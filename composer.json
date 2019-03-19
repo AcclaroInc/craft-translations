@@ -2,7 +2,6 @@
     "name": "acclaro/translations",
     "description": "Easily translate your multisite entry content and eliminate error prone copy/paste workflows through bulk XML import/export and Acclaro Sync features.",
     "type": "craft-plugin",
-    "version": "1.0.0",
     "keywords": [
         "craft",
         "cms",
