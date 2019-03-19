@@ -1,0 +1,126 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set tabs = adminTabs %}
+{% set selectedTab = 'translators' %}
+
+{% do view.registerAssetBundle("acclaro\\translationsforcraft\\assetbundles\\TranslatorAssets") %}
+
+{% js %}
+    var selectedSites = '';
+    if ({{translator.sites|json_encode|raw}} != null) {
+        selectedSites = {{translator.sites|json_encode|raw}};
+    }
+{% endjs %}
+
+{% set title = 'Translations'|t %}
+{% block actionButton %}
+<small class="translations-for-craft-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+{% endblock %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations-for-craft') },
+    { label: 'Translators'|t, url: url('translations-for-craft/translators') },
+] %}
+
+{% if translatorId %}
+    {% set crumbs = crumbs|merge([
+        { label: 'Edit Translation Service'|t, url: 'javascript:void(0)' },
+    ])%}
+{% else %}
+    {% set crumbs = crumbs|merge([
+        { label: 'Add New Translation Service'|t, url: 'javascript:void(0)' },
+    ])%}
+{% endif %}
+
+{% block content %}
+    <form method="post" class="translations-for-craft-translator-form" data-confirm-unload accept-charset="UTF-8">
+        {{ csrfInput() }}
+
+        {{ forms.hidden({
+            name: 'id',
+            value: translatorId,
+        }) }}
+
+        {{ forms.hidden({
+            name: 'status',
+            id: 'status',
+            value: translator.status ?: 'inactive',
+        }) }}
+
+        {{ forms.hidden({
+            name: 'action',
+            value: 'translations-for-craft/base/save-translator'
+        }) }}
+
+        {% if translatorId %}
+        <h1>{{ 'Edit Translation Service'|t }}</h1>
+        {% else %}
+        <h1>{{ 'Add New Translation Service'|t }}</h1>
+        {% endif %}
+
+        {{ forms.selectField({
+            label: 'Translation Service'|t,
+            options: {'':'Choose'|t ~ '...'}|merge(translationServices),
+            value: translator.service,
+            name: 'service',
+            id: 'service',
+        }) }}
+
+        {{ forms.textField({
+            label: 'Translation Service Custom Label'|t,
+            value: translator.label,
+            name: 'label',
+            id: 'label',
+            size: 20,
+            placeholder: 'Optional'|t,
+        }) }}
+
+        {{ forms.checkboxSelectField({
+            label: 'Sites(s)'|t,
+            options: targetSiteCheckboxOptions,
+            value: translator.sites,
+            name: 'sites',
+            id: 'sites',
+        }) }}
+
+        <p><a href="{{ url('settings/sites') }}" target="_blank">{{ 'Configure multi-site settings'|t }} &raquo;</a></p>
+
+        <h2 class="translations-for-craft-translator-settings-header">{{ 'Translation Service Configuration'|t }}</h2>
+        <div class="translations-for-craft-translator-settings" id="settings-acclaro">
+            <div class="translations-for-craft-translator-logo-acclaro"></div>
+
+            {{ forms.textField({
+                label: 'Acclaro API Token'|t,
+                value: translator.setting('apiToken'),
+                name: 'settings[acclaro][apiToken]',
+                size: 20,
+                id: 'settings-acclaro-apiToken',
+            }) }}
+
+            <div class="field">
+                <div class="input {{ orientation }}">
+                    <button class="btn translations-for-craft-authenticate-translation-service">{{ 'Authenticate'|t }}</button>
+                </div>
+            </div>
+
+            {{ forms.checkboxField({
+                label: 'Sandbox Mode'|t,
+                value: 1,
+                checked: translator.setting('sandboxMode'),
+                name: 'settings[acclaro][sandboxMode]',
+                id: 'settings-acclaro-sandboxMode',
+            }) }}
+
+            <p>Don't have an Acclaro API key? <a href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>
+        </div>
+
+        <div class="item" data-position="left" data-colspan="1">
+            <div class="buttons">
+                <div class="btngroup submit first">
+                    <input type="submit" class="btn submit" value="{{ 'Save'|t }}">
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}

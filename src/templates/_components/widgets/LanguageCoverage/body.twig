@@ -1,0 +1,19 @@
+<div id="language-coverage-widget" class="languagecoverage-container">
+        <div class="elements hidden">
+            <div class="tableview">
+                <table class="data fullwidth table">
+                    <tr>
+                        <th>Site</th>
+                        <th style="text-align:center;">Enabled Entries</th>
+                        <th style="text-align:center;">In Queue</th>
+                        <th style="text-align:center;">Translated</th>
+                        <th style="text-align:right;">Coverage</th>
+                    </tr>
+                    {% for i in 1..limit %}
+                        <tr id="site-{{i}}">&nbsp;</tr>
+                    {% endfor %}
+                </table>
+            <div style="text-align:center;" class="hidden"><a href="">Load More..</a></div>
+        </div>
+    </div>
+</div>

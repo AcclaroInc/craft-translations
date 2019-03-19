@@ -1,0 +1,210 @@
+<?php
+/**
+ * Translations for Craft plugin for Craft CMS 3.x
+ *
+ * Translations for Craft eliminates error prone and costly copy/paste workflows for launching human translated Craft CMS web content.
+ *
+ * @link      http://www.acclaro.com/
+ * @copyright Copyright (c) 2018 Acclaro
+ */
+
+namespace acclaro\translationsforcraft\services\repository;
+
+use Craft;
+use Exception;
+use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translationsforcraft\models\TranslatorModel;
+use acclaro\translationsforcraft\records\TranslatorRecord;
+
+class TranslatorRepository
+{
+    /**
+     * @param  int|string $translatorId
+     * @return \acclaro\translationsforcraft\models\TranslatorModel
+     */
+    public function getTranslatorById($translatorId)
+    {
+        $record = TranslatorRecord::findOne($translatorId);
+        
+        $translator = new TranslatorModel($record->toArray([
+            'id',
+            'label',
+            'service',
+            'sites',
+            'status',
+            'settings',
+        ]));
+
+        return $translator;
+    }
+    
+    /**
+     * @return array \acclaro\translationsforcraft\models\TranslatorModel
+     */
+    public function getTranslators()
+    {
+        $records = TranslatorRecord::find()->all();
+        $translators = array();
+        
+        foreach ($records as $key => $record) {
+            $translators[$key] = new TranslatorModel($record->toArray([
+                'id',
+                'label',
+                'service',
+                'sites',
+                'status',
+                'settings',
+            ]));
+        }
+
+        return $translators;
+    }
+
+    /**
+     * @return array \acclaro\translationsforcraft\models\TranslatorModel
+     */
+    public function getActiveTranslators()
+    {
+        $records = TranslatorRecord::findAll(array(
+            'status' => 'active',
+        ));
+
+        $translators = array();
+
+        foreach ($records as $key => $record) {
+            $translators[$key] = new TranslatorModel($record->toArray([
+                'id',
+                'label',
+                'service',
+                'sites',
+                'status',
+                'settings',
+            ]));
+        }
+
+        return $translators;
+    }
+
+    /**
+     * @param  string $service
+     * @return string
+     */
+    public function getTranslatorServiceLabel($service)
+    {
+        $services = $this->getTranslationServices();
+
+        return isset($services[$service]) ? $services[$service] : '';
+    }
+
+    /**
+     * @return array id => label
+     */
+    public function getTranslatorOptions()
+    {
+        $options = array();
+
+        foreach ($this->getActiveTranslators() as $translator) {
+            $options[$translator->id] = $translator->label ? $translator->label : $this->getTranslatorServiceLabel($translator->service);
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return slug => label
+     */
+    public function getTranslationServices()
+    {
+        return array(
+            'acclaro' => 'Acclaro',
+            'export_import' =>'Export/Import',
+        );
+    }
+
+    /**
+     * @return \acclaro\translationsforcraft\models\TranslatorModel
+     */
+    public function makeNewTranslator()
+    {
+        return new TranslatorModel();
+    }
+
+    /**
+     * @param  \acclaro\translationsforcraft\models\TranslatorModel $translator
+     * @throws \Exception
+     * @return bool
+     */
+    public function saveTranslator(TranslatorModel $translator)
+    {
+        $isNew = !$translator->id;
+
+        if (!$isNew) {
+            $record = TranslatorRecord::findOne($translator->id);
+
+            if (!$record) {
+                throw new Exception('No translator exists with that ID.');
+            }
+        } else {
+            $record = new TranslatorRecord();
+        }
+        
+        $record->setAttributes($translator->getAttributes(), false);
+
+        if (!$record->validate()) {
+            $translator->addErrors($record->getErrors());
+
+            return false;
+        }
+
+        if ($translator->hasErrors()) {
+            return false;
+        }
+
+        $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
+
+        try {
+            if ($record->save(false)) {
+                if ($transaction !== null) {
+                    $transaction->commit();
+                }
+
+                return true;
+            }
+        } catch (Exception $e) {
+            if ($transaction !== null) {
+                $transaction->rollback();
+            }
+
+            throw $e;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  \acclaro\translationsforcraft\models\TranslatorModel $translator
+     * @return bool
+     */
+    public function deleteTranslator(TranslatorModel $translator)
+    {
+        $record = TranslatorRecord::findOne($translator->id);
+        
+        $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
+
+        try {
+            if ($record->delete(false)) {
+                if ($transaction !== null) {
+                    $transaction->commit();
+                }
+
+                return true;
+            }
+        } catch (Exception $e) {
+            if ($transaction !== null) {
+                $transaction->rollback();
+            }
+
+            throw $e;
+        }
+    }
+}

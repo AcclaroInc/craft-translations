@@ -1,0 +1,64 @@
+<div id="recently-modified-widget" class="recentlymodified-container">
+    <div class="spinner body-loading"></div>
+    <div class="elements hidden">
+        <div class="tableview">
+            <table class="data fullwidth table">
+                <tr>
+                    <td class="checkbox-cell"></td>
+                    <th>Entry Title</th>
+                    <th>Last Updated</th>
+                    <th class="nowrap" style="text-align:right;">Compare Changes</th>
+                </tr>
+                {% for i in 1..limit %}
+                    <tr id="item-{{i}}">&nbsp;</tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="buttons right" style="margin-top:14px;">
+            <a href="#" id="bulk-reorder" class="btn submit disabled" target="_blank">Reorder</a>
+        </div>
+    </div>
+</div>
+
+<div class="hidden">
+    <div id="diff-modal" class="modal" tabindex="-1" role="dialog" style="padding:15px;overflow-y:auto;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header field">
+                    <div class="modal-title">
+                        <h1>Entry Modification Details</h1>
+                        <div class="buttons">
+                            <a href="#" id="close-diff-modal" class="btn">Close</a>
+                            <a href="#" class="btn submit reorderUrl" target="_blank">Reorder Translations</a>
+                        </div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Entry ID:</label>
+                        <div class="instructions entryId"></div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Entry Title:</label>
+                        <div class="instructions entryName"></div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Site:</label>
+                        <div class="instructions siteLabel"></div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Last Translated:</label>
+                        <div class="instructions fileDate"></div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Date Updated:</label>
+                        <div class="instructions entryDate"></div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Words Difference:</label>
+                        <div class="instructions wordDifference"></div>
+                    </div>
+                </div>
+                <div id="modal-body" class="modal-body"></div>
+            </div>
+        </div>
+    </div>
+</div>

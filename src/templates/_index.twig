@@ -1,0 +1,103 @@
+{% extends "_layouts/cp" %}
+{# {% import 'translations-for-craft/_macros' as macros %} #}
+
+{% set title = "Translation Dashboard"|t %}
+{% set elementType = 'acclaro\\translationsforcraft\\elements\\Order' %}
+
+{% block actionButton %}
+    <a class="btn submit add icon btn-create-new-order" href="{{ url('translations-for-craft/orders/new') }}" style="margin-right: 5px;">{{ 'Create New Order'|t }}</a>
+    <div class="buttons secondary-buttons">
+        <div class="newwidget btngroup">
+            <div id="newwidgetmenubtn" class="btn submit menubtn add icon">{{ 'New widget'|t('app') }}</div>
+            <div class="menu newwidgetmenu">
+                <ul>
+                    {% for type, info in widgetTypes if info.selectable %}
+                        <li>
+                            <a data-type="{{ type }}" data-name="{{ info.name }}">
+                                <span class="icon">{{ info.iconSvg|raw }}</span>
+                                {{ info.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div id="widgetManagerBtn" class="btn settings icon submit" title="{{ 'Settings'|t('app') }}"></div>
+    </div>
+{% endblock %}
+
+{% do view.registerAssetBundle("acclaro\\translationsforcraft\\assetbundles\\OrderAssets") %}
+
+{% set elementInstance = craft.app.elements.createElement(elementType) %}
+{% set context = 'index' %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: 'javascript:void(0)' },
+] %}
+
+{% if not elementInstance %}
+    {% exit 404 %}
+{% endif %}
+
+{% set showSiteMenu = (craft.app.getIsMultiSite() ? (showSiteMenu ?? 'auto') : false) %}
+{% if showSiteMenu == 'auto' %}
+    {% set showSiteMenu = elementInstance.isLocalized() %}
+{% endif %}
+
+{% do view.registerJsFile("https://cdn.jsdelivr.net/npm/apexcharts") %}
+
+{% js "$('#content').css({'background': 'none'});" %}
+
+{% block contextMenu %}
+    {% if showSiteMenu %}
+        {% include "_elements/sitemenu" %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div id="translations-dashboard" style="visibility:hidden;">
+        {% for widget in widgets %}
+            {% if widget %}
+                <div class="item" data-colspan="{{ widget.colspan }}">
+                    <div id="widget{{ widget.id }}" class="widget {{ widget.type|lower }}" data-id="{{ widget.id }}" data-type="{{ widget.type }}" data-title="{{ widget.title }}">
+                        <div class="front">
+                            <div class="pane">
+                                <div class="spinner body-loading"></div>
+                                <div class="settings icon hidden"></div>
+                                <h2>{{ widget.title }}</h2>
+                                {% if widget.name == "Acclaro News" %}
+                                    <div style="text-align:right;">
+                                        <a href="{{ url('https://www.acclaro.com/translation-blog/') }}">{{ 'Visit Blog'|t }} &raquo;</a>
+                                    </div>
+                                {% elseif widget.name == "Modified Source Entries" %}
+                                    <h5 style="margin-bottom:10px;">Primary site entries that have been modified since being translated.</h5>
+                                {% elseif widget.name == "Translation Coverage by Site" %}
+                                    <h5 style="margin-bottom:10px;">Coverage information for target site entries.</h5>
+                                {% endif %}
+                                <div class="body">
+                                    {{ widget.bodyHtml|raw }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="back">
+                            <form class="pane">
+                                <input type="hidden" name="widgetId" value="{{ widget.id }}">
+                                <h2>{{ "{type} Settings"|t('app', { type: widget.name }) }}</h2>
+                                <div class="settings"></div>
+                                <hr>
+                                <div class="buttons clearafter">
+                                    <input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
+                                    <div class="btn" role="button">{{ 'Cancel'|t('app') }}</div>
+                                    <div class="spinner hidden"></div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

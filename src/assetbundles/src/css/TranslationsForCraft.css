@@ -1,0 +1,481 @@
+.translations-for-craft-element-index table.data {
+    min-width: 720px;
+    width: 100%;
+}
+
+.translations-for-craft-element-index .toolbar {
+    display: none;
+}
+
+.translations-for-craft-element-index > .btn.big.submit.add {
+    margin-bottom: 2em;
+}
+
+.translations-for-craft-element-index-header {
+    min-height: 45px;
+}
+
+.translations-for-craft-element-index-header h2 {
+    margin: 0;
+    font-size: 1.5em;
+    padding-top: 5px;
+}
+
+.translations-for-craft-element-index-header .buttons {
+    margin-bottom: 0;
+}
+
+.translations-for-craft-order-step-intro {
+    margin: 0 0 2em;
+}
+
+.translations-for-craft-order-step table.data {
+    margin: 0 0 2em;
+    width: 60%;
+    min-width: 720px;
+}
+
+.translations-for-craft-order-step table.data caption {
+    text-align: left;
+    font-size: 1.2em;
+    font-weight: bold;
+    line-height: 2em;
+}
+
+.translations-for-craft-order-step-btngroup {
+    display: table;
+    width: 60%;
+    min-width: 720px;
+    margin: 0 0 2em;
+}
+
+.translations-for-craft-order-step-btngroup ul {
+    display: table-row;
+    padding: 0;
+    margin: 0;
+}
+
+.translations-for-craft-order-step-btngroup li {
+    display: table-cell;
+    padding: 0;
+    margin: 0;
+    width: 25%;
+}
+
+.translations-for-craft-order-step-btngroup .btn {
+    width: 90%;
+}
+
+.translations-for-craft-order-step-btngroup .btn.disabled {
+    pointer-events: none;
+}
+
+.translations-for-craft-order-step-btngroup .btn:not(.disabled):not(.prev) {
+    background: #5286d9;
+    color: #fff;
+    pointer-events: none;
+    cursor: default;
+}
+
+.translations-for-craft-order-step {
+    display: none;
+}
+
+.translations-for-craft-order-step.active {
+    display: block;
+}
+
+.translations-for-craft-dropdown {
+    margin: 5px 5px 0 0;
+    position: relative;
+}
+
+.translations-for-craft-dropdown ul {
+    display: none;
+    max-height: 300px;
+    position: absolute;
+    overflow-y: scroll;
+    width: 100%;
+}
+
+.translations-for-craft-dropdown:hover ul {
+    display: block;
+}
+
+.translations-for-craft-dropdown ul li a,
+.translations-for-craft-dropdown ul li input {
+    display: block;
+    width: 100%;
+}
+
+.translations-for-craft-dropdown > .btn.disabled {
+    pointer-events: none;
+}
+
+.translations-for-craft-translator-settings {
+    background-image: linear-gradient(#f7f7f8, #f4f5f6);
+    padding: 2em 1em;
+    margin: 0 0 2em;
+    max-width: 720px;
+    display: none;
+}
+
+.translations-for-craft-translator-logo-acclaro {
+    background: url(../img/plugin-logo.png) no-repeat 0 0;
+    background-size: 192px 55px;
+    width: 192px;
+    height: 55px;
+}
+
+.translations-for-craft-version-header {
+    font-size: 1.0769em;
+    line-height: 2;
+    color: #8f98a3;
+}
+
+.translations-for-craft-about {
+    max-width: 720px;
+}
+
+.translations-for-craft-about-header {
+    font-size: 2.25em;
+    line-height: 1.2;
+    margin-bottom: 0;
+}
+
+.translations-for-craft-about-logo {
+    background: url(../img/plugin-logo.png) no-repeat 0 0;
+    background-size: 239px 68px;
+    width: 239px;
+    height: 68px;
+    float: right;
+}
+
+.translations-for-craft-about-author {
+    margin: 0;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.translations-for-craft-about-version {
+    margin: 0;
+}
+
+.translations-for-craft-about-text {
+    margin: 2em 0 0;
+}
+
+.translations-for-craft-about-copyright {
+    margin: 2em 0 0;
+}
+
+.translations-for-craft-order-detail-summary {
+    float: left;
+    width: 50%;
+    margin-right: 10%;
+}
+
+.translations-for-craft-order-detail-summary h2 {
+    font-size: 1.5em;
+    margin-top: 0;
+}
+
+.translations-for-craft-order-detail-summary table.data {
+    width: 100%;
+    margin: 0 0 4em;
+}
+
+.translations-for-craft-order-detail-entries {
+    width: 40%;
+}
+
+.translations-for-craft-order-detail-entries h2 {
+    font-size: 1.5em;
+    margin-top: 0;
+}
+
+.translations-for-craft-order-detail-entries table.data {
+    width: 100%;
+    margin: 0 0 2em;
+}
+
+.translations-for-craft-order-detail-button-wrapper {
+    flex-direction: row;
+    position: relative;
+    float: right;
+    padding-bottom: 10px;
+    margin: 0;
+}
+
+.translations-for-craft-order-detail-button-wrapper #import-tool {
+    margin-left: 10px;
+}
+
+.translations-for-craft-order-detail-button-wrapper .utility-status {
+    display: flex;
+    align-self: center;
+}
+
+.translations-for-craft-order-detail-button-wrapper .utility-status .progressbar {
+    left: 50%;
+    top: calc(50% - 5px);
+    width: 60%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.translations-for-craft-order-reporting {
+    background-image: linear-gradient(#f7f7f8, #f4f5f6);
+    padding: 2em;
+    margin: 0 0 2em;
+    display: inline-block;
+}
+
+.translations-for-craft-order-reporting .btn {
+    display: inline-block;
+}
+
+.translations-for-craft-order-reporting table {
+    margin: 0 0 1em;
+}
+
+.translations-for-craft-order-reporting table label {
+    padding: 1em 1em 1em 0;
+    display: block;
+}
+
+.translations-for-craft-order-reporting table td {
+    vertical-align: middle;
+}
+
+.translations-for-craft-order-reporting table .datewrapper,
+.translations-for-craft-order-reporting table .select,
+.translations-for-craft-order-reporting table select {
+    width: 100%;
+}
+
+.translations-for-craft-complete-orders-indicator {
+    float: right;
+    display: inline-block;
+    padding: 0;
+    min-height: 22px;
+    border: none;
+    position: relative;
+    top: -38px;
+    margin: 0 0 -22px;
+}
+
+.translations-for-craft-lock {
+    font-size: 96px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -48px;
+    margin-left: 79px;
+    z-index: 1;
+}
+
+.translations-for-craft-lock:before {
+    content: 't';
+}
+
+.redactor-box.disabled:before {
+    content: '\00a0';
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    z-index: 99999999;
+}
+
+@media only screen and (max-width: 992px) {
+    .translations-for-craft-lock {
+        margin-left: -31px;
+    }
+}
+
+#nav li .translations-for-craft-complete-orders-indicator {
+    display: inline-block;
+    min-height: 22px;
+    margin: 0 0 -22px;
+    padding: 0;
+}
+
+.translations-for-craft-complete-orders-indicator [data-icon="newstamp"] {
+    top: 8px;
+    right: 14px;
+    position: absolute;
+    font-size: 22px;
+    color: #5286d9;
+}
+
+.translations-for-craft-complete-orders-indicator [data-icon="newstamp"] > span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #333f4d;
+    font-size: 11px;
+    line-height: 22px;
+    width: 100%;
+    text-align: center;
+}
+
+.translations-for-craft-loader {
+    float: left;
+    white-space: nowrap;
+    padding-top: 2px;
+}
+
+.translations-for-craft-loader .spinner{
+    margin-top: 6px;
+    margin-right: 4px;
+}
+
+.ui-datepicker-calendar td > span.ui-state-default {
+    border-radius: 2px;
+    display: block;
+    width: 26px;
+    line-height: 26px;
+    text-align: center;
+    color: #8f98a3;
+}
+
+.translations-for-craft-order-detail-activity-log {
+    margin-top: 3rem;
+}
+.translations-for-craft-order-detail-activity-log .bullets{
+    max-height: 150px;
+    border: 1px solid #ddd;
+    width: 55%;
+    overflow: scroll;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 20px;
+}
+
+.disabled{
+    background: #000 !important;
+    color: #fff !important;
+    cursor: initial;
+}
+
+.link-disabled {
+    cursor: initial;
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+.icon.view:before {
+    content: 'view';
+    vertical-align: initial;
+}
+
+.recentlymodified-container > .body-loading {
+    display: none;
+}
+
+.recentlymodified-container.loading > .body-loading {
+    display: block;
+}
+
+#recently-modified-widget .checkbox-cell label:before {
+    top: 0px;
+}
+
+#recently-modified-widget tr.sel .view-diff {
+    margin-right: 10px;
+    transition: all 0.05s ease-in-out;
+}
+
+#recently-modified-widget .view-diff {
+    transition: all 0.05s ease-in-out;
+}
+
+#diff-modal .heading {
+    border-bottom: 1px dotted #e3e5e8;
+    display: flex;
+    justify-content: flex-start;
+    padding: 10px 0px;
+}
+
+#diff-modal .instructions {
+    margin: 0 0 0 10px;
+}
+
+#diff-modal .modal-title {
+    display: flex;
+    justify-content: space-between;
+}
+
+@media only screen and (max-width: 720px) {
+    .translations-for-craft-order-step-btngroup {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .translations-for-craft-order-step-btngroup ul {
+        display: block;
+    }
+
+    .translations-for-craft-order-step-btngroup li {
+        display: block;
+        margin: 0 0 1em;
+        width: 100%;
+    }
+
+    .translations-for-craft-order-step-btngroup .btn {
+        width: 100%;
+    }
+
+    .translations-for-craft-element-index table.data {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .translations-for-craft-order-step table.data {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .translations-for-craft-order-detail-summary{
+        width: 100%;
+    }
+
+    .translations-for-craft-order-detail-entries{
+        width: 100%;
+    }
+}
+
+#sync-orders {
+    position: relative;
+}
+
+#translations-dashboard .progressbar, #sync-orders .progressbar {
+    left: 50%;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    z-index: 999;
+}
+
+.margin-left{
+    margin-left: 24px;
+}
+
+.margin-right{
+    margin-right: 24px;
+}
+
+#button-container {
+    display: flex;
+}
+
+#translations-dashboard .widget-name {
+    float: left;
+}
+
+#translations-dashboard .buttons {
+    margin: 0 0 14px;
+}

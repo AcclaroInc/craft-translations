@@ -1,0 +1,90 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set tabs = adminTabs %}
+{% set selectedTab = 'translators' %}
+
+{% set title = 'Translators'|t %}
+{% block actionButton %}
+<a class="btn big submit add icon" href="{{ url('translations-for-craft/translators/new') }}">{{ 'New Translator'|t }}</a>
+<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations-for-craft/orders/new') }}" style="margin-left:5px;">{{ 'Create New Order'|t }}</a>
+{% endblock %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations-for-craft') },
+    { label: 'Translators'|t, url: 'javascript:void(0)' },
+] %}
+
+{% block content %}
+<div class="translations-for-craft-element-index">
+    {% if translators is not empty %}
+    <table class="data">
+        <thead>
+            <tr>
+                <th>{{ 'Name'|t }}</th>
+                <th>{{ 'Status'|t }}</th>
+                <th>{{ 'Service'|t }}</th>
+                <th>{{ 'Sites'|t }}</th>
+                <th style="text-align:right;">{{ 'Actions'|t }}</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for translator in translators %}
+            <tr>
+                <td><a href="{{ url('translations-for-craft/translators/detail/'~translator.id) }}">{{ translator.name }}</a></td>
+                <td>
+                    {% switch translator.status %}
+                    {% case "active" %}
+                        <span class="status green"></span>{{ translator.status|title }}
+                    {% case "inactive" %}
+                        <span class="status red"></span>{{ translator.status|title }}
+                    {% endswitch %}
+                </td>
+                <td>
+                    {% switch translator.service %}
+                    {% case "export_import" %}
+                        {{ 'Export/Import' }}
+                    {% case "acclaro" %}
+                        {{ 'Acclaro' }}
+                    {% endswitch %}
+                </td>
+                <td style="overflow-wrap:break-word;">
+                {% for site in translator.sitesArray %}
+                    {{translatorTargetSites[site].name}} <span class="light">({{ translatorTargetSites[site].language }})</span>{% if not loop.last %}<br>{% endif %}
+                {% endfor %}
+                </td>
+                <td style="text-align:right;">
+                    <form method="post" accept-charset="UTF-8">
+                        {{ csrfInput() }}
+
+                        {{ forms.hidden({
+                            name: 'action',
+                            value: 'translations-for-craft/base/delete-translator',
+                        }) }}
+
+                        {{ forms.hidden({
+                            name: 'translatorId',
+                            value: translator.id,
+                        }) }}
+                        <div class="btn menubtn settings icon"></div>
+                        <div class="menu">
+                            <ul>
+                                <li><a class="" href="{{ url('translations-for-craft/translators/detail/'~translator.id) }}"> Edit</a></li>
+                            </ul>
+                            <hr>
+                            <ul>
+                                <li><a class="formsubmit error" title="{{ 'Delete Translator Service'|t }}" data-confirm="{{ 'Are you sure you want to delete this translator?'|t }}">Delete</a></li>
+                            </ul>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No Translators available.</p>
+    {% endif %}
+</div>
+{% endblock %}

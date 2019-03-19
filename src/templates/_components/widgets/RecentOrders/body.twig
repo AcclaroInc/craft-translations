@@ -1,0 +1,57 @@
+<div class="recentorders-container">
+    {% if orders|length %}
+        <table class="data fullwidth table">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th style="text-align:right;">Date Ordered</th>
+            </tr>
+            {% for order in orders %}
+                <tr>
+                    <td>
+                        {{ order.id }}
+                    </td>
+                    <td>
+                        <a href="{{ order.getCpEditUrl() }}">{{ order.title }}</a>
+                    </td>
+                    <td>
+                    {% switch order.statusLabel %}
+                        {% case "Order failed" %}
+                            <span class="status red"></span>{{order.statusLabel}}
+                        {% case "Pending submission" %}
+                            <span class="status"></span>{{order.statusLabel}}
+                        {% case "In progress" %}
+                            <span class="status orange"></span>{{order.statusLabel}}
+                        {% case "Ready to publish" %}
+                            <span class="status blue"></span>{{order.statusLabel}}
+                        {% case "Canceled" %}
+                            <span class="status red"></span>{{order.statusLabel}}
+                        {% case "Published" %}
+                            <span class="status green"></span>{{order.statusLabel}}
+                    {% endswitch %}
+                    </td>
+                    <td style="text-align:right;">
+                        <span class="light">
+                            {{ order.dateOrdered ? order.dateOrdered|date('M j, Y g:i a') : '--' }}
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        <div class="buttons right" style="margin-top:14px;">
+            {% js 'new Craft.TranslationsForCraft.SyncOrders(\'sync-orders\');' %}
+            <div class="btngroup">
+                <a class="btn" href="{{ url('translations-for-craft/orders') }}">{{ 'View All Orders'|t }}</a>
+            </div>
+        </div>
+    {% else %}
+        <table class="data fullwidth table">
+            <tr>
+                <td>
+                    <p>{{ "No Orders exist yet."|t('app') }}</p>
+                </td>
+            </tr>
+        </table>
+    {% endif %}
+</div>

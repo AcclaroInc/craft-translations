@@ -1,0 +1,116 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set tabs = adminTabs %}
+{% set selectedTab = 'orders' %}
+{% set sourceSite = sourceSiteObject %}
+
+{% do view.registerAssetBundle("acclaro\\translationsforcraft\\assetbundles\\OrderAssets") %}
+
+{% set title = 'Translations'|t %}
+{% block actionButton %}
+<small class="translations-for-craft-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+{% endblock %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations-for-craft') },
+    { label: 'Orders'|t, url: url('translations-for-craft/orders') },
+    { label: order.title|t, url: url('translations-for-craft/orders/detail/'~orderId) },
+    { label: 'Order Entries'|t, url: 'javascript:void(0)' },
+] %}
+
+{% block content %}
+    <h1>{{ order.title }}</h1>
+
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+
+        {{ forms.hidden({
+            name: 'action',
+            value: 'translations-for-craft/base/publish-entries',
+        }) }}
+
+        {{ forms.hidden({
+            name: 'orderId',
+            value: order.id,
+        }) }}
+
+        <div class="elementindex">
+            <div class="main">
+                {% if order.status == 'complete' %}
+                <div class="toolbar">
+                    <div class="buttons right">
+                        <input type="submit" class="btn submit disabled translations-for-craft-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to publish these entries?'|t }}" disabled="disabled" value="{{ 'Publish selected'|t }}">
+                    </div>
+                </div>
+                {% endif %}
+                <div class="elements">
+                    <div class="tableview">
+                        <table class="data fullwidth">
+                            <thead>
+                                <tr>
+                                    {% if order.status == 'complete' %}
+                                    <td class="thin checkbox-cell translations-for-craft-checkbox-cell">
+                                        <input class="checkbox" id="element-0" type="checkbox">
+                                        <label class="checkbox" for="element-0"></label>
+                                    </td>
+                                    {% endif %}
+                                    <th scope="col">{{ 'Title'|t }}</th>
+                                    <th scope="col">{{ 'Section'|t }}</th>
+                                    <th scope="col">{{ 'Source Site'|t }}</th>
+                                    <th scope="col">{{ 'Target Sites(s)'|t }}</th>
+                                    <th scope="col">{{ 'Status'|t }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for element in elements %}
+                                <tr>
+                                    {% if order.status == 'complete' %}
+                                    <td class="thin checkbox-cell translations-for-craft-checkbox-cell">
+                                        <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"{% if isElementPublished[element.id] %} disabled="disabled"{% endif %}>
+                                        <label class="checkbox" for="element-{{ element.id }}"></label>
+                                    </td>
+                                    {% endif %}
+                                    <td>
+                                        <div class="element small hasstatus">
+                                            <span class="status {{ (element.className == 'craft\\elements\\GlobalSet') ? 'green' : element.status }}"></span>
+                                            <div class="label">
+                                                <span class="title">
+                                                    <a href="{{ element.cpEditUrl }}">{{ element.title ?? element.name }}</a>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
+                                    <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
+                                    <td>
+                                    {% for file in files[element.id] %}
+                                        {% if not loop.first %}
+                                        <br>
+                                        {% endif %}
+                                        <a href="{{ fileUrls[file.id] }}">
+                                            {{ fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
+                                        </a>
+                                        {% if element.className != 'craft\\elements\\GlobalSet' %}
+                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </td>
+                                    <td>
+                                    {% for file in files[element.id] %}
+                                        {% if not loop.first %}
+                                        <br>
+                                        {% endif %}
+                                        <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
+                                    {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}

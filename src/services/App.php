@@ -1,0 +1,163 @@
+<?php
+
+namespace acclaro\translationsforcraft\services;
+
+use craft\base\Component;
+
+/**
+ * App Service
+ *
+ * All of your plugin’s business logic should go in services, including saving data,
+ * retrieving data, etc. They provide APIs that your controllers, template variables,
+ * and other plugins can interact with.
+ *
+ * https://craftcms.com/docs/plugins/services
+ *
+ * @author    Acclaro
+ * @package   TranslationsForCraft
+ */
+class App extends Component
+{
+
+    /**
+     * @var UrlHelper
+     */
+    public $urlHelper;
+    
+    /**
+     * @var UrlGenerator
+     */
+    public $urlGenerator;
+    
+    /**
+     * @var Translator
+     */
+    public $translator;
+
+    /**
+     * @var ElementCloner
+     */
+    public $elementCloner;
+    
+    /**
+     * @var repository\TranslationRepository
+     */
+    public $translationRepository;
+    
+    /**
+     * @var repository\CategoryRepository
+     */
+    public $categoryRepository;
+    
+    /**
+     * @var repository\TagRepository
+     */
+    public $tagRepository;
+    
+    /**
+     * @var repository\DraftRepository
+     */
+    public $draftRepository;
+    
+    /**
+     * @var repository\EntryRepository
+     */
+    public $entryRepository;
+    
+    /**
+     * @var repository\FileRepository
+     */
+    public $fileRepository;
+    
+    /**
+     * @var repository\GlobalSetRepository
+     */
+    public $globalSetRepository;
+    
+    /**
+     * @var repository\GlobalSetDraftRepository
+     */
+    public $globalSetDraftRepository;
+    
+    /**
+     * @var repository\SiteRepository
+     */
+    public $siteRepository;
+    
+    /**
+     * @var repository\OrderRepository
+     */
+    public $orderRepository;
+    
+    /**
+     * @var repository\TranslatorRepository
+     */
+    public $translatorRepository;
+    
+    /**
+     * @var repository\UserRepository
+     */
+    public $userRepository;
+    
+    /**
+     * @var WordCounter
+     */
+    public $wordCounter;
+    
+    /**
+     * @var fieldtranslator\Factory
+     */
+    public $fieldTranslatorFactory;
+    
+    /**
+     * @var job\Factory
+     */
+    public $jobFactory;
+    
+    /**
+     * @var translation\Factory
+     */
+    public $translationFactory;
+    
+    /**
+     * @var ElementTranslator
+     */
+    public $elementTranslator;
+    
+    /**
+     * @var ElementToXmlConverter
+     */
+    public $elementToXmlConverter;
+    
+    /**
+     * @var OrderSearchParams
+     */
+    public $orderSearchParams;
+    
+    public function init()
+    {
+        $this->urlHelper = new UrlHelper();
+        $this->urlGenerator = new UrlGenerator();
+        $this->translator = new Translator();
+        $this->elementCloner = new ElementCloner();
+        $this->translationRepository = new repository\TranslationRepository();
+        $this->categoryRepository = new repository\CategoryRepository();
+        $this->tagRepository = new repository\TagRepository();
+        $this->draftRepository = new repository\DraftRepository();
+        $this->entryRepository = new repository\EntryRepository();
+        $this->fileRepository = new repository\FileRepository();
+        $this->globalSetRepository = new repository\GlobalSetRepository();
+        $this->globalSetDraftRepository = new repository\GlobalSetDraftRepository();
+        $this->siteRepository = new repository\SiteRepository();
+        $this->orderRepository = new repository\OrderRepository();
+        $this->translatorRepository = new repository\TranslatorRepository();
+        $this->userRepository = new repository\UserRepository();
+        $this->wordCounter = new WordCounter();
+        $this->fieldTranslatorFactory = new fieldtranslator\Factory();
+        $this->jobFactory = new job\Factory();
+        $this->translationFactory = new translation\Factory();
+        $this->elementTranslator = new ElementTranslator();
+        $this->elementToXmlConverter = new ElementToXmlConverter();
+        $this->orderSearchParams = new OrderSearchParams();
+    }
+}
