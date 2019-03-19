@@ -59,8 +59,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function authenticate()
     {
-        // return $this->acclaroApiClient->getAccount();
-
         $response = $this->acclaroApiClient->getAccount();
 
         return !empty($response->plunetid);

@@ -97,22 +97,26 @@ class BaseController extends Controller
 
         $key = sha1_file(Craft::$app->path->getConfigPath().'/license.key');
 
-        echo $key.PHP_EOL;
-
         if (Craft::$app->request->getRequiredQueryParam('key') !== $key) {
+            echo $key.PHP_EOL;
             Craft::$app->end('Invalid key');
+        } else {
+            echo $key.PHP_EOL;
+            echo 'Valid key'.PHP_EOL;
         }
 
         $orderId = Craft::$app->request->getRequiredQueryParam('orderId');
 
         if (!$orderId) {
-            Craft::$app->end('Missing orderId');
+            Craft::$app->end('Missing order ID');
         }
 
         $order = TranslationsForCraft::$plugin->orderRepository->getOrderById($orderId);
 
         if (!$order) {
             Craft::$app->end('Invalid orderId');
+        } else {
+            echo 'Order found'.PHP_EOL;
         }
 
         // don't process published orders
@@ -124,9 +128,23 @@ class BaseController extends Controller
 
         $translationService = TranslationsForCraft::$plugin->translationFactory->makeTranslationService($translator->service, $translator->getSettings());
 
+        if (!$translationService) {
+            Craft::$app->end('Couldn’t find the translation service');
+        } else {
+            echo 'Translation service found'.PHP_EOL;
+        }
+
         $translationService->updateOrder(TranslationsForCraft::$plugin->jobFactory, $order);
 
-        Craft::$app->getElements()->saveElement($order);
+        echo 'Updating order'.PHP_EOL;
+
+        $success = Craft::$app->getElements()->saveElement($order);
+
+        if (!$success) {
+            Craft::$app->end('Couldn’t save the order');
+        } else {
+            echo 'Saving order'.PHP_EOL;
+        }
 
         Craft::$app->end('OK');
     }
@@ -141,13 +159,20 @@ class BaseController extends Controller
 
         if (Craft::$app->request->getQueryParam('key') !== $key) {
             Craft::$app->end('Invalid key');
+        } else {
+            echo 'Valid key'.PHP_EOL;
         }
 
         $fileId = Craft::$app->request->getRequiredQueryParam('fileId');
 
         $file = TranslationsForCraft::$plugin->fileRepository->getFileById($fileId);
 
-        echo 'Found file'.PHP_EOL;
+        if (!$file) {
+            Craft::$app->end('Couldn’t find the file');
+        } else {
+            echo 'Found file'.PHP_EOL;
+        }
+
 
         // don't process published files
         if ($file->status === 'published') {
@@ -156,22 +181,33 @@ class BaseController extends Controller
 
         $order = TranslationsForCraft::$plugin->orderRepository->getOrderById($file->orderId);
 
-        echo 'Found order'.PHP_EOL;
+        if (!$order) {
+            Craft::$app->end('Couldn’t find the order');
+        } else {
+            echo 'Found order'.PHP_EOL;
+        }
 
         $translator = $order->getTranslator();
 
         $translationService = TranslationsForCraft::$plugin->translationFactory->makeTranslationService($translator->service, $translator->getSettings());
 
-        echo 'Updating file'.PHP_EOL;
+        if (!$translationService) {
+            Craft::$app->end('Couldn’t find the translation service');
+        } else {
+            echo 'Translation service found'.PHP_EOL;
+        }
 
         $translationService->updateFile(TranslationsForCraft::$plugin->jobFactory, $order, $file);
 
-        echo 'Saving file'.PHP_EOL;
+        echo 'Updating file'.PHP_EOL;
 
+        
         $success = TranslationsForCraft::$plugin->fileRepository->saveFile($file);
 
         if (!$success) {
             Craft::$app->end('Couldn’t save the file');
+        } else {
+            echo 'Saving file'.PHP_EOL;
         }
 
         Craft::$app->end('OK');

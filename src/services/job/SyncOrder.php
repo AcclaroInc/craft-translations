@@ -48,6 +48,12 @@ class SyncOrder implements JobInterface
         TranslationsForCraft::$plugin->orderRepository->saveOrder($this->order);
 
         foreach ($this->order->files as $file) {
+
+            // Let's make sure we're not updating published files
+            if ($file->status == 'published') {
+                continue;
+            }
+
             $translationService->updateFile(TranslationsForCraft::$plugin->jobFactory, $this->order, $file);
 
             TranslationsForCraft::$plugin->fileRepository->saveFile($file);

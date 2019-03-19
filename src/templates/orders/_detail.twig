@@ -75,7 +75,8 @@
                 {% js 'new Craft.TranslationsForCraft.ExportFiles(\'export-zip\');' %}
             {% endif %}
         {% else %}
-            {% if order.status != 'complete' and order.status != 'published' %}
+            {# {% if order.status != 'complete' and order.status != 'published' %} #}
+            {% if order.status != 'published' %}
                 <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
                     <input type="hidden" name="action" value="translations-for-craft/base/sync-order">
                     {{ csrfInput() }}
@@ -212,6 +213,7 @@
                         <th scope="col">{{ 'Source Site'|t }}</th>
                         <th scope="col">{{ 'Target Sites(s)'|t }}</th>
                         <th scope="col">{{ 'Status'|t }}</th>
+                        <th scope="col">{{ 'Date Updated'|t }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -251,7 +253,14 @@
                                         <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
                                     {% endfor %}
                                 </td>
-                              
+                                 <td>
+                                    {% for file in files[element.id] %}
+                                        {% if not loop.first %}
+                                        <br>
+                                        {% endif %}
+                                        {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                    {% endfor %}
+                                </td>
                              </tr>
                          
                     {% endfor %}

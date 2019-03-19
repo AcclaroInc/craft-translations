@@ -112,6 +112,7 @@ class FileRepository
                 'target',
                 'previewUrl',
                 'serviceFileId',
+                'dateUpdated',
             ]));
         }
 
