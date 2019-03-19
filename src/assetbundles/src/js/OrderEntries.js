@@ -1,13 +1,13 @@
 (function($) {
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
 /**
  * Order entries class
  */
-Craft.TranslationsForCraft.OrderEntries = {
+Craft.Translations.OrderEntries = {
     $checkboxes: null,
     $selectAllCheckbox: null,
     $publishSelectedBtn: null,
@@ -34,23 +34,23 @@ Craft.TranslationsForCraft.OrderEntries = {
         }
     },
     init: function() {
-        this.$publishSelectedBtn = $('.translations-for-craft-publish-selected-btn');
-        this.$selectAllCheckbox = $('thead .translations-for-craft-checkbox-cell :checkbox');
-        this.$checkboxes = $('tbody .translations-for-craft-checkbox-cell :checkbox').not('[disabled]');
+        this.$publishSelectedBtn = $('.translations-publish-selected-btn');
+        this.$selectAllCheckbox = $('thead .translations-checkbox-cell :checkbox');
+        this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
 
         this.$selectAllCheckbox.on('change', function() {
-            Craft.TranslationsForCraft.OrderEntries.toggleSelected($(this).is(':checked'));
+            Craft.Translations.OrderEntries.toggleSelected($(this).is(':checked'));
         });
 
         this.$checkboxes.on('change', function() {
-            Craft.TranslationsForCraft.OrderEntries.togglePublishButton();
-            Craft.TranslationsForCraft.OrderEntries.toggleSelectAllCheckbox();
+            Craft.Translations.OrderEntries.togglePublishButton();
+            Craft.Translations.OrderEntries.toggleSelectAllCheckbox();
         });
     }
 };
 
 $(function() {
-    Craft.TranslationsForCraft.OrderEntries.init();
+    Craft.Translations.OrderEntries.init();
 });
 
 })(jQuery);

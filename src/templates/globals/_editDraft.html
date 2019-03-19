@@ -29,11 +29,11 @@
         <div class="btn submit menubtn" data-form="globalSetDraft"></div>
         <div class="menu">
             <ul>
-                <li><a class="formsubmit" data-action="translations-for-craft/base/publish-global-set-draft">{{ 'Publish draft'|t }}</a></li>
+                <li><a class="formsubmit" data-action="translations/base/publish-global-set-draft">{{ 'Publish draft'|t }}</a></li>
             </ul>
             <hr>
             <ul>
-                <li><a class="formsubmit" data-action="translations-for-craft/base/delete-global-set-draft" data-confirm="{{ 'Are you sure you want to delete this draft?'|t }}">{{ 'Delete draft'|t }}</a></li>
+                <li><a class="formsubmit" data-action="translations/base/delete-global-set-draft" data-confirm="{{ 'Are you sure you want to delete this draft?'|t }}">{{ 'Delete draft'|t }}</a></li>
             </ul>
         </div>
     </div>
@@ -53,7 +53,7 @@
 
 {% block content %}
     <form id="globalSetDraft" method="post" accept-charset="UTF-8" data-saveshortcut data-confirm-unload>
-        <input type="hidden" name="action" value="translations-for-craft/base/save-global-set-draft">
+        <input type="hidden" name="action" value="translations/base/save-global-set-draft">
         <input type="hidden" name="draftId" value="{{ draft.draftId }}">
         <input type="hidden" name="site" value="{{ draft.site }}">
         <input type="hidden" name="globalSetId" value="{{ globalSetId }}">

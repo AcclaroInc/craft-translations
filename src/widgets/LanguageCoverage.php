@@ -8,17 +8,17 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\widgets;
+namespace acclaro\translations\widgets;
 
 use Craft;
 use craft\base\Widget;
 use craft\helpers\Json;
-use acclaro\translationsforcraft\records\WidgetRecord;
-use acclaro\translationsforcraft\assetbundles\LanguageCoverageAssets as JS;
+use acclaro\translations\records\WidgetRecord;
+use acclaro\translations\assetbundles\LanguageCoverageAssets as JS;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.2
  */
 class LanguageCoverage extends Widget
@@ -66,7 +66,7 @@ class LanguageCoverage extends Widget
      */
     public function getSettingsHtml()
     {
-        return Craft::$app->getView()->renderTemplate('translations-for-craft/_components/widgets/LanguageCoverage/settings',
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/LanguageCoverage/settings',
             [
                 'widget' => $this
             ]);
@@ -84,9 +84,9 @@ class LanguageCoverage extends Widget
         $view = Craft::$app->getView();
         $view->registerAssetBundle(JS::class);
         $view->registerJs(
-            'new Craft.TranslationsForCraft.LanguageCoverage(' . $this->id . ', ' . Json::encode($params) . ');'
+            'new Craft.Translations.LanguageCoverage(' . $this->id . ', ' . Json::encode($params) . ');'
         );
-        return Craft::$app->getView()->renderTemplate('translations-for-craft/_components/widgets/LanguageCoverage/body', [
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/LanguageCoverage/body', [
             'limit' => $this->limit,
             // 'colspan' => $this->limit
         ]);   

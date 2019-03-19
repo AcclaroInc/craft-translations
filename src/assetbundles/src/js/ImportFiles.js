@@ -1,13 +1,13 @@
 (function($) {
 
-    if (typeof Craft.TranslationsForCraft === 'undefined') {
-        Craft.TranslationsForCraft = {};
+    if (typeof Craft.Translations === 'undefined') {
+        Craft.Translations = {};
     }
 
     /**
      * Order Import Files class
      */
-    Craft.TranslationsForCraft.ImportFiles =
+    Craft.Translations.ImportFiles =
     {
         init: function()
         {
@@ -16,7 +16,7 @@
             var $btn = $('#import-tool');
             
             var form = self.buildImportFilesForm();
-            var url = Craft.getUrl('translations-for-craft/orders/importfile');
+            var url = Craft.getUrl('translations/orders/importfile');
             
             $btn.on('click',function(){
                 var hud = new Garnish.HUD($btn, form, {
@@ -35,7 +35,7 @@
                 'accept-charset' : 'UTF-8',
                 'class' : 'form last',
                 'action' : '',
-                'id' : 'translations-for-craft-form-import'
+                'id' : 'translations-form-import'
             });
 
 
@@ -57,7 +57,7 @@
             var $hiddenAction = $('<input>', {
                 'type': 'hidden',
                 'name': 'action',
-                'value': 'translations-for-craft/files/import-file'
+                'value': 'translations/files/import-file'
             });
 
             $hiddenAction.appendTo($form);
@@ -85,12 +85,12 @@
     };
 
     $(function() {
-        Craft.TranslationsForCraft.ImportFiles.init();
+        Craft.Translations.ImportFiles.init();
     });
 
 })(jQuery);
 
-// Craft.TranslationsForCraft.ImportFiles = Garnish.Base.extend(
+// Craft.Translations.ImportFiles = Garnish.Base.extend(
 //     {
 //         uploader: null,
 //         allowedKinds: null,
@@ -101,7 +101,7 @@
 //             this.$element = $element;
 //             this.allowedKinds = null;
 
-//             settings = $.extend({}, Craft.TranslationsForCraft.ImportFiles.defaults, settings);
+//             settings = $.extend({}, Craft.Translations.ImportFiles.defaults, settings);
 
 //             var events = settings.events;
 //             delete settings.events;

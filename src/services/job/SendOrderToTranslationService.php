@@ -8,23 +8,23 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\job;
+namespace acclaro\translations\services\job;
 
 use Craft;
 use DateTime;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\Translations;
 
 class SendOrderToTranslationService implements JobInterface
 {
     /**
-     * @var \acclaro\translationsforcraft\elements\Order;
+     * @var \acclaro\translations\elements\Order;
      */
     protected $order;
 
     /**
-     * @param \acclaro\translationsforcraft\elements\Order                 $order
+     * @param \acclaro\translations\elements\Order                 $order
      */
     public function __construct(
         Order $order
@@ -39,16 +39,16 @@ class SendOrderToTranslationService implements JobInterface
     {
         $translator = $this->order->getTranslator();
 
-        $translationService = TranslationsForCraft::$plugin->translationFactory->makeTranslationService($translator->service, $translator->getSettings());
+        $translationService = Translations::$plugin->translationFactory->makeTranslationService($translator->service, $translator->getSettings());
 
         $translationService->sendOrder($this->order);
 
         $this->order->dateOrdered = new DateTime();
 
-        TranslationsForCraft::$plugin->orderRepository->saveOrder($this->order);
+        Translations::$plugin->orderRepository->saveOrder($this->order);
 
         foreach ($this->order->files as $file) {
-            TranslationsForCraft::$plugin->fileRepository->saveFile($file);
+            Translations::$plugin->fileRepository->saveFile($file);
         }
     }
 }

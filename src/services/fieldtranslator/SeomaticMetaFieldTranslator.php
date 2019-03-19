@@ -8,16 +8,16 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\fieldtranslator;
+namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use craft\elements\Tag;
 use craft\helpers\Json;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\ElementTranslator;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\ElementTranslator;
 
 class SeomaticMetaFieldTranslator extends GenericFieldTranslator
 {
@@ -102,7 +102,7 @@ class SeomaticMetaFieldTranslator extends GenericFieldTranslator
             foreach ($attributes as $attribute) {
                 $value = $meta->metaGlobalVars->$attribute;
 
-                $wordCount += TranslationsForCraft::$plugin->wordCounter->getWordCount($value);
+                $wordCount += Translations::$plugin->wordCounter->getWordCount($value);
             }
         }
 

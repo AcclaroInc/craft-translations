@@ -5,17 +5,17 @@
 {% set selectedTab = 'orders' %}
 {% set sourceSite = sourceSiteObject %}
 
-{% do view.registerAssetBundle("acclaro\\translationsforcraft\\assetbundles\\OrderAssets") %}
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
 
 {% set title = 'Translations'|t %}
 {% block actionButton %}
-<small class="translations-for-craft-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+<small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
 {% endblock %}
 
 {% set crumbs = [
-    { label: 'Translations'|t, url: url('translations-for-craft') },
-    { label: 'Orders'|t, url: url('translations-for-craft/orders') },
-    { label: order.title|t, url: url('translations-for-craft/orders/detail/'~orderId) },
+    { label: 'Translations'|t, url: url('translations') },
+    { label: 'Orders'|t, url: url('translations/orders') },
+    { label: order.title|t, url: url('translations/orders/detail/'~orderId) },
     { label: 'Order Entries'|t, url: 'javascript:void(0)' },
 ] %}
 
@@ -27,7 +27,7 @@
 
         {{ forms.hidden({
             name: 'action',
-            value: 'translations-for-craft/base/publish-entries',
+            value: 'translations/base/publish-entries',
         }) }}
 
         {{ forms.hidden({
@@ -40,7 +40,7 @@
                 {% if order.status == 'complete' %}
                 <div class="toolbar">
                     <div class="buttons right">
-                        <input type="submit" class="btn submit disabled translations-for-craft-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to publish these entries?'|t }}" disabled="disabled" value="{{ 'Publish selected'|t }}">
+                        <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to publish these entries?'|t }}" disabled="disabled" value="{{ 'Publish selected'|t }}">
                     </div>
                 </div>
                 {% endif %}
@@ -50,7 +50,7 @@
                             <thead>
                                 <tr>
                                     {% if order.status == 'complete' %}
-                                    <td class="thin checkbox-cell translations-for-craft-checkbox-cell">
+                                    <td class="thin checkbox-cell translations-checkbox-cell">
                                         <input class="checkbox" id="element-0" type="checkbox">
                                         <label class="checkbox" for="element-0"></label>
                                     </td>
@@ -66,7 +66,7 @@
                             {% for element in elements %}
                                 <tr>
                                     {% if order.status == 'complete' %}
-                                    <td class="thin checkbox-cell translations-for-craft-checkbox-cell">
+                                    <td class="thin checkbox-cell translations-checkbox-cell">
                                         <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"{% if isElementPublished[element.id] %} disabled="disabled"{% endif %}>
                                         <label class="checkbox" for="element-{{ element.id }}"></label>
                                     </td>

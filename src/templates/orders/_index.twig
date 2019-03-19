@@ -1,26 +1,26 @@
 {% extends "_layouts/cp" %}
-{% import 'translations-for-craft/_macros' as macros %}
+{% import 'translations/_macros' as macros %}
 
 {% set title = "Orders"|t %}
-{% set elementType = 'acclaro\\translationsforcraft\\elements\\Order' %}
+{% set elementType = 'acclaro\\translations\\elements\\Order' %}
 
 {% set tabs = adminTabs %}
 {% set selectedTab = 'orders' %}
 
 {% block actionButton %}
 <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
-    <input type="hidden" name="action" value="translations-for-craft/base/sync-orders">
+    <input type="hidden" name="action" value="translations/base/sync-orders">
     {{ csrfInput() }}
     <div class="btngroup" style="margin-right:5px;">
         <input type="submit" class="btn big submit" value="{{ "Sync Orders"|t('app') }}" />
     </div>
     <div class="sync-status"></div>
 </form>
-{% js 'new Craft.TranslationsForCraft.SyncOrders(\'sync-orders\');' %}
-<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations-for-craft/orders/new') }}">{{ 'Create New Order'|t }}</a>
+{% js 'new Craft.Translations.SyncOrders(\'sync-orders\');' %}
+<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}">{{ 'Create New Order'|t }}</a>
 {% endblock %}
 
-{% do view.registerAssetBundle("acclaro\\translationsforcraft\\assetbundles\\OrderAssets") %}
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
 
 {% set elementInstance = craft.app.elements.createElement(elementType) %}
 {% set context = 'index' %}

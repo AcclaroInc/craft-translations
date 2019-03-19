@@ -8,19 +8,19 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\widgets;
+namespace acclaro\translations\widgets;
 
 use Craft;
 use craft\db\Query;
 use craft\helpers\Db;
 use craft\base\Widget;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\records\WidgetRecord;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\records\WidgetRecord;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.2
  */
 class RecentOrders extends Widget
@@ -68,7 +68,7 @@ class RecentOrders extends Widget
      */
     public function getSettingsHtml()
     {
-        return Craft::$app->getView()->renderTemplate('translations-for-craft/_components/widgets/RecentOrders/settings',
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/RecentOrders/settings',
             [
                 'widget' => $this
             ]);
@@ -83,7 +83,7 @@ class RecentOrders extends Widget
         
         $orders = $this->_getOrders();
         
-        return $view->renderTemplate('translations-for-craft/_components/widgets/RecentOrders/body', ['orders' => $orders]);
+        return $view->renderTemplate('translations/_components/widgets/RecentOrders/body', ['orders' => $orders]);
     }
 
     public static function doesUserHaveWidget(string $type): bool

@@ -10,7 +10,7 @@
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 return [

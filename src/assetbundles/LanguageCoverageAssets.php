@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\assetbundles;
+namespace acclaro\translations\assetbundles;
 
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
@@ -17,7 +17,7 @@ class LanguageCoverageAssets extends AssetBundle
 {
     public function init()
     {
-        $this->sourcePath = '@acclaro/translationsforcraft/assetbundles/src';
+        $this->sourcePath = '@acclaro/translations/assetbundles/src';
 
         $this->depends = [
             CpAsset::class,

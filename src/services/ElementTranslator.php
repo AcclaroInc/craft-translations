@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services;
+namespace acclaro\translations\services;
 
 use Craft;
 use Exception;
@@ -23,8 +23,8 @@ use craft\elements\Category;
 use \craft\base\ContentTrait;
 use \craft\base\ElementInterface;
 use craft\elements\db\ElementQuery;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 
 class ElementTranslator
 {
@@ -96,7 +96,7 @@ class ElementTranslator
             
             $fieldType = $field;
 
-            $translator = TranslationsForCraft::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
+            $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             if (!$translator) {
                 if ($includeNonTranslatable) {
@@ -142,8 +142,8 @@ class ElementTranslator
         $wordCount = 0;
 
         if ($element instanceof Entry || $element instanceof Tag || $element instanceof Category) {
-            $wordCount += TranslationsForCraft::$plugin->wordCounter->getWordCount($element->title);
-            $wordCount += TranslationsForCraft::$plugin->wordCounter->getWordCount($element->slug);
+            $wordCount += Translations::$plugin->wordCounter->getWordCount($element->title);
+            $wordCount += Translations::$plugin->wordCounter->getWordCount($element->slug);
         }
         
         foreach($element->getFieldLayout()->getFields() as $layoutField) {
@@ -159,7 +159,7 @@ class ElementTranslator
     {
         $fieldType = $field;
 
-        $translator = TranslationsForCraft::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
+        $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
         $fieldSource = array();
 
@@ -180,7 +180,7 @@ class ElementTranslator
 
         $fieldHandle = $field->handle;
 
-        $translator = TranslationsForCraft::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
+        $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
         $fieldSource = array();
 
@@ -205,7 +205,7 @@ class ElementTranslator
         $fieldHandle = $field->handle;
 
         if ($field->getIsTranslatable()) {
-            $translator = TranslationsForCraft::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
+            $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             return $translator ? $translator->getWordCount($this, $element, $field) : 0;
         }

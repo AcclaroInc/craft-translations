@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\controllers;
+namespace acclaro\translations\controllers;
 
 use Craft;
 use DateTime;
@@ -23,13 +23,13 @@ use craft\elements\GlobalSet;
 use craft\base\VolumeInterface;
 use craft\helpers\ElementHelper;
 use yii\web\NotFoundHttpException;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\repository\SiteRepository;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\repository\SiteRepository;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class FilesController extends Controller
@@ -59,8 +59,8 @@ class FilesController extends Controller
     {
         $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
 
-        $order = TranslationsForCraft::$plugin->orderRepository->getOrderById($params['orderId']);
-        $files = TranslationsForCraft::$plugin->fileRepository->getFilesByOrderId($params['orderId'], null);
+        $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
+        $files = Translations::$plugin->fileRepository->getFilesByOrderId($params['orderId'], null);
 
         $siteRepository = new SiteRepository(Craft::$app);
         $tempPath = Craft::$app->path->getTempPath();
@@ -164,7 +164,7 @@ class FilesController extends Controller
 
 		//Get Order Data
 		$orderId = Craft::$app->getRequest()->getParam('orderId');
-        $this->order = TranslationsForCraft::$plugin->orderRepository->getOrderById($orderId);
+        $this->order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
 		$count = 0;
         $total_files = count($this->order->files);
@@ -295,7 +295,7 @@ class FilesController extends Controller
 	     		}
 	     		catch(Exception $e)
 	     		{ 
-	     			$this->showUserMessages(TranslationsForCraft::$plugin->translator->translate('app', $e->getMessage()));
+	     			$this->showUserMessages(Translations::$plugin->translator->translate('app', $e->getMessage()));
                  }
 
 	     		//Get DraftId & Lang Nodes From Document
@@ -332,7 +332,7 @@ class FilesController extends Controller
 				{
 	                if ($draftId === $file->draftId)
                     {	//Get File
-                        $draft_file = TranslationsForCraft::$plugin->fileRepository->getFileByDraftId($draftId);
+                        $draft_file = Translations::$plugin->fileRepository->getFileByDraftId($draftId);
 	                }
                 }
 
@@ -351,31 +351,31 @@ class FilesController extends Controller
 		        }
 
 		        //Translation Service
-		    	$translationService = TranslationsForCraft::$plugin->translationFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
+		    	$translationService = Translations::$plugin->translationFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
 
-		        $translationService->updateIOFile(TranslationsForCraft::$plugin->jobFactory, $this->order, $draft_file, $xml_content);
+		        $translationService->updateIOFile(Translations::$plugin->jobFactory, $this->order, $draft_file, $xml_content);
 
 		        $draft_file->status = 'complete';
 
 		        //If Successfully saved
-		        $success = TranslationsForCraft::$plugin->fileRepository->saveFile($draft_file);
+		        $success = Translations::$plugin->fileRepository->saveFile($draft_file);
 
 		        if ($success)
 		        {
 		        	$this->showUserMessages("File $xml imported successfully!", true);
 		        	
 		        	$this->order->logActivity(
-		                sprintf(TranslationsForCraft::$plugin->translator->translate('app', "File %s imported successfully!"), $xml)
+		                sprintf(Translations::$plugin->translator->translate('app', "File %s imported successfully!"), $xml)
 		            );
 
 		        	//Verify All files on this order were successfully imported.
 		            if ($this->isOrderCompleted())
 		        	{
 		        		//Save Order with status complete
-		        		 $translationService->updateOrder(TranslationsForCraft::$plugin->jobFactory, $this->order);
+		        		 $translationService->updateOrder(Translations::$plugin->jobFactory, $this->order);
 			    	}
 
-		        	TranslationsForCraft::$plugin->orderRepository->saveOrder($this->order);
+		        	Translations::$plugin->orderRepository->saveOrder($this->order);
 		        }
 			}
 			else
@@ -392,7 +392,7 @@ class FilesController extends Controller
 	*/
     public function isOrderCompleted()
     {
-    	$files = TranslationsForCraft::$plugin->fileRepository->getFilesByOrderId($this->order->id);
+    	$files = Translations::$plugin->fileRepository->getFilesByOrderId($this->order->id);
     	foreach ($files as $file)
     	{
     		if ($file->status !== 'complete')

@@ -5,7 +5,7 @@
         });
     }
 
-    Craft.TranslationsForCraft.LanguageCoverage = Garnish.Base.extend(
+    Craft.Translations.LanguageCoverage = Garnish.Base.extend(
         {
             params: null,
             $widget: null,
@@ -31,7 +31,7 @@
                     limit: params
                 };
 
-                Craft.postActionRequest('translations-for-craft/widget/get-language-coverage', data, $.proxy(function(response, textStatus) {
+                Craft.postActionRequest('translations/widget/get-language-coverage', data, $.proxy(function(response, textStatus) {
                     if (textStatus === 'success') {
                         this.$widget.removeClass('loading');
                         this.$widget.find('.elements').removeClass('hidden');

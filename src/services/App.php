@@ -1,6 +1,6 @@
 <?php
 
-namespace acclaro\translationsforcraft\services;
+namespace acclaro\translations\services;
 
 use craft\base\Component;
 
@@ -14,7 +14,7 @@ use craft\base\Component;
  * https://craftcms.com/docs/plugins/services
  *
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  */
 class App extends Component
 {

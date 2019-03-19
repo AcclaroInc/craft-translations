@@ -1,6 +1,6 @@
 <?php
 
-namespace acclaro\translationsforcraft\services\api;
+namespace acclaro\translations\services\api;
 
 use Craft;
 use Exception;
@@ -41,7 +41,7 @@ class AcclaroApiClient
 
     public function logRequest($request, $endpoint)
     {
-        $tempPath = Craft::$app->getPath()->getTempPath().'/translations-for-craft';
+        $tempPath = Craft::$app->getPath()->getTempPath().'/translations';
 
         if (!is_dir($tempPath)) {
             mkdir($tempPath);
@@ -60,7 +60,7 @@ class AcclaroApiClient
 
     public function logResponse($response, $endpoint)
     {
-        Craft::$app->path->getTempPath().'/translations-for-craft';
+        Craft::$app->path->getTempPath().'/translations';
 
         if (!is_dir($tempPath)) {
             mkdir($tempPath);

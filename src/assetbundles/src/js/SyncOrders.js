@@ -1,13 +1,13 @@
 (function($) {
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
 /**
  * Order index class
  */
-Craft.TranslationsForCraft.SyncOrders = Garnish.Base.extend(
+Craft.Translations.SyncOrders = Garnish.Base.extend(
 {
     $trigger: null,
     $form: null,
@@ -56,7 +56,7 @@ Craft.TranslationsForCraft.SyncOrders = Garnish.Base.extend(
                                     this.updateProgressBar();
 
                                     if (response) {
-                                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations-for-craft/base/sync-orders')}).hide();
+                                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/base/sync-orders')}).hide();
                                         this.$form.append($iframe);
                                     }
 

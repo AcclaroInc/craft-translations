@@ -1,6 +1,6 @@
 <?php
 
-namespace acclaro\translationsforcraft\migrations;
+namespace acclaro\translations\migrations;
 
 use Craft;
 use craft\db\Migration;
@@ -15,11 +15,11 @@ class m190312_021921_create_widgets_table extends Migration
      */
     public function safeUp()
     {
-        echo "Creating translationsforcraft_widgets column...\n";
-        $this->dropTableIfExists('{{%translationsforcraft_widgets}}');
+        echo "Creating translations_widgets column...\n";
+        $this->dropTableIfExists('{{%translations_widgets}}');
 
         $this->createTable(
-            '{{%translationsforcraft_widgets}}',
+            '{{%translations_widgets}}',
             [
                 'id' => $this->primaryKey(),
                 'userId' => $this->integer()->notNull(),
@@ -34,10 +34,10 @@ class m190312_021921_create_widgets_table extends Migration
             ]
         );
 
-        $this->createIndex(null, '{{%translationsforcraft_widgets}}', ['userId'], false);
+        $this->createIndex(null, '{{%translations_widgets}}', ['userId'], false);
         
-        $this->addForeignKey(null,'{{%translationsforcraft_widgets}}',['userId'],'{{%users}}',['id'],'CASCADE',null);
-        echo "Done creating translationsforcraft_widgets column...\n";
+        $this->addForeignKey(null,'{{%translations_widgets}}',['userId'],'{{%users}}',['id'],'CASCADE',null);
+        echo "Done creating translations_widgets column...\n";
     }
 
     /**

@@ -40,9 +40,9 @@
             {% endfor %}
         </table>
         <div class="buttons right" style="margin-top:14px;">
-            {% js 'new Craft.TranslationsForCraft.SyncOrders(\'sync-orders\');' %}
+            {% js 'new Craft.Translations.SyncOrders(\'sync-orders\');' %}
             <div class="btngroup">
-                <a class="btn" href="{{ url('translations-for-craft/orders') }}">{{ 'View All Orders'|t }}</a>
+                <a class="btn" href="{{ url('translations/orders') }}">{{ 'View All Orders'|t }}</a>
             </div>
         </div>
     {% else %}

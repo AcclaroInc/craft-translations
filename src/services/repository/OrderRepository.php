@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
+namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
@@ -16,15 +16,15 @@ use craft\db\Query;
 use craft\helpers\Db;
 
 use craft\elements\db\ElementQuery;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\records\OrderRecord;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\elements\Order;
+use acclaro\translations\records\OrderRecord;
+use acclaro\translations\Translations;
 
 class OrderRepository
 {
     /**
      * @param  int|string $orderId
-     * @return \acclaro\translationsforcraft\elements\Order|null
+     * @return \acclaro\translations\elements\Order|null
      */
     public function getOrderById($orderId)
     {
@@ -36,7 +36,7 @@ class OrderRepository
      */
     public function getDraftOrders()
     {
-        $results = Order::find()->andWhere(Db::parseParam('translationsforcraft_orders.status', 'new'))->all();
+        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', 'new'))->all();
         return $results;
     }
 
@@ -55,7 +55,7 @@ class OrderRepository
     public function getInProgressOrders()
     {
         $inProgressOrders = Order::find()
-            ->andWhere(Db::parseParam('translationsforcraft_orders.status', array(
+            ->andWhere(Db::parseParam('translations_orders.status', array(
                 'getting quote', 'needs approval', 'in preparation', 'in progress'
             )))
             ->all();
@@ -69,8 +69,8 @@ class OrderRepository
     public function getInProgressOrdersByTranslatorId($translatorId)
     {
         $pendingOrders = Order::find()
-            ->andWhere(Db::parseParam('translationsforcraft_orders.translatorId', $translatorId))
-            ->andWhere(Db::parseParam('translationsforcraft_orders.status', array(
+            ->andWhere(Db::parseParam('translations_orders.translatorId', $translatorId))
+            ->andWhere(Db::parseParam('translations_orders.status', array(
                 'getting quote', 'needs approval', 'in preparation', 'in progress'
             )))
             ->all();
@@ -83,7 +83,7 @@ class OrderRepository
      */
     public function getCompleteOrders()
     {
-        $results = Order::find()->andWhere(Db::parseParam('translationsforcraft_orders.status', 'complete'))->all();
+        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', 'complete'))->all();
         return $results;
     }
     
@@ -102,7 +102,7 @@ class OrderRepository
     }
 
     /**
-     * @return \acclaro\translationsforcraft\elements\Order
+     * @return \acclaro\translations\elements\Order
      */
     public function makeNewOrder($sourceSite = null)
     {
@@ -116,7 +116,7 @@ class OrderRepository
     }
     
     /**
-     * @param \acclaro\translationsforcraft\elements\Order $order
+     * @param \acclaro\translations\elements\Order $order
      * @throws \Exception
      * @return bool
      */

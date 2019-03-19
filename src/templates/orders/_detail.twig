@@ -4,18 +4,18 @@
 {% set tabs = adminTabs %}
 {% set selectedTab = 'orders' %}
 
-{% do view.registerAssetBundle("acclaro\\translationsforcraft\\assetbundles\\OrderAssets") %}
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
 
 {% set sourceSite = sourceSiteObject %}
 
 {% set title = 'Translations'|t %}
 {% block actionButton %}
-<small class="translations-for-craft-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+<small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
 {% endblock %}
 
 {% set crumbs = [
-    { label: 'Translations'|t, url: url('translations-for-craft') },
-    { label: 'Orders'|t, url: url('translations-for-craft/orders') },
+    { label: 'Translations'|t, url: url('translations') },
+    { label: 'Orders'|t, url: url('translations/orders') },
 ] %}
 
 {% if isSubmitted %}
@@ -36,7 +36,7 @@
 {% block content %}
 {% if isSubmitted %}
 
-    <div class="translations-for-craft-order-detail-summary">
+    <div class="translations-order-detail-summary">
 
         {% if order.translator.service is defined and order.translator.service == 'export_import' %}
 
@@ -44,12 +44,12 @@
                 <a class="btn disabled right margin-left" id="">{{ 'Import'|t }}</a>
                 <a class="btn disabled right" id="">{{ 'Export'|t }}</a>
             {% else %}
-                <div class="buttons translations-for-craft-order-detail-button-wrapper">
+                <div class="buttons translations-order-detail-button-wrapper">
                     <a class="btn submit right" id="import-tool">{{ 'Import'|t('app') }}</a>
                     <div class="utility-status"></div>
                 </div>
                 <div class="hud-wrapper hidden">
-                    <div id="translations-for-craft-import-form" class="form meta">
+                    <div id="translations-import-form" class="form meta">
                         {{ forms.hidden({
                             name: 'orderId',
                             id: 'order_id',
@@ -59,7 +59,7 @@
                  </div>
 
                  <form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
-                    <input type="hidden" name="action" value="translations-for-craft/files/create-export-zip">
+                    <input type="hidden" name="action" value="translations/files/create-export-zip">
                     {{ csrfInput() }}
 
                     {{ forms.hidden({
@@ -67,18 +67,18 @@
                         value: order.id
                     }) }}
 
-                    <div class="buttons translations-for-craft-order-detail-button-wrapper">
+                    <div class="buttons translations-order-detail-button-wrapper">
                         <input type="submit" class="btn submit right" value="{{ "Export"|t('app') }}" />
                         <div class="utility-status"></div>
                     </div>
                 </form>
-                {% js 'new Craft.TranslationsForCraft.ExportFiles(\'export-zip\');' %}
+                {% js 'new Craft.Translations.ExportFiles(\'export-zip\');' %}
             {% endif %}
         {% else %}
             {# {% if order.status != 'complete' and order.status != 'published' %} #}
             {% if order.status != 'published' %}
                 <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
-                    <input type="hidden" name="action" value="translations-for-craft/base/sync-order">
+                    <input type="hidden" name="action" value="translations/base/sync-order">
                     {{ csrfInput() }}
 
                     {{ forms.hidden({
@@ -86,12 +86,12 @@
                         value: order.id
                     }) }}
 
-                    <div class="buttons translations-for-craft-order-detail-button-wrapper">
+                    <div class="buttons translations-order-detail-button-wrapper">
                         <input type="submit" class="btn submit right" value="{{ "Sync"|t('app') }}" />
                         <div class="sync-status"></div>
                     </div>
                 </form>
-                {% js 'new Craft.TranslationsForCraft.SyncOrder(\'sync-order\');' %}
+                {% js 'new Craft.Translations.SyncOrder(\'sync-order\');' %}
             {% endif %}
         {% endif %}
         
@@ -169,7 +169,7 @@
    
     </div>
 
-    <div class="translations-for-craft-order-detail-entries right">
+    <div class="translations-order-detail-entries right">
         
         <h2>{{ 'Order Entries Translation Status'|t }}</h2>
 
@@ -187,12 +187,12 @@
         </table>
 
         {% if order.status == 'complete' %}
-            <a href="{{ url('translations-for-craft/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries & Bulk Publish'|t }}</a>
+            <a href="{{ url('translations/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries & Bulk Publish'|t }}</a>
         {% else %}
-            <a href="{{ url('translations-for-craft/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries in this Order'|t }}</a>
+            <a href="{{ url('translations/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries in this Order'|t }}</a>
         {% endif %}
 
-          <div class="translations-for-craft-order-detail-activity-log">
+          <div class="translations-order-detail-activity-log">
             <h2>{{ 'Order Activity Log'|t }}</h2>
             <ul class="bullets">
                 {% for log in order.activityLogArray %}
@@ -202,7 +202,7 @@
         </div>
     </div>
 
-    <div class="translations-for-craft-order-detail-summary" style="margin-top: 3rem; width: 100%;">
+    <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
             <h2>{{ 'Order Entries'|t }}</h2>
            
             <table class="data">
@@ -270,12 +270,12 @@
 
 
 {% else %}
-    <form method="post" class="translations-for-craft-order-form" data-confirm-unload accept-charset="UTF-8">
+    <form method="post" class="translations-order-form" data-confirm-unload accept-charset="UTF-8">
         {{ csrfInput() }}
 
         {{ forms.hidden({
             name: 'action',
-            value: 'translations-for-craft/base/save-order',
+            value: 'translations/base/save-order',
         }) }}
 
         {{ forms.hidden({
@@ -294,7 +294,7 @@
         <h1>{{ 'Create New Order'|t }}</h1>
         {% endif %}
 
-        <div class="translations-for-craft-order-step-btngroup">
+        <div class="translations-order-step-btngroup">
             <ul>
                 <li>
                     <a class="btn big{% if orderId %} prev{% endif %}" href="#step1">1 - {{ 'Choose Entries'|t }}</a>
@@ -311,9 +311,9 @@
             </ul>
         </div>
 
-        <div class="translations-for-craft-order-steps">
-            <div class="translations-for-craft-order-step{% if orderId is empty %} active{% endif %}" id="step1">
-                <div class="translations-for-craft-order-step-intro">
+        <div class="translations-order-steps">
+            <div class="translations-order-step{% if orderId is empty %} active{% endif %}" id="step1">
+                <div class="translations-order-step-intro">
                     <h2>{{ 'Choose Entries'|t }}</h2>
 
                     <p>{{ 'Entries that are added to this order will appear below. You can add entries from either of the following:'|t }}</p>
@@ -346,7 +346,7 @@
                             <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                             <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                             <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
-                            <td><a class="icon delete translations-for-craft-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
+                            <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -356,14 +356,14 @@
                 <div class="item" data-position="left" data-colspan="1">
                     <div class="buttons">
                         <div class="btngroup submit first">
-                            <a class="btn submit translations-for-craft-order-step-next" href="#step2">{{ 'Next'|t }}</a>
+                            <a class="btn submit translations-order-step-next" href="#step2">{{ 'Next'|t }}</a>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="translations-for-craft-order-step" id="step2">
-                <div class="translations-for-craft-order-step-intro">
+            <div class="translations-order-step" id="step2">
+                <div class="translations-order-step-intro">
                     <h2>{{ 'Select Sites'|t }}</h2>
 
                     <p>
@@ -392,14 +392,14 @@
                 <div class="item" data-position="left" data-colspan="1">
                     <div class="buttons">
                         <div class="btngroup submit first">
-                            <a class="btn submit translations-for-craft-order-step-next" href="#step3">{{ 'Next'|t }}</a>
+                            <a class="btn submit translations-order-step-next" href="#step3">{{ 'Next'|t }}</a>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="translations-for-craft-order-step" id="step3">
-                <div class="translations-for-craft-order-step-intro">
+            <div class="translations-order-step" id="step3">
+                <div class="translations-order-step-intro">
                     <h2>{{ 'Add Details'|t }}</h2>
 
                     <p>
@@ -448,14 +448,14 @@
                 <div class="item" data-position="left" data-colspan="1">
                     <div class="buttons">
                         <div class="btngroup submit first">
-                            <a class="btn submit translations-for-craft-order-step-next" href="#step4">{{ 'Next'|t }}</a>
+                            <a class="btn submit translations-order-step-next" href="#step4">{{ 'Next'|t }}</a>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="translations-for-craft-order-step{% if orderId %} active{% endif %}" id="step4">
-                <div class="translations-for-craft-order-step-intro">
+            <div class="translations-order-step{% if orderId %} active{% endif %}" id="step4">
+                <div class="translations-order-step-intro">
                     <h2>{{ 'Review & Submit'|t }}</h2>
 
                     <p>
@@ -521,14 +521,14 @@
                 }) }}
 
                 {% if '' in translatorOptions|keys %}
-                <a href="{{url('translations-for-craft/translators')}}">Add a translator &raquo;</a>
+                <a href="{{url('translations/translators')}}">Add a translator &raquo;</a>
                 {% endif %}
 
                 <div class="field">
                     <div class="heading">
                         <label>{{ 'Requested Due Date'|t }}</label>
                         &nbsp;&nbsp;&nbsp;
-                        <a class="translations-for-craft-order-step-prev" href="#step3">Edit &raquo;</a>
+                        <a class="translations-order-step-prev" href="#step3">Edit &raquo;</a>
                     </div>
                     <div class="input {{ orientation }}">
                         <div data-order-attribute="requestedDueDate[date]">
@@ -545,7 +545,7 @@
                     <div class="heading">
                         <label>{{ 'Additional comments and instructions'|t }}</label>
                         &nbsp;&nbsp;&nbsp;
-                        <a class="translations-for-craft-order-step-prev" href="#step3">Edit &raquo;</a>
+                        <a class="translations-order-step-prev" href="#step3">Edit &raquo;</a>
                     </div>
                     <div class="input {{ orientation }}">
                         <div data-order-attribute="comments" style="white-space: pre-wrap">{% if order.comments %}{{ order.comments }}{% else %}<i>None</i>{% endif %}</div>
@@ -555,16 +555,16 @@
                 <div class="item" data-position="left" data-colspan="1">
                     <div class="buttons">
                         <div class="btngroup submit">
-                            <button type="submit" name="submit" value="submit" class="translations-for-craft-order-submit-btn btn big submit{% if orderEntriesCount == 0 %} disabled{% endif %}"{% if orderEntriesCount == 0 %} disabled="disabled"{% endif %}>{{ 'Submit'|t }}</button>
+                            <button type="submit" name="submit" value="submit" class="translations-order-submit-btn btn big submit{% if orderEntriesCount == 0 %} disabled{% endif %}"{% if orderEntriesCount == 0 %} disabled="disabled"{% endif %}>{{ 'Submit'|t }}</button>
                         </div>
                         {% if licenseStatus == 'valid' %}
                         <div class="btngroup submit">
-                            <button type="submit" class="translations-for-craft-order-save-btn btn big">{{ 'Save'|t }}</button>
+                            <button type="submit" class="translations-order-save-btn btn big">{{ 'Save'|t }}</button>
                         </div>
                         {% endif %}
-                        <div class="translations-for-craft-loader hidden">
+                        <div class="translations-loader hidden">
                             <div class="spinner"></div>
-                            <p class="translations-for-craft-loader-msg hidden">{{ 'Please wait and do not close this window until the page finishes loading.'|t }}</p>
+                            <p class="translations-loader-msg hidden">{{ 'Please wait and do not close this window until the page finishes loading.'|t }}</p>
                         </div>
                     </div>
                 </div>

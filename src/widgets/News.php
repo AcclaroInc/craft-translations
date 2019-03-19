@@ -8,20 +8,20 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\widgets;
+namespace acclaro\translations\widgets;
 
 use Craft;
 use craft\db\Query;
 use craft\helpers\Db;
 use craft\base\Widget;
 use GuzzleHttp\Client;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\records\WidgetRecord;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\records\WidgetRecord;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.2
  */
 class News extends Widget
@@ -69,7 +69,7 @@ class News extends Widget
      */
     public function getSettingsHtml()
     {
-        return Craft::$app->getView()->renderTemplate('translations-for-craft/_components/widgets/RecentlyModified/settings',
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/RecentlyModified/settings',
             [
                 'widget' => $this
             ]);
@@ -84,7 +84,7 @@ class News extends Widget
         
         $articles = $this->_getArticles();
         
-        return $view->renderTemplate('translations-for-craft/_components/widgets/News/body', ['articles' => $articles]);
+        return $view->renderTemplate('translations/_components/widgets/News/body', ['articles' => $articles]);
     }
 
     public static function doesUserHaveWidget(string $type): bool

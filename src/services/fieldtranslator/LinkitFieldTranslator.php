@@ -8,15 +8,15 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\fieldtranslator;
+namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use fruitstudios\linkit\fields\LinkitField;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\ElementTranslator;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\ElementTranslator;
 
 class LinkitFieldTranslator extends GenericFieldTranslator
 {
@@ -124,7 +124,7 @@ class LinkitFieldTranslator extends GenericFieldTranslator
         {
             if($key === 'customText' || $key === 'defautlText')
             {
-                $wordCount += TranslationsForCraft::$plugin->wordCounter->getWordCount(strip_tags($value));
+                $wordCount += Translations::$plugin->wordCounter->getWordCount(strip_tags($value));
             }
         }
         return $wordCount;

@@ -8,11 +8,11 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services;
+namespace acclaro\translations\services;
 
 use Craft;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\App;
 
 class OrderSearchParams
 {
@@ -21,8 +21,8 @@ class OrderSearchParams
         $sites = Craft::$app->sites->getAllSiteIds();
         $category = 'app';
         $statuses = array_map(function($status) use ($category) {
-            return TranslationsForCraft::$plugin->translator->translate($category, $status);
-        }, TranslationsForCraft::$plugin->orderRepository->getOrderStatuses());
+            return Translations::$plugin->translator->translate($category, $status);
+        }, Translations::$plugin->orderRepository->getOrderStatuses());
         
         $query = Craft::$app->request->getParam('criteria') ? Craft::$app->request->getParam('criteria') : Craft::$app->request->getParam('');
 

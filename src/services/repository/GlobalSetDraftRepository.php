@@ -8,15 +8,15 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
+namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\fields\Matrix;
 use craft\elements\GlobalSet;
 use craft\base\ElementInterface;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\models\GlobalSetDraftModel;
-use acclaro\translationsforcraft\records\GlobalSetDraftRecord;
+use acclaro\translations\Translations;
+use acclaro\translations\models\GlobalSetDraftModel;
+use acclaro\translations\records\GlobalSetDraftRecord;
 
 class GlobalSetDraftRepository
 {
@@ -92,7 +92,7 @@ class GlobalSetDraftRepository
             $record = GlobalSetDraftRecord::findOne($draft->draftId);
 
             if (!$record) {
-                throw new Exception(TranslationsForCraft::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draft->draftId)));
+                throw new Exception(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draft->draftId)));
             }
         } else {
             $record = new GlobalSetDraftRecord();
@@ -110,14 +110,14 @@ class GlobalSetDraftRepository
 
         if (!$draft->name && $draft->id) {
             $totalDrafts = Craft::$app->getDb()->createCommand()
-                ->from('translationsforcraft_globalsetdrafts')
+                ->from('translations_globalsetdrafts')
                 ->where(
                     array('and', 'globalSetId = :globalSetId', 'site = :site'),
                     array(':globalSetId' => $draft->id, ':site' => $draft->site)
                 )
                 ->count('id');
             
-            $draft->name = TranslationsForCraft::$plugin->translator->translate('app', 'Draft {num}', array('num' => $totalDrafts + 1));
+            $draft->name = Translations::$plugin->translator->translate('app', 'Draft {num}', array('num' => $totalDrafts + 1));
         }
 
         if (is_null($draft->globalSetId)) {
@@ -133,7 +133,7 @@ class GlobalSetDraftRepository
             'fields' => array(),
         );
 
-        $content = TranslationsForCraft::$plugin->elementTranslator->toPostArray($draft);
+        $content = Translations::$plugin->elementTranslator->toPostArray($draft);
         
         foreach ($draft->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
@@ -174,7 +174,7 @@ class GlobalSetDraftRepository
     {
         $globalSet = Craft::$app->globals->getSetById($draft->globalSetId, $draft->site);
         
-        $globalSet->setFieldValues(TranslationsForCraft::$plugin->elementTranslator->toPostArray($draft));
+        $globalSet->setFieldValues(Translations::$plugin->elementTranslator->toPostArray($draft));
         
         $success = Craft::$app->elements->saveElement($globalSet);
         

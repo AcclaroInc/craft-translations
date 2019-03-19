@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft;
+namespace acclaro\translations;
 
 use Craft;
 use yii\base\Event;
@@ -24,15 +24,15 @@ use craft\events\ElementEvent;
 use craft\services\EntryRevisions;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\base\PluginTrait;
+use acclaro\translations\services\App;
+use acclaro\translations\base\PluginTrait;
 use craft\console\Application as ConsoleApplication;
-use acclaro\translationsforcraft\assetbundles\EntryAssets;
-use acclaro\translationsforcraft\assetbundles\UniversalAssets;
-use acclaro\translationsforcraft\assetbundles\EditDraftAssets;
-use acclaro\translationsforcraft\assetbundles\GlobalSetAssets;
+use acclaro\translations\assetbundles\EntryAssets;
+use acclaro\translations\assetbundles\UniversalAssets;
+use acclaro\translations\assetbundles\EditDraftAssets;
+use acclaro\translations\assetbundles\GlobalSetAssets;
 
-class TranslationsForCraft extends Plugin
+class Translations extends Plugin
 {
     // Traits
     // =========================================================================
@@ -42,7 +42,7 @@ class TranslationsForCraft extends Plugin
     /**
      * Enable use of self::$plugin
      *
-     * @var \acclaro\translationsforcraft\services\App
+     * @var \acclaro\translations\services\App
      */
     public static $plugin;
 
@@ -81,7 +81,7 @@ class TranslationsForCraft extends Plugin
         $this->installEventListeners();
 
         if (Craft::$app instanceof ConsoleApplication) {
-            $this->controllerNamespace = 'acclaro\translationsforcraft\console\controllers';
+            $this->controllerNamespace = 'acclaro\translations\console\controllers';
         }
 
         Event::on(
@@ -94,7 +94,7 @@ class TranslationsForCraft extends Plugin
                 // );
                 Craft::info(
                     Craft::t(
-                        'translations-for-craft',
+                        'translations',
                         '{name} EntryRevisions::EVENT_BEFORE_SAVE_DRAFT',
                         ['name' => $this->name]
                     ),
@@ -168,7 +168,7 @@ class TranslationsForCraft extends Plugin
 
         Craft::info(
             Craft::t(
-                'translations-for-craft',
+                'translations',
                 '{name} plugin loaded',
                 ['name' => $this->name]
             ),
@@ -186,19 +186,19 @@ class TranslationsForCraft extends Plugin
         
         $subNavs['dashboard'] = [
             'label' => 'Dashboard',
-            'url' => 'translations-for-craft',
+            'url' => 'translations',
         ];
         $subNavs['orders'] = [
             'label' => 'Orders',
-            'url' => 'translations-for-craft/orders',
+            'url' => 'translations/orders',
         ];
         $subNavs['translators'] = [
             'label' => 'Translators',
-            'url' => 'translations-for-craft/translators',
+            'url' => 'translations/translators',
         ];
         $subNavs['about'] = [
             'label' => 'About',
-            'url' => 'translations-for-craft/about',
+            'url' => 'translations/about',
         ];
 
         $navItem = array_merge($navItem, [
@@ -216,7 +216,7 @@ class TranslationsForCraft extends Plugin
      */
     protected function tableSchemaExists(): bool
     {
-        return (Craft::$app->db->schema->getTableSchema('{{%translationsforcraft_orders}}') !== null);
+        return (Craft::$app->db->schema->getTableSchema('{{%translations_orders}}') !== null);
     }
 
     /**
@@ -249,20 +249,20 @@ class TranslationsForCraft extends Plugin
         Event::on(
             UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function (RegisterUrlRulesEvent $event) {
                 $event->rules = array_merge($event->rules, [
-                    'translations-for-craft' => 'translations-for-craft/widget/index',
-                    'translations-for-craft/orders' => 'translations-for-craft/base/order-index',
-                    'translations-for-craft/orders/new' => 'translations-for-craft/base/order-detail',
-                    'translations-for-craft/orders/detail/<orderId:\d+>' => 'translations-for-craft/base/order-detail',
-                    'translations-for-craft/orders/entries/<orderId:\d+>' => 'translations-for-craft/base/order-entries',
-                    // 'translations-for-craft/orders/reporting' => 'translations-for-craft/base/index',
-                    'translations-for-craft/translators' => 'translations-for-craft/base/translator-index',
-                    'translations-for-craft/translators/new' => 'translations-for-craft/base/translator-detail',
-                    'translations-for-craft/translators/detail/<translatorId:\d+>' => 'translations-for-craft/base/translator-detail',
-                    'translations-for-craft/about' => 'translations-for-craft/base/about-index',
-                    'translations-for-craft/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations-for-craft/base/edit-global-set-draft',
+                    'translations' => 'translations/widget/index',
+                    'translations/orders' => 'translations/base/order-index',
+                    'translations/orders/new' => 'translations/base/order-detail',
+                    'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
+                    'translations/orders/entries/<orderId:\d+>' => 'translations/base/order-entries',
+                    // 'translations/orders/reporting' => 'translations/base/index',
+                    'translations/translators' => 'translations/base/translator-index',
+                    'translations/translators/new' => 'translations/base/translator-detail',
+                    'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
+                    'translations/about' => 'translations/base/about-index',
+                    'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/base/edit-global-set-draft',
                     
-                    'translations-for-craft/orders/exportfile' => 'translations-for-craft/files/export-file',
-                    'translations-for-craft/orders/importfile' => 'translations-for-craft/files/import-file',
+                    'translations/orders/exportfile' => 'translations/files/export-file',
+                    'translations/orders/importfile' => 'translations/files/import-file',
                 ]);
             }
         );
@@ -295,7 +295,7 @@ class TranslationsForCraft extends Plugin
         self::$view->registerAssetBundle(UniversalAssets::class);
 
         $numberOfCompleteOrders = count(self::$plugin->orderRepository->getCompleteOrders());
-        self::$view->registerJs("$(function(){ Craft.TranslationsForCraft.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
+        self::$view->registerJs("$(function(){ Craft.Translations.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
     }
     
     private function _includeEditDraftResource($draftId)
@@ -317,13 +317,13 @@ class TranslationsForCraft extends Plugin
         $data = [
             'orders' => $orders,
             'sites' => Craft::$app->sites->getAllSiteIds(),
-            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus('translations-for-craft')
+            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus('translations')
         ];
         $data = json_encode($data);
         
         self::$view->registerAssetBundle(EntryAssets::class);
         
-        self::$view->registerJs("$(function(){ Craft.TranslationsForCraft.AddEntriesToTranslationOrder.init({$data}); });");
+        self::$view->registerJs("$(function(){ Craft.Translations.AddEntriesToTranslationOrder.init({$data}); });");
     }
     
     private function _includeGlobalSetResources($globalSetHandle, $site = null)
@@ -362,7 +362,7 @@ class TranslationsForCraft extends Plugin
 
         self::$view->registerAssetBundle(GlobalSetAssets::class);
 
-        self::$view->registerJs("$(function(){ Craft.TranslationsForCraft.GlobalSetEdit.init({$orders}, {$globalSetId}, {$drafts}); });");
+        self::$view->registerJs("$(function(){ Craft.Translations.GlobalSetEdit.init({$orders}, {$globalSetId}, {$drafts}); });");
     }
 
     private function _onSaveEntry(Event $event)

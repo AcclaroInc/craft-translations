@@ -8,23 +8,23 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\models;
+namespace acclaro\translations\models;
 
 use craft\elements\GlobalSet;
 use craft\validators\NumberValidator;
 use craft\validators\SiteIdValidator;
 use craft\validators\StringValidator;
 use craft\validators\DateTimeValidator;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\records\GlobalSetDraftRecord;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\records\GlobalSetDraftRecord;
 
 use Craft;
 use craft\base\Model;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class GlobalSetDraftModel extends GlobalSet
@@ -120,9 +120,9 @@ class GlobalSetDraftModel extends GlobalSet
     public function getGlobalSet()
     {
         if (is_null($this->globalSetId)) {
-            $this->_globalSet = TranslationsForCraft::$plugin->globalSetRepository->getSetById($this->id); // this works for creating orders
+            $this->_globalSet = Translations::$plugin->globalSetRepository->getSetById($this->id); // this works for creating orders
         } else {
-            $this->_globalSet = TranslationsForCraft::$plugin->globalSetRepository->getSetById($this->globalSetId); // this works for edit draft
+            $this->_globalSet = Translations::$plugin->globalSetRepository->getSetById($this->globalSetId); // this works for edit draft
         }
 
         return $this->_globalSet;
@@ -140,8 +140,8 @@ class GlobalSetDraftModel extends GlobalSet
     {
         $globalSet = $this->getGlobalSet();
 
-        $path = 'translations-for-craft/globals/'.$globalSet->handle.'/drafts/'.$this->draftId;
+        $path = 'translations/globals/'.$globalSet->handle.'/drafts/'.$this->draftId;
         
-        return TranslationsForCraft::$plugin->urlHelper->cpUrl($path);
+        return Translations::$plugin->urlHelper->cpUrl($path);
     }
 }

@@ -8,12 +8,12 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
+namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\elements\GlobalSet;
 use craft\base\ElementInterface;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 
 class GlobalSetRepository
 {

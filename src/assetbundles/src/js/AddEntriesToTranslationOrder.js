@@ -6,11 +6,11 @@ function unique(array) {
     });
 }
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
-Craft.TranslationsForCraft.AddEntriesToTranslationOrder = {
+Craft.Translations.AddEntriesToTranslationOrder = {
     entries: [],
 
     $btn: null,
@@ -80,7 +80,7 @@ Craft.TranslationsForCraft.AddEntriesToTranslationOrder = {
 
         this.data = data;
 
-        var $btngroup = $('<div>', {'class': 'btngroup translations-for-craft-dropdown'});
+        var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
         if (this.isEditEntryScreen()) {
             $btngroup.insertBefore('#header .btngroup');
@@ -169,7 +169,7 @@ Craft.TranslationsForCraft.AddEntriesToTranslationOrder = {
                 var $hiddenAction = $('<input>', {
                     'type': 'hidden',
                     'name': 'action',
-                    'value': 'translations-for-craft/base/add-elements-to-order'
+                    'value': 'translations/base/add-elements-to-order'
                 });
 
                 $hiddenAction.appendTo($form);
@@ -212,7 +212,7 @@ Craft.TranslationsForCraft.AddEntriesToTranslationOrder = {
 
         $item.prependTo($dropdown);
 
-        var $link = Craft.getUrl('translations-for-craft/orders/new');
+        var $link = Craft.getUrl('translations/orders/new');
 
         this.$btn.attr('href', $link);
 

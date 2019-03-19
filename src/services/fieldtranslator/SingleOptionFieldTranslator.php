@@ -8,16 +8,16 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\fieldtranslator;
+namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use craft\fields\MultiSelect;
 use craft\fields\data\SingleOptionFieldData;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\ElementTranslator;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\ElementTranslator;
 
 class SingleOptionFieldTranslator extends GenericFieldTranslator
 {
@@ -68,7 +68,7 @@ class SingleOptionFieldTranslator extends GenericFieldTranslator
             }
 
             if ($source) {
-                TranslationsForCraft::$plugin->translationRepository->addTranslation(
+                Translations::$plugin->translationRepository->addTranslation(
                     $sourceSite,
                     $targetSite,
                     $source,

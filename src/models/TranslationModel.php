@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\models;
+namespace acclaro\translations\models;
 
 use Craft;
 use craft\base\Model;
@@ -16,11 +16,11 @@ use craft\validators\StringValidator;
 use craft\validators\UniqueValidator;
 use craft\validators\SiteIdValidator;
 use craft\validators\DateTimeValidator;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class TranslationModel extends Model

@@ -8,14 +8,14 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
+namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
 use craft\elements\Category;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\CategoryQuery;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 
 class CategoryRepository
 {

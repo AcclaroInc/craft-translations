@@ -6,17 +6,17 @@
 
 {% set title = 'Translators'|t %}
 {% block actionButton %}
-<a class="btn big submit add icon" href="{{ url('translations-for-craft/translators/new') }}">{{ 'New Translator'|t }}</a>
-<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations-for-craft/orders/new') }}" style="margin-left:5px;">{{ 'Create New Order'|t }}</a>
+<a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New Translator'|t }}</a>
+<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}" style="margin-left:5px;">{{ 'Create New Order'|t }}</a>
 {% endblock %}
 
 {% set crumbs = [
-    { label: 'Translations'|t, url: url('translations-for-craft') },
+    { label: 'Translations'|t, url: url('translations') },
     { label: 'Translators'|t, url: 'javascript:void(0)' },
 ] %}
 
 {% block content %}
-<div class="translations-for-craft-element-index">
+<div class="translations-element-index">
     {% if translators is not empty %}
     <table class="data">
         <thead>
@@ -32,7 +32,7 @@
         <tbody>
         {% for translator in translators %}
             <tr>
-                <td><a href="{{ url('translations-for-craft/translators/detail/'~translator.id) }}">{{ translator.name }}</a></td>
+                <td><a href="{{ url('translations/translators/detail/'~translator.id) }}">{{ translator.name }}</a></td>
                 <td>
                     {% switch translator.status %}
                     {% case "active" %}
@@ -60,7 +60,7 @@
 
                         {{ forms.hidden({
                             name: 'action',
-                            value: 'translations-for-craft/base/delete-translator',
+                            value: 'translations/base/delete-translator',
                         }) }}
 
                         {{ forms.hidden({
@@ -70,7 +70,7 @@
                         <div class="btn menubtn settings icon"></div>
                         <div class="menu">
                             <ul>
-                                <li><a class="" href="{{ url('translations-for-craft/translators/detail/'~translator.id) }}"> Edit</a></li>
+                                <li><a class="" href="{{ url('translations/translators/detail/'~translator.id) }}"> Edit</a></li>
                             </ul>
                             <hr>
                             <ul>

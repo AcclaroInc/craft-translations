@@ -1,96 +1,96 @@
-.translations-for-craft-element-index table.data {
+.translations-element-index table.data {
     min-width: 720px;
     width: 100%;
 }
 
-.translations-for-craft-element-index .toolbar {
+.translations-element-index .toolbar {
     display: none;
 }
 
-.translations-for-craft-element-index > .btn.big.submit.add {
+.translations-element-index > .btn.big.submit.add {
     margin-bottom: 2em;
 }
 
-.translations-for-craft-element-index-header {
+.translations-element-index-header {
     min-height: 45px;
 }
 
-.translations-for-craft-element-index-header h2 {
+.translations-element-index-header h2 {
     margin: 0;
     font-size: 1.5em;
     padding-top: 5px;
 }
 
-.translations-for-craft-element-index-header .buttons {
+.translations-element-index-header .buttons {
     margin-bottom: 0;
 }
 
-.translations-for-craft-order-step-intro {
+.translations-order-step-intro {
     margin: 0 0 2em;
 }
 
-.translations-for-craft-order-step table.data {
+.translations-order-step table.data {
     margin: 0 0 2em;
     width: 60%;
     min-width: 720px;
 }
 
-.translations-for-craft-order-step table.data caption {
+.translations-order-step table.data caption {
     text-align: left;
     font-size: 1.2em;
     font-weight: bold;
     line-height: 2em;
 }
 
-.translations-for-craft-order-step-btngroup {
+.translations-order-step-btngroup {
     display: table;
     width: 60%;
     min-width: 720px;
     margin: 0 0 2em;
 }
 
-.translations-for-craft-order-step-btngroup ul {
+.translations-order-step-btngroup ul {
     display: table-row;
     padding: 0;
     margin: 0;
 }
 
-.translations-for-craft-order-step-btngroup li {
+.translations-order-step-btngroup li {
     display: table-cell;
     padding: 0;
     margin: 0;
     width: 25%;
 }
 
-.translations-for-craft-order-step-btngroup .btn {
+.translations-order-step-btngroup .btn {
     width: 90%;
 }
 
-.translations-for-craft-order-step-btngroup .btn.disabled {
+.translations-order-step-btngroup .btn.disabled {
     pointer-events: none;
 }
 
-.translations-for-craft-order-step-btngroup .btn:not(.disabled):not(.prev) {
+.translations-order-step-btngroup .btn:not(.disabled):not(.prev) {
     background: #5286d9;
     color: #fff;
     pointer-events: none;
     cursor: default;
 }
 
-.translations-for-craft-order-step {
+.translations-order-step {
     display: none;
 }
 
-.translations-for-craft-order-step.active {
+.translations-order-step.active {
     display: block;
 }
 
-.translations-for-craft-dropdown {
+.translations-dropdown {
     margin: 5px 5px 0 0;
     position: relative;
 }
 
-.translations-for-craft-dropdown ul {
+.translations-dropdown ul {
     display: none;
     max-height: 300px;
     position: absolute;
@@ -98,21 +98,21 @@
     width: 100%;
 }
 
-.translations-for-craft-dropdown:hover ul {
+.translations-dropdown:hover ul {
     display: block;
 }
 
-.translations-for-craft-dropdown ul li a,
-.translations-for-craft-dropdown ul li input {
+.translations-dropdown ul li a,
+.translations-dropdown ul li input {
     display: block;
     width: 100%;
 }
 
-.translations-for-craft-dropdown > .btn.disabled {
+.translations-dropdown > .btn.disabled {
     pointer-events: none;
 }
 
-.translations-for-craft-translator-settings {
+.translations-translator-settings {
     background-image: linear-gradient(#f7f7f8, #f4f5f6);
     padding: 2em 1em;
     margin: 0 0 2em;
@@ -120,30 +120,30 @@
     display: none;
 }
 
-.translations-for-craft-translator-logo-acclaro {
+.translations-translator-logo-acclaro {
     background: url(../img/plugin-logo.png) no-repeat 0 0;
     background-size: 192px 55px;
     width: 192px;
     height: 55px;
 }
 
-.translations-for-craft-version-header {
+.translations-version-header {
     font-size: 1.0769em;
     line-height: 2;
     color: #8f98a3;
 }
 
-.translations-for-craft-about {
+.translations-about {
     max-width: 720px;
 }
 
-.translations-for-craft-about-header {
+.translations-about-header {
     font-size: 2.25em;
     line-height: 1.2;
     margin-bottom: 0;
 }
 
-.translations-for-craft-about-logo {
+.translations-about-logo {
     background: url(../img/plugin-logo.png) no-repeat 0 0;
     background-size: 239px 68px;
     width: 239px;
@@ -151,55 +151,55 @@
     float: right;
 }
 
-.translations-for-craft-about-author {
+.translations-about-author {
     margin: 0;
     font-weight: bold;
     font-size: 1.1em;
 }
 
-.translations-for-craft-about-version {
+.translations-about-version {
     margin: 0;
 }
 
-.translations-for-craft-about-text {
+.translations-about-text {
     margin: 2em 0 0;
 }
 
-.translations-for-craft-about-copyright {
+.translations-about-copyright {
     margin: 2em 0 0;
 }
 
-.translations-for-craft-order-detail-summary {
+.translations-order-detail-summary {
     float: left;
     width: 50%;
     margin-right: 10%;
 }
 
-.translations-for-craft-order-detail-summary h2 {
+.translations-order-detail-summary h2 {
     font-size: 1.5em;
     margin-top: 0;
 }
 
-.translations-for-craft-order-detail-summary table.data {
+.translations-order-detail-summary table.data {
     width: 100%;
     margin: 0 0 4em;
 }
 
-.translations-for-craft-order-detail-entries {
+.translations-order-detail-entries {
     width: 40%;
 }
 
-.translations-for-craft-order-detail-entries h2 {
+.translations-order-detail-entries h2 {
     font-size: 1.5em;
     margin-top: 0;
 }
 
-.translations-for-craft-order-detail-entries table.data {
+.translations-order-detail-entries table.data {
     width: 100%;
     margin: 0 0 2em;
 }
 
-.translations-for-craft-order-detail-button-wrapper {
+.translations-order-detail-button-wrapper {
     flex-direction: row;
     position: relative;
     float: right;
@@ -207,53 +207,53 @@
     margin: 0;
 }
 
-.translations-for-craft-order-detail-button-wrapper #import-tool {
+.translations-order-detail-button-wrapper #import-tool {
     margin-left: 10px;
 }
 
-.translations-for-craft-order-detail-button-wrapper .utility-status {
+.translations-order-detail-button-wrapper .utility-status {
     display: flex;
     align-self: center;
 }
 
-.translations-for-craft-order-detail-button-wrapper .utility-status .progressbar {
+.translations-order-detail-button-wrapper .utility-status .progressbar {
     left: 50%;
     top: calc(50% - 5px);
     width: 60%;
     transform: translateX(-50%) translateY(-50%);
 }
 
-.translations-for-craft-order-reporting {
+.translations-order-reporting {
     background-image: linear-gradient(#f7f7f8, #f4f5f6);
     padding: 2em;
     margin: 0 0 2em;
     display: inline-block;
 }
 
-.translations-for-craft-order-reporting .btn {
+.translations-order-reporting .btn {
     display: inline-block;
 }
 
-.translations-for-craft-order-reporting table {
+.translations-order-reporting table {
     margin: 0 0 1em;
 }
 
-.translations-for-craft-order-reporting table label {
+.translations-order-reporting table label {
     padding: 1em 1em 1em 0;
     display: block;
 }
 
-.translations-for-craft-order-reporting table td {
+.translations-order-reporting table td {
     vertical-align: middle;
 }
 
-.translations-for-craft-order-reporting table .datewrapper,
-.translations-for-craft-order-reporting table .select,
-.translations-for-craft-order-reporting table select {
+.translations-order-reporting table .datewrapper,
+.translations-order-reporting table .select,
+.translations-order-reporting table select {
     width: 100%;
 }
 
-.translations-for-craft-complete-orders-indicator {
+.translations-complete-orders-indicator {
     float: right;
     display: inline-block;
     padding: 0;
@@ -264,7 +264,7 @@
     margin: 0 0 -22px;
 }
 
-.translations-for-craft-lock {
+.translations-lock {
     font-size: 96px;
     position: fixed;
     top: 50%;
@@ -274,7 +274,7 @@
     z-index: 1;
 }
 
-.translations-for-craft-lock:before {
+.translations-lock:before {
     content: 't';
 }
 
@@ -291,19 +291,19 @@
 }
 
 @media only screen and (max-width: 992px) {
-    .translations-for-craft-lock {
+    .translations-lock {
         margin-left: -31px;
     }
 }
 
-#nav li .translations-for-craft-complete-orders-indicator {
+#nav li .translations-complete-orders-indicator {
     display: inline-block;
     min-height: 22px;
     margin: 0 0 -22px;
     padding: 0;
 }
 
-.translations-for-craft-complete-orders-indicator [data-icon="newstamp"] {
+.translations-complete-orders-indicator [data-icon="newstamp"] {
     top: 8px;
     right: 14px;
     position: absolute;
@@ -311,7 +311,7 @@
     color: #5286d9;
 }
 
-.translations-for-craft-complete-orders-indicator [data-icon="newstamp"] > span {
+.translations-complete-orders-indicator [data-icon="newstamp"] > span {
     position: absolute;
     top: 0;
     left: 0;
@@ -322,13 +322,13 @@
     text-align: center;
 }
 
-.translations-for-craft-loader {
+.translations-loader {
     float: left;
     white-space: nowrap;
     padding-top: 2px;
 }
 
-.translations-for-craft-loader .spinner{
+.translations-loader .spinner{
     margin-top: 6px;
     margin-right: 4px;
 }
@@ -342,10 +342,10 @@
     color: #8f98a3;
 }
 
-.translations-for-craft-order-detail-activity-log {
+.translations-order-detail-activity-log {
     margin-top: 3rem;
 }
-.translations-for-craft-order-detail-activity-log .bullets{
+.translations-order-detail-activity-log .bullets{
     max-height: 150px;
     border: 1px solid #ddd;
     width: 55%;
@@ -410,41 +410,41 @@
 }
 
 @media only screen and (max-width: 720px) {
-    .translations-for-craft-order-step-btngroup {
+    .translations-order-step-btngroup {
         display: block;
         width: 100%;
         min-width: 0;
     }
 
-    .translations-for-craft-order-step-btngroup ul {
+    .translations-order-step-btngroup ul {
         display: block;
     }
 
-    .translations-for-craft-order-step-btngroup li {
+    .translations-order-step-btngroup li {
         display: block;
         margin: 0 0 1em;
         width: 100%;
     }
 
-    .translations-for-craft-order-step-btngroup .btn {
+    .translations-order-step-btngroup .btn {
         width: 100%;
     }
 
-    .translations-for-craft-element-index table.data {
+    .translations-element-index table.data {
         min-width: 0;
         width: 100%;
     }
 
-    .translations-for-craft-order-step table.data {
+    .translations-order-step table.data {
         min-width: 0;
         width: 100%;
     }
 
-    .translations-for-craft-order-detail-summary{
+    .translations-order-detail-summary{
         width: 100%;
     }
 
-    .translations-for-craft-order-detail-entries{
+    .translations-order-detail-entries{
         width: 100%;
     }
 }

@@ -1,10 +1,10 @@
 (function($) {
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
-Craft.TranslationsForCraft.DisableFields = {
+Craft.Translations.DisableFields = {
     init: function() {
         var $form = $('form');
         // $form.find(':input').addClass('disabled').prop('disabled', true);
@@ -12,12 +12,12 @@ Craft.TranslationsForCraft.DisableFields = {
         // $form.find('.input').addClass('disabled');
         // $form.find('.btn').addClass('disabled');
         // $form.find('.redactor-box').addClass('disabled');
-        $form.append('<span class="icon translations-for-craft-lock"></span>');
+        $form.append('<span class="icon translations-lock"></span>');
     }
 };
 
 $(function() {
-    Craft.TranslationsForCraft.DisableFields.init();
+    Craft.Translations.DisableFields.init();
 });
 
 })(jQuery);

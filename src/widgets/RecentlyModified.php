@@ -8,17 +8,17 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\widgets;
+namespace acclaro\translations\widgets;
 
 use Craft;
 use craft\base\Widget;
 use craft\helpers\Json;
-use acclaro\translationsforcraft\records\WidgetRecord;
-use acclaro\translationsforcraft\assetbundles\RecentlyModifiedAssets as JS;
+use acclaro\translations\records\WidgetRecord;
+use acclaro\translations\assetbundles\RecentlyModifiedAssets as JS;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.2
  */
 class RecentlyModified extends Widget
@@ -66,7 +66,7 @@ class RecentlyModified extends Widget
      */
     public function getSettingsHtml()
     {
-        return Craft::$app->getView()->renderTemplate('translations-for-craft/_components/widgets/RecentlyModified/settings',
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/RecentlyModified/settings',
             [
                 'widget' => $this
             ]);
@@ -84,9 +84,9 @@ class RecentlyModified extends Widget
         $view = Craft::$app->getView();
         $view->registerAssetBundle(JS::class);
         $view->registerJs(
-            'new Craft.TranslationsForCraft.RecentlyModified(' . $this->id . ', ' . Json::encode($params) . ');'
+            'new Craft.Translations.RecentlyModified(' . $this->id . ', ' . Json::encode($params) . ');'
         );
-        return Craft::$app->getView()->renderTemplate('translations-for-craft/_components/widgets/RecentlyModified/body', [
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/RecentlyModified/body', [
             'limit' => $this->limit,
         ]);
     }

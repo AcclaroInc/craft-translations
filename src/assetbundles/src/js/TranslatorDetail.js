@@ -1,22 +1,22 @@
 (function($) {
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
-Craft.TranslationsForCraft.TranslatorDetail = {
+Craft.Translations.TranslatorDetail = {
     updateService: function() {
         var service = $('#service').val();
 
         if (service != 'acclaro') {
-            $('.translations-for-craft-translator-settings').hide();
-            $('.translations-for-craft-translator-settings-header').hide();
+            $('.translations-translator-settings').hide();
+            $('.translations-translator-settings-header').hide();
         } else {
             var $settings = $('#settings-'+service);
 
             $settings.show();
-            $('.translations-for-craft-translator-settings').not($settings).hide();
-            $('.translations-for-craft-translator-settings-header').show();
+            $('.translations-translator-settings').not($settings).hide();
+            $('.translations-translator-settings-header').show();
         }
     },
 
@@ -115,7 +115,7 @@ Craft.TranslationsForCraft.TranslatorDetail = {
             location.href,
             {
                 CRAFT_CSRF_TOKEN: Craft.csrfTokenValue,
-                action: 'translations-for-craft/base/authenticate-translation-service',
+                action: 'translations/base/authenticate-translation-service',
                 service: service,
                 settings: settings
             },
@@ -145,13 +145,13 @@ Craft.TranslationsForCraft.TranslatorDetail = {
         }
         
 
-        $('.translations-for-craft-authenticate-translation-service').on('click', function(e) {
+        $('.translations-authenticate-translation-service').on('click', function(e) {
             e.preventDefault();
 
             self.authenticateTranslationService();
         });
 
-        $('.translations-for-craft-translator-form').on('submit', function(e) {
+        $('.translations-translator-form').on('submit', function(e) {
             if (!self.validate()) {
                 e.preventDefault();
             }
@@ -160,7 +160,7 @@ Craft.TranslationsForCraft.TranslatorDetail = {
 };
 
 $(function() {
-    Craft.TranslationsForCraft.TranslatorDetail.init();
+    Craft.Translations.TranslatorDetail.init();
 });
 
 })(jQuery);

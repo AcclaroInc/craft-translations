@@ -8,16 +8,16 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\records;
+namespace acclaro\translations\records;
 
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 
 use Craft;
 use craft\db\ActiveRecord;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class TranslatorRecord extends ActiveRecord
@@ -30,6 +30,6 @@ class TranslatorRecord extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%translationsforcraft_translators}}';
+        return '{{%translations_translators}}';
     }
 }

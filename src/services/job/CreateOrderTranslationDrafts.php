@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\job;
+namespace acclaro\translations\services\job;
 
 use Craft;
 use craft\base\Element;
@@ -16,10 +16,10 @@ use craft\elements\Entry;
 use craft\models\EntryDraft;
 use craft\elements\GlobalSet;
 use craft\elements\db\ElementQuery;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\models\GlobalSetDraftModel;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\Translations;
+use acclaro\translations\models\GlobalSetDraftModel;
 
 class CreateOrderTranslationDrafts implements JobInterface
 {
@@ -100,30 +100,30 @@ class CreateOrderTranslationDrafts implements JobInterface
             'authorId' => $entry->authorId
         ];
 
-        $supportedSites = TranslationsForCraft::$plugin->entryRepository->getSupportedSites($entry);
+        $supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
 
         $draftConfig['enabledForSite'] = in_array($site, $supportedSites);
         $draftConfig['siteId'] = $site;
 
-        $draft = TranslationsForCraft::$plugin->draftRepository->makeNewDraft($draftConfig);
+        $draft = Translations::$plugin->draftRepository->makeNewDraft($draftConfig);
 
-        TranslationsForCraft::$plugin->draftRepository->saveDraft($draft);
+        Translations::$plugin->draftRepository->saveDraft($draft);
 
         return $draft;
     }
 
     public function createGlobalSetDraft(GlobalSet $globalSet, $site)
     {
-        $draft = TranslationsForCraft::$plugin->globalSetDraftRepository->makeNewDraft();
+        $draft = Translations::$plugin->globalSetDraftRepository->makeNewDraft();
         $draft->name = sprintf('%s [%s]', $this->orderName, $site);
         $draft->id = $globalSet->id;
         $draft->site = $site;
 
-        $post = TranslationsForCraft::$plugin->elementTranslator->toPostArray($globalSet);
+        $post = Translations::$plugin->elementTranslator->toPostArray($globalSet);
 
         $draft->setFieldValues($post);
 
-        TranslationsForCraft::$plugin->globalSetDraftRepository->saveDraft($draft);
+        Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
 
         return $draft;
     }

@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services;
+namespace acclaro\translations\services;
 
 use Craft;
 

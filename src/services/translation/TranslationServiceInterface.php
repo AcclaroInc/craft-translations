@@ -8,31 +8,31 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\translation;
+namespace acclaro\translations\services\translation;
 
 use Craft;
 use Exception;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\models\FileModel;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\job\Factory as JobFactory;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\models\FileModel;
+use acclaro\translations\Translations;
+use acclaro\translations\services\job\Factory as JobFactory;
 
 interface TranslationServiceInterface
 {
     /**
      * Fetch order from service and update order model accordingly
-     * @param  \acclaro\translationsforcraft\services\job\Factory $jobFactory
-     * @param  \acclaro\translationsforcraft\elements\Order  $order
+     * @param  \acclaro\translations\services\job\Factory $jobFactory
+     * @param  \acclaro\translations\elements\Order  $order
      * @return void
      */
     public function updateOrder(JobFactory $jobFactory, Order $order);
 
     /**
      * Fetch file from service and update file model accordingly
-     * @param  \acclaro\translationsforcraft\services\job\Factory $jobFactory
-     * @param  \acclaro\translationsforcraft\elements\Order  $order
-     * @param  \acclaro\translationsforcraft\models\FileModel   $file
+     * @param  \acclaro\translations\services\job\Factory $jobFactory
+     * @param  \acclaro\translations\elements\Order  $order
+     * @param  \acclaro\translations\models\FileModel   $file
      * @return void
      */
     public function updateFile(JobFactory $jobFactory, Order $order, FileModel $file);
@@ -45,7 +45,7 @@ interface TranslationServiceInterface
 
     /**
      * Send order to service and update order model accordingly
-     * @param  \acclaro\translationsforcraft\elements\Order $order
+     * @param  \acclaro\translations\elements\Order $order
      * @return void
      */
     public function sendOrder(Order $order);

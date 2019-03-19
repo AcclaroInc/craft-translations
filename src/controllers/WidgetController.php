@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\controllers;
+namespace acclaro\translations\controllers;
 
 use Craft;
 use DateTime;
@@ -29,34 +29,35 @@ use craft\events\WidgetEvent;
 use craft\helpers\ArrayHelper;
 use craft\helpers\StringHelper;
 use craft\base\WidgetInterface;
+use craft\widgets\MissingWidget;
 use craft\helpers\ElementHelper;
 use SebastianBergmann\Diff\Differ;
 use craft\errors\WidgetNotFoundException;
 use craft\errors\MissingComponentException;
-use acclaro\translationsforcraft\services\App;
+use acclaro\translations\services\App;
 use craft\helpers\Component as ComponentHelper;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\models\FileModel;
-use acclaro\translationsforcraft\records\FileRecord;
-use acclaro\translationsforcraft\records\WidgetRecord;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\elements\Order;
+use acclaro\translations\models\FileModel;
+use acclaro\translations\records\FileRecord;
+use acclaro\translations\records\WidgetRecord;
+use acclaro\translations\Translations;
 use SebastianBergmann\Diff\Output\DiffOnlyOutputBuilder;
-use acclaro\translationsforcraft\assetbundles\DashboardAssets;
-use acclaro\translationsforcraft\services\repository\FileRepository;
-use acclaro\translationsforcraft\services\repository\SiteRepository;
-use acclaro\translationsforcraft\assetbundles\RecentlyModifiedAssets;
+use acclaro\translations\assetbundles\DashboardAssets;
+use acclaro\translations\services\repository\FileRepository;
+use acclaro\translations\services\repository\SiteRepository;
+use acclaro\translations\assetbundles\RecentlyModifiedAssets;
 
 // Widget Classes
-use acclaro\translationsforcraft\widgets\News;
-use acclaro\translationsforcraft\widgets\Translators;
-use acclaro\translationsforcraft\widgets\RecentOrders;
-use acclaro\translationsforcraft\widgets\RecentlyModified;
-use acclaro\translationsforcraft\widgets\LanguageCoverage;
+use acclaro\translations\widgets\News;
+use acclaro\translations\widgets\Translators;
+use acclaro\translations\widgets\RecentOrders;
+use acclaro\translations\widgets\RecentlyModified;
+use acclaro\translations\widgets\LanguageCoverage;
 
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class WidgetController extends Controller
@@ -146,25 +147,25 @@ class WidgetController extends Controller
                 ];
             }
             $variables['widgets'][] = $info;
-            $allWidgetJs .= 'new Craft.TranslationsForCraft.Widget("#widget' . $widget->id . '", ' .
+            $allWidgetJs .= 'new Craft.Translations.Widget("#widget' . $widget->id . '", ' .
                 Json::encode($info['settingsHtml']) . ', ' .
                 'function(){' . $info['settingsJs'] . '}' .
                 ");\n";
             if (!empty($widgetJs)) {
-                // Allow any widget JS to execute *after* we've created the Craft.TranslationsForCraft.Widget instance
+                // Allow any widget JS to execute *after* we've created the Craft.Translations.Widget instance
                 $allWidgetJs .= $widgetJs . "\n";
             }
         }
 
         // Register Dashboard Assets
         $view->registerAssetBundle(DashboardAssets::class);
-        $view->registerJs('window.translationsdashboard = new Craft.TranslationsForCraft.Dashboard(' . Json::encode($widgetTypeInfo) . ');');
+        $view->registerJs('window.translationsdashboard = new Craft.Translations.Dashboard(' . Json::encode($widgetTypeInfo) . ');');
 
         $view->registerJs($allWidgetJs);
         $variables['widgetTypes'] = $widgetTypeInfo;
         $variables['selectedSubnavItem'] = 'dashboard';
         
-        return $this->renderTemplate('translations-for-craft/_index', $variables);
+        return $this->renderTemplate('translations/_index', $variables);
     }
 
     /**
@@ -303,14 +304,14 @@ class WidgetController extends Controller
                 // Get in progress entry translation count
                 $inQueue = FileRecord::findBySql(
                     "SELECT DISTINCT `elementId`
-                    FROM {{%translationsforcraft_files}}
+                    FROM {{%translations_files}}
                     WHERE `status` IN ('new','preview','in progress','complete')
                     AND `targetSite` = $id"
                 )->count();
 
                 $translated = FileRecord::findBySql(
                     "SELECT DISTINCT `elementId`
-                    FROM {{%translationsforcraft_files}}
+                    FROM {{%translations_files}}
                     WHERE `status` = 'published'
                     AND `targetSite` = $id"
                 )->count();
@@ -385,12 +386,12 @@ class WidgetController extends Controller
                 // Now we can get the element
                 $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
                 // Get the elements translated file
-                $file = TranslationsForCraft::$plugin->fileRepository->getFileById($fileId);
+                $file = Translations::$plugin->fileRepository->getFileById($fileId);
                 
                 // Is the element more recent than the file?
                 if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
                     // Current entries XML
-                    $currentXML = TranslationsForCraft::$plugin->elementToXmlConverter->toXml($element, 0, Craft::$app->getSites()->getPrimarySite()->id, $file->targetSite);
+                    $currentXML = Translations::$plugin->elementToXmlConverter->toXml($element, 0, Craft::$app->getSites()->getPrimarySite()->id, $file->targetSite);
                     $currentXML = simplexml_load_string($currentXML)->body->asXML();
                     
                     // Translated file XML
@@ -411,7 +412,7 @@ class WidgetController extends Controller
                         $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
                         $data[$i]['entryUrl'] = UrlHelper::cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
                         $data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
-                        $wordCount = (TranslationsForCraft::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
+                        $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
                         $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
                         $data[$i]['diff'] = $differ->diff($translatedXML, $currentXML);
     
@@ -563,7 +564,7 @@ class WidgetController extends Controller
             if ($isNewWidget) {
                 // Set the sortOrder
                 $maxSortOrder = (new Query())
-                    ->from(['{{%translationsforcraft_widgets}}'])
+                    ->from(['{{%translations_widgets}}'])
                     ->where(['userId' => Craft::$app->getUser()->getIdentity()->id])
                     ->max('[[sortOrder]]');
                 $widgetRecord->sortOrder = $maxSortOrder + 1;
@@ -784,7 +785,7 @@ class WidgetController extends Controller
                 'type',
                 'settings',
             ])
-            ->from(['{{%translationsforcraft_widgets}}']);
+            ->from(['{{%translations_widgets}}']);
     }
 
     /**

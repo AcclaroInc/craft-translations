@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services;
+namespace acclaro\translations\services;
 
 use Craft;
 use Exception;
@@ -17,8 +17,8 @@ use craft\base\Field;
 use craft\fields\Matrix;
 // use craft\fields\SuperTable;
 // use craft\fields\New;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 
 class ElementCloner
 {

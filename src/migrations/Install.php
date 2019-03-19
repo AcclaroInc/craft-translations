@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\migrations;
+namespace acclaro\translations\migrations;
 
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 
 use Craft;
 use craft\config\DbConfig;
@@ -18,7 +18,7 @@ use craft\db\Migration;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class Install extends Migration
@@ -66,11 +66,11 @@ class Install extends Migration
     {
         $tablesCreated = false;
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translationsforcraft_files}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_files}}');
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translationsforcraft_files}}',
+                '{{%translations_files}}',
                 [
                     'id'                => $this->primaryKey(),
                     'orderId'           => $this->integer()->notNull(),
@@ -91,11 +91,11 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translationsforcraft_globalsetdrafts}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_globalsetdrafts}}');
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translationsforcraft_globalsetdrafts}}',
+                '{{%translations_globalsetdrafts}}',
                 [
                     'id'            => $this->primaryKey(),
                     'name'          => $this->string()->notNull(),
@@ -109,11 +109,11 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translationsforcraft_orders}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_orders}}');
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translationsforcraft_orders}}',
+                '{{%translations_orders}}',
                 [
                     'id'                => $this->integer()->notNull(),
                     'translatorId'      => $this->integer(),
@@ -137,11 +137,11 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translationsforcraft_translators}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_translators}}');
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translationsforcraft_translators}}',
+                '{{%translations_translators}}',
                 [
                     'id'            => $this->primaryKey(),
                     'label'         => $this->string()->notNull()->defaultValue(''),
@@ -156,11 +156,11 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translationsforcraft_translations}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_translations}}');
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translationsforcraft_translations}}',
+                '{{%translations_translations}}',
                 [
                     'id'                => $this->primaryKey(),
                     'sourceSite'        => $this->integer()->notNull(),
@@ -174,11 +174,11 @@ class Install extends Migration
             );
         }
         
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translationsforcraft_widgets}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_widgets}}');
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translationsforcraft_widgets}}',
+                '{{%translations_widgets}}',
                 [
                     'id' => $this->primaryKey(),
                     'userId' => $this->integer()->notNull(),
@@ -203,10 +203,10 @@ class Install extends Migration
      */
     protected function createIndexes()
     {
-        $this->createIndex(null, '{{%translationsforcraft_files}}', ['orderId'], false);
-        $this->createIndex(null, '{{%translationsforcraft_files}}', ['elementId'], false);
-        $this->createIndex(null, '{{%translationsforcraft_globalsetdrafts}}', ['globalSetId'], false);
-        $this->createIndex(null, '{{%translationsforcraft_widgets}}', ['userId'], false);
+        $this->createIndex(null, '{{%translations_files}}', ['orderId'], false);
+        $this->createIndex(null, '{{%translations_files}}', ['elementId'], false);
+        $this->createIndex(null, '{{%translations_globalsetdrafts}}', ['globalSetId'], false);
+        $this->createIndex(null, '{{%translations_widgets}}', ['userId'], false);
     }
 
     /**
@@ -215,14 +215,14 @@ class Install extends Migration
      */
     protected function addForeignKeys()
     {
-        $this->addForeignKey(null,'{{%translationsforcraft_files}}',['orderId'],'{{%translationsforcraft_orders}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translationsforcraft_files}}',['elementId'],'{{%elements}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translationsforcraft_globalsetdrafts}}',['globalSetId'],'{{%globalsets}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translationsforcraft_globalsetdrafts}}',['site'],'{{%sites}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translationsforcraft_orders}}',['id'],'{{%elements}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translationsforcraft_orders}}',['ownerId'],'{{%users}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translationsforcraft_orders}}',['translatorId'],'{{%translationsforcraft_translators}}',['id'],'SET NULL',null);
-        $this->addForeignKey(null,'{{%translationsforcraft_widgets}}',['userId'],'{{%users}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_files}}',['orderId'],'{{%translations_orders}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_files}}',['elementId'],'{{%elements}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_globalsetdrafts}}',['globalSetId'],'{{%globalsets}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_globalsetdrafts}}',['site'],'{{%sites}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_orders}}',['id'],'{{%elements}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_orders}}',['ownerId'],'{{%users}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_orders}}',['translatorId'],'{{%translations_translators}}',['id'],'SET NULL',null);
+        $this->addForeignKey(null,'{{%translations_widgets}}',['userId'],'{{%users}}',['id'],'CASCADE',null);
     }
 
     /**
@@ -237,17 +237,17 @@ class Install extends Migration
      */
     protected function removeTables()
     {
-        $this->dropTableIfExists('{{%translationsforcraft_files}}');
+        $this->dropTableIfExists('{{%translations_files}}');
 
-        $this->dropTableIfExists('{{%translationsforcraft_globalsetdrafts}}');
+        $this->dropTableIfExists('{{%translations_globalsetdrafts}}');
 
-        $this->dropTableIfExists('{{%translationsforcraft_orders}}');
+        $this->dropTableIfExists('{{%translations_orders}}');
 
-        $this->dropTableIfExists('{{%translationsforcraft_translators}}');
+        $this->dropTableIfExists('{{%translations_translators}}');
 
-        $this->dropTableIfExists('{{%translationsforcraft_translations}}');
+        $this->dropTableIfExists('{{%translations_translations}}');
         
-        $this->dropTableIfExists('{{%translationsforcraft_widgets}}');
+        $this->dropTableIfExists('{{%translations_widgets}}');
     }
 
 }

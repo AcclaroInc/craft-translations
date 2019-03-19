@@ -8,11 +8,11 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\job;
+namespace acclaro\translations\services\job;
 
 use Craft;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 
 class SyncOrders implements JobInterface
 {
@@ -21,10 +21,10 @@ class SyncOrders implements JobInterface
      */
     public function handle()
     {
-        $orders = TranslationsForCraft::$plugin->orderRepository->getInProgressOrders();
+        $orders = Translations::$plugin->orderRepository->getInProgressOrders();
 
         foreach ($orders as $order) {
-            TranslationsForCraft::$plugin->jobFactory->dispatchJob(SyncOrder::class, $order);
+            Translations::$plugin->jobFactory->dispatchJob(SyncOrder::class, $order);
         }
     }
 }

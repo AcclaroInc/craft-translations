@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\console\controllers;
+namespace acclaro\translations\console\controllers;
 
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 
 use Craft;
 use yii\console\Controller;
@@ -20,7 +20,7 @@ use yii\helpers\Console;
  * Command Command
  *
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class CommandController extends Controller
@@ -29,7 +29,7 @@ class CommandController extends Controller
     // =========================================================================
 
     /**
-     * Handle translations-for-craft/command console commands
+     * Handle translations/command console commands
      *
      * @return mixed
      */
@@ -43,7 +43,7 @@ class CommandController extends Controller
     }
 
     /**
-     * Handle translations-for-craft/command/do-something console commands
+     * Handle translations/command/do-something console commands
      *
      * @return mixed
      */

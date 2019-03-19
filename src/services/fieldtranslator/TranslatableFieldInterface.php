@@ -8,14 +8,14 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\fieldtranslator;
+namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
 use craft\base\Field;
 use craft\base\Element;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\ElementTranslator;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\ElementTranslator;
 
 interface TranslatableFieldInterface
 {
@@ -26,7 +26,7 @@ interface TranslatableFieldInterface
      * - OR -
      * array of key => value pairs
      *
-     * @param  \acclaro\translationsforcraft\services\ElementTranslator $elementTranslator
+     * @param  \acclaro\translations\services\ElementTranslator $elementTranslator
      * @param  \craft\base\Element                                      $element
      * @param  \craft\base\Field                                        $field
      * @return string|bool|int|float|array
@@ -36,7 +36,7 @@ interface TranslatableFieldInterface
     /**
      * Update an element with data from translation target document
      *
-     * @param  \acclaro\translationsforcraft\services\ElementTranslator $elementTranslator
+     * @param  \acclaro\translations\services\ElementTranslator $elementTranslator
      * @param  \craft\base\Element                                      $element
      * @param  \craft\base\Field                                        $field
      * @param  string                                                   $sourceSite
@@ -60,7 +60,7 @@ interface TranslatableFieldInterface
      * - OR -
      * array of key => value pairs
      *
-     * @param  \acclaro\translationsforcraft\services\ElementTranslator $elementTranslator
+     * @param  \acclaro\translations\services\ElementTranslator $elementTranslator
      * @param  \craft\base\Element                                      $element
      * @param  \craft\base\Field                                        $field
      * @return string|bool|int|float|array
@@ -70,7 +70,7 @@ interface TranslatableFieldInterface
     /**
      * Get word count of an element field
      *
-     * @param  \acclaro\translationsforcraft\services\ElementTranslator $elementTranslator
+     * @param  \acclaro\translations\services\ElementTranslator $elementTranslator
      * @param  \craft\base\Element                                      $element
      * @param  \craft\base\Field                                        $field
      * @return int

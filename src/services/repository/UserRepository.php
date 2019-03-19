@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
+namespace acclaro\translations\services\repository;
 
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 use Craft;
 use craft\elements\User;
 

@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\job;
+namespace acclaro\translations\services\job;
 
 use Craft;
 use Exception;
@@ -17,9 +17,9 @@ use craft\helpers\Path;
 use craft\elements\GlobalSet;
 use craft\helpers\FileHelper;
 use craft\helpers\ElementHelper;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\repository\SiteRepository;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\repository\SiteRepository;
 
 class ExportOrderFiles implements JobInterface
 {

@@ -8,24 +8,24 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\translation;
+namespace acclaro\translations\services\translation;
 
 use Craft;
 use DateTime;
 use Exception;
 use craft\elements\GlobalSet;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\models\FileModel;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\api\AcclaroApiClient;
-use acclaro\translationsforcraft\services\job\UpdateDraftFromXml;
-use acclaro\translationsforcraft\services\job\Factory as JobFactory;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\models\FileModel;
+use acclaro\translations\Translations;
+use acclaro\translations\services\api\AcclaroApiClient;
+use acclaro\translations\services\job\UpdateDraftFromXml;
+use acclaro\translations\services\job\Factory as JobFactory;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
     /**
-     * @var \acclaro\translationsforcraft\services\api\AcclaroApiClient
+     * @var \acclaro\translations\services\api\AcclaroApiClient
      */
     protected $apiClient;
 
@@ -58,7 +58,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
     {
         if ($order->status !== 'complete') {
             $order->logActivity(
-                sprintf(TranslationsForCraft::$plugin->translator->translate('app', 'Order status changed to %s'), 'complete')
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), 'complete')
             );
         }
 
@@ -89,9 +89,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
             if ($element instanceof GlobalSet) {
-                $draft = TranslationsForCraft::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+                $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
             } else {
-                $draft = TranslationsForCraft::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
 
             $jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);

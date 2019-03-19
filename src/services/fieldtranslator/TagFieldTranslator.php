@@ -8,21 +8,21 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\fieldtranslator;
+namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use craft\elements\Tag;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\ElementTranslator;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\ElementTranslator;
 
 class TagFieldTranslator extends TaxonomyFieldTranslator
 {
     public function translateRelated(ElementTranslator $elementTranslator, Element $element, Tag $existingTag, $sourceSite, $targetSite, $fieldData)
     {
-        $translatedTag = TranslationsForCraft::$plugin->tagRepository->find(array(
+        $translatedTag = Translations::$plugin->tagRepository->find(array(
             'id' => $existingTag->id,
             'groupId' => $existingTag->groupId,
             'siteId' => $existingTag->siteId
@@ -31,7 +31,7 @@ class TagFieldTranslator extends TaxonomyFieldTranslator
         if ($translatedTag) {
             $tag = $translatedTag;
         } else {
-            $tag = TranslationsForCraft::$plugin->elementCloner->cloneElement($existingTag);
+            $tag = Translations::$plugin->elementCloner->cloneElement($existingTag);
         }
 
         $tag->siteId = $targetSite;
@@ -48,7 +48,7 @@ class TagFieldTranslator extends TaxonomyFieldTranslator
         
         $tag->setFieldValues($post, mt_rand(10000, 99999));
 
-        TranslationsForCraft::$plugin->tagRepository->saveTag($tag);
+        Translations::$plugin->tagRepository->saveTag($tag);
 
         return $tag->id;
     }

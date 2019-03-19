@@ -8,10 +8,10 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\models;
+namespace acclaro\translations\models;
 
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\App;
 
 
 use Craft;
@@ -24,7 +24,7 @@ use craft\validators\DateTimeValidator;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class FileModel extends Model

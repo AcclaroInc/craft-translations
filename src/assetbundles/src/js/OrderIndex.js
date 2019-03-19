@@ -1,13 +1,13 @@
 (function($) {
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
 /**
  * Order index class
  */
-Craft.TranslationsForCraft.OrderIndex = Garnish.Base.extend(
+Craft.Translations.OrderIndex = Garnish.Base.extend(
 {
     init: function() {
         $(document).on("click", ".translations-delete-order", function() {
@@ -15,7 +15,7 @@ Craft.TranslationsForCraft.OrderIndex = Garnish.Base.extend(
 
             if (confirm(Craft.t('app', 'Are you sure you want to delete this order?'))) {
                 var data = {
-                    action: 'translations-for-craft/base/delete-order',
+                    action: 'translations/base/delete-order',
                     orderId: $button.data('order-id')
                 };
 
@@ -45,7 +45,7 @@ Craft.TranslationsForCraft.OrderIndex = Garnish.Base.extend(
 });
 
 $(function() {
-    Craft.TranslationsForCraft.OrderIndex.prototype.init();
+    Craft.Translations.OrderIndex.prototype.init();
 });
 
 Garnish.$win.ready($.proxy(function() {

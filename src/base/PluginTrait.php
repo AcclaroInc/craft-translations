@@ -1,8 +1,8 @@
 <?php
-namespace acclaro\translationsforcraft\base;
+namespace acclaro\translations\base;
 
-use acclaro\translationsforcraft;
-use acclaro\translationsforcraft\services\TranslationsForCraftService;
+use acclaro\translations;
+use acclaro\translations\services\TranslationsService;
 
 use Craft;
 use craft\log\FileTarget;
@@ -28,26 +28,26 @@ trait PluginTrait
     private function _setPluginComponents()
     {
         $this->setComponents([
-            'service' => TranslationsForCraftService::class,
+            'service' => TranslationsService::class,
         ]);
     }
 
     private function _setLogging()
     {
         Craft::getLogger()->dispatcher->targets[] = new FileTarget([
-            'logFile' => Craft::getAlias('@storage/logs/translations-for-craft.log'),
-            'categories' => ['translations-for-craft'],
+            'logFile' => Craft::getAlias('@storage/logs/translations.log'),
+            'categories' => ['translations'],
         ]);
     }
 
     public static function log($message)
     {
-        Craft::getLogger()->log($message, Logger::LEVEL_INFO, 'translations-for-craft');
+        Craft::getLogger()->log($message, Logger::LEVEL_INFO, 'translations');
     }
 
     public static function error($message)
     {
-        Craft::getLogger()->log($message, Logger::LEVEL_ERROR, 'translations-for-craft');
+        Craft::getLogger()->log($message, Logger::LEVEL_ERROR, 'translations');
     }
 
 }

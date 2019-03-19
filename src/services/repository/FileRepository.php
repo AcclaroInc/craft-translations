@@ -8,20 +8,20 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
-use acclaro\translationsforcraft\TranslationsForCraft;
+namespace acclaro\translations\services\repository;
+use acclaro\translations\Translations;
 
 use Craft;
 
 use Exception;
-use acclaro\translationsforcraft\models\FileModel;
-use acclaro\translationsforcraft\records\FileRecord;
+use acclaro\translations\models\FileModel;
+use acclaro\translations\records\FileRecord;
 
 class FileRepository
 {
     /**
      * @param  int|string $fileId
-     * @return \acclaro\translationsforcraft\models\FileModel
+     * @return \acclaro\translations\models\FileModel
      */
     public function getFileById($fileId)
     {
@@ -48,7 +48,7 @@ class FileRepository
     
     /**
      * @param  int|string $draftId
-     * @return \acclaro\translationsforcraft\models\FileModel
+     * @return \acclaro\translations\models\FileModel
      */
     public function getFileByDraftId($draftId, $elementId = null)
     {
@@ -84,7 +84,7 @@ class FileRepository
     
     /**
      * @param  int|string $orderId
-     * @return \acclaro\translationsforcraft\models\FileModel
+     * @return \acclaro\translations\models\FileModel
      */
     public function getFilesByOrderId(int $orderId, $elementId = null)
     {
@@ -121,7 +121,7 @@ class FileRepository
     
     /**
      * @param  int|string $siteId
-     * @return \acclaro\translationsforcraft\models\FileModel
+     * @return \acclaro\translations\models\FileModel
      */
     public function getFilesByTargetSite(int $siteId, $elementId = null)
     {
@@ -157,7 +157,7 @@ class FileRepository
 
     /**
      * @param  int|string $orderId
-     * @return \acclaro\translationsforcraft\models\FileModel
+     * @return \acclaro\translations\models\FileModel
      */
     public function getFiles()
     {
@@ -187,7 +187,7 @@ class FileRepository
     }
 
     /**
-     * @return \acclaro\translationsforcraft\models\FileModel
+     * @return \acclaro\translations\models\FileModel
      */
     public function makeNewFile()
     {
@@ -195,7 +195,7 @@ class FileRepository
     }
 
     /**
-     * @param  \acclaro\translationsforcraft\models\FileModel $file
+     * @param  \acclaro\translations\models\FileModel $file
      * @throws \Exception
      * @return bool
      */

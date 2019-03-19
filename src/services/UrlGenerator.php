@@ -8,18 +8,18 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services;
+namespace acclaro\translations\services;
 
 use Craft;
 use craft\base\Element;
 use craft\models\EntryDraft;
 use craft\elements\GlobalSet;
 use craft\elements\Entry;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\models\FileModel;
-use acclaro\translationsforcraft\models\GlobalSetDraftModel;
+use acclaro\translations\Translations;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\models\FileModel;
+use acclaro\translations\models\GlobalSetDraftModel;
 
 use DOMDocument;
 use DateTime;
@@ -33,7 +33,7 @@ class UrlGenerator
 
         $cpTrigger = '/'.Craft::$app->getConfig()->getGeneral()->cpTrigger;
         
-        $url = TranslationsForCraft::$plugin->urlHelper->actionUrl('translations-for-craft/base/file-callback', array(
+        $url = Translations::$plugin->urlHelper->actionUrl('translations/base/file-callback', array(
             'key' => $key,
             'fileId' => $file->id,
         ));
@@ -47,7 +47,7 @@ class UrlGenerator
 
         $cpTrigger = '/'.Craft::$app->getConfig()->getGeneral()->cpTrigger;
 
-        $url = TranslationsForCraft::$plugin->urlHelper->actionUrl('translations-for-craft/base/order-callback', array(
+        $url = Translations::$plugin->urlHelper->actionUrl('translations/base/order-callback', array(
             'key' => $key,
             'orderId' => $order->id,
         ));
@@ -66,14 +66,14 @@ class UrlGenerator
                 );
             }
     
-            return TranslationsForCraft::$plugin->urlHelper->cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($file->targetSite)->handle);
+            return Translations::$plugin->urlHelper->cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($file->targetSite)->handle);
         }
 
         if ($element instanceof GlobalSet) {
-            return TranslationsForCraft::$plugin->urlHelper->cpUrl('translations-for-craft/globals/'.$element->handle.'/drafts/'.$file->draftId);
+            return Translations::$plugin->urlHelper->cpUrl('translations/globals/'.$element->handle.'/drafts/'.$file->draftId);
         }
 
-        return TranslationsForCraft::$plugin->urlHelper->cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/drafts/'.$file->draftId);
+        return Translations::$plugin->urlHelper->cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/drafts/'.$file->draftId);
     }
 
     public function generateFileWebUrl(Element $element, FileModel $file)
@@ -91,7 +91,7 @@ class UrlGenerator
 
     public function generateCpUrl($path)
     {
-        return TranslationsForCraft::$plugin->urlHelper->cpUrl($path);
+        return Translations::$plugin->urlHelper->cpUrl($path);
     }
     
     public function generateElementPreviewUrl(Element $element, $targetSite)
@@ -126,7 +126,7 @@ class UrlGenerator
             }
         }
         
-        $previewUrl = TranslationsForCraft::$plugin->urlHelper->actionUrl('entries/share-entry', $params);
+        $previewUrl = Translations::$plugin->urlHelper->actionUrl('entries/share-entry', $params);
 
         return $previewUrl;
     }

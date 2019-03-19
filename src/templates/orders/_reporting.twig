@@ -7,18 +7,18 @@
 
 {% set title = 'Translations'|t %}
 {% block actionButton %}
-<small class="translations-for-craft-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+<small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
 {% endblock %}
 
 {% set crumbs = [
-    { label: 'Translations'|t, url: url('translations-for-craft') },
-    { label: 'Orders'|t, url: url('translations-for-craft/orders') },
+    { label: 'Translations'|t, url: url('translations') },
+    { label: 'Orders'|t, url: url('translations/orders') },
     { label: 'Reporting'|t, url: 'javascript:void(0)' },
 ] %}
 
 {% block content %}
 
-    <form class="translations-for-craft-order-reporting" action="{{ url('translations-for-craft/orders') }}">
+    <form class="translations-order-reporting" action="{{ url('translations/orders') }}">
         <h2>{{ 'Order Reporting'|t }}</h2>
 
         <table>

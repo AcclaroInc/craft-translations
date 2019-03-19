@@ -4,7 +4,7 @@
 {% set tabs = adminTabs %}
 {% set selectedTab = 'translators' %}
 
-{% do view.registerAssetBundle("acclaro\\translationsforcraft\\assetbundles\\TranslatorAssets") %}
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}
 
 {% js %}
     var selectedSites = '';
@@ -15,12 +15,12 @@
 
 {% set title = 'Translations'|t %}
 {% block actionButton %}
-<small class="translations-for-craft-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+<small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
 {% endblock %}
 
 {% set crumbs = [
-    { label: 'Translations'|t, url: url('translations-for-craft') },
-    { label: 'Translators'|t, url: url('translations-for-craft/translators') },
+    { label: 'Translations'|t, url: url('translations') },
+    { label: 'Translators'|t, url: url('translations/translators') },
 ] %}
 
 {% if translatorId %}
@@ -34,7 +34,7 @@
 {% endif %}
 
 {% block content %}
-    <form method="post" class="translations-for-craft-translator-form" data-confirm-unload accept-charset="UTF-8">
+    <form method="post" class="translations-translator-form" data-confirm-unload accept-charset="UTF-8">
         {{ csrfInput() }}
 
         {{ forms.hidden({
@@ -50,7 +50,7 @@
 
         {{ forms.hidden({
             name: 'action',
-            value: 'translations-for-craft/base/save-translator'
+            value: 'translations/base/save-translator'
         }) }}
 
         {% if translatorId %}
@@ -86,9 +86,9 @@
 
         <p><a href="{{ url('settings/sites') }}" target="_blank">{{ 'Configure multi-site settings'|t }} &raquo;</a></p>
 
-        <h2 class="translations-for-craft-translator-settings-header">{{ 'Translation Service Configuration'|t }}</h2>
-        <div class="translations-for-craft-translator-settings" id="settings-acclaro">
-            <div class="translations-for-craft-translator-logo-acclaro"></div>
+        <h2 class="translations-translator-settings-header">{{ 'Translation Service Configuration'|t }}</h2>
+        <div class="translations-translator-settings" id="settings-acclaro">
+            <div class="translations-translator-logo-acclaro"></div>
 
             {{ forms.textField({
                 label: 'Acclaro API Token'|t,
@@ -100,7 +100,7 @@
 
             <div class="field">
                 <div class="input {{ orientation }}">
-                    <button class="btn translations-for-craft-authenticate-translation-service">{{ 'Authenticate'|t }}</button>
+                    <button class="btn translations-authenticate-translation-service">{{ 'Authenticate'|t }}</button>
                 </div>
             </div>
 

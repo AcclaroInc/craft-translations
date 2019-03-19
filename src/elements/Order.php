@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\elements;
+namespace acclaro\translations\elements;
 
 
 use Craft;
@@ -23,16 +23,16 @@ use craft\validators\UniqueValidator;
 use craft\validators\DateTimeValidator;
 use craft\validators\SiteIdValidator;
 use craft\elements\db\ElementQueryInterface;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\records\OrderRecord;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\elements\db\OrderQuery;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\records\OrderRecord;
+use acclaro\translations\Translations;
+use acclaro\translations\elements\db\OrderQuery;
 
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class Order extends Element
@@ -82,7 +82,7 @@ class Order extends Element
      */
     public static function displayName(): string
     {
-        return TranslationsForCraft::$plugin->translator->translate('app', 'Order');
+        return Translations::$plugin->translator->translate('app', 'Order');
     }
 
     public static function refHandle()
@@ -121,21 +121,21 @@ class Order extends Element
     // public static function statuses(): array
     // {
     //     return [
-    //         'new' => TranslationsForCraft::$plugin->translator->translate('app', 'Pending submission'),
+    //         'new' => Translations::$plugin->translator->translate('app', 'Pending submission'),
     //         'in progress' => [
-    //             'label' => TranslationsForCraft::$plugin->translator->translate('app', 'In progress'),
+    //             'label' => Translations::$plugin->translator->translate('app', 'In progress'),
     //             'color' => 'orange'
     //         ],
     //         'complete' => [
-    //             'label' => TranslationsForCraft::$plugin->translator->translate('app', 'Ready to publish'),
+    //             'label' => Translations::$plugin->translator->translate('app', 'Ready to publish'),
     //             'color' => 'blue'
     //         ],
     //         'canceled' => [
-    //             'label' => TranslationsForCraft::$plugin->translator->translate('app', 'Canceled'),
+    //             'label' => Translations::$plugin->translator->translate('app', 'Canceled'),
     //             'color' => 'red'
     //         ],
     //         'published' => [
-    //             'label' => TranslationsForCraft::$plugin->translator->translate('app', 'Complete'),
+    //             'label' => Translations::$plugin->translator->translate('app', 'Complete'),
     //             'color' => 'green'
     //         ],
     //     ];
@@ -146,13 +146,13 @@ class Order extends Element
         $sources = [
             [
                 'key' => 'all',
-                'label' => TranslationsForCraft::$plugin->translator->translate('app', 'All Orders'),
+                'label' => Translations::$plugin->translator->translate('app', 'All Orders'),
                 'criteria' => [],
                 'defaultSort' => ['postDate', 'desc']
             ],
             [
                 'key' => 'in-progress',
-                'label' => TranslationsForCraft::$plugin->translator->translate('app', 'Orders in progress'),
+                'label' => Translations::$plugin->translator->translate('app', 'Orders in progress'),
                 'criteria' => [
                     'status' => [
                         'new', 'in progress', 'in preparation', 'getting quote', 'needs approval', 'complete'
@@ -201,9 +201,9 @@ class Order extends Element
                 $length = count($targetSites);
                 foreach ($targetSites as $key => $site) {
                     if (($key+1) === $length) {
-                        $languages .= ucfirst(TranslationsForCraft::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>';
+                        $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>';
                     } else {
-                        $languages .= ucfirst(TranslationsForCraft::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>'. ', ';
+                        $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>'. ', ';
                     }
                 }
 
@@ -232,24 +232,24 @@ class Order extends Element
                     return  sprintf('#%s', $this->id);
                 }
 
-                $translationService = TranslationsForCraft::$plugin->translationFactory->makeTranslationService($translator->service, json_decode($translator->settings, true));
+                $translationService = Translations::$plugin->translationFactory->makeTranslationService($translator->service, json_decode($translator->settings, true));
 
                 return sprintf('<a href="%s" target="_blank">#%s</a>', $translationService->getOrderUrl($this), $value);
 
             case 'status':
             switch ($this->statusLabel) {
                 case 'Order failed':
-                    return '<span class="status red"></span>'.TranslationsForCraft::$plugin->translator->translate('app', $this->statusLabel);
+                    return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Pending submission':
-                    return '<span class="status"></span>'.TranslationsForCraft::$plugin->translator->translate('app', $this->statusLabel);
+                    return '<span class="status"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'In progress':
-                    return '<span class="status orange"></span>'.TranslationsForCraft::$plugin->translator->translate('app', $this->statusLabel);
+                    return '<span class="status orange"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Ready to publish':
-                    return '<span class="status blue"></span>'.TranslationsForCraft::$plugin->translator->translate('app', $this->statusLabel);
+                    return '<span class="status blue"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Canceled':
-                    return '<span class="status red"></span>'.TranslationsForCraft::$plugin->translator->translate('app', $this->statusLabel);
+                    return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Published':
-                    return '<span class="status green"></span>'.TranslationsForCraft::$plugin->translator->translate('app', $this->statusLabel);
+                    return '<span class="status green"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
             }
 
             case 'requestedDueDate':
@@ -281,16 +281,16 @@ class Order extends Element
     protected static function defineTableAttributes(): array
     {
         $attributes = [
-            'title' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Name')],
-            'serviceOrderId' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'ID')],
-            'ownerId' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Owner')],
-            'entriesCount' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Entries')],
-            'wordCount' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Words')],
-            'translatorId' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Translator')],
-            'targetSites' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Sites')],
-            'status' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Status')],
-            'dateOrdered' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Created')],
-            'actionButton' => ['label' => TranslationsForCraft::$plugin->translator->translate('app', 'Actions')]
+            'title' => ['label' => Translations::$plugin->translator->translate('app', 'Name')],
+            'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
+            'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
+            'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
+            'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
+            'translatorId' => ['label' => Translations::$plugin->translator->translate('app', 'Translator')],
+            'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
+            'status' => ['label' => Translations::$plugin->translator->translate('app', 'Status')],
+            'dateOrdered' => ['label' => Translations::$plugin->translator->translate('app', 'Created')],
+            'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
         ];
 
         return $attributes;
@@ -351,7 +351,7 @@ class Order extends Element
     public function getFiles()
     {
         if (is_null($this->_files)) {
-            $this->_files = TranslationsForCraft::$plugin->fileRepository->getFilesByOrderId($this->id);
+            $this->_files = Translations::$plugin->fileRepository->getFilesByOrderId($this->id);
         }
 
         return $this->_files;
@@ -359,14 +359,14 @@ class Order extends Element
 
     public function getTranslator()
     {
-        $translator = $this->translatorId ? TranslationsForCraft::$plugin->translatorRepository->getTranslatorById($this->translatorId) : null;
+        $translator = $this->translatorId ? Translations::$plugin->translatorRepository->getTranslatorById($this->translatorId) : null;
         
         return $translator;
     }
 
     public function getOwner()
     {
-        $owner = $this->ownerId ? TranslationsForCraft::$plugin->userRepository->getUserById($this->ownerId) : null;
+        $owner = $this->ownerId ? Translations::$plugin->userRepository->getUserById($this->ownerId) : null;
         
         return $owner;
     }
@@ -397,7 +397,7 @@ class Order extends Element
 
     public function getCpEditUrl()
     {
-        return TranslationsForCraft::$plugin->urlHelper->cpUrl('translations-for-craft/orders/detail/'.$this->id);
+        return Translations::$plugin->urlHelper->cpUrl('translations/orders/detail/'.$this->id);
     }
 
     public function getStatusLabel()
@@ -471,36 +471,36 @@ class Order extends Element
 
     public function performAction(ElementActionInterface $query)
     {
-        $query->addSelect('translationsforcraft_orders.*');
+        $query->addSelect('translations_orders.*');
 
-        $query->join('translationsforcraft_orders translationsforcraft_orders', 'translationsforcraft_orders.id = elements.id');
+        $query->join('translations_orders translations_orders', 'translations_orders.id = elements.id');
 
         if ($this->status) {
             if (is_array($this->status)) {
-                $query->andWhere(array('in', 'translationsforcraft_orders.status', $this->status));
+                $query->andWhere(array('in', 'translations_orders.status', $this->status));
             } else if ($this->status !== '*') {
-                $query->andWhere('translationsforcraft_orders.status = :status', array(':status' => $this->status));
+                $query->andWhere('translations_orders.status = :status', array(':status' => $this->status));
             }
         }
 
         if ($this->getAttribute('translatorId')) {
-            $query->andWhere('translationsforcraft_orders.translatorId = :translatorId', array(':translatorId' => $this->translatorId));
+            $query->andWhere('translations_orders.translatorId = :translatorId', array(':translatorId' => $this->translatorId));
         }
 
         if ($this->getAttribute('sourceSite')) {
-            $query->andWhere('translationsforcraft_orders.sourceSite = :sourceSite', array(':sourceSite' => $this->sourceSite));
+            $query->andWhere('translations_orders.sourceSite = :sourceSite', array(':sourceSite' => $this->sourceSite));
         }
 
         if ($this->getAttribute('targetSites')) {
-            $query->andWhere('translationsforcraft_orders.targetSites LIKE :targetSites', array(':targetSites' => '%"'.$this->targetSites.'"%'));
+            $query->andWhere('translations_orders.targetSites LIKE :targetSites', array(':targetSites' => '%"'.$this->targetSites.'"%'));
         }
 
         if ($this->getAttribute('startDate')) {
-            $query->andWhere('translationsforcraft_orders.dateOrdered >= :dateOrdered', array(':dateOrdered' => DateTime::createFromFormat('n/j/Y', $this->startDate)->format('Y-m-d H:i:s')));
+            $query->andWhere('translations_orders.dateOrdered >= :dateOrdered', array(':dateOrdered' => DateTime::createFromFormat('n/j/Y', $this->startDate)->format('Y-m-d H:i:s')));
         }
 
         if ($this->getAttribute('endDate')) {
-            $query->andWhere('translationsforcraft_orders.dateOrdered <= :dateOrdered', array(':dateOrdered' => DateTime::createFromFormat('n/j/Y', $this->endDate)->format('Y-m-d H:i:s')));
+            $query->andWhere('translations_orders.dateOrdered <= :dateOrdered', array(':dateOrdered' => DateTime::createFromFormat('n/j/Y', $this->endDate)->format('Y-m-d H:i:s')));
         }
     }
 }

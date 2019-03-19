@@ -8,19 +8,19 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
+namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\models\TranslatorModel;
-use acclaro\translationsforcraft\records\TranslatorRecord;
+use acclaro\translations\Translations;
+use acclaro\translations\models\TranslatorModel;
+use acclaro\translations\records\TranslatorRecord;
 
 class TranslatorRepository
 {
     /**
      * @param  int|string $translatorId
-     * @return \acclaro\translationsforcraft\models\TranslatorModel
+     * @return \acclaro\translations\models\TranslatorModel
      */
     public function getTranslatorById($translatorId)
     {
@@ -39,7 +39,7 @@ class TranslatorRepository
     }
     
     /**
-     * @return array \acclaro\translationsforcraft\models\TranslatorModel
+     * @return array \acclaro\translations\models\TranslatorModel
      */
     public function getTranslators()
     {
@@ -61,7 +61,7 @@ class TranslatorRepository
     }
 
     /**
-     * @return array \acclaro\translationsforcraft\models\TranslatorModel
+     * @return array \acclaro\translations\models\TranslatorModel
      */
     public function getActiveTranslators()
     {
@@ -122,7 +122,7 @@ class TranslatorRepository
     }
 
     /**
-     * @return \acclaro\translationsforcraft\models\TranslatorModel
+     * @return \acclaro\translations\models\TranslatorModel
      */
     public function makeNewTranslator()
     {
@@ -130,7 +130,7 @@ class TranslatorRepository
     }
 
     /**
-     * @param  \acclaro\translationsforcraft\models\TranslatorModel $translator
+     * @param  \acclaro\translations\models\TranslatorModel $translator
      * @throws \Exception
      * @return bool
      */
@@ -182,7 +182,7 @@ class TranslatorRepository
     }
 
     /**
-     * @param  \acclaro\translationsforcraft\models\TranslatorModel $translator
+     * @param  \acclaro\translations\models\TranslatorModel $translator
      * @return bool
      */
     public function deleteTranslator(TranslatorModel $translator)

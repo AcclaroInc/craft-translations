@@ -1,16 +1,16 @@
 (function($) {
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
-Craft.TranslationsForCraft.OrderDetail = {
+Craft.Translations.OrderDetail = {
     goToStep: function(el) {
         var href = $(el).attr('href');
         var stepSelector = href.replace(/^.*(#step\d+)$/, '$1');
-        var $btn = $('.translations-for-craft-order-step-btngroup .btn[href="'+href+'"]');
+        var $btn = $('.translations-order-step-btngroup .btn[href="'+href+'"]');
         var $step = $(stepSelector);
-        var $steps = $('.translations-for-craft-order-step');
+        var $steps = $('.translations-order-step');
 
         $btn.closest('li').nextAll('li').find('.btn').removeClass('active').addClass('disabled').removeClass('prev');
         $btn.closest('li').prevAll('li').find('.btn').removeClass('active').removeClass('disabled').addClass('prev');
@@ -37,7 +37,7 @@ Craft.TranslationsForCraft.OrderDetail = {
     },
 
     validateStepElement: function(el) {
-        var $step = $(el).closest('.translations-for-craft-order-step');
+        var $step = $(el).closest('.translations-order-step');
         var stepId = $step.attr('id').replace(/^step(\d+)$/, '$1');
 
         return this.validateStep(stepId);
@@ -117,7 +117,7 @@ Craft.TranslationsForCraft.OrderDetail = {
             $('[data-order-attribute=targetSites]').text(targetSitesLabels.join(', '));
         });
 
-        $('.translations-for-craft-order-step-next').on('click', function(e) {
+        $('.translations-order-step-next').on('click', function(e) {
             e.preventDefault();
 
             if (self.validateStepElement(this)) {
@@ -125,13 +125,13 @@ Craft.TranslationsForCraft.OrderDetail = {
             }
         });
 
-        $('.translations-for-craft-order-step-prev').on('click', function(e) {
+        $('.translations-order-step-prev').on('click', function(e) {
             e.preventDefault();
 
             self.goToStep(this);
         });
 
-        $('.translations-for-craft-order-delete-entry').on('click', function(e) {
+        $('.translations-order-delete-entry').on('click', function(e) {
             var $button = $(this);
             var $table = $button.closest('table');
             var $row = $button.closest('tr');
@@ -148,7 +148,7 @@ Craft.TranslationsForCraft.OrderDetail = {
                 var entriesCount = $('input[name="elements[]"]').length;
 
                 if (entriesCount === 0) {
-                    $('.translations-for-craft-order-submit-btn').addClass('disabled').prop('disabled', true);
+                    $('.translations-order-submit-btn').addClass('disabled').prop('disabled', true);
                 }
 
                 var wordCount = 0;
@@ -163,33 +163,33 @@ Craft.TranslationsForCraft.OrderDetail = {
             }
         });
 
-        $('.translations-for-craft-order-submit-btn').on('click', function(e) {
+        $('.translations-order-submit-btn').on('click', function(e) {
             if (!self.validateStep('4')) {
                 e.preventDefault();
             } else {
-                $(this).closest('.translations-for-craft-order-form')
-                    .find('.translations-for-craft-loader-msg')
+                $(this).closest('.translations-order-form')
+                    .find('.translations-loader-msg')
                     .removeClass('hidden');
     
-                setTimeout(function(){window.location.href=Craft.getUrl('translations-for-craft/orders')},1000)
+                setTimeout(function(){window.location.href=Craft.getUrl('translations/orders')},1000)
             }
 
         });
 
-        $('.translations-for-craft-order-form').on('submit', function(e) {
+        $('.translations-order-form').on('submit', function(e) {
             if (!self.validateStep('4')) {
                 e.preventDefault();
             }
 
             var $form = $(this);
 
-            $form.find('.translations-for-craft-loader').removeClass('hidden');
+            $form.find('.translations-loader').removeClass('hidden');
             $form.find('.btn[type=submit]').addClass('disabled').css('pointer-events', 'none');
         });
 
         $("input[id^=requestedDueDate]").datepicker('option', 'minDate', +1)
 
-        $(document).on('click', '.translations-for-craft-order-step-btngroup .btn.prev', function(e) {
+        $(document).on('click', '.translations-order-step-btngroup .btn.prev', function(e) {
             e.preventDefault();
 
             self.goToStep(this);
@@ -211,7 +211,7 @@ Craft.TranslationsForCraft.OrderDetail = {
             var order_id = $('#order_id').val();
 
             var data = {
-                action: 'translations-for-craft/base/edit-order-name',
+                action: 'translations/base/edit-order-name',
                 orderId: order_id,
                 order_name: order_name
             };
@@ -241,7 +241,7 @@ Craft.TranslationsForCraft.OrderDetail = {
 };
 
 $(function() {
-    Craft.TranslationsForCraft.OrderDetail.init();
+    Craft.Translations.OrderDetail.init();
 });
 
 })(jQuery);

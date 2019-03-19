@@ -1,11 +1,11 @@
 {% extends "_layouts/cp" %}
-{# {% import 'translations-for-craft/_macros' as macros %} #}
+{# {% import 'translations/_macros' as macros %} #}
 
 {% set title = "Translation Dashboard"|t %}
-{% set elementType = 'acclaro\\translationsforcraft\\elements\\Order' %}
+{% set elementType = 'acclaro\\translations\\elements\\Order' %}
 
 {% block actionButton %}
-    <a class="btn submit add icon btn-create-new-order" href="{{ url('translations-for-craft/orders/new') }}" style="margin-right: 5px;">{{ 'Create New Order'|t }}</a>
+    <a class="btn submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}" style="margin-right: 5px;">{{ 'Create New Order'|t }}</a>
     <div class="buttons secondary-buttons">
         <div class="newwidget btngroup">
             <div id="newwidgetmenubtn" class="btn submit menubtn add icon">{{ 'New widget'|t('app') }}</div>
@@ -27,7 +27,7 @@
     </div>
 {% endblock %}
 
-{% do view.registerAssetBundle("acclaro\\translationsforcraft\\assetbundles\\OrderAssets") %}
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
 
 {% set elementInstance = craft.app.elements.createElement(elementType) %}
 {% set context = 'index' %}

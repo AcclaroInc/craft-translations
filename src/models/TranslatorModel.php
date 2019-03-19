@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\models;
+namespace acclaro\translations\models;
 
 use Craft;
 use craft\base\Model;
@@ -16,12 +16,12 @@ use craft\validators\SiteIdValidator;
 use craft\validators\StringValidator;
 use craft\validators\UniqueValidator;
 use craft\validators\DateTimeValidator;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class TranslatorModel extends Model
@@ -65,7 +65,7 @@ class TranslatorModel extends Model
 
     public function getName()
     {
-        return $this->label ? $this->label : TranslationsForCraft::$plugin->translatorRepository->getTranslatorServiceLabel($this->service);
+        return $this->label ? $this->label : Translations::$plugin->translatorRepository->getTranslatorServiceLabel($this->service);
     }
 
     public function getSitesArray()

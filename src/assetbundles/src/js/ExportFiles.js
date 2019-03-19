@@ -1,13 +1,13 @@
 (function($) {
 
-  if (typeof Craft.TranslationsForCraft === 'undefined') {
-      Craft.TranslationsForCraft = {};
+  if (typeof Craft.Translations === 'undefined') {
+      Craft.Translations = {};
   }
 
   /**
    * Order Export Files To Translate
    */
-  Craft.TranslationsForCraft.ExportFiles = Garnish.Base.extend(
+  Craft.Translations.ExportFiles = Garnish.Base.extend(
     {
         $trigger: null,
         $form: null,
@@ -56,7 +56,7 @@
                                         this.updateProgressBar();
 
                                         if (response && response.translatedFiles) {
-                                            var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations-for-craft/files/export-file', {'filename': response.translatedFiles})}).hide();
+                                            var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.translatedFiles})}).hide();
                                             this.$form.append($iframe);
                                         }
 

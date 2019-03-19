@@ -8,22 +8,22 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\fieldtranslator;
+namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use craft\elements\Category;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\ElementTranslator;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\ElementTranslator;
 
 class CategoryFieldTranslator extends TaxonomyFieldTranslator
 {
     public function translateRelated(ElementTranslator $elementTranslator, Element $element, Category $category, $sourceSite, $targetSite, $fieldData)
     {
         // search for existing translated category in the same group
-        $translatedCategory = TranslationsForCraft::$plugin->categoryRepository->find(array(
+        $translatedCategory = Translations::$plugin->categoryRepository->find(array(
             // 'slug' => $fieldData->slug,
             'groupId' => $category->groupId,
             'siteId' => $targetSite,
@@ -33,7 +33,7 @@ class CategoryFieldTranslator extends TaxonomyFieldTranslator
             return $translatedCategory->id;
         }
 
-        $translatedCategory = TranslationsForCraft::$plugin->categoryRepository->find(array(
+        $translatedCategory = Translations::$plugin->categoryRepository->find(array(
             'id' => $category->id,
             'groupId' => $category->groupId,
             'siteId' => $targetSite,
@@ -57,7 +57,7 @@ class CategoryFieldTranslator extends TaxonomyFieldTranslator
 
         $category->setFieldValues($post);
 
-        TranslationsForCraft::$plugin->categoryRepository->saveCategory($category);
+        Translations::$plugin->categoryRepository->saveCategory($category);
 
         return $category->id;
     }

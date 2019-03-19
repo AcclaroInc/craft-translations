@@ -8,13 +8,13 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
+namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
 use craft\models\EntryDraft;
 use craft\base\ElementInterface;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 
 class DraftRepository
 {

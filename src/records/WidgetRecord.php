@@ -8,16 +8,16 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\records;
+namespace acclaro\translations\records;
 
 use craft\db\Table;
 use craft\db\ActiveRecord;
 use yii\db\ActiveQueryInterface;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\Translations;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.0
  */
 class WidgetRecord extends ActiveRecord
@@ -30,7 +30,7 @@ class WidgetRecord extends ActiveRecord
      */
     public static function tableName(): string
     {
-        return '{{%translationsforcraft_widgets}}';
+        return '{{%translations_widgets}}';
     }
     
     /**

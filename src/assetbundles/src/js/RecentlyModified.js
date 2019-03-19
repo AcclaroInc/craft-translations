@@ -5,7 +5,7 @@
         });
     }
 
-    Craft.TranslationsForCraft.RecentlyModified = Garnish.Base.extend(
+    Craft.Translations.RecentlyModified = Garnish.Base.extend(
         {
             params: null,
             $widget: null,
@@ -38,7 +38,7 @@
                     limit: params
                 };
 
-                Craft.postActionRequest('translations-for-craft/widget/get-recently-modified', data, $.proxy(function(response, textStatus) {
+                Craft.postActionRequest('translations/widget/get-recently-modified', data, $.proxy(function(response, textStatus) {
                     if (textStatus === 'success') {
                         this.$widget.removeClass('loading');
                         this.$widget.find('.elements').removeClass('hidden');
@@ -85,7 +85,7 @@
 
                     $('.entry-check .checkbox').on('click', function(e) {
                         $(e.target).closest('tr[id^=item-]').toggleClass('sel');
-                        Craft.TranslationsForCraft.RecentlyModified.prototype.updateSelected();
+                        Craft.Translations.RecentlyModified.prototype.updateSelected();
                     });
 
                     $('.view-diff').on('click', function(e) {
@@ -109,7 +109,7 @@
                         $modal.show();
 
                         // Set the reorder button
-                        $('.reorderUrl').attr('href', Craft.getUrl('translations-for-craft/orders/new?sourceSite='+ content[$(e.target).attr('data-id')].siteId +'&elements[]='+ content[$(e.target).attr('data-id')].entryId));
+                        $('.reorderUrl').attr('href', Craft.getUrl('translations/orders/new?sourceSite='+ content[$(e.target).attr('data-id')].siteId +'&elements[]='+ content[$(e.target).attr('data-id')].entryId));
 
                         // Set modification details
                         for (let index = 0; index < classNames.length; index++) {
@@ -147,7 +147,7 @@
                 }
 
                 if (!$('#bulk-reorder').hasClass('disabled')) {
-                    $('#bulk-reorder').attr('href', Craft.getUrl('translations-for-craft/orders/new?sourceSite='+ Craft.siteId + elements));
+                    $('#bulk-reorder').attr('href', Craft.getUrl('translations/orders/new?sourceSite='+ Craft.siteId + elements));
                 }
             }
         });

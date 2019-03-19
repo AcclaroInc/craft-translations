@@ -1,6 +1,6 @@
 <?php
 
-namespace acclaro\translationsforcraft\migrations;
+namespace acclaro\translations\migrations;
 
 use Craft;
 use craft\db\Migration;
@@ -15,10 +15,10 @@ class m190219_003607_order_failed extends Migration
      */
     public function safeUp()
     {
-        echo "Altering translationsforcraft_orders status column to include failed order status...\n";
+        echo "Altering translations_orders status column to include failed order status...\n";
         $values = ['new','getting quote','needs approval','in preparation','in progress','complete','canceled','published','failed'];
-        $this->alterColumn('{{%translationsforcraft_orders}}', 'status', $this->enum('values', $values)->notNull()->defaultValue('new'));
-        echo "Done altering translationsforcraft_orders status column...\n";
+        $this->alterColumn('{{%translations_orders}}', 'status', $this->enum('values', $values)->notNull()->defaultValue('new'));
+        echo "Done altering translations_orders status column...\n";
     }
 
     /**

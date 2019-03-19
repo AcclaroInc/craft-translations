@@ -8,19 +8,19 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\translation;
+namespace acclaro\translations\services\translation;
 
 use Craft;
 use DateTime;
 use Exception;
 use craft\elements\GlobalSet;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\models\FileModel;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\api\AcclaroApiClient;
-use acclaro\translationsforcraft\services\job\UpdateDraftFromXml;
-use acclaro\translationsforcraft\services\job\Factory as JobFactory;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\models\FileModel;
+use acclaro\translations\Translations;
+use acclaro\translations\services\api\AcclaroApiClient;
+use acclaro\translations\services\job\UpdateDraftFromXml;
+use acclaro\translations\services\job\Factory as JobFactory;
 
 class AcclaroTranslationService implements TranslationServiceInterface
 {
@@ -30,13 +30,13 @@ class AcclaroTranslationService implements TranslationServiceInterface
     protected $sandboxMode = false;
     
     /**
-     * @var acclaro\translationsforcraft\services\api\AcclaroApiClient
+     * @var acclaro\translations\services\api\AcclaroApiClient
      */
     protected $acclaroApiClient;
 
     /**
      * @param array                                                         $settings
-     * @param acclaro\translationsforcraft\services\api\AcclaroApiClient    $acclaroApiClient
+     * @param acclaro\translations\services\api\AcclaroApiClient    $acclaroApiClient
      */
     public function __construct(
         array $settings,
@@ -73,7 +73,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         if ($order->status !== $orderResponse->status) {
             $order->logActivity(
-                sprintf(TranslationsForCraft::$plugin->translator->translate('app', 'Order status changed to %s'), $orderResponse->status)
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderResponse->status)
             );
         }
 
@@ -115,12 +115,12 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
             if ($element instanceof GlobalSet) {
-                $draft = TranslationsForCraft::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+                $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
             } else {
-                $draft = TranslationsForCraft::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
 
-            TranslationsForCraft::$plugin->jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
+            Translations::$plugin->jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
         }
     }
 
@@ -142,7 +142,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         $orderCallbackResponse = $this->acclaroApiClient->requestOrderCallback(
             $order->serviceOrderId,
-            TranslationsForCraft::$plugin->urlGenerator->generateOrderCallbackUrl($order)
+            Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
         );
 
         $tempPath = Craft::$app->path->getTempPath();
@@ -150,8 +150,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
         foreach ($order->files as $file) {
             $element = Craft::$app->elements->getElementById($file->elementId);
 
-            $sourceSite = TranslationsForCraft::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
-            $targetSite = TranslationsForCraft::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
+            $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
+            $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
                 $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
@@ -176,8 +176,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
             // var_dump($fileResponse);
             // var_dump(isset($fileResponse->errorCode));
             // if (isset($fileResponse->errorCode)) {
-            //     // Craft::$app->getSession()->setError(TranslationsForCraft::$plugin->translator->translate('app', 'Error Code: '.$fileResponse->errorCode.' '. $fileResponse->errorMessage));
-            //     throw new HttpException(400, TranslationsForCraft::$plugin->translator->translate('app', 'Error Code: '.$fileResponse->errorCode.' '. $fileResponse->errorMessage));
+            //     // Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Error Code: '.$fileResponse->errorCode.' '. $fileResponse->errorMessage));
+            //     throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Error Code: '.$fileResponse->errorCode.' '. $fileResponse->errorMessage));
             // } else {
                 // var_dump('$fileResponse');
                 // var_dump($fileResponse);
@@ -189,7 +189,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $fileCallbackResponse = $this->acclaroApiClient->requestFileCallback(
                     $order->serviceOrderId,
                     $file->serviceFileId,
-                    TranslationsForCraft::$plugin->urlGenerator->generateFileCallbackUrl($file)
+                    Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
                 );
 
                 $this->acclaroApiClient->addReviewUrl(

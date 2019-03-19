@@ -8,14 +8,14 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services;
+namespace acclaro\translations\services;
 
 use Craft;
 use Exception;
 use DOMDocument;
 use craft\base\Element;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 
 class ElementToXmlConverter
 {
@@ -36,7 +36,7 @@ class ElementToXmlConverter
         $sites->setAttribute('target-site', $targetSite);
         $langs->setAttribute('source-language', Craft::$app->sites->getSiteById($sourceSite)->language);
         $langs->setAttribute('target-language', Craft::$app->sites->getSiteById($targetSite)->language);
-        $original->setAttribute('url', TranslationsForCraft::$plugin->urlGenerator->generateElementPreviewUrl($element, $targetSite));
+        $original->setAttribute('url', Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $targetSite));
         $preview->setAttribute('url', $previewUrl);
 
         $elementIdMeta = $head->appendChild($dom->createElement('meta'));
@@ -49,7 +49,7 @@ class ElementToXmlConverter
 
         $body = $xml->appendChild($dom->createElement('body'));
 
-        foreach (TranslationsForCraft::$plugin->elementTranslator->toTranslationSource($element) as $key => $value) {
+        foreach (Translations::$plugin->elementTranslator->toTranslationSource($element) as $key => $value) {
             $translation = $dom->createElement('content');
 
             $translation->setAttribute('resname', $key);

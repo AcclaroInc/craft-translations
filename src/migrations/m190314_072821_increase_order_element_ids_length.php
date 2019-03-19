@@ -1,6 +1,6 @@
 <?php
 
-namespace acclaro\translationsforcraft\migrations;
+namespace acclaro\translations\migrations;
 
 use Craft;
 use craft\db\Migration;
@@ -15,9 +15,9 @@ class m190314_072821_increase_order_element_ids_length extends Migration
      */
     public function safeUp()
     {
-        echo "Altering translationsforcraft_orders elementIds column...\n";
-        $this->alterColumn('{{%translationsforcraft_orders}}', 'elementIds', $this->string(2040)->notNull()->defaultValue(''));
-        echo "Done altering translationsforcraft_orders elementIds column...\n";
+        echo "Altering translations_orders elementIds column...\n";
+        $this->alterColumn('{{%translations_orders}}', 'elementIds', $this->string(2040)->notNull()->defaultValue(''));
+        echo "Done altering translations_orders elementIds column...\n";
     }
 
     /**

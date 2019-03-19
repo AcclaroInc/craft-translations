@@ -5,24 +5,24 @@
 
 {% set title = 'About'|t %}
 {% block actionButton %}
-<small class="translations-for-craft-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+<small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
 {% endblock %}
 
 {% set crumbs = [
-    { label: 'Translations'|t, url: url('translations-for-craft') },
+    { label: 'Translations'|t, url: url('translations') },
     { label: 'About'|t, url: 'javascript:void(0)' },
 ] %}
 
 {% block content %}
-    <div class="translations-for-craft-about">
-        <a href="https://www.acclaro.com/" class="translations-for-craft-about-logo"></a>
+    <div class="translations-about">
+        <a href="https://www.acclaro.com/" class="translations-about-logo"></a>
 
-        <h2 class="translations-for-craft-about-header">{{ 'Translations'|t }}</h2>
+        <h2 class="translations-about-header">{{ 'Translations'|t }}</h2>
 
-        <p class="translations-for-craft-about-author">{{ 'by Acclaro Inc.'|t }}</p>
-        <p class="translations-for-craft-about-version">{{ 'Version'|t }} {{ pluginVersion }}&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{cpUrl('utilities/updates')}}">{{ 'Check for updates'|t }} &raquo;</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://info.acclaro.com/hubfs/Product/TranslationPluginforCraft/TranslationPluginforCraft3QSG.pdf" target="_blank">{{ 'View Documentation'|t }} &raquo;</a></p>
+        <p class="translations-about-author">{{ 'by Acclaro Inc.'|t }}</p>
+        <p class="translations-about-version">{{ 'Version'|t }} {{ pluginVersion }}&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{cpUrl('utilities/updates')}}">{{ 'Check for updates'|t }} &raquo;</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://info.acclaro.com/hubfs/Product/TranslationPluginforCraft/TranslationPluginforCraft3QSG.pdf" target="_blank">{{ 'View Documentation'|t }} &raquo;</a></p>
 
-        <div class="translations-for-craft-about-text">
+        <div class="translations-about-text">
             <p>This plugin is made available by <a href="https://www.acclaro.com/">Acclaro</a>. Any usage of it on a public site requires that the site owners have purchased the plugin either from Acclaro or the Craft plugin store.</p>
             
             <p>Prior to installation and use of this plugin it is strongly recommended that you backup your site content.</p>
@@ -34,6 +34,6 @@
             <p><a href="mailto:support@acclaro.com">Contact us</a> with any additional plugin questions or support needs.</p>
         </div>
 
-        <p class="translations-for-craft-about-copyright">{{ 'Copyright %d Acclaro Inc. All rights reserved.'|t|format(now|date('Y')) }}</p>
+        <p class="translations-about-copyright">{{ 'Copyright %d Acclaro Inc. All rights reserved.'|t|format(now|date('Y')) }}</p>
     </div>
 {% endblock %}

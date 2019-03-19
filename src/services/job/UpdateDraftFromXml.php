@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\job;
+namespace acclaro\translations\services\job;
 
 use Craft;
 use craft\base\Element;
@@ -17,10 +17,10 @@ use yii\web\HttpException;
 use craft\models\EntryDraft;
 use craft\helpers\FileHelper;
 use craft\helpers\ElementHelper;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\repository\SiteRepository;
-use acclaro\translationsforcraft\models\GlobalSetDraftModel;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\repository\SiteRepository;
+use acclaro\translations\models\GlobalSetDraftModel;
 
 class UpdateDraftFromXml implements JobInterface
 {
@@ -30,7 +30,7 @@ class UpdateDraftFromXml implements JobInterface
     protected $element;
 
     /**
-     * @var \craft\models\EntryDraft|\acclaro\translationsforcraft\models\GlobalSetDraftModel
+     * @var \craft\models\EntryDraft|\acclaro\translations\models\GlobalSetDraftModel
      */
     protected $draft;
 
@@ -79,7 +79,7 @@ class UpdateDraftFromXml implements JobInterface
      */
     public function handle()
     {
-        $targetData = TranslationsForCraft::$plugin->elementTranslator->getTargetDataFromXml($this->xml);
+        $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($this->xml);
 
         if ($this->draft instanceof EntryDraft) {
             if (isset($targetData['title'])) {
@@ -91,7 +91,7 @@ class UpdateDraftFromXml implements JobInterface
             }
         }
 
-        $post = TranslationsForCraft::$plugin->elementTranslator->toPostArrayFromTranslationTarget($this->element, $this->sourceSite, $this->targetSite, $targetData);
+        $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($this->element, $this->sourceSite, $this->targetSite, $targetData);
         
         $this->draft->setFieldValues($post);
         
@@ -99,9 +99,9 @@ class UpdateDraftFromXml implements JobInterface
 
         // save the draft
         if ($this->draft instanceof EntryDraft) {
-            TranslationsForCraft::$plugin->draftRepository->saveDraft($this->draft);
+            Translations::$plugin->draftRepository->saveDraft($this->draft);
         } elseif ($this->draft instanceof GlobalSetDraftModel) {
-            TranslationsForCraft::$plugin->globalSetDraftRepository->saveDraft($this->draft);
+            Translations::$plugin->globalSetDraftRepository->saveDraft($this->draft);
         }
     }
 }

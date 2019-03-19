@@ -8,15 +8,15 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\fieldtranslator;
+namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use craft\fields\MultiSelect;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\ElementTranslator;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\ElementTranslator;
 
 class MultiSelectFieldTranslator extends GenericFieldTranslator
 {
@@ -101,7 +101,7 @@ class MultiSelectFieldTranslator extends GenericFieldTranslator
             }
 
             if ($source) {
-                TranslationsForCraft::$plugin->translationRepository->addTranslation(
+                Translations::$plugin->translationRepository->addTranslation(
                     $sourceSite,
                     $targetSite,
                     $source,
@@ -144,12 +144,12 @@ class MultiSelectFieldTranslator extends GenericFieldTranslator
      */
     public function getWordCount(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
-        $value = TranslationsForCraft::$plugin->getFieldValue($elementTranslator, $element, $field)->all();
+        $value = Translations::$plugin->getFieldValue($elementTranslator, $element, $field)->all();
 
         $wordCount = 0;
 
         foreach ((array) $value as $v) {
-            $wordCount += TranslationsForCraft::$plugin->wordCounter->getWordCount($v);
+            $wordCount += Translations::$plugin->wordCounter->getWordCount($v);
         }
 
         return $wordCount;

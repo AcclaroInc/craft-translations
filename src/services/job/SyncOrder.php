@@ -8,12 +8,12 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\job;
+namespace acclaro\translations\services\job;
 
 use Craft;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\elements\Order;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
+use acclaro\translations\Translations;
 
 class SyncOrder implements JobInterface
 {
@@ -36,16 +36,16 @@ class SyncOrder implements JobInterface
      */
     public function handle()
     {
-        $translationService = TranslationsForCraft::$plugin->translationFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
+        $translationService = Translations::$plugin->translationFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
         
         // Don't update manual orders
         if ($this->order->translator->service === 'export_import') {
             return;
         }
 
-        $translationService->updateOrder(TranslationsForCraft::$plugin->jobFactory, $this->order);
+        $translationService->updateOrder(Translations::$plugin->jobFactory, $this->order);
 
-        TranslationsForCraft::$plugin->orderRepository->saveOrder($this->order);
+        Translations::$plugin->orderRepository->saveOrder($this->order);
 
         foreach ($this->order->files as $file) {
 
@@ -54,9 +54,9 @@ class SyncOrder implements JobInterface
                 continue;
             }
 
-            $translationService->updateFile(TranslationsForCraft::$plugin->jobFactory, $this->order, $file);
+            $translationService->updateFile(Translations::$plugin->jobFactory, $this->order, $file);
 
-            TranslationsForCraft::$plugin->fileRepository->saveFile($file);
+            Translations::$plugin->fileRepository->saveFile($file);
         }
     }
 }

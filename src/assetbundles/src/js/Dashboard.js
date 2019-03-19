@@ -4,7 +4,7 @@
     /**
      * Dashboard class
      */
-    Craft.TranslationsForCraft.Dashboard = Garnish.Base.extend(
+    Craft.Translations.Dashboard = Garnish.Base.extend(
         {
             $grid: null,
             $widgetManagerBtn: null,
@@ -87,7 +87,7 @@
                     $container.addClass('loading');
                 }
 
-                var widget = new Craft.TranslationsForCraft.Widget($container, settingsHtml.replace(/__NAMESPACE__/g, settingsNamespace), function() {
+                var widget = new Craft.Translations.Widget($container, settingsHtml.replace(/__NAMESPACE__/g, settingsNamespace), function() {
                     eval(settingsJs);
                 });
 
@@ -108,7 +108,7 @@
                         type: type
                     };
 
-                    Craft.postActionRequest('translations-for-craft/widget/create-widget', data, function(response, textStatus) {
+                    Craft.postActionRequest('translations/widget/create-widget', data, function(response, textStatus) {
                         if (textStatus === 'success' && response.success) {
                             $container.removeClass('loading');
                             widget.update(response);
@@ -125,7 +125,7 @@
                     var $widgets = this.$grid.find('> .item > .widget'),
                         $form = $(
                             '<form method="post" accept-charset="UTF-8">' +
-                            '<input type="hidden" name="action" value="translations-for-craft/widget/save-widget"/>' +
+                            '<input type="hidden" name="action" value="translations/widget/save-widget"/>' +
                             '</form>'
                         ).appendTo(Garnish.$bod),
                         $noWidgets = $('<p id="nowidgets"' + ($widgets.length ? ' class="hidden"' : '') + '>' + Craft.t('app', 'You don’t have any widgets yet.') + '</p>').appendTo($form),
@@ -158,8 +158,8 @@
                         tableSelector: $table,
                         noObjectsSelector: $noWidgets,
                         sortable: true,
-                        reorderAction: 'translations-for-craft/widget/reorder-user-widgets',
-                        deleteAction: 'translations-for-craft/widget/delete-user-widget',
+                        reorderAction: 'translations/widget/reorder-user-widgets',
+                        deleteAction: 'translations/widget/delete-user-widget',
                         onReorderItems: $.proxy(function(ids) {
                             var lastWidget = null;
 
@@ -198,7 +198,7 @@
     /**
      * Dashboard Widget class
      */
-    Craft.TranslationsForCraft.Widget = Garnish.Base.extend(
+    Craft.Translations.Widget = Garnish.Base.extend(
         {
             $container: null,
             $gridItem: null,
@@ -333,7 +333,7 @@
                 e.preventDefault();
                 this.$settingsSpinner.removeClass('hidden');
 
-                var action = this.$container.hasClass('new') ? 'translations-for-craft/widget/create-widget' : 'translations-for-craft/widget/save-widget-settings',
+                var action = this.$container.hasClass('new') ? 'translations/widget/create-widget' : 'translations/widget/save-widget-settings',
                     data = this.$settingsForm.serialize();
 
                 Craft.postActionRequest(action, data, $.proxy(function(response, textStatus) {
@@ -459,7 +459,7 @@
                 );
 
                 // Initialize the colspan picker
-                this.colspanPicker = new Craft.TranslationsForCraft.WidgetColspanPicker(this, $row.find('> td.widgetmanagerhud-col-colspan-picker'));
+                this.colspanPicker = new Craft.Translations.WidgetColspanPicker(this, $row.find('> td.widgetmanagerhud-col-colspan-picker'));
 
                 return $row;
             },
@@ -486,7 +486,7 @@
     /**
      * Widget colspan picker class
      */
-    Craft.TranslationsForCraft.WidgetColspanPicker = Garnish.Base.extend(
+    Craft.Translations.WidgetColspanPicker = Garnish.Base.extend(
         {
             widget: null,
             maxColspan: null,
@@ -588,7 +588,7 @@
                     colspan: newColspan
                 };
 
-                Craft.postActionRequest('translations-for-craft/widget/change-widget-colspan', data, function(response, textStatus) {
+                Craft.postActionRequest('translations/widget/change-widget-colspan', data, function(response, textStatus) {
                     if (textStatus === 'success' && response.success) {
                         Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
                     }

@@ -1,10 +1,10 @@
 (function($) {
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
-Craft.TranslationsForCraft.GlobalSetEdit = {
+Craft.Translations.GlobalSetEdit = {
     init: function(orders, globalSetId, drafts) {
         this.initAddToTranslationOrderButton(orders, globalSetId);
         this.initDraftsDropdown(drafts);
@@ -63,7 +63,7 @@ Craft.TranslationsForCraft.GlobalSetEdit = {
         var $formsubmit = $('<a>', {
             'class': 'formsubmit',
             'text': Craft.t('app', 'Save as a draft'),
-            'data-action': 'translations-for-craft/base/save-global-set-draft'
+            'data-action': 'translations/base/save-global-set-draft'
         }).appendTo($item);
 
         $btn.menubtn();
@@ -76,7 +76,7 @@ Craft.TranslationsForCraft.GlobalSetEdit = {
 
         var sourceSite = $('form#main-form input[type=hidden][name=siteId]').val();
 
-        var $btngroup = $('<div>', {'class': 'btngroup submit right translations-for-craft-dropdown'});
+        var $btngroup = $('<div>', {'class': 'btngroup submit right translations-dropdown'});
 
         $btngroup.insertBefore('#header > .submit');
 
@@ -154,7 +154,7 @@ Craft.TranslationsForCraft.GlobalSetEdit = {
                 var $hiddenAction = $('<input>', {
                     'type': 'hidden',
                     'name': 'action',
-                    'value': 'translations-for-craft/base/add-elements-to-order'
+                    'value': 'translations/base/add-elements-to-order'
                 });
 
                 $hiddenAction.appendTo($form);
@@ -193,7 +193,7 @@ Craft.TranslationsForCraft.GlobalSetEdit = {
             });
         }
 
-        var $link = Craft.getUrl('translations-for-craft/orders/new', {'elements[]': globalSetId, 'sourceSite': sourceSite});
+        var $link = Craft.getUrl('translations/orders/new', {'elements[]': globalSetId, 'sourceSite': sourceSite});
 
         $btn.attr('href', $link);
 

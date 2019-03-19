@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\fieldtranslator;
+namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
 use craft\base\Field;
@@ -32,8 +32,8 @@ use fruitstudios\linkit\fields\LinkitField;
 use verbb\supertable\fields\SuperTableField;
 use nystudio107\seomatic\fields\SeoSettings;
 
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 
 class Factory
 {
@@ -71,15 +71,15 @@ class Factory
 
             switch ($translatorClass) {
                 case MultiOptionsFieldTranslator::class:
-                    return new MultiOptionsFieldTranslator(Craft::$app, TranslationsForCraft::$plugin->wordCounter, TranslationsForCraft::$plugin->translationRepository);
+                    return new MultiOptionsFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
                 case SingleOptionFieldTranslator::class:
-                    return new SingleOptionFieldTranslator(Craft::$app, TranslationsForCraft::$plugin->wordCounter, TranslationsForCraft::$plugin->translationRepository);
+                    return new SingleOptionFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
                 case TagFieldTranslator::class:
-                    return new TagFieldTranslator(Craft::$app, TranslationsForCraft::$plugin->wordCounter, TranslationsForCraft::$plugin->tagRepository, TranslationsForCraft::$plugin->elementCloner);
+                    return new TagFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->tagRepository, Translations::$plugin->elementCloner);
                 case CategoryFieldTranslator::class:
-                    return new CategoryFieldTranslator(Craft::$app, TranslationsForCraft::$plugin->wordCounter, TranslationsForCraft::$plugin->categoryRepository);
+                    return new CategoryFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->categoryRepository);
             }
-            return new $translatorClass(Craft::$app, TranslationsForCraft::$plugin->wordCounter);
+            return new $translatorClass(Craft::$app, Translations::$plugin->wordCounter);
         }
 
         return null;

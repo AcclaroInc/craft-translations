@@ -8,15 +8,15 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\repository;
-use acclaro\translationsforcraft\TranslationsForCraft;
+namespace acclaro\translations\services\repository;
+use acclaro\translations\Translations;
 
 use Craft;
 use Exception;
 use yii\i18n\MessageSource;
 use ReflectionClass;
-use acclaro\translationsforcraft\models\TranslationModel;
-use acclaro\translationsforcraft\records\TranslationRecord;
+use acclaro\translations\models\TranslationModel;
+use acclaro\translations\records\TranslationRecord;
 
 class TranslationRepository
 {

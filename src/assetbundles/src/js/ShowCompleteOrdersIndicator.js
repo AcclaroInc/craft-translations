@@ -1,10 +1,10 @@
 (function($) {
 
-if (typeof Craft.TranslationsForCraft === 'undefined') {
-    Craft.TranslationsForCraft = {};
+if (typeof Craft.Translations === 'undefined') {
+    Craft.Translations = {};
 }
 
-Craft.TranslationsForCraft.ShowCompleteOrdersIndicator = {
+Craft.Translations.ShowCompleteOrdersIndicator = {
     numberOfCompleteOrders: 0,
     init: function(numberOfCompleteOrders) {
         this.numberOfCompleteOrders = numberOfCompleteOrders;
@@ -14,8 +14,8 @@ Craft.TranslationsForCraft.ShowCompleteOrdersIndicator = {
         }
     },
     showIndicator: function() {
-        // var $link = $('<span>', {'class': 'translations-for-craft-complete-orders-indicator'});
-        // var $stamp = $('<span>', {'class': 'translations-for-craft-complete-orders-indicator', 'data-icon': 'newstamp'});
+        // var $link = $('<span>', {'class': 'translations-complete-orders-indicator'});
+        // var $stamp = $('<span>', {'class': 'translations-complete-orders-indicator', 'data-icon': 'newstamp'});
         // var $indicator = $('<span>', {'text': this.numberOfCompleteOrders});
         var $badge = $('<span>', {'class': 'badge number-of-orders', 'text': this.numberOfCompleteOrders});
 
@@ -23,8 +23,8 @@ Craft.TranslationsForCraft.ShowCompleteOrdersIndicator = {
 
         // $stamp.appendTo($link);
 
-        if (!$('#nav-translations-for-craft > a > span').last().hasClass('number-of-orders')) {
-            $badge.appendTo('#nav-translations-for-craft > a');
+        if (!$('#nav-translations > a > span').last().hasClass('number-of-orders')) {
+            $badge.appendTo('#nav-translations > a');
         }
     }
 };

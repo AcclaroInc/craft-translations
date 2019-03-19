@@ -8,19 +8,19 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\widgets;
+namespace acclaro\translations\widgets;
 
 use Craft;
 use craft\db\Query;
 use craft\helpers\Db;
 use craft\base\Widget;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\records\WidgetRecord;
-use acclaro\translationsforcraft\services\repository\TranslatorRepository;
+use acclaro\translations\services\App;
+use acclaro\translations\records\WidgetRecord;
+use acclaro\translations\services\repository\TranslatorRepository;
 
 /**
  * @author    Acclaro
- * @package   TranslationsForCraft
+ * @package   Translations
  * @since     1.0.2
  */
 class Translators extends Widget
@@ -38,7 +38,7 @@ class Translators extends Widget
      */
     public static function iconPath()
     {
-        return Craft::getAlias('@acclaro/translationsforcraft/icon-mask.svg');
+        return Craft::getAlias('@acclaro/translations/icon-mask.svg');
     }
 
     /**
@@ -68,7 +68,7 @@ class Translators extends Widget
         
         $translators = $this->_getTranslators();
         
-        return $view->renderTemplate('translations-for-craft/_components/widgets/Translators/body', ['translators' => $translators]);
+        return $view->renderTemplate('translations/_components/widgets/Translators/body', ['translators' => $translators]);
     }
 
     public static function doesUserHaveWidget(string $type): bool

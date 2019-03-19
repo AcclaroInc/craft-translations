@@ -8,15 +8,15 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translationsforcraft\services\translation;
+namespace acclaro\translations\services\translation;
 
 use Craft;
 use Exception;
-use acclaro\translationsforcraft\services\App;
-use acclaro\translationsforcraft\TranslationsForCraft;
-use acclaro\translationsforcraft\services\api\AcclaroApiClient;
-use acclaro\translationsforcraft\services\translation\AcclaroTranslationService;
-use acclaro\translationsforcraft\services\translation\Export_ImportTranslationService;
+use acclaro\translations\services\App;
+use acclaro\translations\Translations;
+use acclaro\translations\services\api\AcclaroApiClient;
+use acclaro\translations\services\translation\AcclaroTranslationService;
+use acclaro\translations\services\translation\Export_ImportTranslationService;
 
 class Factory
 {
