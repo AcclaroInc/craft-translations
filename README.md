@@ -47,7 +47,7 @@ You can also install Translations via the Plugin Store in the Craft Control Pane
 
 **Craft 2 support**  We offer similar features and functionality for Craft 2. [Click here](https://info.acclaro.com/translation-plugin-for-craft?utm_campaign=Craft%20Plugin%20Store&utm_source=Craft%20Plugin%20Store%20Listing%20-%20Craft%202%20Page&utm_medium=Listing) for more information.
 
-**Get started** We offer a 30-day money back guarantee for the software plugin purchase if you are not satisfied.
+**Our Guarantee** We offer a 30-day money back guarantee for the software plugin purchase if you are not satisfied.
 
 ## Getting Started With Your Translations 
 
