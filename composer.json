@@ -1,8 +1,8 @@
 {
-    "name": "acclaro/translations-for-craft",
+    "name": "acclaro/translations",
     "description": "Easily translate your multisite entry content and eliminate error prone copy/paste workflows through bulk XML import/export and Acclaro Sync features.",
     "type": "craft-plugin",
-    "version": "1.0.3",
+    "version": "1.0.0",
     "keywords": [
         "craft",
         "cms",
@@ -11,8 +11,8 @@
         "translation plugin for craft"
     ],
     "support": {
-        "docs": "https://info.acclaro.com/hubfs/Product/TranslationPluginforCraft/TranslationPluginforCraft3QSG.pdf",
-        "issues": "https://github.com/AcclaroInc/Acclaro-Translation-Plugin-Craft-v3/issues"
+        "docs": "https://github.com/AcclaroInc/craft-translations/wiki",
+        "issues": "https://github.com/AcclaroInc/craft-translations/issues"
     },
     "license": "proprietary",
     "authors": [
@@ -33,10 +33,10 @@
     },
     "extra": {
         "name": "Translations",
-        "handle": "translations-for-craft",
+        "handle": "translations",
         "hasCpSection": true,
-        "changelogUrl": "https://github.com/AcclaroInc/Acclaro-Translation-Plugin-Craft-v3/translationsforcraft/master/CHANGELOG.md",
-        "documentationUrl": "https://info.acclaro.com/hubfs/Product/TranslationPluginforCraft/TranslationPluginforCraft3QSG.pdf",
+        "changelogUrl": "https://github.com/AcclaroInc/craft-translations/master/CHANGELOG.md",
+        "documentationUrl": "https://github.com/AcclaroInc/craft-translations/wiki",
         "components": {
             "translationPluginForCraftService": "acclaro\\translationsforcraft\\services\\TranslationsForCraftService"
         },
