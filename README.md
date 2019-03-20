@@ -6,6 +6,7 @@
 - The license fee for this plugin is $999.00 via the Craft Plugin Store. Annual license renewals can be purchased for $399.00. (Pricing is subject to change without prior notice)
 - Prior to download, installation and use of the Translation Plugin for Craft on a public site, site owners are required to purchase the plugin from the Craft plugin store or submit payment directly to Acclaro for purchases outside of the store. 
 - Any usage of the plugin either on production or in a sandbox environment indicates your acceptance of the legal terms described in the [Craft Software License](https://craftcms.github.io/license/). Any usage of Acclaro Translation Service API integrations indicates acceptance of the terms and conditions as set forth in the [Acclaro User Agreement](https://my.acclaro.com/p.php/useragreement) and [Privacy Policy](https://www.acclaro.com/privacy-policy/).
+- Creating translation orders with multiple entries (bulk orders) is not available during the trial period of the plugin. Once a license is purchased, bulk ordering is automatically enabled.
 
 <!-- ## Used By -->
 <!-- [Clients go here] -->
