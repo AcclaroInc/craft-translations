@@ -74,6 +74,9 @@ class CreateOrderTranslationDrafts implements JobInterface
                     case Entry::class:
                         $drafts[] = $this->createEntryDraft($element, $site);
                         break;
+                    case EntryDraft::class:
+                        $drafts[] = $this->createEntryDraft($element, $site);
+                        break;
                     case GlobalSet::class:
                         $drafts[] = $this->createGlobalSetDraft($element, $site);
                         break;
