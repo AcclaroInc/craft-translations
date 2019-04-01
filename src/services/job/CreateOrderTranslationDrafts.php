@@ -70,7 +70,6 @@ class CreateOrderTranslationDrafts implements JobInterface
 
         foreach ($this->targetSites as $key => $site) {
             foreach ($this->elements as $element) {
-                var_dump(get_class($element));
                 switch (get_class($element)) {
                     case Entry::class:
                         $drafts[] = $this->createEntryDraft($element, $site);
