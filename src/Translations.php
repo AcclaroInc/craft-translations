@@ -132,6 +132,19 @@ class Translations extends Plugin
             }
         );
 
+        Event::on(
+            Elements::class,
+            Elements::EVENT_BEFORE_DELETE_ELEMENT,
+            function (DeleteElementEvent $event) {
+                Craft::debug(
+                    'Elements::EVENT_BEFORE_DELETE_ELEMENT',
+                    __METHOD__
+                );
+
+                $this->_onDeleteElement($event);
+            }
+        );
+
         /**
          * EVENT_AFTER_DELETE_DRAFT gets triggered after EVENT_AFTER_PUBLISH_DRAFT
          * May need to find another solution to the entry draft deletion
@@ -409,5 +422,12 @@ class Translations extends Plugin
         $draft = $event->draft;
 
         return self::$plugin->fileRepository->delete($draft->draftId);
+    }
+
+    private function _onDeleteElement(Event $event) {
+
+        if (Craft::$app->getRequest()->getParam('hardDelete')) {
+            $event->hardDelete = true;
+        }
     }
 }

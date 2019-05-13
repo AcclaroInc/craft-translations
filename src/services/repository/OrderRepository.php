@@ -32,6 +32,15 @@ class OrderRepository
     }
 
     /**
+     * @param  int|string $orderId
+     * @return \acclaro\translations\elements\Order|null
+     */
+    public function getOrderByIdWithTrashed($orderId)
+    {
+        return Element::findOne(['id' => $orderId]);
+    }
+
+    /**
      * @return \craft\elements\db\ElementQuery
      */
     public function getDraftOrders()

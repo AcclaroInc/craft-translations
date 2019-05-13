@@ -1132,17 +1132,34 @@ class BaseController extends Controller
         $this->requirePostRequest();
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
+        $hardDelete = Craft::$app->getRequest()->getParam('hardDelete');
+        $restore = Craft::$app->getRequest()->getParam('restore');
+
+        if ($hardDelete || $restore) {
+
+            $order = Translations::$plugin->orderRepository->getOrderByIdWithTrashed($orderId);
+            $order->dateDeleted = NULL;
+            $order->save();
+
+            if ($restore) {
+                return $this->asJson([
+                    'success' => true,
+                    'error' => null
+                ]);
+            }
+        }
 
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
-        if (!$orderId) {
+        if (!$order) {
             return $this->asJson([
                 'success' => false,
                 'error' => Translations::$plugin->translator->translate('app', 'No order exists with the ID “{id}”.', array('id' => $orderId))
             ]);
         }
 
-        if ($order->status !== 'new' && $order->status !== 'failed') {
+        $translator = $order->translatorId ? Translations::$plugin->translatorRepository->getTranslatorById($order->translatorId) : null;
+        if (($translator->service == 'export_import' && $order->status === 'published') || ($translator->service == 'acclaro' && $order->status !== 'new' && $order->status !== 'failed')) {
             return $this->asJson([
                 'success' => false,
                 'error' => Translations::$plugin->translator->translate('app', 'You cannot delete a submitted order.')
@@ -1151,7 +1168,7 @@ class BaseController extends Controller
 
         if ($orderId) {
             Craft::$app->getElements()->deleteElementById($orderId);
-            
+
             return $this->asJson([
                 'success' => true,'error' => null
             ]);
