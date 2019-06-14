@@ -14,7 +14,7 @@ use Craft;
 use Exception;
 use craft\db\Query;
 use craft\helpers\Db;
-
+use craft\records\Element;
 use craft\elements\db\ElementQuery;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
