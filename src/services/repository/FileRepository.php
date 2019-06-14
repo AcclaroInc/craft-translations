@@ -209,11 +209,15 @@ class FileRepository
             if (!$record) {
                 throw new Exception('No file exists with that ID.');
             }
+            $record->setAttributes($file->getAttributes(), false);
         } else {
             $record = new FileRecord();
+            $att = $file->getAttributes();
+            if (empty($att['id'])) {
+                unset($att['id']);
+            }
+            $record->setAttributes($att, false);
         }
-        
-        $record->setAttributes($file->getAttributes(), false);
         
         if (!$record->validate()) {
             $file->addErrors($record->getErrors());
