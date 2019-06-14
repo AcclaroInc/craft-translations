@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.1.0 - 2019-06-17
+### Changed
+- Added support for PostgreSQL
+- Support Element soft-delete
+- Minor UI updates
+- Update actionUrl to token based
+
 ## 1.0.2 - 2019-04-01
 ### Changed
 - Added support `EntryDraft` types in `elements` table
