@@ -99,6 +99,7 @@ class WidgetController extends Controller
         $widgetTypeInfo = [];
         $view->setNamespace('__NAMESPACE__');
 
+        $isSelectableWidget = false;
         foreach ($widgetTypes as $widgetType) {
             /** @var WidgetInterface $widgetType */
             if (!$widgetType::isSelectable()) {
@@ -117,6 +118,7 @@ class WidgetController extends Controller
                 'settingsJs' => $settingsJs,
                 'selectable' => true,
             ];
+            $isSelectableWidget = true;
         }
 
         // Sort them by name
@@ -164,6 +166,7 @@ class WidgetController extends Controller
         $view->registerJs($allWidgetJs);
         $variables['widgetTypes'] = $widgetTypeInfo;
         $variables['selectedSubnavItem'] = 'dashboard';
+        $variables['isSelectableWidget'] = $isSelectableWidget;
         
         return $this->renderTemplate('translations/_index', $variables);
     }
