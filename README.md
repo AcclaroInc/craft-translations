@@ -13,6 +13,7 @@
 ## System Requirements
 - Craft CMS 3.0.0 or later.
 - PHP 7.1+
+- PHP [DOM](https://docs.craftcms.com/v3/requirements.html#optional-php-extensions) Extension
 
 ## Installation
 **Reminder:** Before installing the Translation Plugin or making any changes to support your Craft multisite settings, it’s recommended to ensure your Craft site backups are current. It is also recommended to try out all settings and multisite configuration changes on a staging site prior to implementation in a production environment.
