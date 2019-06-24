@@ -344,7 +344,7 @@ class Order extends Element
         
         foreach ($elementIds as $key => $elementId) {
             if (!array_key_exists($elementId, $this->_elements)) {
-                $this->_elements[$elementId] = Craft::$app->elements->getElementById($elementId, null, $this->siteId);
+                $this->_elements[$elementId] = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
             }
 
             if ($this->_elements[$elementId]) {
