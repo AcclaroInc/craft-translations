@@ -257,13 +257,20 @@ class Order extends Element
                 return $value ? date('n/j/y', strtotime($value)) : '--';
 
             case 'actionButton':
-            if ($this->status !== 'new' && $this->status !== 'failed') {
-                    return '<form><div class="btn menubtn settings icon"></div><div class="menu"><ul><li><a class="" href="'.$this->getCpEditUrl().'"> Edit</a></li></ul><hr><ul><li><a class="link-disabled">Delete</a></li></ul></div></form>';
+
+                if (($this->getTranslator()->service == 'export_import' && $this->status === 'published') || ($this->getTranslator()->service == 'acclaro' && $this->status !== 'new' && $this->status !== 'failed')) {
+                    return '<form><div class="btn menubtn settings icon"></div><div class="menu"><ul><li><a class="" href="'.$this->getCpEditUrl().'"> Edit</a></li></ul><hr><ul><li><a class="link-disabled">Move to Trash</a></li></ul></div></form>';
                 }
 
-                return sprintf(
-                    '<div class="btn menubtn settings icon"></div><div class="menu"><ul><li><a class="" href="'.$this->getCpEditUrl().'"> Edit</a></li></ul><hr><ul><li><a class="translations-delete-order error" data-order-id="%s">Delete</a></li></ul></div>',$this->id
-                );
+                if (!$this->trashed) {
+                    return sprintf(
+                        '<div class="btn menubtn settings icon"></div><div class="menu"><ul><li><a class="" href="'.$this->getCpEditUrl().'"> Edit</a></li></ul><hr><ul><li><a class="translations-delete-order error" data-hard-delete="0" data-order-id="%s">Move to Trash</a></li></ul></div>',$this->id
+                    );
+                } else {
+                    return sprintf(
+                        '<div class="btn menubtn settings icon"></div><div class="menu"><ul><li><a class="translations-restore-order" data-order-id="%s"> Restore </a></li></ul><hr><ul><li><a class="translations-delete-order error" data-hard-delete="1" data-order-id="%s">Delete Permanently</a></li></ul></div>',$this->id,$this->id
+                    );
+                }
 
             case 'ownerId':
                 return $this->getOwner() ? $this->getOwner()->username : '';
@@ -337,7 +344,7 @@ class Order extends Element
         
         foreach ($elementIds as $key => $elementId) {
             if (!array_key_exists($elementId, $this->_elements)) {
-                $this->_elements[$elementId] = Craft::$app->elements->getElementById($elementId, null, $this->siteId);
+                $this->_elements[$elementId] = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
             }
 
             if ($this->_elements[$elementId]) {

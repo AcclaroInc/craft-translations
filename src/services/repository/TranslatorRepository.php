@@ -144,11 +144,13 @@ class TranslatorRepository
             if (!$record) {
                 throw new Exception('No translator exists with that ID.');
             }
+            $record->setAttributes($translator->getAttributes(), false);
         } else {
             $record = new TranslatorRecord();
+            $new_translator = $translator->getAttributes();
+            unset($new_translator['id']);
+            $record->setAttributes($new_translator, false);
         }
-        
-        $record->setAttributes($translator->getAttributes(), false);
 
         if (!$record->validate()) {
             $translator->addErrors($record->getErrors());

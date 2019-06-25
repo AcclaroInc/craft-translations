@@ -91,7 +91,7 @@ class FilesController extends Controller
         {
             foreach ($order->files as $file)
             {
-                $element = Craft::$app->elements->getElementById($file->elementId);
+                $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
                 $targetSite = $file->targetSite;
 

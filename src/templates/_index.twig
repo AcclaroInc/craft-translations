@@ -8,7 +8,7 @@
     <a class="btn submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}" style="margin-right: 5px;">{{ 'Create New Order'|t }}</a>
     <div class="buttons secondary-buttons">
         <div class="newwidget btngroup">
-            <div id="newwidgetmenubtn" class="btn submit menubtn add icon">{{ 'New widget'|t('app') }}</div>
+            <div id="newwidgetmenubtn" class="btn submit menubtn add icon {% if isSelectableWidget is empty %} disabled {% endif %}">{{ 'New widget'|t('app') }}</div>
             <div class="menu newwidgetmenu">
                 <ul>
                     {% for type, info in widgetTypes if info.selectable %}

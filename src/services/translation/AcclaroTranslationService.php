@@ -148,7 +148,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
         $tempPath = Craft::$app->path->getTempPath();
 
         foreach ($order->files as $file) {
-            $element = Craft::$app->elements->getElementById($file->elementId);
+            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);

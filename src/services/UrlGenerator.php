@@ -106,7 +106,8 @@ class UrlGenerator
         // If we're looking at the live version of an entry, just use
         // the entry's main URL as its share URL
         if ($className === Entry::class && $element->getStatus() === Entry::STATUS_LIVE) {
-            $variables['shareUrl'] = $element->getUrl();
+            // $variables['shareUrl'] = $element->getUrl();
+            $previewUrl = $element->getUrl();
         } else {
             switch ($className) {
                 case EntryDraft::class:
@@ -124,10 +125,16 @@ class UrlGenerator
                     ];
                     break;
             }
+            // Create the token
+            $token = Craft::$app->getTokens()->createToken([
+                'entries/view-shared-entry',
+                $params,
+                new DateTime('+3 months')
+            ]);
+
+            $previewUrl = Translations::$plugin->urlHelper->urlWithToken($element->getUrl(), $token);
         }
         
-        $previewUrl = Translations::$plugin->urlHelper->actionUrl('entries/share-entry', $params);
-
         return $previewUrl;
     }
 }

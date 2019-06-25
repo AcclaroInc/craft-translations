@@ -57,7 +57,7 @@ class ExportOrderFiles implements JobInterface
         {
             foreach ($this->order->files as $file)
             {
-                $element = Craft::$app->elements->getElementById($file->elementId);
+                $element = Craft::$app->elements->getElementById($file->elementId, null, $this->sourceSite);
 
                 $targetSite = $file->targetSite;
                 if ($element instanceof GlobalSet)

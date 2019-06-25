@@ -24,6 +24,7 @@ use craft\events\ElementEvent;
 use craft\services\EntryRevisions;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\DeleteElementEvent;
 use acclaro\translations\services\App;
 use acclaro\translations\base\PluginTrait;
 use craft\console\Application as ConsoleApplication;
@@ -59,7 +60,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.0.0';
+    public $schemaVersion = '1.0.1';
 
     // Public Methods
     // =========================================================================
@@ -129,6 +130,19 @@ class Translations extends Plugin
                 );
                 
                 $this->_onSaveEntry($event);
+            }
+        );
+
+        Event::on(
+            Elements::class,
+            Elements::EVENT_BEFORE_DELETE_ELEMENT,
+            function (DeleteElementEvent $event) {
+                Craft::debug(
+                    'Elements::EVENT_BEFORE_DELETE_ELEMENT',
+                    __METHOD__
+                );
+
+                $this->_onDeleteElement($event);
             }
         );
 
@@ -409,5 +423,12 @@ class Translations extends Plugin
         $draft = $event->draft;
 
         return self::$plugin->fileRepository->delete($draft->draftId);
+    }
+
+    private function _onDeleteElement(Event $event) {
+
+        if (Craft::$app->getRequest()->getParam('hardDelete')) {
+            $event->hardDelete = true;
+        }
     }
 }
