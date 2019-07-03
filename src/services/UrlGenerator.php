@@ -132,7 +132,11 @@ class UrlGenerator
                 new DateTime('+3 months')
             ]);
 
-            $previewUrl = Translations::$plugin->urlHelper->urlWithToken($element->getUrl(), $token);
+            if ($element->getUrl()) {
+                $previewUrl = Translations::$plugin->urlHelper->urlWithToken($element->getUrl(), $token);
+            } else {
+                $previewUrl = '';
+            }
         }
         
         return $previewUrl;
