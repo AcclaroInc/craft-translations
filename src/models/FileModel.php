@@ -88,6 +88,8 @@ class FileModel extends Model
                 return 'Canceled';
             case 'published':
                 return 'Published';
+            case 'failed':
+                return 'Failed';
         }
     }
     
@@ -100,6 +102,7 @@ class FileModel extends Model
                 return 'orange';
             case 'complete':
                 return 'blue';
+            case 'failed':
             case 'canceled':
                 return 'red';
             case 'published':

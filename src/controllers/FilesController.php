@@ -91,6 +91,9 @@ class FilesController extends Controller
         {
             foreach ($order->files as $file)
             {
+                // skip failed files
+                if ($file->status == 'failed') continue;
+
                 $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
                 $targetSite = $file->targetSite;

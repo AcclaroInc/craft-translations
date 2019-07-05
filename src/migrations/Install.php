@@ -78,7 +78,7 @@ class Install extends Migration
                     'draftId'           => $this->integer()->notNull(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSite'        => $this->integer()->notNull(),
-                    'status'            => $this->enum('status', ['new','in progress','preview','complete','canceled','published'])->defaultValue('new'),
+                    'status'            => $this->enum('status', ['new','in progress','preview','complete','canceled','published', 'failed'])->defaultValue('new'),
                     'wordCount'         => $this->integer(),
                     'source'            => $this->longText(),
                     'target'            => $this->longText(),

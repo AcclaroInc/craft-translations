@@ -19,6 +19,7 @@ use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
+use acclaro\translations\services\job\OrderJob;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\SyncOrders;
 use acclaro\translations\services\job\CreateOrderTranslationDrafts;
@@ -1024,7 +1025,7 @@ class BaseController extends Controller
         if (Craft::$app->getRequest()->getParam('submit')) {
 
             Craft::$app->queue->push(new OrderJob([
-                'description' => 'Order submitted',
+                'description' => 'Creating Translation Order',
                 'orderId' => $order->getId(),
                 'wordCounts' => $wordCounts,
             ]));
