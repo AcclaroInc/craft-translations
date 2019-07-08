@@ -12,6 +12,7 @@ namespace acclaro\translations\controllers;
 
 use Craft;
 use DateTime;
+use Exception;
 use craft\web\Controller;
 use craft\elements\Entry;
 use yii\web\HttpException;
@@ -943,96 +944,105 @@ class BaseController extends Controller
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
         }
 
-        $targetSites = Craft::$app->getRequest()->getParam('targetSites');
+        try {
 
-        if ($targetSites === '*') {
-            $targetSites = Craft::$app->getSites()->getAllSiteIds();
-        }
+            $targetSites = Craft::$app->getRequest()->getParam('targetSites');
 
-        $requestedDueDate = Craft::$app->getRequest()->getParam('requestedDueDate');
-        
-        $translatorId = Craft::$app->getRequest()->getParam('translatorId');
-        
-        $title = Craft::$app->getRequest()->getParam('title');
+            if ($targetSites === '*') {
+                $targetSites = Craft::$app->getSites()->getAllSiteIds();
+            }
 
-        if (!$title) {
-            $title = sprintf(
-                'Translation Order #%s',
-                Translations::$plugin->orderRepository->getOrdersCount() + 1
-            );
-        }
+            $requestedDueDate = Craft::$app->getRequest()->getParam('requestedDueDate');
 
-        $order->ownerId = Craft::$app->getRequest()->getParam('ownerId');
-        $order->title = $title;
-        $order->targetSites = $targetSites ? json_encode($targetSites) : null;
-        
-        if ($requestedDueDate) {
-            if (!is_array($requestedDueDate)) {
-                $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
+            $translatorId = Craft::$app->getRequest()->getParam('translatorId');
+
+            $title = Craft::$app->getRequest()->getParam('title');
+
+            if (!$title) {
+                $title = sprintf(
+                    'Translation Order #%s',
+                    Translations::$plugin->orderRepository->getOrdersCount() + 1
+                );
+            }
+
+            $order->ownerId = Craft::$app->getRequest()->getParam('ownerId');
+            $order->title = $title;
+            $order->targetSites = $targetSites ? json_encode($targetSites) : null;
+
+            if ($requestedDueDate) {
+                if (!is_array($requestedDueDate)) {
+                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
+                } else {
+                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
+                }
+            }
+            $order->requestedDueDate = $requestedDueDate ? $requestedDueDate : null;
+
+            $order->comments = Craft::$app->getRequest()->getParam('comments');
+            $order->translatorId = $translatorId;
+
+            $elementIds = Craft::$app->getRequest()->getParam('elements') ? Craft::$app->getRequest()->getParam('elements') : array();
+
+            $order->elementIds = json_encode($elementIds);
+
+            $entriesCount = 0;
+            $wordCounts = array();
+
+            foreach ($order->getElements() as $element) {
+                $entriesCount++;
+
+                $wordCounts[$element->id] = Translations::$plugin->elementTranslator->getWordCount($element);
+
+                if ($element instanceof Entry) {
+                    $supportedSites = array();
+
+                    foreach ($element->getSupportedSites() as $supportedSite) {
+                        $supportedSites[] = $supportedSite['siteId'];
+                    }
+
+                    $hasTargetSites = !array_diff($targetSites, $supportedSites);
+
+                    if (!$hasTargetSites) {
+                        $message = sprintf(
+                            Translations::$plugin->translator->translate('app', "The target site(s) selected are not available for the entry “%s”. Please check your settings in Settings > Sections > %s to change this entry's target sites."),
+                            $element->title,
+                            $element->section->name
+                        );
+
+                        Craft::$app->getSession()->setError($message);
+                        return;
+                    }
+                }
+            }
+
+            $order->entriesCount = $entriesCount;
+            $order->wordCount = array_sum($wordCounts);
+
+            // Manual Translation will make orders 'in progress' status after creation
+
+            $success = Craft::$app->getElements()->saveElement($order);
+            if (!$success) {
+                Craft::error('Couldn’t save the order', __METHOD__);
             } else {
-                $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
-            }
-        }
-        $order->requestedDueDate = $requestedDueDate ? $requestedDueDate : null;
+                if (Craft::$app->getRequest()->getParam('submit')) {
 
-        $order->comments = Craft::$app->getRequest()->getParam('comments');
-        $order->translatorId = $translatorId;
+                    Craft::$app->queue->push(new OrderJob([
+                        'description' => 'Creating Translation Order',
+                        'orderId' => $order->getId(),
+                        'wordCounts' => $wordCounts,
+                    ]));
 
-        $elementIds = Craft::$app->getRequest()->getParam('elements') ? Craft::$app->getRequest()->getParam('elements') : array();
-
-        $order->elementIds = json_encode($elementIds);
-
-        $entriesCount = 0;
-        $wordCounts = array();
-
-        foreach ($order->getElements() as $element) {
-            $entriesCount++;
-
-            $wordCounts[$element->id] = Translations::$plugin->elementTranslator->getWordCount($element);
-
-            if ($element instanceof Entry) {
-                $supportedSites = array();
-
-                foreach ($element->getSupportedSites() as $supportedSite) {
-                    $supportedSites[] = $supportedSite['siteId'];
-                }
-
-                $hasTargetSites = !array_diff($targetSites, $supportedSites);
-
-                if (!$hasTargetSites) {
-                    $message = sprintf(
-                        Translations::$plugin->translator->translate('app', "The target site(s) selected are not available for the entry “%s”. Please check your settings in Settings > Sections > %s to change this entry's target sites."),
-                        $element->title,
-                        $element->section->name
-                    );
-
-                    Craft::$app->getSession()->setError($message);
-                    return;
+                    Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Submitted.'));
+                } else {
+                    Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Saved.'));
                 }
             }
-        }
 
-        $order->entriesCount = $entriesCount;
-        $order->wordCount = array_sum($wordCounts);
+        } catch (Exception $e) {
 
-        // Manual Translation will make orders 'in progress' status after creation
-
-        $success = Craft::$app->getElements()->saveElement($order);
-        if (!$success) {
-            Craft::error('Couldn’t save the order', __METHOD__);
-        }
-
-        if (Craft::$app->getRequest()->getParam('submit')) {
-
-            Craft::$app->queue->push(new OrderJob([
-                'description' => 'Creating Translation Order',
-                'orderId' => $order->getId(),
-                'wordCounts' => $wordCounts,
-            ]));
-
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Submitted.'));
-        } else {
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Saved.'));
+            Craft::error('Couldn’t save the order. Error: '.$e->getMessage(), __METHOD__);
+            $order->status = 'failed';
+            Craft::$app->getElements()->saveElement($order);
         }
 
         return $this->redirect('translations/orders', 302, true);
