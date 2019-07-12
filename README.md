@@ -13,6 +13,7 @@
 
 ## System Requirements
 - Craft CMS 3.0.0 or later. (Craft 3.1+ is required for v1.1.0^)
+    - ***Important Note:** Craft 3.2+ is not currently supported*
 - PHP 7.1+
 - PHP [DOM](https://docs.craftcms.com/v3/requirements.html#optional-php-extensions) Extension
 
