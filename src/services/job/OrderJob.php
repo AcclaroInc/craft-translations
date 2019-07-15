@@ -92,53 +92,11 @@ class OrderJob extends BaseJob
 
         $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Order Submitted to %s'), $order->translator->getName()));
 
-        $drafts = Translations::$plugin->jobFactory->dispatchJob(CreateOrderTranslationDrafts::class, $order->getTargetSitesArray(), $order->getElements(), $order->title);
-        $totalElements = count($drafts);
-        $currentElement = 0;
-        foreach ($drafts as $draft) {
-
-            $this->setProgress($queue, $currentElement++ / $totalElements);
-
-            $file = Translations::$plugin->fileRepository->makeNewFile();
-            if ($draft instanceof GlobalSet) {
-                $targetSite = $draft->site;
-            } else {
-                $targetSite = $draft->siteId;
-            }
-
-            try {
-
-                $element = Craft::$app->getElements()->getElementById($draft->id, null, $order->sourceSite);
-
-                $file->orderId = $order->id;
-                $file->elementId = $draft->id;
-                $file->draftId = $draft->draftId;
-                $file->sourceSite = $order->sourceSite;
-                $file->targetSite = $targetSite;
-                $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
-                $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                    $element,
-                    $draft->draftId,
-                    $order->sourceSite,
-                    $targetSite,
-                    $file->previewUrl
-                );
-                $file->wordCount = isset($this->wordCounts[$draft->id]) ? $this->wordCounts[$draft->id] : 0;
-
-                Translations::$plugin->fileRepository->saveFile($file);
-            } catch (Exception $e) {
-
-                $file->orderId = $order->id;
-                $file->elementId = $draft->id;
-                $file->draftId = $draft->draftId;
-                $file->sourceSite = $order->sourceSite;
-                $file->targetSite = $targetSite;
-                $file->status = 'failed';
-                $file->wordCount = isset($this->wordCounts[$draft->id]) ? $this->wordCounts[$draft->id] : 0;
-
-                Translations::$plugin->fileRepository->saveFile($file);
-            }
-        }
+        Craft::$app->queue->push(new OrderTranslationDrafts([
+            'description' => 'Creating Order Translation Drafts',
+            'orderId' => $order->getId(),
+            'wordCounts' => $this->wordCounts,
+        ]));
 
         // Only send order to translation service when not Manual
         if ($order->translator->service !== 'export_import') {

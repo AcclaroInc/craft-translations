@@ -11,6 +11,7 @@
 namespace acclaro\translations\services\job;
 
 use Craft;
+use Exception;
 use craft\base\Element;
 use craft\elements\Entry;
 use craft\models\EntryDraft;
@@ -89,45 +90,61 @@ class CreateOrderTranslationDrafts implements JobInterface
 
     public function createEntryDraft(Entry $entry, $site)
     {
-        $draftConfig = [
-            'name' => sprintf('%s [%s]', $this->orderName, $site),
-            'id' => $entry->id,
-            'sectionId' => $entry->sectionId,
-            'creatorId' => Craft::$app->session && Craft::$app->getUser() ? Craft::$app->getUser()->id : '1',
-            'typeId' => $entry->typeId,
-            'slug' => $entry->slug,
-            'postDate' => $entry->postDate,
-            'expiryDate' => $entry->expiryDate,
-            'enabled' => $entry->enabled,
-            'title' => $entry->title,
-            'authorId' => $entry->authorId
-        ];
 
-        $supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
+        try{
 
-        $draftConfig['enabledForSite'] = in_array($site, $supportedSites);
-        $draftConfig['siteId'] = $site;
+            $draftConfig = [
+                'name' => sprintf('%s [%s]', $this->orderName, $site),
+                'id' => $entry->id,
+                'sectionId' => $entry->sectionId,
+                'creatorId' => Craft::$app->session && Craft::$app->getUser() ? Craft::$app->getUser()->id : '1',
+                'typeId' => $entry->typeId,
+                'slug' => $entry->slug,
+                'postDate' => $entry->postDate,
+                'expiryDate' => $entry->expiryDate,
+                'enabled' => $entry->enabled,
+                'title' => $entry->title,
+                'authorId' => $entry->authorId
+            ];
 
-        $draft = Translations::$plugin->draftRepository->makeNewDraft($draftConfig);
+            $supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
 
-        Translations::$plugin->draftRepository->saveDraft($draft);
+            $draftConfig['enabledForSite'] = in_array($site, $supportedSites);
+            $draftConfig['siteId'] = $site;
 
-        return $draft;
+            $draft = Translations::$plugin->draftRepository->makeNewDraft($draftConfig);
+
+            Translations::$plugin->draftRepository->saveDraft($draft);
+
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error('CreateEntryDraft exception:: '.$e->getMessage());
+            return [];
+        }
+
     }
 
     public function createGlobalSetDraft(GlobalSet $globalSet, $site)
     {
-        $draft = Translations::$plugin->globalSetDraftRepository->makeNewDraft();
-        $draft->name = sprintf('%s [%s]', $this->orderName, $site);
-        $draft->id = $globalSet->id;
-        $draft->site = $site;
+        try {
+            $draft = Translations::$plugin->globalSetDraftRepository->makeNewDraft();
+            $draft->name = sprintf('%s [%s]', $this->orderName, $site);
+            $draft->id = $globalSet->id;
+            $draft->site = $site;
 
-        $post = Translations::$plugin->elementTranslator->toPostArray($globalSet);
+            $post = Translations::$plugin->elementTranslator->toPostArray($globalSet);
 
-        $draft->setFieldValues($post);
+            $draft->setFieldValues($post);
 
-        Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
+            Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
 
-        return $draft;
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error('CreateGlobalSetDraft exception:: '.$e->getMessage());
+            return [];
+        }
+
     }
 }
