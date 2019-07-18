@@ -20,10 +20,9 @@ use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
-use acclaro\translations\services\job\OrderJob;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\SyncOrders;
-use acclaro\translations\services\job\CreateOrderTranslationDrafts;
+use acclaro\translations\services\job\CreateTranslationDrafts;
 use acclaro\translations\services\job\SendOrderToTranslationService;
 use acclaro\translations\services\translation\AcclaroTranslationService;
 
@@ -1026,9 +1025,62 @@ class BaseController extends Controller
             } else {
                 if (Craft::$app->getRequest()->getParam('submit')) {
 
-                    Craft::$app->queue->push(new OrderJob([
-                        'description' => 'Creating Translation Order',
-                        'orderId' => $order->getId(),
+                    // Check supported languages
+                    if ($order->getTranslator()->service !== 'export_import') {
+                        Craft::info('Acclaro API Order');
+                        $translationService = Translations::$plugin->translationFactory->makeTranslationService($order->getTranslator()->service, $order->getTranslator()->getSettings());
+
+                        if ($translationService->getLanguages()) {
+                            $sourceLanguage = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($order->sourceSite)->language);
+                            $unsupported = false;
+                            $unsupportedLangs = [];
+                            $supportedLanguagePairs = [];
+
+                            foreach ($translationService->getLanguagePairs($sourceLanguage) as $key => $languagePair) {
+                                $supportedLanguagePairs[] = $languagePair->target['code'];
+                            }
+
+                            foreach (json_decode($order->targetSites) as $key => $siteId) {
+                                $site = Craft::$app->getSites()->getSiteById($siteId);
+                                $language = Translations::$plugin->siteRepository->normalizeLanguage($site->language);
+
+                                if (!in_array($language, array_column($translationService->getLanguages(), 'code'))) {
+                                    $unsupported = true;
+                                    $unsupportedLangs[] = array(
+                                        'language' => $site->name .' ('.$site->language.')'
+                                    );
+                                }
+
+                                if (!in_array($language, $supportedLanguagePairs)) {
+                                    $unsupported = true;
+                                    $unsupportedLangs[] = array(
+                                        'language' => $site->name .' ('.$site->language.')'
+                                    );
+                                }
+                            }
+
+                            if ($unsupported || !empty($unsupportedLangs)) {
+                                $order->status = 'failed';
+                                $success = Craft::$app->getElements()->saveElement($order);
+                                if (!$success) {
+                                    Craft::error('Couldn’t save the order', __METHOD__);
+                                }
+                                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The following language pair(s) are not supported: '.implode(', ', array_column($unsupportedLangs, 'language')).' Contact Acclaro for assistance.'));
+                                // return; // @todo This might be a better idea than failing the order
+                                return $this->redirect('translations/orders', 302, true);
+                            }
+
+                        } else {
+                            // var_dump('Could not fetch languages');
+                        }
+                    }
+
+                    $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Order Submitted to %s'), $order->translator->getName()));
+                    
+                    $order->wordCount = array_sum($wordCounts);
+                    Craft::$app->queue->push(new CreateTranslationDrafts([
+                        'description' => 'Creating Translation Drafts',
+                        'orderId' => $order->id,
                         'wordCounts' => $wordCounts,
                     ]));
 
@@ -1039,7 +1091,6 @@ class BaseController extends Controller
             }
 
         } catch (Exception $e) {
-
             Craft::error('Couldn’t save the order. Error: '.$e->getMessage(), __METHOD__);
             $order->status = 'failed';
             Craft::$app->getElements()->saveElement($order);
