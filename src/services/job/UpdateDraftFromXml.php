@@ -12,73 +12,32 @@ namespace acclaro\translations\services\job;
 
 use Craft;
 use craft\base\Element;
-use craft\helpers\Path;
-use yii\web\HttpException;
+use craft\elements\Entry;
 use craft\models\EntryDraft;
+
+use craft\queue\BaseJob;
+use yii\web\HttpException;
+use acclaro\translations\Translations;
+
+use craft\helpers\Path;
 use craft\helpers\FileHelper;
 use craft\helpers\ElementHelper;
-use acclaro\translations\services\App;
-use acclaro\translations\Translations;
-use acclaro\translations\services\repository\SiteRepository;
 use acclaro\translations\models\GlobalSetDraftModel;
 
-class UpdateDraftFromXml implements JobInterface
+class UpdateDraftFromXml extends BaseJob
 {
-     /**
-     * @var \craft\base\Element
-     */
-    protected $element;
 
-    /**
-     * @var \craft\models\EntryDraft|\acclaro\translations\models\GlobalSetDraftModel
-     */
-    protected $draft;
+    public $element;
+    public $draft;
+    public $xml;
+    public $sourceSite;
+    public $targetSite;
 
-    /**
-     * @var string
-     */
-    protected $sourceSite;
-
-    /**
-     * @var string
-     */
-    protected $targetSite;
-
-    /**
-     * @var string
-     */
-    protected $xml;
-
-    /**
-     * @param \Craft\BaseElementModel                                               $element
-     * @param \Craft\EntryDraftModel|\Craft\AcclaroTranslations_GlobalSetDraftModel $draft
-     * @param string                                                                $xml
-     * @param string                                                                $sourceSite
-     * @param string                                                                $targetSite
-     */
-    public function __construct(
-        Element $element,
-        $draft,
-        $xml,
-        $sourceSite,
-        $targetSite
-    ) {
-        $this->element = $element;
-
-        $this->draft = $draft;
-
-        $this->xml = $xml;
-
-        $this->sourceSite = $sourceSite;
-
-        $this->targetSite = $targetSite;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function handle()
+    public function execute($queue)
     {
+
+        Craft::info('UpdateDraftFromXml Execute Start!!');
+
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($this->xml);
 
         if ($this->draft instanceof EntryDraft) {
@@ -92,9 +51,9 @@ class UpdateDraftFromXml implements JobInterface
         }
 
         $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($this->element, $this->sourceSite, $this->targetSite, $targetData);
-        
+
         $this->draft->setFieldValues($post);
-        
+
         $this->draft->siteId = $this->targetSite;
 
         // save the draft
@@ -103,5 +62,13 @@ class UpdateDraftFromXml implements JobInterface
         } elseif ($this->draft instanceof GlobalSetDraftModel) {
             Translations::$plugin->globalSetDraftRepository->saveDraft($this->draft);
         }
+
+        Craft::info('UpdateDraftFromXml Execute Ends');
+
+    }
+
+    protected function defaultDescription()
+    {
+        return 'Updating Entry Drafts';
     }
 }

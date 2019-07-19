@@ -122,7 +122,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             //Translations::$plugin->jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
 
-            Craft::$app->queue->push(new UpdateDraftFromXmlJob([
+            Craft::$app->queue->push(new UpdateDraftFromXml([
                 'description' => 'Updating Entry Drafts',
                 'element' => $element,
                 'draft' => $draft,
@@ -132,7 +132,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             ]));
         }
     }
-
+ 
     /**
      * {@inheritdoc}
      */
