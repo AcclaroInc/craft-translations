@@ -94,7 +94,16 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
 
-            $jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
+            //$jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
+
+            Craft::$app->queue->push(new UpdateDraftFromXmlJob([
+                'description' => 'Updating Entry Drafts',
+                'element' => $element,
+                'draft' => $draft,
+                'xml' => $target,
+                'sourceSite' => $file->sourceSite,
+                'targetSite' => $file->targetSite,
+            ]));
 
         }
     }
