@@ -94,19 +94,45 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
 
-            //$jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
-
-            Craft::$app->queue->push(new UpdateDraftFromXml([
-                'description' => 'Updating Entry Drafts',
-                'element' => $element,
-                'draft' => $draft,
-                'xml' => $target,
-                'sourceSite' => $file->sourceSite,
-                'targetSite' => $file->targetSite,
-            ]));
+            $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite);
 
         }
     }
+
+    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite)
+    {
+
+        Craft::info('UpdateIOFile -> UpdateDraftFromXml Execute Start!!');
+
+        $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
+
+        if ($draft instanceof EntryDraft) {
+            if (isset($targetData['title'])) {
+                $draft->title = $targetData['title'];
+            }
+
+            if (isset($targetData['slug'])) {
+                $draft->slug = $targetData['slug'];
+            }
+        }
+
+        $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+        $draft->setFieldValues($post);
+
+        $draft->siteId = $targetSite;
+
+        // save the draft
+        if ($draft instanceof EntryDraft) {
+            Translations::$plugin->draftRepository->saveDraft($draft);
+        } elseif ($draft instanceof GlobalSetDraftModel) {
+            Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
+        }
+
+        Craft::info('UpdateIOFile -> UpdateDraftFromXml Execute Ends');
+
+    }
+
 
     /**
      * {@inheritdoc}
