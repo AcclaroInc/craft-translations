@@ -12,31 +12,41 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
-use craft\models\EntryDraft;
+use craft\elements\Entry;
 use craft\base\ElementInterface;
 use acclaro\translations\Translations;
 
 class DraftRepository
 {
     /**
-     * @return \craft\models\EntryDraft|null
+     * @return \craft\elements\Entry|null
      */
-    public function makeNewDraft($config)
+    public function makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes)
     {
-        return new EntryDraft($config);
+        $draft = Craft::$app->drafts->createDraft(
+            $entry,
+            $creatorId,
+            $name,
+            $notes,
+            $newAttributes
+        );
+
+        $draft->setAttributes($newAttributes, false);
+
+        return $draft;
     }
     
     public function getDraftById($draftId)
     {
-        return Craft::$app->entryRevisions->getDraftById($draftId);
+        return Craft::$app->elements->getElementById($draftId);
     }
 
-    public function saveDraft(EntryDraft $draft)
+    public function saveDraft($element, $creatorId, $name, $notes)
     {
-        return Craft::$app->entryRevisions->saveDraft($draft);
+        return Craft::$app->drafts->saveElementAsDraft($element, $creatorId, $name, $notes);
     }
     
-    public function publishDraft(EntryDraft $draft)
+    public function publishDraft(Entry $draft)
     {
         return Craft::$app->entryRevisions->publishDraft($draft);
     }

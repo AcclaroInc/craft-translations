@@ -17,8 +17,7 @@ use Exception;
 
 use craft\base\Element;
 use craft\elements\Entry;
-use craft\models\EntryDraft;
-
+use craft\elements\User;
 use craft\queue\BaseJob;
 use yii\web\HttpException;
 use craft\elements\GlobalSet;
@@ -30,6 +29,7 @@ class CreateTranslationDrafts extends BaseJob
     public $mySetting;
     public $orderId;
     public $wordCounts;
+    public $defaultCreator;
 
     public function execute($queue)
     {
@@ -42,14 +42,15 @@ class CreateTranslationDrafts extends BaseJob
         $totalElements = count($elements);
         $currentElement = 0;
         $drafts = array();
+        $this->defaultCreator = User::find()
+            ->admin()
+            ->orderBy(['elements.id' => SORT_ASC])
+            ->one();
 
         foreach ($order->getTargetSitesArray() as $key => $site) {
             foreach ($elements as $element) {
                 switch (get_class($element)) {
                     case Entry::class:
-                        $draft = $this->createEntryDraft($element, $site, $order->title);
-                        break;
-                    case EntryDraft::class:
                         $draft = $this->createEntryDraft($element, $site, $order->title);
                         break;
                     case GlobalSet::class:
@@ -73,7 +74,7 @@ class CreateTranslationDrafts extends BaseJob
                     $element = Craft::$app->getElements()->getElementById($draft->id, null, $order->sourceSite);
 
                     $file->orderId = $order->id;
-                    $file->elementId = $draft->id;
+                    $file->elementId = $draft->sourceId;
                     $file->draftId = $draft->draftId;
                     $file->sourceSite = $order->sourceSite;
                     $file->targetSite = $targetSite;
@@ -132,29 +133,19 @@ class CreateTranslationDrafts extends BaseJob
     {
 
         try{
+            $creatorId = $this->defaultCreator->id;
 
-            $draftConfig = [
-                'name' => sprintf('%s [%s]', $orderName, $site),
-                'id' => $entry->id,
-                'sectionId' => $entry->sectionId,
-                'creatorId' => Craft::$app->session && Craft::$app->getUser() ? Craft::$app->getUser()->id : '1',
-                'typeId' => $entry->typeId,
-                'slug' => $entry->slug,
-                'postDate' => $entry->postDate,
-                'expiryDate' => $entry->expiryDate,
-                'enabled' => $entry->enabled,
-                'title' => $entry->title,
-                'authorId' => $entry->authorId
-            ];
+            $name = sprintf('%s [%s]', $orderName, $site);
+
+            $notes = '';
 
             $supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
+            $newAttributes = [
+                'enabledForSite' => in_array($site, $supportedSites),
+                'siteId' => $site,
+            ];
 
-            $draftConfig['enabledForSite'] = in_array($site, $supportedSites);
-            $draftConfig['siteId'] = $site;
-
-            $draft = Translations::$plugin->draftRepository->makeNewDraft($draftConfig);
-
-            Translations::$plugin->draftRepository->saveDraft($draft);
+            $draft = Translations::$plugin->draftRepository->makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes);
 
             return $draft;
         } catch (Exception $e) {
