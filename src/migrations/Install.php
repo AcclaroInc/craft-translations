@@ -128,7 +128,7 @@ class Install extends Migration
                     'serviceOrderId'    => $this->string()->defaultValue(''),
                     'entriesCount'      => $this->integer()->notNull(),
                     'wordCount'         => $this->integer()->notNull(),
-                    'elementIds'        => $this->string(2040)->notNull()->defaultValue(''),
+                    'elementIds'        => $this->string(8160)->notNull()->defaultValue(''),
                     'dateCreated'       => $this->dateTime()->notNull(),
                     'dateUpdated'       => $this->dateTime()->notNull(),
                     'uid'               => $this->uid(),
