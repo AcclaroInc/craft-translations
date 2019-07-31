@@ -444,7 +444,6 @@ class BaseController extends Controller
         $variables['licenseStatus'] = Craft::$app->plugins->getPluginLicenseKeyStatus('translations');
         
         if ($variables['inputSourceSite'] && ! Translations::$plugin->siteRepository->isSiteSupported($variables['inputSourceSite'])) {
-            // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Source site is not supported'));
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Source site is not supported'));
             return;
         }
@@ -522,7 +521,7 @@ class BaseController extends Controller
             {
                 $variables['entriesCountByElementCompleted'] = 0;
                 $variables['entriesCountByElement'] = 0;
-                
+
                 foreach ($variables['elements'] as $element) 
                 {
                     $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
@@ -531,6 +530,7 @@ class BaseController extends Controller
  
                     $isElementPublished = true;
 
+                    // TODO: Improve this for performance
                     foreach ($variables['files'][$element->id] as $file) {
                         if ($file->status !== 'published'){
                             $isElementPublished = false;
@@ -564,7 +564,7 @@ class BaseController extends Controller
                 $variables['entriesCountByElement'] -=  $variables['entriesCountByElementCompleted'];
             }
         }
-        
+
         if (!$variables['translatorOptions']) {
             $variables['translatorOptions'] = array('' => Translations::$plugin->translator->translate('app', 'No Translators'));
         }
@@ -764,7 +764,7 @@ class BaseController extends Controller
 
                 $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
             } else {
-                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId);
+                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
 
                 $success = Translations::$plugin->draftRepository->publishDraft($draft);
 
