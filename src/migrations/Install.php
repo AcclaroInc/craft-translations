@@ -217,6 +217,7 @@ class Install extends Migration
     {
         $this->addForeignKey(null,'{{%translations_files}}',['orderId'],'{{%translations_orders}}',['id'],'CASCADE',null);
         $this->addForeignKey(null,'{{%translations_files}}',['elementId'],'{{%elements}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_files}}',['draftId'],'{{%drafts}}',['id'],'CASCADE',null);
         $this->addForeignKey(null,'{{%translations_globalsetdrafts}}',['globalSetId'],'{{%globalsets}}',['id'],'CASCADE',null);
         $this->addForeignKey(null,'{{%translations_globalsetdrafts}}',['site'],'{{%sites}}',['id'],'CASCADE',null);
         $this->addForeignKey(null,'{{%translations_orders}}',['id'],'{{%elements}}',['id'],'CASCADE',null);
