@@ -100,9 +100,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
     public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite)
     {
-
-        Craft::info('UpdateIOFile -> UpdateDraftFromXml Execute Start!!');
-
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
 
         if ($draft instanceof Entry) {
@@ -127,8 +124,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         } elseif ($draft instanceof GlobalSetDraftModel) {
             Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
         }
-
-        Craft::info('UpdateIOFile -> UpdateDraftFromXml Execute Ends');
     }
 
 

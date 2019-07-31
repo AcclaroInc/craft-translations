@@ -33,9 +33,6 @@ class CreateTranslationDrafts extends BaseJob
 
     public function execute($queue)
     {
-
-        Craft::info('CreateTranslationDrafts Execute Start!!');
-
         $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
 
         $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
@@ -119,9 +116,6 @@ class CreateTranslationDrafts extends BaseJob
                 Craft::error('Couldn’t save the order', __METHOD__);
             }
         }
-
-        Craft::info('OrderJob Execute Ends Id :: '.$this->orderId);
-
     }
 
     protected function defaultDescription()

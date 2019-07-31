@@ -27,9 +27,6 @@ class ImportFiles extends BaseJob
 
     public function execute($queue)
     {
-
-        Craft::info('ImportFiles Execute Start!!');
-
         $this->order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
         $dir = new \DirectoryIterator($this->xmlPath);
 
@@ -40,9 +37,6 @@ class ImportFiles extends BaseJob
             //Process XML Files
             $this->processFile($xml, $this->xmlPath);
         }
-
-        Craft::info('ImportFiles Execute Ends!!');
-
     }
 
     protected function defaultDescription()

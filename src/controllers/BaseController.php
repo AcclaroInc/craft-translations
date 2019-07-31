@@ -1027,7 +1027,6 @@ class BaseController extends Controller
 
                     // Check supported languages
                     if ($order->getTranslator()->service !== 'export_import') {
-                        Craft::info('Acclaro API Order');
                         $translationService = Translations::$plugin->translationFactory->makeTranslationService($order->getTranslator()->service, $order->getTranslator()->getSettings());
 
                         if ($translationService->getLanguages()) {
