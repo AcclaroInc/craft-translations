@@ -47,7 +47,7 @@ class ImportFiles extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Updating Entry Drafts';
+        return 'Updating Translation Drafts';
     }
 
     /**
@@ -67,7 +67,7 @@ class ImportFiles extends BaseJob
 
                 // check if the file is empty
                 if (empty($xml_content)) {
-                    $this->showUserMessages($xml." file you are trying to import is empty.");
+                    $this->order->logActivity(Translations::$plugin->translator->translate('app', $xml." file you are trying to import is empty."));
                     return false;
                 }
 
@@ -82,14 +82,14 @@ class ImportFiles extends BaseJob
                         $errors = $this->reportXmlErrors();
                         if($errors)
                         {
-                            $this->showUserMessages("We found errors on $xml : "  . $errors);
+                            $this->order->logActivity(Translations::$plugin->translator->translate('app', "We found errors on $xml : "  . $errors));
                             return;
                         }
                     }
                 }
                 catch(Exception $e)
                 {
-                    $this->showUserMessages(Translations::$plugin->translator->translate('app', $e->getMessage()));
+                    $this->order->logActivity(Translations::$plugin->translator->translate('app', $e->getMessage()));
                 }
 
                 //Get DraftId & Lang Nodes From Document
@@ -133,14 +133,14 @@ class ImportFiles extends BaseJob
                 //Validate If the draft was found
                 if (is_null($draft_file))
                 {
-                    $this->showUserMessages("The file you are trying to import does not contain a match for this entry.");
+                    $this->order->logActivity(Translations::$plugin->translator->translate('app', "The file you are trying to import does not contain a match for this entry."));
                     return;
                 }
 
                 // Don't process published files
                 if ($draft_file->status === 'published')
                 {
-                    $this->showUserMessages("This entry was already published.");
+                    $this->order->logActivity(Translations::$plugin->translator->translate('app', "This entry was already published."));
                     return;
                 }
 
@@ -156,8 +156,6 @@ class ImportFiles extends BaseJob
 
                 if ($success)
                 {
-                    $this->showUserMessages("File $xml imported successfully!", true);
-
                     $this->order->logActivity(
                         sprintf(Translations::$plugin->translator->translate('app', "File %s imported successfully!"), $xml)
                     );
@@ -175,28 +173,13 @@ class ImportFiles extends BaseJob
             else
             {
                 //Invalid
-                $this->showUserMessages("File $xml is invalid, please try again with a valid xml file.");
+                $this->order->logActivity(Translations::$plugin->translator->translate('app', "File $xml is invalid, please try again with a valid xml file."));
             }
         }
     }
 
     /**
-     * Show Flash Notificaitons and Erros to the trasnlator
-     */
-    public function showUserMessages($message, $isSuccess = false)
-    {
-        if ($isSuccess)
-        {
-            Craft::$app->session->setNotice(Craft::t('app', $message));
-        }
-        else
-        {
-            Craft::$app->session->setError(Craft::t('app', $message));
-        }
-    }
-
-    /**
-     * Verify if the all entries per orden have been completed
+     * Verify if the all entries per order have been completed
      * @return boolean
      */
     public function isOrderCompleted()
