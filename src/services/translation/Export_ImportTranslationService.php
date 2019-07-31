@@ -13,13 +13,13 @@ namespace acclaro\translations\services\translation;
 use Craft;
 use DateTime;
 use Exception;
+use craft\elements\Entry;
 use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
-use acclaro\translations\services\job\UpdateDraftFromXml;
 use acclaro\translations\services\job\Factory as JobFactory;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
@@ -95,7 +95,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             }
 
             $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite);
-
         }
     }
 
@@ -106,7 +105,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
 
-        if ($draft instanceof EntryDraft) {
+        if ($draft instanceof Entry) {
             if (isset($targetData['title'])) {
                 $draft->title = $targetData['title'];
             }
@@ -123,14 +122,13 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         $draft->siteId = $targetSite;
 
         // save the draft
-        if ($draft instanceof EntryDraft) {
+        if ($draft instanceof Entry) {
             Translations::$plugin->draftRepository->saveDraft($draft);
         } elseif ($draft instanceof GlobalSetDraftModel) {
             Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
         }
 
         Craft::info('UpdateIOFile -> UpdateDraftFromXml Execute Ends');
-
     }
 
 
