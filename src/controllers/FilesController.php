@@ -176,10 +176,8 @@ class FilesController extends Controller
         try
         {
             // Make sure a file was uploaded
-            if ($file && $file->size > 0)
-            {
-                if (!in_array($file->extension, $this->_allowedTypes))
-                {
+            if ($file && $file->size > 0) {
+                if (!in_array($file->extension, $this->_allowedTypes)) {
                     $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
                 }
 
@@ -188,15 +186,12 @@ class FilesController extends Controller
                 FileHelper::clearDirectory($folderPath);
 
                 //If is a Zip File
-                if ($file->extension === 'zip')
-                {
+                if ($file->extension === 'zip') {
                     //Unzip File ZipArchive
                     $zip = new \ZipArchive();
-                    if (move_uploaded_file($file->tempName, $folderPath.$fileName))
-                    {
+                    if (move_uploaded_file($file->tempName, $folderPath.$fileName)) {
 
-                        if ($zip->open($folderPath.$fileName))
-                        {
+                        if ($zip->open($folderPath.$fileName)) {
                             $xmlPath = $folderPath.$orderId;
 
                             $zip->extractTo($xmlPath);
@@ -214,44 +209,41 @@ class FilesController extends Controller
                             $zip->close();
 
                             Craft::$app->queue->push(new ImportFiles([
-                                'description' => 'Updating Entry Drafts',
+                                'description' => 'Updating Translation Drafts',
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,
                                 'xmlPath' => $xmlPath,
                             ]));
-                        }
-                        else
-                        {
+                            // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
+                            $this->showUserMessages("File uploaded successfully: $fileName", true);
+                        } else {
                             $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
                         }
-                    }
-                    else
-                    {
+                    } else {
                         $this->showUserMessages("Unable to upload file: $fileName");
                     }
-                }
-                elseif ($file->extension === 'xml')
-                {
+                } elseif ($file->extension === 'xml') {
                     $xmlPath = $folderPath.$orderId;
 
                     mkdir($xmlPath, 0777, true);
 
                     //Upload File
-                    if( move_uploaded_file($file->tempName, $xmlPath.'/'.$fileName))
-                    {
+                    if( move_uploaded_file($file->tempName, $xmlPath.'/'.$fileName)) {
 
                         Craft::$app->queue->push(new ImportFiles([
-                            'description' => 'Updating Entry Drafts',
+                            'description' => 'Updating Translation Drafts',
                             'orderId' => $orderId,
                             'totalFiles' => $total_files,
                             'xmlPath' => $xmlPath,
                         ]));
-
-                    }
-                    else
+                        // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
+                        $this->showUserMessages("File uploaded successfully: $fileName", true);
+                    } else {
                         $this->showUserMessages("Unable to upload file: $fileName");
+                    }
+                } else {
+                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
                 }
-
             } else {
                 $this->showUserMessages("The file you are trying to import is empty.");
             }
