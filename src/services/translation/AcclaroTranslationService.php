@@ -19,7 +19,6 @@ use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
-use acclaro\translations\services\job\UpdateDraftFromXml;
 use acclaro\translations\services\job\Factory as JobFactory;
 
 class AcclaroTranslationService implements TranslationServiceInterface
@@ -120,10 +119,43 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
 
-            Translations::$plugin->jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
+            $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite);
         }
     }
 
+    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite)
+    {
+
+        Craft::info('UpdateDraftFromXml Execute Start!!');
+
+        $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
+
+        if ($draft instanceof Entry) {
+            if (isset($targetData['title'])) {
+                $draft->title = $targetData['title'];
+            }
+
+            if (isset($targetData['slug'])) {
+                $draft->slug = $targetData['slug'];
+            }
+        }
+
+        $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+        $draft->setFieldValues($post);
+
+        $draft->siteId = $targetSite;
+
+        // save the draft
+        if ($draft instanceof Entry) {
+            Translations::$plugin->draftRepository->saveDraft($draft);
+        } elseif ($draft instanceof GlobalSetDraftModel) {
+            Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
+        }
+
+        Craft::info('UpdateDraftFromXml Execute Start Execute Ends');
+    }
+ 
     /**
      * {@inheritdoc}
      */

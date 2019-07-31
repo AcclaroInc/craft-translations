@@ -23,14 +23,6 @@ class Factory
         $args = array_slice(func_get_args(), 1);
 
         switch ($class) {
-            case UpdateDraftFromXml::class:
-                $args[] = Craft::$app;
-                $args[] = Translations::$plugin->draftRepository;
-                $args[] = Translations::$plugin->globalSetDraftRepository;
-                $args[] = Translations::$plugin->elementTranslator;
-                $args[] = $this;
-               
-                break;
             case SyncOrders::class:
                 // $args[] = Craft::$app;
                 // $args[] = Translations::$plugin->orderRepository;

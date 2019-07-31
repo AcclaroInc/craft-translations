@@ -159,11 +159,18 @@ class ElementTranslator
     {
         $fieldType = $field;
 
+        $nestedFieldType = [
+            'craft\fields\Matrix',
+            'verbb\supertable\fields\SuperTableField',
+            'benf\neo\Field'
+        ];
+
         $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
         $fieldSource = array();
 
-        if ($translator && $field->getIsTranslatable()) {
+        // Check if field is translatable or is nested field
+        if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), $nestedFieldType)) {
             $fieldSource = $translator->toTranslationSource($this, $element, $field);
 
             if (!is_array($fieldSource)) {
@@ -180,20 +187,24 @@ class ElementTranslator
 
         $fieldHandle = $field->handle;
 
+        $nestedFieldType = [
+            'craft\fields\Matrix',
+            'verbb\supertable\fields\SuperTableField',
+            'benf\neo\Field'
+        ];
+
         $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
         $fieldSource = array();
 
-        if ($translator && $field->getIsTranslatable()) {
+        // Check if field is translatable or is nested field
+        if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), $nestedFieldType)) {
             $fieldSource = $translator->toPostArray($this, $element, $field);
 
             if (!is_array($fieldSource)) {
                 $fieldSource = array($fieldHandle => $fieldSource);
             }
         }
-        // else {
-        //     $fieldSource =  array($fieldHandle => $element->$fieldHandle);
-        // }
 
         return $fieldSource;
     }
@@ -204,7 +215,14 @@ class ElementTranslator
 
         $fieldHandle = $field->handle;
 
-        if ($field->getIsTranslatable()) {
+        $nestedFieldType = [
+            'craft\fields\Matrix',
+            'verbb\supertable\fields\SuperTableField',
+            'benf\neo\Field'
+        ];
+
+        // Check if field is translatable or is nested field
+        if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             return $translator ? $translator->getWordCount($this, $element, $field) : 0;

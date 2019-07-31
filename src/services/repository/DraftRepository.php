@@ -12,32 +12,50 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
-use craft\models\EntryDraft;
-use craft\base\ElementInterface;
+use craft\elements\Entry;
 use acclaro\translations\Translations;
 
 class DraftRepository
 {
     /**
-     * @return \craft\models\EntryDraft|null
+     * @return \craft\elements\Entry|null
      */
-    public function makeNewDraft($config)
+    public function makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes)
     {
-        return new EntryDraft($config);
+        $draft = Craft::$app->getDrafts()->createDraft(
+            $entry,
+            $creatorId,
+            $name,
+            $notes,
+            $newAttributes
+        );
+
+        $draft->setAttributes($newAttributes, false);
+
+        return $draft;
     }
     
-    public function getDraftById($draftId)
+    public function getDraftById($draftId, $siteId)
     {
-        return Craft::$app->entryRevisions->getDraftById($draftId);
+        $draft = Entry::find()
+            ->draftId($draftId)
+            ->siteId($siteId)
+            ->anyStatus()
+            ->one();
+
+        return $draft;
     }
 
-    public function saveDraft(EntryDraft $draft)
+    public function saveDraft($element)
     {
-        return Craft::$app->entryRevisions->saveDraft($draft);
+        return Craft::$app->elements->saveElement($element);
     }
     
-    public function publishDraft(EntryDraft $draft)
+    public function publishDraft(Entry $draft)
     {
-        return Craft::$app->entryRevisions->publishDraft($draft);
+        // Let's save the draft before we pass it to applyDraft()
+        Craft::$app->elements->saveElement($draft);
+
+        return Craft::$app->getDrafts()->applyDraft($draft);
     }
 }
