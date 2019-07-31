@@ -39,7 +39,7 @@ class CreateTranslationDrafts extends BaseJob
         $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
 
         $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
-        $totalElements = count($elements);
+        $totalElements = (count($elements) * count($order->getTargetSitesArray()));
         $currentElement = 0;
         $drafts = array();
         $this->defaultCreator = User::find()
@@ -126,7 +126,7 @@ class CreateTranslationDrafts extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Creating Translation Draft';
+        return 'Creating Translation Drafts';
     }
 
     public function createEntryDraft(Entry $entry, $site, $orderName)
