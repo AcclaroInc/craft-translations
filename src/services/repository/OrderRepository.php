@@ -79,9 +79,6 @@ class OrderRepository
     {
         $pendingOrders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.translatorId', $translatorId))
-            ->andWhere(Db::parseParam('translations_orders.status', array(
-                'getting quote', 'needs approval', 'in preparation', 'in progress'
-            )))
             ->all();
 
         return $pendingOrders;
