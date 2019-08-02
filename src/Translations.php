@@ -33,6 +33,7 @@ use acclaro\translations\assetbundles\EntryAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
+use acclaro\translations\services\job\DeleteTranslationDrafts;
 
 class Translations extends Plugin
 {
@@ -197,7 +198,15 @@ class Translations extends Plugin
     public function uninstall()
     {
         // Let's clean up the drafts table
-        $this->_onUninstall();
+        $files = self::$plugin->fileRepository->getFiles();
+        $drafts = array_column($files, 'draftId');
+
+        if ($drafts) {
+            Craft::$app->queue->push(new DeleteTranslationDrafts([
+                'description' => 'Deleting Translation Drafts',
+                'drafts' => $drafts,
+            ]));
+        }
 
         if (($migration = $this->createInstallMigration()) !== null) {
             try {
@@ -452,34 +461,5 @@ class Translations extends Plugin
         if (Craft::$app->getRequest()->getParam('hardDelete')) {
             $event->hardDelete = true;
         }
-    }
-
-    private function _onUninstall()
-    {
-        $files = self::$plugin->fileRepository->getFiles();
-        
-        $drafts = array_column($files, 'draftId');
-
-        if ($drafts) {
-            foreach ($drafts as $id) {
-                $elementsService = Craft::$app->getElements();
-                $transaction = Craft::$app->getDb()->beginTransaction();
-    
-                try {
-                    $draft = Entry::find()
-                                ->draftId($id)
-                                ->anyStatus()
-                                ->siteId('*')
-                                ->one();
-
-                    $elementsService->deleteElement($draft, true);
-                    $transaction->commit();
-                } catch (\Throwable $e) {
-                    $transaction->rollBack();
-                    throw $e;
-                }
-            }
-        }
-
     }
 }
