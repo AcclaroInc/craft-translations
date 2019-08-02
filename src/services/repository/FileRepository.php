@@ -204,7 +204,14 @@ class FileRepository
         $isNew = !$file->id;
 
         if (!$isNew) {
+            // echo '<pre>';
+            // var_dump($file->id);
+            // echo '</pre>';
             $record = FileRecord::findOne($file->id);
+            // echo '<pre>';
+            // var_dump($record);
+            // echo '</pre>';
+            // die;
 
             if (!$record) {
                 throw new Exception('No file exists with that ID.');

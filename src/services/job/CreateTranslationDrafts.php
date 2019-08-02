@@ -129,13 +129,13 @@ class CreateTranslationDrafts extends BaseJob
         try{
             $creatorId = $this->defaultCreator->id;
 
-            $name = sprintf('%s [%s]', $orderName, $site);
+            $name = sprintf('%s [%s]', $orderName, Craft::$app->getSites()->getSiteById($site)->handle);
 
             $notes = '';
 
             $supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
             $newAttributes = [
-                'enabledForSite' => in_array($site, $supportedSites),
+                // 'enabledForSite' => in_array($site, $supportedSites),
                 'siteId' => $site,
             ];
 

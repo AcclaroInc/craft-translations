@@ -156,8 +156,8 @@
                     <td>
                         <input type="radio" name="__status" disabled="disabled"{% if order.status == 'new' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Pending submission'|t }}<br>
                         <input type="radio" name="__status" disabled="disabled"{% if order.status == 'in progress' or order.status == 'getting quote' or order.status == 'needs approval' or order.status == 'in preparation' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'In progress'|t }}<br>
-                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'complete' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Ready to publish'|t }}<br>
-                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'published' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Published'|t }}
+                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'complete' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Ready to update'|t }}<br>
+                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'published' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Updated'|t }}
                     </td>
                 </tr>
                 <tr>
@@ -207,7 +207,7 @@
 
         {{ forms.hidden({
             name: 'action',
-            value: 'translations/base/publish-entries',
+            value: 'translations/base/update-entries',
         }) }}
 
         {{ forms.hidden({
@@ -221,7 +221,7 @@
                     {% if order.status == 'complete' %}
                     <div class="toolbar">
                         <div class="buttons right">
-                            <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to update these entries?'|t }}" disabled="disabled" value="{{ 'Update Entries'|t }}">
+                            <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to update these entries?'|t }}" disabled="disabled" value="{{ 'Update Selected Entries'|t }}">
                         </div>
                     </div>
                     {% endif %}

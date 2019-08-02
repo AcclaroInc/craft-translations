@@ -11,6 +11,7 @@
 namespace acclaro\translations;
 
 use Craft;
+use craft\db\Table;
 use yii\base\Event;
 use craft\base\Plugin;
 use craft\web\UrlManager;
@@ -21,7 +22,7 @@ use craft\events\DraftEvent;
 use craft\services\Elements;
 use craft\events\PluginEvent;
 use craft\events\ElementEvent;
-use craft\services\EntryRevisions;
+use craft\services\Drafts;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\DeleteElementEvent;
@@ -86,17 +87,17 @@ class Translations extends Plugin
         }
 
         Event::on(
-            EntryRevisions::class,
-            EntryRevisions::EVENT_BEFORE_SAVE_DRAFT,
+            Drafts::class,
+            Drafts::EVENT_BEFORE_APPLY_DRAFT,
             function (DraftEvent $event) {
                 // Craft::debug(
-                //     'EntryRevisions::EVENT_BEFORE_SAVE_DRAFT',
+                //     'Drafts::EVENT_BEFORE_APPLY_DRAFT',
                 //     __METHOD__
                 // );
                 Craft::info(
                     Craft::t(
                         'translations',
-                        '{name} EntryRevisions::EVENT_BEFORE_SAVE_DRAFT',
+                        '{name} Drafts::EVENT_BEFORE_APPLY_DRAFT',
                         ['name' => $this->name]
                     ),
                     __METHOD__
@@ -107,15 +108,15 @@ class Translations extends Plugin
         );
         
         Event::on(
-            EntryRevisions::class,
-            EntryRevisions::EVENT_AFTER_PUBLISH_DRAFT,
+            Drafts::class,
+            Drafts::EVENT_AFTER_APPLY_DRAFT,
             function (DraftEvent $event) {
                 Craft::debug(
-                    'EntryRevisions::EVENT_AFTER_PUBLISH_DRAFT',
+                    'Drafts::EVENT_AFTER_APPLY_DRAFT',
                     __METHOD__
                 );
                 if ($event->draft) {
-                    $this->_onPublishDraft($event);
+                    $this->_onApplyDraft($event);
                 }
             }
         );
@@ -147,15 +148,15 @@ class Translations extends Plugin
         );
 
         /**
-         * EVENT_AFTER_DELETE_DRAFT gets triggered after EVENT_AFTER_PUBLISH_DRAFT
+         * EVENT_AFTER_DELETE_DRAFT gets triggered after EVENT_AFTER_APPLY_DRAFT
          * May need to find another solution to the entry draft deletion
          */
         // Event::on(
-        //     EntryRevisions::class,
-        //     EntryRevisions::EVENT_AFTER_DELETE_DRAFT,
+        //     Drafts::class,
+        //     Drafts::EVENT_AFTER_DELETE_DRAFT,
         //     function (DraftEvent $event) {
         //         Craft::debug(
-        //             'EntryRevisions::EVENT_AFTER_DELETE_DRAFT',
+        //             'Drafts::EVENT_AFTER_DELETE_DRAFT',
         //             __METHOD__
         //         );
         //         if ($event->draft) {
@@ -190,7 +191,26 @@ class Translations extends Plugin
         );
     }
 
-        /**
+    /**
+     * @inheritdoc
+     */
+    public function uninstall()
+    {
+        // Let's clean up the drafts table
+        $this->_onUninstall();
+
+        if (($migration = $this->createInstallMigration()) !== null) {
+            try {
+                $this->getMigrator()->migrateDown($migration);
+            } catch (MigrationException $e) {
+                return false;
+            }
+        }
+        $this->afterUninstall();
+        return null;
+    }
+
+    /**
      * @inheritdoc
      */
     public function getCpNavItem()
@@ -385,7 +405,7 @@ class Translations extends Plugin
         // and send notification to acclaro
     }
 
-    private function _onPublishDraft(Event $event)
+    private function _onApplyDraft(Event $event)
     {
         // update acclaro order and files
         $draft = $event->draft;
@@ -418,17 +438,48 @@ class Translations extends Plugin
         }
     }
 
-    private function _onDeleteDraft(Event $event) {
+    private function _onDeleteDraft(Event $event)
+    {
 
         $draft = $event->draft;
 
         return self::$plugin->fileRepository->delete($draft->draftId);
     }
 
-    private function _onDeleteElement(Event $event) {
+    private function _onDeleteElement(Event $event)
+    {
 
         if (Craft::$app->getRequest()->getParam('hardDelete')) {
             $event->hardDelete = true;
         }
+    }
+
+    private function _onUninstall()
+    {
+        $files = self::$plugin->fileRepository->getFiles();
+        
+        $drafts = array_column($files, 'draftId');
+
+        if ($drafts) {
+            foreach ($drafts as $id) {
+                $elementsService = Craft::$app->getElements();
+                $transaction = Craft::$app->getDb()->beginTransaction();
+    
+                try {
+                    $draft = Entry::find()
+                                ->draftId($id)
+                                ->anyStatus()
+                                ->siteId('*')
+                                ->one();
+
+                    $elementsService->deleteElement($draft, true);
+                    $transaction->commit();
+                } catch (\Throwable $e) {
+                    $transaction->rollBack();
+                    throw $e;
+                }
+            }
+        }
+
     }
 }

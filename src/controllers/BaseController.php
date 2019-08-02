@@ -725,7 +725,7 @@ class BaseController extends Controller
         $this->renderTemplate('translations/orders/_entries', $variables);
     }
 
-    public function actionPublishEntries()
+    public function actionUpdateEntries()
     {
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 

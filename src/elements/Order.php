@@ -127,7 +127,7 @@ class Order extends Element
     //             'color' => 'orange'
     //         ],
     //         'complete' => [
-    //             'label' => Translations::$plugin->translator->translate('app', 'Ready to publish'),
+    //             'label' => Translations::$plugin->translator->translate('app', 'Ready to update'),
     //             'color' => 'blue'
     //         ],
     //         'canceled' => [
@@ -244,11 +244,11 @@ class Order extends Element
                     return '<span class="status"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'In progress':
                     return '<span class="status orange"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Ready to publish':
+                case 'Ready to update':
                     return '<span class="status blue"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Canceled':
                     return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Published':
+                case 'Updated':
                     return '<span class="status green"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
             }
 
@@ -418,11 +418,11 @@ class Order extends Element
             case 'in progress':
                 return 'In progress';
             case 'complete':
-                return 'Ready to publish';
+                return 'Ready to update';
             case 'canceled':
                 return 'Canceled';
             case 'published':
-                return 'Published';
+                return 'Updated';
             case 'failed':
                 return 'Order failed';
         }

@@ -23,11 +23,11 @@
                             <span class="status"></span>{{order.statusLabel}}
                         {% case "In progress" %}
                             <span class="status orange"></span>{{order.statusLabel}}
-                        {% case "Ready to publish" %}
+                        {% case "Ready to update" %}
                             <span class="status blue"></span>{{order.statusLabel}}
                         {% case "Canceled" %}
                             <span class="status red"></span>{{order.statusLabel}}
-                        {% case "Published" %}
+                        {% case "Updated" %}
                             <span class="status green"></span>{{order.statusLabel}}
                     {% endswitch %}
                     </td>
