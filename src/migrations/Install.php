@@ -128,7 +128,7 @@ class Install extends Migration
                     'serviceOrderId'    => $this->string()->defaultValue(''),
                     'entriesCount'      => $this->integer()->notNull(),
                     'wordCount'         => $this->integer()->notNull(),
-                    'elementIds'        => $this->string(2040)->notNull()->defaultValue(''),
+                    'elementIds'        => $this->string(8160)->notNull()->defaultValue(''),
                     'dateCreated'       => $this->dateTime()->notNull(),
                     'dateUpdated'       => $this->dateTime()->notNull(),
                     'uid'               => $this->uid(),
@@ -217,6 +217,7 @@ class Install extends Migration
     {
         $this->addForeignKey(null,'{{%translations_files}}',['orderId'],'{{%translations_orders}}',['id'],'CASCADE',null);
         $this->addForeignKey(null,'{{%translations_files}}',['elementId'],'{{%elements}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null,'{{%translations_files}}',['draftId'],'{{%drafts}}',['id'],'CASCADE',null);
         $this->addForeignKey(null,'{{%translations_globalsetdrafts}}',['globalSetId'],'{{%globalsets}}',['id'],'CASCADE',null);
         $this->addForeignKey(null,'{{%translations_globalsetdrafts}}',['site'],'{{%sites}}',['id'],'CASCADE',null);
         $this->addForeignKey(null,'{{%translations_orders}}',['id'],'{{%elements}}',['id'],'CASCADE',null);
