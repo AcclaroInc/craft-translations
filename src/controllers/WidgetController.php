@@ -305,20 +305,20 @@ class WidgetController extends Controller
                 ->count();
                 
                 // Get in progress entry translation count
-                $inQueue = FileRecord::findBySql(
-                    "SELECT DISTINCT `elementId`
-                    FROM {{%translations_files}}
-                    WHERE `status` IN ('new','preview','in progress','complete')
-                    AND `targetSite` = $id"
-                )->count();
+                $inQueue = FileRecord::find()
+                    ->select(['elementId'])
+                    ->distinct(true)
+                    ->where(['status' => ['new','preview','in progress','complete']])
+                    ->andWhere(['targetSite' => $id])
+                    ->count();
 
-                $translated = FileRecord::findBySql(
-                    "SELECT DISTINCT `elementId`
-                    FROM {{%translations_files}}
-                    WHERE `status` = 'published'
-                    AND `targetSite` = $id"
-                )->count();
-    
+                $translated = FileRecord::find()
+                    ->select(['elementId'])
+                    ->distinct(true)
+                    ->where(['status' => 'published'])
+                    ->andWhere(['targetSite' => $id])
+                    ->count();
+
                 // Set data
                 $data[$i]['siteId'] = $id;
                 $data[$i]['name'] = $site->name;

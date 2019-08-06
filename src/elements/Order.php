@@ -232,7 +232,7 @@ class Order extends Element
                     return  sprintf('#%s', $this->id);
                 }
 
-                $translationService = Translations::$plugin->translationFactory->makeTranslationService($translator->service, json_decode($translator->settings, true));
+                $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, json_decode($translator->settings, true));
 
                 return sprintf('<a href="%s" target="_blank">#%s</a>', $translationService->getOrderUrl($this), $value);
 

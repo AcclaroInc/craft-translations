@@ -10,7 +10,6 @@
 
 namespace acclaro\translations\services\job;
 
-use acclaro\translations\services\job\SendOrderToTranslationService;
 use Craft;
 use DateTime;
 use Exception;
@@ -23,7 +22,7 @@ use yii\web\HttpException;
 use craft\elements\GlobalSet;
 use acclaro\translations\Translations;
 
-class CreateTranslationDrafts extends BaseJob
+class CreateDrafts extends BaseJob
 {
 
     public $mySetting;
@@ -104,7 +103,11 @@ class CreateTranslationDrafts extends BaseJob
 
         // Only send order to translation service when not Manual
         if ($order->translator->service !== 'export_import') {
-            Translations::$plugin->jobFactory->dispatchJob(SendOrderToTranslationService::class, $order);
+            $translator = $order->getTranslator();
+
+            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+
+            $translationService->sendOrder($order);
         } else {
             $order->status = 'in progress';
             $order->dateOrdered = new DateTime();
@@ -120,7 +123,7 @@ class CreateTranslationDrafts extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Creating Translation Drafts';
+        return 'Creating translation drafts';
     }
 
     public function createEntryDraft(Entry $entry, $site, $orderName)

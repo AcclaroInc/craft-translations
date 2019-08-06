@@ -17,7 +17,7 @@ use craft\queue\BaseJob;
 use craft\elements\Entry;
 use acclaro\translations\Translations;
 
-class DeleteTranslationDrafts extends BaseJob
+class DeleteDrafts extends BaseJob
 {
     public $drafts;
 

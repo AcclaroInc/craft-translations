@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translations\services\translation;
+namespace acclaro\translations\services\translator;
 
 use Craft;
 use DateTime;
@@ -20,7 +20,6 @@ use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
-use acclaro\translations\services\job\Factory as JobFactory;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
@@ -54,7 +53,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function updateOrder(JobFactory $jobFactory, Order $order)
+    public function updateOrder(Order $order)
     {
         if ($order->status !== 'complete') {
             $order->logActivity(
@@ -69,11 +68,11 @@ class Export_ImportTranslationService implements TranslationServiceInterface
      * {@inheritdoc}
      */
 
-    public function updateFile(JobFactory $jobFactory, Order $order, FileModel $file){
+    public function updateFile(Order $order, FileModel $file){
         return;
     }
 
-    public function updateIOFile(JobFactory $jobFactory, Order $order, FileModel $file, $target)
+    public function updateIOFile(Order $order, FileModel $file, $target)
     { 
         if (empty($target)) 
         {

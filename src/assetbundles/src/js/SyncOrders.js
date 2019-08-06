@@ -101,7 +101,7 @@ Craft.Translations.SyncOrders = Garnish.Base.extend(
             this)
         });
 
-        Craft.cp.displayNotice(Craft.t('app', 'Orders up to date.'));
+        // Craft.cp.displayNotice(Craft.t('app', 'Orders up to date.'));
         
         window.location.reload();
     }

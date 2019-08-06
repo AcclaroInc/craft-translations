@@ -33,7 +33,7 @@ use acclaro\translations\assetbundles\EntryAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
-use acclaro\translations\services\job\DeleteTranslationDrafts;
+use acclaro\translations\services\job\DeleteDrafts;
 
 class Translations extends Plugin
 {
@@ -202,7 +202,7 @@ class Translations extends Plugin
         $drafts = array_column($files, 'draftId');
 
         if ($drafts) {
-            Craft::$app->queue->push(new DeleteTranslationDrafts([
+            Craft::$app->queue->push(new DeleteDrafts([
                 'description' => 'Deleting Translation Drafts',
                 'drafts' => $drafts,
             ]));

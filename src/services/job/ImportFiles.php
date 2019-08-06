@@ -139,9 +139,9 @@ class ImportFiles extends BaseJob
                 }
 
                 //Translation Service
-                $translationService = Translations::$plugin->translationFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
+                $translationService = Translations::$plugin->translatorFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
 
-                $translationService->updateIOFile(Translations::$plugin->jobFactory, $this->order, $draft_file, $xml_content);
+                $translationService->updateIOFile($this->order, $draft_file, $xml_content);
 
                 $draft_file->status = 'complete';
 
@@ -158,7 +158,7 @@ class ImportFiles extends BaseJob
                     if ($this->isOrderCompleted())
                     {
                         //Save Order with status complete
-                        $translationService->updateOrder(Translations::$plugin->jobFactory, $this->order);
+                        $translationService->updateOrder($this->order);
                     }
 
                     Translations::$plugin->orderRepository->saveOrder($this->order);

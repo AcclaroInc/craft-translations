@@ -110,14 +110,9 @@ class App extends Component
     public $fieldTranslatorFactory;
     
     /**
-     * @var job\Factory
+     * @var translators\Factory
      */
-    public $jobFactory;
-    
-    /**
-     * @var translation\Factory
-     */
-    public $translationFactory;
+    public $translatorFactory;
     
     /**
      * @var ElementTranslator
@@ -154,8 +149,7 @@ class App extends Component
         $this->userRepository = new repository\UserRepository();
         $this->wordCounter = new WordCounter();
         $this->fieldTranslatorFactory = new fieldtranslator\Factory();
-        $this->jobFactory = new job\Factory();
-        $this->translationFactory = new translation\Factory();
+        $this->translatorFactory = new translator\Factory();
         $this->elementTranslator = new ElementTranslator();
         $this->elementToXmlConverter = new ElementToXmlConverter();
         $this->orderSearchParams = new OrderSearchParams();

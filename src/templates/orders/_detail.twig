@@ -186,11 +186,11 @@
             </tbody>
         </table>
 
-        {% if order.status == 'complete' %}
+        {# {% if order.status == 'complete' %}
             <a href="{{ url('translations/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries & Bulk Publish'|t }}</a>
         {% else %}
             <a href="{{ url('translations/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries in this Order'|t }}</a>
-        {% endif %}
+        {% endif %} #}
 
           <div class="translations-order-detail-activity-log">
             <h2>{{ 'Order Activity Log'|t }}</h2>
@@ -306,73 +306,6 @@
             </div>
         </div>
     </form>
-
-    {# <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
-            <h2>{{ 'Order Entries'|t }}</h2>
-           
-            <table class="data">
-                 <thead>
-                    <tr>
-                        <th scope="col">{{ 'Title'|t }}</th>
-                        <th scope="col">{{ 'Section'|t }}</th>
-                        <th scope="col">{{ 'Source Site'|t }}</th>
-                        <th scope="col">{{ 'Target Sites(s)'|t }}</th>
-                        <th scope="col">{{ 'Status'|t }}</th>
-                        <th scope="col">{{ 'Date Updated'|t }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for element in elements %}
-                      
-                            <tr>
-                                <td>
-                                    <div class="element small hasstatus">
-                                        <span class="status {{ (element.className == 'craft\\elements\\GlobalSet') ? 'green' : element.status }}"></span>
-                                        <div class="label">
-                                            <span class="title">
-                                                <a href="{{ element.cpEditUrl }}">{{ element.title ?? element.name }}</a>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
-                                <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
-                                <td>
-                                {% for file in files[element.id] %}
-                                    {% if not loop.first %}
-                                    <br>
-                                    {% endif %}
-                                    <a href="{{ fileUrls[file.id] }}">
-                                        {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
-                                    </a>
-                                    {% if element.className != 'craft\\elements\\GlobalSet' %}
-                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
-                                    {% endif %}
-                                {% endfor %}
-                                </td>
-                                 <td>
-                                    {% for file in files[element.id] %}
-                                        {% if not loop.first %}
-                                        <br>
-                                        {% endif %}
-                                        <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
-                                    {% endfor %}
-                                </td>
-                                 <td>
-                                    {% for file in files[element.id] %}
-                                        {% if not loop.first %}
-                                        <br>
-                                        {% endif %}
-                                        {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
-                                    {% endfor %}
-                                </td>
-                             </tr>
-                         
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>   #}
-
 
 {% else %}
     <form method="post" class="translations-order-form" data-confirm-unload accept-charset="UTF-8">
@@ -591,7 +524,7 @@
                                     {% if orderId %}
                                     <span data-order-attribute="targetSites">
                                     {% for targetSite in orderTargetSitesObject %}
-                                        {{targetSite.name}} <span class="light">({{ sourceSite.language }})</span>
+                                        {{targetSite.name}} <span class="light">({{ targetSite.language }})</span>
                                         {% if not loop.last %}<br>{% endif %}
                                     {% endfor %}
                                     </span>
