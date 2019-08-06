@@ -209,7 +209,7 @@ class FilesController extends Controller
                             $zip->close();
 
                             Craft::$app->queue->push(new ImportFiles([
-                                'description' => 'Updating Translation Drafts',
+                                'description' => 'Updating translation drafts',
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,
                                 'xmlPath' => $xmlPath,
@@ -231,7 +231,7 @@ class FilesController extends Controller
                     if( move_uploaded_file($file->tempName, $xmlPath.'/'.$fileName)) {
 
                         Craft::$app->queue->push(new ImportFiles([
-                            'description' => 'Updating Translation Drafts',
+                            'description' => 'Updating translation drafts',
                             'orderId' => $orderId,
                             'totalFiles' => $total_files,
                             'xmlPath' => $xmlPath,
