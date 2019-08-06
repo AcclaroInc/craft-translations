@@ -437,6 +437,10 @@ class BaseController extends Controller
         $variables['orderId'] = isset($variables['orderId']) ? $variables['orderId'] : null;
 
         $variables['inputSourceSite'] = Craft::$app->getRequest()->getQueryParam('sourceSite');
+
+        if (empty($variables['inputSourceSite'])) {
+            $variables['inputSourceSite'] = Craft::$app->getRequest()->getParam('sourceSite');
+        }
         
         $variables['translatorId'] = isset($variables['order']) ? $variables['order']['translatorId'] : null;
 
@@ -462,6 +466,10 @@ class BaseController extends Controller
             $variables['order'] = Translations::$plugin->orderRepository->makeNewOrder($variables['inputSourceSite']);
 
             $variables['inputElements'] = Craft::$app->getRequest()->getQueryParam('elements');
+
+            if (empty($variables['inputElements'])) {
+                $variables['inputElements'] = Craft::$app->getRequest()->getParam('elements');
+            }
         }
         
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['order']['sourceSite']);
@@ -766,7 +774,7 @@ class BaseController extends Controller
         $pendingOrdersCount = count($pendingOrders);
 
         if ($pendingOrdersCount > 0) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'This translator cannot be deleted until all in-progress orders are completed.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'This translator cannot be deleted as orders has been created already.'));
 
             return;
         }

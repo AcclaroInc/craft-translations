@@ -233,6 +233,45 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             this.entries.push(this.getEditEntryId());
             this.updateCreateNewLink();
         }
+
+        this.$btn.on('click', function(e) {
+            e.preventDefault();
+
+            var $form = $('<form>', {
+                'method': 'POST',
+                'action': Craft.getUrl('translations/orders/new')
+            });
+
+            $form.hide();
+
+            $form.appendTo('body');
+
+            $form.append(Craft.getCsrfInput());
+
+            var $hiddenSourceSite = $('<input>', {
+                'type': 'hidden',
+                'name': 'sourceSite',
+                'value': self.getSourceSite()
+            });
+
+            $hiddenSourceSite.appendTo($form);
+
+            for (var j = 0; j < self.entries.length; j++) {
+                $('<input>', {
+                    'type': 'hidden',
+                    'name': 'elements[]',
+                    'value': self.entries[j]
+                }).appendTo($form);
+            }
+
+            var $submit = $('<input>', {
+                'type': 'submit'
+            });
+
+            $submit.appendTo($form);
+
+            $form.submit();
+        });
     }
 };
 
