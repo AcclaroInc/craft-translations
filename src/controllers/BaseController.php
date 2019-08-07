@@ -531,45 +531,42 @@ class BaseController extends Controller
                 $variables['entriesCountByElementCompleted'] = 0;
                 $variables['entriesCountByElement'] = 0;
 
-                foreach ($variables['elements'] as $element) 
-                {
-                    $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
+                $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
 
-                    $variables['entriesCountByElement'] += count($variables['files'][$element->id]);
- 
-                    $isElementPublished = true;
+                $variables['entriesCountByElement'] += count($variables['files'][$element->id]);
 
-                    // TODO: Improve this for performance
-                    foreach ($variables['files'][$element->id] as $file) {
-                        if ($file->status !== 'published'){
-                            $isElementPublished = false;
-                        }
+                $isElementPublished = true;
 
-                        if ($element instanceof Entry) {
-                            if ($file->status === 'published') {
-                                $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
-
-                                $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
-                            } else {
-                                $variables['webUrls'][$file->id] = $file->previewUrl;
-                            }
-
-                            if($file->status === 'complete' || $file->status === 'published')
-                            {
-                                $variables['entriesCountByElementCompleted']++;
-                            }
-                        } elseif ($element instanceof GlobalSet) {
-                            if($file->status === 'complete' || $file->status === 'published')
-                            {
-                                $variables['entriesCountByElementCompleted']++;
-                            }
-                        }
-
-                        $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
-                        $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                // TODO: Improve this for performance
+                foreach ($variables['files'][$element->id] as $file) {
+                    if ($file->status !== 'published'){
+                        $isElementPublished = false;
                     }
-                    $variables['isElementPublished'][$element->id] = $isElementPublished;
+
+                    if ($element instanceof Entry) {
+                        if ($file->status === 'published') {
+                            $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
+
+                            $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
+                        } else {
+                            $variables['webUrls'][$file->id] = $file->previewUrl;
+                        }
+
+                        if($file->status === 'complete' || $file->status === 'published')
+                        {
+                            $variables['entriesCountByElementCompleted']++;
+                        }
+                    } elseif ($element instanceof GlobalSet) {
+                        if($file->status === 'complete' || $file->status === 'published')
+                        {
+                            $variables['entriesCountByElementCompleted']++;
+                        }
+                    }
+
+                    $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
+                    $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 }
+                $variables['isElementPublished'][$element->id] = $isElementPublished;
                 $variables['entriesCountByElement'] -=  $variables['entriesCountByElementCompleted'];
             }
         }
