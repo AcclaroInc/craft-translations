@@ -32,40 +32,31 @@
          * @param {id, notice, url} params 
          */
         _trackJobProgressInternal: function(params) {
-            if (Craft.cp.jobInfo.length) {
-                var result;
-                for (i = 0; i < Craft.cp.jobInfo.length; i++) {
-                    var matches = true;
-                    if (params.id !== Craft.cp.jobInfo[i].id){
-                        matches = false;
+            Craft.queueActionRequest('queue/get-job-info?dontExtendSession=1', $.proxy(function(response, textStatus) {
+                if (textStatus === 'success') {
+                    var result;
+                    for (i = 0; i < response.length; i++) {
+                        var matches = true;
+                        if (params.id !== response[i].id){
+                            matches = false;
+                        }
+                        if (matches){
+                            result = response[i];
+                            this.trackJobProgressById(true, false, params);
+                        }
                     }
-                    if (matches){
-                        result = Craft.cp.jobInfo[i];
-                        this.trackJobProgressById(true, false, params);
+
+                    if(!result) {
+                        Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
+    
+                        if (params.url && window.location.pathname.includes('translations/orders')) {
+                            window.location.href=Craft.getUrl(params.url);
+                        }
+                    } else {
+                        console.log(`Job progress: ${result.progress}`);
                     }
                 }
-
-                // Job completed
-                console.log(result);
-                if(!result) {
-                    Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
-
-                    if (params.url && window.location.pathname.includes('translations/orders')) {
-                        window.location.href=Craft.getUrl(params.url);
-                    }
-                } else {
-                    console.log(`Job progress: ${result.progress}`);
-                }
-            } else {
-                // No jobs running or job completed
-                console.log('no jobs running, try again');
-                this.trackJobProgressById(true, false, params);
-                // Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
-
-                // if (params.url && window.location.pathname.includes('translations/orders')) {
-                //     window.location.href=Craft.getUrl(params.url);
-                // }
-            }
+            }, this));
         },
     };
     
