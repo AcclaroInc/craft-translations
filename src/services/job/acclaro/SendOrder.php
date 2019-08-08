@@ -41,7 +41,7 @@ class SendOrder extends BaseJob
         $orderResponse = $acclaroApiClient->createOrder(
             $order->title,
             $order->comments,
-            $order->requestedDueDate ? $order->requestedDueDate->format(DateTime::ISO8601) : '',
+            $order->requestedDueDate ? DateTime::createFromFormat(DateTime::ISO8601, $order->requestedDueDate) : '',
             $order->id,
             $order->wordCount
         );

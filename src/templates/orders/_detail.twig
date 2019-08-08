@@ -78,8 +78,11 @@
             {# {% if order.status != 'complete' and order.status != 'published' %} #}
             {% if order.status != 'published' %}
                 <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
-                    <input type="hidden" name="action" value="translations/base/sync-order">
                     {{ csrfInput() }}
+                    {{ forms.hidden({
+                        name: 'action',
+                        value: 'translations/base/sync-order',
+                    }) }}
 
                     {{ forms.hidden({
                         name: 'orderId',
@@ -91,7 +94,6 @@
                         <div class="sync-status"></div>
                     </div>
                 </form>
-                {% js 'new Craft.Translations.SyncOrder(\'sync-order\');' %}
             {% endif %}
         {% endif %}
         

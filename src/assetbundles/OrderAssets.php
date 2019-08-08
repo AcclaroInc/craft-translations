@@ -29,8 +29,6 @@ class OrderAssets extends AssetBundle
             'js/OrderIndex.js',
             'js/ExportFiles.js',
             'js/ImportFiles.js',
-            'js/SyncOrders.js',
-            'js/SyncOrder.js'
         ];
 
         $this->css = [

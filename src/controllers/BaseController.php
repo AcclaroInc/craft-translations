@@ -21,7 +21,6 @@ use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\SyncOrder;
-use acclaro\translations\services\job\SyncOrders;
 use acclaro\translations\services\job\CreateDrafts;
 use acclaro\translations\services\job\UpdateEntries;
 use acclaro\translations\services\translator\AcclaroTranslationService;
@@ -531,45 +530,42 @@ class BaseController extends Controller
                 $variables['entriesCountByElementCompleted'] = 0;
                 $variables['entriesCountByElement'] = 0;
 
-                foreach ($variables['elements'] as $element) 
-                {
-                    $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
+                $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
 
-                    $variables['entriesCountByElement'] += count($variables['files'][$element->id]);
- 
-                    $isElementPublished = true;
+                $variables['entriesCountByElement'] += count($variables['files'][$element->id]);
 
-                    // TODO: Improve this for performance
-                    foreach ($variables['files'][$element->id] as $file) {
-                        if ($file->status !== 'published'){
-                            $isElementPublished = false;
-                        }
+                $isElementPublished = true;
 
-                        if ($element instanceof Entry) {
-                            if ($file->status === 'published') {
-                                $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
-
-                                $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
-                            } else {
-                                $variables['webUrls'][$file->id] = $file->previewUrl;
-                            }
-
-                            if($file->status === 'complete' || $file->status === 'published')
-                            {
-                                $variables['entriesCountByElementCompleted']++;
-                            }
-                        } elseif ($element instanceof GlobalSet) {
-                            if($file->status === 'complete' || $file->status === 'published')
-                            {
-                                $variables['entriesCountByElementCompleted']++;
-                            }
-                        }
-
-                        $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
-                        $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                foreach ($variables['files'][$element->id] as $file) {
+                    if ($file->status !== 'published'){
+                        $isElementPublished = false;
                     }
-                    $variables['isElementPublished'][$element->id] = $isElementPublished;
+
+                    if ($element instanceof Entry) {
+                        if ($file->status === 'published') {
+                            $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
+
+                            $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
+                        } else {
+                            $variables['webUrls'][$file->id] = $file->previewUrl;
+                        }
+
+                        if($file->status === 'complete' || $file->status === 'published')
+                        {
+                            $variables['entriesCountByElementCompleted']++;
+                        }
+                    } elseif ($element instanceof GlobalSet) {
+                        if($file->status === 'complete' || $file->status === 'published')
+                        {
+                            $variables['entriesCountByElementCompleted']++;
+                        }
+                    }
+
+                    $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
+                    $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 }
+                
+                $variables['isElementPublished'][$element->id] = $isElementPublished;
                 $variables['entriesCountByElement'] -=  $variables['entriesCountByElementCompleted'];
             }
         }
@@ -676,79 +672,28 @@ class BaseController extends Controller
         $this->renderTemplate('translations/translators/_detail', $variables);
     }
 
-    public function actionOrderEntries(array $variables = array())
-    {
-        $variables = Craft::$app->getRequest()->resolve()[1];
-
-        $variables['adminTabs'] = $this->adminTabs;
-
-        $variables['pluginVersion'] = $this->pluginVersion;
-
-        $variables['order'] = Translations::$plugin->orderRepository->getOrderById($variables['orderId']);
-
-        $variables['selectedSubnavItem'] = 'orders';
-
-        if (!$variables['order']) {
-            throw new HttpException(404);
-        }
-
-        $variables['elements'] = $variables['order']->getElements();
-
-        $variables['files'] = array();
-
-        $variables['fileUrls'] = array();
-
-        $variables['webUrls'] = array();
-
-        $variables['isElementPublished'] = array();
-
-        $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['order']['sourceSite']);
-
-        foreach ($variables['elements'] as $element) {
-            $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
-
-            $isElementPublished = true;
-
-            foreach ($variables['files'][$element->id] as $file) {
-                if ($file->status !== 'published') {
-                    $isElementPublished = false;
-                }
-
-                if ($element instanceof Entry) {
-                    if ($file->status === 'published') {
-                        $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
-
-                        $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
-                    } else {
-                        $variables['webUrls'][$file->id] = $file->previewUrl;
-                    }
-                }
-                $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
-
-                $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-            }
-
-            $variables['isElementPublished'][$element->id] = $isElementPublished;
-        }
-
-        $this->renderTemplate('translations/orders/_entries', $variables);
-    }
-
     public function actionUpdateEntries()
     {
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 
         $elementIds = Craft::$app->getRequest()->getParam('elements');
 
-        Craft::$app->queue->push(new UpdateEntries([
+        $job = Craft::$app->queue->push(new UpdateEntries([
             'description' => 'Updating translation entries',
             'orderId' => $orderId,
             'elementIds' => $elementIds
         ]));
 
-        // Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Entries published.'));
-
-        $this->redirect('translations/orders/detail/'.$orderId, 302, true);
+        if ($job) {
+            $params = [
+                'id' => (int) $job,
+                'notice' => 'Done updating translation entries',
+                'url' => 'translations/orders/detail/'. $orderId,
+            ];
+            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        } else {
+            $this->redirect('translations/orders', 302, true);
+        }
     }
 
     // Translator CRUD Methods
@@ -943,6 +888,7 @@ class BaseController extends Controller
             // Manual Translation will make orders 'in progress' status after creation
 
             $success = Craft::$app->getElements()->saveElement($order);
+            $job = '';
             if (!$success) {
                 Craft::error('Couldn’t save the order', __METHOD__);
             } else {
@@ -1000,13 +946,13 @@ class BaseController extends Controller
                     $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Order Submitted to %s'), $order->translator->getName()));
                     
                     $order->wordCount = array_sum($wordCounts);
-                    Craft::$app->queue->push(new CreateDrafts([
+                    
+                    $job = Craft::$app->queue->push(new CreateDrafts([
                         'description' => 'Creating translation drafts',
                         'orderId' => $order->id,
                         'wordCounts' => $wordCounts,
                     ]));
-
-                    Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Submitted.'));
+                    
                 } else {
                     Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Saved.'));
                 }
@@ -1018,7 +964,16 @@ class BaseController extends Controller
             Craft::$app->getElements()->saveElement($order);
         }
 
-        return $this->redirect('translations/orders', 302, true);
+        if ($job) {
+            $params = [
+                'id' => (int) $job,
+                'notice' => 'Done creating translation drafts',
+                'url' => $order->getTranslator()->service !== 'export_import' ? 'translations/orders' : 'translations/orders/detail/'. $order->id
+            ];
+            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        } else {
+            $this->redirect('translations/orders', 302, true);
+        }
     }
 
     public function actionDeleteOrder()
@@ -1071,37 +1026,61 @@ class BaseController extends Controller
         }
     }
 
-    public function actionSyncOrder($params = array())
+    public function actionSyncOrder()
     {
+        $this->requireLogin();
+        $this->requireAdmin();
         $this->requirePostRequest();
 
-        $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
+        $orderId = Craft::$app->getRequest()->getParam('orderId');
 
-        $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         if ($order) {
-            Craft::$app->queue->push(new SyncOrder([
+            $job = Craft::$app->queue->push(new SyncOrder([
                 'description' => 'Syncing order '. $order->title,
                 'order' => $order
             ]));
-            
-            return $this->asJson([
-                'success' => true,
-                'error' => null
-            ]);
+
+            if ($job) {
+                $params = [
+                    'id' => (int) $job,
+                    'notice' => 'Done syncing order '. $order->title,
+                    'url' => 'translations/orders/detail/'. $order->id
+                ];
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            } else {
+                $this->redirect('translations/orders', 302, true);
+            }
         }
     }
     
     public function actionSyncOrders()
     {
-        Craft::$app->queue->push(new SyncOrders([
-            'description' => 'Syncing translation orders'
-        ]));
+        $orders = Translations::$plugin->orderRepository->getInProgressOrders();
 
-        return $this->asJson([
-            'success' => true,
-            'error' => null
-        ]);
+        foreach ($orders as $order) {
+            // Don't update manual orders
+            if ($order->translator->service === 'export_import') {
+                continue;
+            }
+
+            $job = Craft::$app->queue->push(new SyncOrder([
+                'description' => 'Syncing order '. $order->title,
+                'order' => $order
+            ]));
+        }
+
+        if ($job) {
+            $params = [
+                'id' => (int) $job,
+                'notice' => 'Done syncing orders',
+                'url' => 'translations/orders'
+            ];
+            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        } else {
+            $this->redirect('translations/orders', 302, true);
+        }
     }
 
     public function actionEditOrderName()

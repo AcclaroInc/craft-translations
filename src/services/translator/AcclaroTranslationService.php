@@ -168,12 +168,21 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function sendOrder(Order $order)
     {
-        Craft::$app->queue->push(new SendOrder([
+        $job = Craft::$app->queue->push(new SendOrder([
             'description' => 'Sending order to Acclaro',
             'order' => $order,
             'sandboxMode' => $this->sandboxMode,
             'settings' => $this->settings
         ]));
+
+        // if ($job) {
+        //     $params = [
+        //         'id' => (int) $job,
+        //         'notice' => 'Order sent to Acclaro',
+        //         'url' => 'translations/orders'
+        //     ];
+        //     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        // }
     }
 
     public function getOrderUrl(Order $order)

@@ -296,7 +296,6 @@ class Translations extends Plugin
                     'translations/orders' => 'translations/base/order-index',
                     'translations/orders/new' => 'translations/base/order-detail',
                     'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
-                    'translations/orders/entries/<orderId:\d+>' => 'translations/base/order-entries',
                     // 'translations/orders/reporting' => 'translations/base/index',
                     'translations/translators' => 'translations/base/translator-index',
                     'translations/translators/new' => 'translations/base/translator-detail',
@@ -338,6 +337,7 @@ class Translations extends Plugin
         self::$view->registerAssetBundle(UniversalAssets::class);
 
         $numberOfCompleteOrders = count(self::$plugin->orderRepository->getCompleteOrders());
+        self::$view->registerJs("$(function(){ Craft.Translations });");
         self::$view->registerJs("$(function(){ Craft.Translations.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
     }
     

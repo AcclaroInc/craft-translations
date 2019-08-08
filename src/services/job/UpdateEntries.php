@@ -27,17 +27,13 @@ class UpdateEntries extends BaseJob
         $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
         $files = $order->getFiles();
 
-        $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
-
         $filesCount = count($files);
 
-        $totalElements = $filesCount;
+        $totalElements = count($this->elementIds);
         $currentElement = 0;
         $publishedFilesCount = 0;
 
         foreach ($files as $file) {
-            $this->setProgress($queue, $currentElement++ / $totalElements);
-
             if (!in_array($file->elementId, $this->elementIds)) {
                 continue;
             }
@@ -48,6 +44,9 @@ class UpdateEntries extends BaseJob
                 continue;
             }
 
+            $this->setProgress($queue, $currentElement++ / $totalElements);
+            Craft::info('23fo2in2FJ: '. $currentElement .' | '. $totalElements);
+
             $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
             if ($element instanceof GlobalSetModel) {
@@ -56,13 +55,21 @@ class UpdateEntries extends BaseJob
                 // keep original global set name
                 $draft->name = $element->name;
 
-                $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+                if ($draft) {
+                    $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+                } else {
+                    $success = false;
+                }
 
                 $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
             } else {
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
 
-                $success = Translations::$plugin->draftRepository->publishDraft($draft);
+                if ($draft) {
+                    $success = Translations::$plugin->draftRepository->publishDraft($draft);
+                } else {
+                    $success = false;
+                }
 
                 $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
             }
@@ -90,16 +97,10 @@ class UpdateEntries extends BaseJob
                     array(':oldTokenRoute' => $oldTokenRoute)
                 );
             } else {
-                if ($transaction !== null) {
-                    $transaction->rollback();
-                }
+                $order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t update entry '. '"'. $element->title .'"'));
+                Translations::$plugin->orderRepository->saveOrder($order);
 
-                // Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
-                $this->order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t publish '. $draft->name));
-
-                // $this->redirect($uri, 302, true);
-
-                return;
+                continue;
             }
 
             $file->draftId = 0;
@@ -108,16 +109,13 @@ class UpdateEntries extends BaseJob
             Translations::$plugin->fileRepository->saveFile($file);
         }
 
+        Craft::info('aas3i23jf: '. $publishedFilesCount .' | '. $filesCount);
         if ($publishedFilesCount === $filesCount) {
             $order->status = 'published';
 
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Entries published'));
 
             Translations::$plugin->orderRepository->saveOrder($order);
-        }
-
-        if ($transaction !== null) {
-            $transaction->commit();
         }
     }
 
