@@ -9,6 +9,7 @@
      */
     Craft.Translations = {
         trackJobProgressTimeout: null,
+        job: null,
 
         init: function() {
         },
@@ -34,26 +35,34 @@
         _trackJobProgressInternal: function(params) {
             Craft.queueActionRequest('queue/get-job-info?dontExtendSession=1', $.proxy(function(response, textStatus) {
                 if (textStatus === 'success') {
-                    var result;
-                    for (i = 0; i < response.length; i++) {
-                        var matches = true;
-                        if (params.id !== response[i].id){
-                            matches = false;
-                        }
-                        if (matches){
-                            result = response[i];
-                            this.trackJobProgressById(true, false, params);
-                        }
-                    }
+                    this.trackJobProgressTimeout = null;
 
-                    if(!result) {
-                        Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
-    
-                        if (params.url && window.location.pathname.includes('translations/orders')) {
-                            window.location.href=Craft.getUrl(params.url);
+                    if (Craft.cp.jobInfo.length) {
+                        console.log('Craft.cp.jobInfo.length');
+                        // Check to see if it matches our jobId
+                        for (i = 0; i < Craft.cp.jobInfo.length; i++) {
+                            console.log(Craft.cp.jobInfo[i].id);
+                            var matches = false;
+                            if (params.id == Craft.cp.jobInfo[i].id) {
+                                matches = true;
+                            }
+                            if (matches) {
+                                this.job = Craft.cp.jobInfo[i];
+
+                                console.log(`Job progress: ${Craft.cp.jobInfo[i].progress}`);
+                                // Check again after a delay
+                                this.trackJobProgressById(true, false, params);
+                            }
                         }
                     } else {
-                        console.log(`Job progress: ${result.progress}`);
+                        // Job is either completed or no jobs running
+                        if (this.job) {
+                            Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
+    
+                            if (params.url && window.location.pathname.includes('translations/orders')) {
+                                window.location.href=Craft.getUrl(params.url);
+                            }    
+                        }
                     }
                 }
             }, this));
