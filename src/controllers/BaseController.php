@@ -504,6 +504,9 @@ class BaseController extends Controller
 
         $variables['entriesCountBySection'] = array();
 
+        $variables['entriesCountByElement'] = 0;
+        $variables['entriesCountByElementCompleted'] = 0;
+
         foreach ($variables['elements'] as $element) {
             $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
 
@@ -527,9 +530,6 @@ class BaseController extends Controller
             //Is an order being created or are we on the detail page?
             if (!isset($variables['inputSourceSite']))
             {
-                $variables['entriesCountByElementCompleted'] = 0;
-                $variables['entriesCountByElement'] = 0;
-
                 $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
 
                 $variables['entriesCountByElement'] += count($variables['files'][$element->id]);
@@ -537,7 +537,7 @@ class BaseController extends Controller
                 $isElementPublished = true;
 
                 foreach ($variables['files'][$element->id] as $file) {
-                    if ($file->status !== 'published'){
+                    if ($file->status !== 'published') {
                         $isElementPublished = false;
                     }
 
@@ -550,13 +550,11 @@ class BaseController extends Controller
                             $variables['webUrls'][$file->id] = $file->previewUrl;
                         }
 
-                        if($file->status === 'complete' || $file->status === 'published')
-                        {
+                        if($file->status === 'complete' || $file->status === 'published') {
                             $variables['entriesCountByElementCompleted']++;
                         }
                     } elseif ($element instanceof GlobalSet) {
-                        if($file->status === 'complete' || $file->status === 'published')
-                        {
+                        if($file->status === 'complete' || $file->status === 'published') {
                             $variables['entriesCountByElementCompleted']++;
                         }
                     }
@@ -566,9 +564,10 @@ class BaseController extends Controller
                 }
                 
                 $variables['isElementPublished'][$element->id] = $isElementPublished;
-                $variables['entriesCountByElement'] -=  $variables['entriesCountByElementCompleted'];
             }
         }
+
+        $variables['entriesCountByElement'] -=  $variables['entriesCountByElementCompleted'];
 
         if (!$variables['translatorOptions']) {
             $variables['translatorOptions'] = array('' => Translations::$plugin->translator->translate('app', 'No Translators'));
