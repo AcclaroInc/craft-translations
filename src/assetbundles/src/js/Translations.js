@@ -53,7 +53,7 @@
                         window.location.href=Craft.getUrl(params.url);
                     }
                 } else {
-                    // console.log(`Job progress: ${result.progress}`);
+                    console.log(`Job progress: ${result.progress}`);
                 }
             } else {
                 // No jobs running or job completed
