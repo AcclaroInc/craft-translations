@@ -286,8 +286,8 @@ class BaseController extends Controller
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Source site is not supported'));
             return;
         }
-        
-        if ($order->sourceSite !== (int) $sourceSite) {
+
+        if ((int) $order->sourceSite !== (int) $sourceSite) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'All entries within an order must have the same source site.'));
             return;
         }
