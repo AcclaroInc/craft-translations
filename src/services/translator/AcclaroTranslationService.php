@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translations\services\translation;
+namespace acclaro\translations\services\translator;
 
 use Craft;
 use DateTime;
@@ -19,7 +19,7 @@ use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
-use acclaro\translations\services\job\Factory as JobFactory;
+use acclaro\translations\services\job\acclaro\SendOrder;
 
 class AcclaroTranslationService implements TranslationServiceInterface
 {
@@ -32,6 +32,11 @@ class AcclaroTranslationService implements TranslationServiceInterface
      * @var acclaro\translations\services\api\AcclaroApiClient
      */
     protected $acclaroApiClient;
+    
+    /**
+     * @var array
+     */
+    protected $settings;
 
     /**
      * @param array                                                         $settings
@@ -44,6 +49,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
         if (!isset($settings['apiToken'])) {
             throw new Exception('Missing apiToken');
         }
+
+        $this->settings = $settings;
 
         $this->sandboxMode = !empty($settings['sandboxMode']);
 
@@ -66,7 +73,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function updateOrder(JobFactory $jobFactory, Order $order)
+    public function updateOrder(Order $order)
     {
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
@@ -82,7 +89,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function updateFile(JobFactory $jobFactory, Order $order, FileModel $file)
+    public function updateFile(Order $order, FileModel $file)
     {
         $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
 
@@ -161,84 +168,21 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function sendOrder(Order $order)
     {
-        $orderResponse = $this->acclaroApiClient->createOrder(
-            $order->title,
-            $order->comments,
-            $order->requestedDueDate ? $order->requestedDueDate->format(DateTime::ISO8601) : '',
-            $order->id,
-            $order->wordCount
-        );
+        $job = Craft::$app->queue->push(new SendOrder([
+            'description' => 'Sending order to Acclaro',
+            'order' => $order,
+            'sandboxMode' => $this->sandboxMode,
+            'settings' => $this->settings
+        ]));
 
-        $order->serviceOrderId = (!is_null($orderResponse)) ? $orderResponse->orderid : '';
-        $order->status = (!is_null($orderResponse)) ? $orderResponse->status : '';
-
-        $orderCallbackResponse = $this->acclaroApiClient->requestOrderCallback(
-            $order->serviceOrderId,
-            Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
-        );
-
-        $tempPath = Craft::$app->path->getTempPath();
-
-        foreach ($order->files as $file) {
-            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-
-            $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
-            $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
-
-            if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
-            } else {
-                $filename = $element->slug.'-'.$targetSite.'.xml';
-            }
-
-            $path = $tempPath.'/'.$filename;
-
-            $stream = fopen($path, 'w+');
-
-            fwrite($stream, $file->source);
-
-            $fileResponse = $this->acclaroApiClient->sendSourceFile(
-                $order->serviceOrderId,
-                $sourceSite,
-                $targetSite,
-                $file->id,
-                $path
-            );
-
-            // var_dump($fileResponse);
-            // var_dump(isset($fileResponse->errorCode));
-            // if (isset($fileResponse->errorCode)) {
-            //     // Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Error Code: '.$fileResponse->errorCode.' '. $fileResponse->errorMessage));
-            //     throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Error Code: '.$fileResponse->errorCode.' '. $fileResponse->errorMessage));
-            // } else {
-                // var_dump('$fileResponse');
-                // var_dump($fileResponse);
-                // var_dump($file);
-                // die;
-                $file->serviceFileId = $fileResponse->fileid;
-                $file->status = $fileResponse->status;
-
-                $fileCallbackResponse = $this->acclaroApiClient->requestFileCallback(
-                    $order->serviceOrderId,
-                    $file->serviceFileId,
-                    Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
-                );
-
-                $this->acclaroApiClient->addReviewUrl(
-                    $order->serviceOrderId,
-                    $file->serviceFileId,
-                    $file->previewUrl
-                );
-            // }
-
-            fclose($stream);
-
-            unlink($path);
-        }
-
-        $submitOrderResponse = $this->acclaroApiClient->submitOrder($order->serviceOrderId);
-
-        $order->status = $submitOrderResponse->status;
+        // if ($job) {
+        //     $params = [
+        //         'id' => (int) $job,
+        //         'notice' => 'Order sent to Acclaro',
+        //         'url' => 'translations/orders'
+        //     ];
+        //     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        // }
     }
 
     public function getOrderUrl(Order $order)

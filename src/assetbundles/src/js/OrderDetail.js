@@ -171,7 +171,7 @@ Craft.Translations.OrderDetail = {
                     .find('.translations-loader-msg')
                     .removeClass('hidden');
     
-                setTimeout(function(){window.location.href=Craft.getUrl('translations/orders')},1000)
+                // setTimeout(function(){window.location.href=Craft.getUrl('translations/orders')},1000)
             }
 
         });

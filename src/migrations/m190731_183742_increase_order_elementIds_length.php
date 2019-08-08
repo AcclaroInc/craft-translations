@@ -17,7 +17,7 @@ class m190731_183742_increase_order_elementIds_length extends Migration
     {
         // Place migration code here...
         echo "Altering translations_orders elementIds column...\n";
-        $this->alterColumn('{{%translations_orders}}', 'elementIds', $this->string(8160)->notNull()->defaultValue(''));
+        $this->alterColumn('{{%translations_orders}}', 'elementIds', $this->string(8160)->notNull());
         echo "Done altering translations_orders elementIds column...\n";
     }
 

@@ -78,8 +78,11 @@
             {# {% if order.status != 'complete' and order.status != 'published' %} #}
             {% if order.status != 'published' %}
                 <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
-                    <input type="hidden" name="action" value="translations/base/sync-order">
                     {{ csrfInput() }}
+                    {{ forms.hidden({
+                        name: 'action',
+                        value: 'translations/base/sync-order',
+                    }) }}
 
                     {{ forms.hidden({
                         name: 'orderId',
@@ -91,7 +94,6 @@
                         <div class="sync-status"></div>
                     </div>
                 </form>
-                {% js 'new Craft.Translations.SyncOrder(\'sync-order\');' %}
             {% endif %}
         {% endif %}
         
@@ -156,8 +158,8 @@
                     <td>
                         <input type="radio" name="__status" disabled="disabled"{% if order.status == 'new' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Pending submission'|t }}<br>
                         <input type="radio" name="__status" disabled="disabled"{% if order.status == 'in progress' or order.status == 'getting quote' or order.status == 'needs approval' or order.status == 'in preparation' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'In progress'|t }}<br>
-                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'complete' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Ready to publish'|t }}<br>
-                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'published' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Published'|t }}
+                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'complete' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Ready to update'|t }}<br>
+                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'published' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Updated'|t }}
                     </td>
                 </tr>
                 <tr>
@@ -186,11 +188,11 @@
             </tbody>
         </table>
 
-        {% if order.status == 'complete' %}
+        {# {% if order.status == 'complete' %}
             <a href="{{ url('translations/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries & Bulk Publish'|t }}</a>
         {% else %}
             <a href="{{ url('translations/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries in this Order'|t }}</a>
-        {% endif %}
+        {% endif %} #}
 
           <div class="translations-order-detail-activity-log">
             <h2>{{ 'Order Activity Log'|t }}</h2>
@@ -202,72 +204,110 @@
         </div>
     </div>
 
-    <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
-            <h2>{{ 'Order Entries'|t }}</h2>
-           
-            <table class="data">
-                 <thead>
-                    <tr>
-                        <th scope="col">{{ 'Title'|t }}</th>
-                        <th scope="col">{{ 'Section'|t }}</th>
-                        <th scope="col">{{ 'Source Site'|t }}</th>
-                        <th scope="col">{{ 'Target Sites(s)'|t }}</th>
-                        <th scope="col">{{ 'Status'|t }}</th>
-                        <th scope="col">{{ 'Date Updated'|t }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for element in elements %}
-                      
-                            <tr>
-                                <td>
-                                    <div class="element small hasstatus">
-                                        <span class="status {{ (element.className == 'craft\\elements\\GlobalSet') ? 'green' : element.status }}"></span>
-                                        <div class="label">
-                                            <span class="title">
-                                                <a href="{{ element.cpEditUrl }}">{{ element.title ?? element.name }}</a>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
-                                <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
-                                <td>
-                                {% for file in files[element.id] %}
-                                    {% if not loop.first %}
-                                    <br>
-                                    {% endif %}
-                                    <a href="{{ fileUrls[file.id] }}">
-                                        {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
-                                    </a>
-                                    {% if element.className != 'craft\\elements\\GlobalSet' %}
-                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
-                                    {% endif %}
-                                {% endfor %}
-                                </td>
-                                 <td>
-                                    {% for file in files[element.id] %}
-                                        {% if not loop.first %}
-                                        <br>
-                                        {% endif %}
-                                        <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
-                                    {% endfor %}
-                                </td>
-                                 <td>
-                                    {% for file in files[element.id] %}
-                                        {% if not loop.first %}
-                                        <br>
-                                        {% endif %}
-                                        {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
-                                    {% endfor %}
-                                </td>
-                             </tr>
-                         
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>  
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
 
+        {{ forms.hidden({
+            name: 'action',
+            value: 'translations/base/update-entries',
+        }) }}
+
+        {{ forms.hidden({
+            name: 'orderId',
+            value: order.id,
+        }) }}
+
+        <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
+            <div class="elementindex">
+                <div class="main">
+                    {% if order.status == 'complete' %}
+                    <div class="toolbar">
+                        <div class="buttons right">
+                            <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to update these entries?'|t }}" disabled="disabled" value="{{ 'Update Selected Entries'|t }}">
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="elements">
+                        <div class="tableview">
+                            <table class="data fullwidth">
+                                <thead>
+                                    <tr>
+                                        {% if order.status == 'complete' %}
+                                        <td class="thin checkbox-cell translations-checkbox-cell">
+                                            <input class="checkbox" id="element-0" type="checkbox">
+                                            <label class="checkbox" for="element-0"></label>
+                                        </td>
+                                        {% endif %}
+                                        <th scope="col">{{ 'Title'|t }}</th>
+                                        <th scope="col">{{ 'Section'|t }}</th>
+                                        <th scope="col">{{ 'Source Site'|t }}</th>
+                                        <th scope="col">{{ 'Target Sites(s)'|t }}</th>
+                                        <th scope="col">{{ 'Status'|t }}</th>
+                                        <th scope="col">{{ 'Date Updated'|t }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for element in elements %}
+                                    
+                                            <tr>
+                                                {% if order.status == 'complete' %}
+                                                <td class="thin checkbox-cell translations-checkbox-cell">
+                                                    <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"{% if isElementPublished[element.id] %} disabled="disabled"{% endif %}>
+                                                    <label class="checkbox" for="element-{{ element.id }}"></label>
+                                                </td>
+                                                {% endif %}
+                                                <td>
+                                                    <div class="element small hasstatus">
+                                                        <span class="status {{ (element.className == 'craft\\elements\\GlobalSet') ? 'green' : element.status }}"></span>
+                                                        <div class="label">
+                                                            <span class="title">
+                                                                <a href="{{ element.cpEditUrl }}">{{ element.title ?? element.name }}</a>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
+                                                <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
+                                                <td>
+                                                {% for file in files[element.id] %}
+                                                    {% if not loop.first %}
+                                                    <br>
+                                                    {% endif %}
+                                                    <a href="{{ fileUrls[file.id] }}">
+                                                        {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
+                                                    </a>
+                                                    {% if element.className != 'craft\\elements\\GlobalSet' %}
+                                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                </td>
+                                                <td>
+                                                    {% for file in files[element.id] %}
+                                                        {% if not loop.first %}
+                                                        <br>
+                                                        {% endif %}
+                                                        <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    {% for file in files[element.id] %}
+                                                        {% if not loop.first %}
+                                                        <br>
+                                                        {% endif %}
+                                                        {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                                    {% endfor %}
+                                                </td>
+                                            </tr>
+                                        
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 
 {% else %}
     <form method="post" class="translations-order-form" data-confirm-unload accept-charset="UTF-8">
@@ -486,7 +526,7 @@
                                     {% if orderId %}
                                     <span data-order-attribute="targetSites">
                                     {% for targetSite in orderTargetSitesObject %}
-                                        {{targetSite.name}} <span class="light">({{ sourceSite.language }})</span>
+                                        {{targetSite.name}} <span class="light">({{ targetSite.language }})</span>
                                         {% if not loop.last %}<br>{% endif %}
                                     {% endfor %}
                                     </span>

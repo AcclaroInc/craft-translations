@@ -62,6 +62,7 @@ class ImportFiles extends BaseJob
                 // check if the file is empty
                 if (empty($xml_content)) {
                     $this->order->logActivity(Translations::$plugin->translator->translate('app', $xml." file you are trying to import is empty."));
+                    Translations::$plugin->orderRepository->saveOrder($this->order);
                     return false;
                 }
 
@@ -77,6 +78,7 @@ class ImportFiles extends BaseJob
                         if($errors)
                         {
                             $this->order->logActivity(Translations::$plugin->translator->translate('app', "We found errors on $xml : "  . $errors));
+                            Translations::$plugin->orderRepository->saveOrder($this->order);
                             return;
                         }
                     }
@@ -84,6 +86,7 @@ class ImportFiles extends BaseJob
                 catch(Exception $e)
                 {
                     $this->order->logActivity(Translations::$plugin->translator->translate('app', $e->getMessage()));
+                    Translations::$plugin->orderRepository->saveOrder($this->order);
                 }
 
                 //Get DraftId & Lang Nodes From Document
@@ -127,7 +130,8 @@ class ImportFiles extends BaseJob
                 //Validate If the draft was found
                 if (is_null($draft_file))
                 {
-                    $this->order->logActivity(Translations::$plugin->translator->translate('app', "The file you are trying to import does not contain a match for this entry."));
+                    $this->order->logActivity(Translations::$plugin->translator->translate('app', $xml ." does not match any known entries."));
+                    Translations::$plugin->orderRepository->saveOrder($this->order);
                     return;
                 }
 
@@ -135,13 +139,14 @@ class ImportFiles extends BaseJob
                 if ($draft_file->status === 'published')
                 {
                     $this->order->logActivity(Translations::$plugin->translator->translate('app', "This entry was already published."));
+                    Translations::$plugin->orderRepository->saveOrder($this->order);
                     return;
                 }
 
                 //Translation Service
-                $translationService = Translations::$plugin->translationFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
+                $translationService = Translations::$plugin->translatorFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
 
-                $translationService->updateIOFile(Translations::$plugin->jobFactory, $this->order, $draft_file, $xml_content);
+                $translationService->updateIOFile($this->order, $draft_file, $xml_content);
 
                 $draft_file->status = 'complete';
 
@@ -158,7 +163,7 @@ class ImportFiles extends BaseJob
                     if ($this->isOrderCompleted())
                     {
                         //Save Order with status complete
-                        $translationService->updateOrder(Translations::$plugin->jobFactory, $this->order);
+                        $translationService->updateOrder($this->order);
                     }
 
                     Translations::$plugin->orderRepository->saveOrder($this->order);
@@ -168,6 +173,7 @@ class ImportFiles extends BaseJob
             {
                 //Invalid
                 $this->order->logActivity(Translations::$plugin->translator->translate('app', "File $xml is invalid, please try again with a valid xml file."));
+                Translations::$plugin->orderRepository->saveOrder($this->order);
             }
         }
     }
@@ -187,5 +193,22 @@ class ImportFiles extends BaseJob
             }
         }
         return true;
+    }
+
+    /**
+    * Report and Validate XML imported files
+	* @return string
+    */
+    public function reportXmlErrors()
+    {
+    	$errors = array();
+    	$libErros = libxml_get_errors();
+    	
+    	$msg = false;
+    	if ($libErros && isset($libErros[0]))
+    	{
+    		$msg = $libErros[0]->code . ": " .$libErros[0]->message;
+    	}
+    	return $msg;
     }
 }

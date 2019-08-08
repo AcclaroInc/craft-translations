@@ -80,10 +80,12 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         this.data = data;
 
+        var $btncontainer = $('<div>', {'class': 'flex btngroup-container'});
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
         if (this.isEditEntryScreen()) {
-            $btngroup.insertBefore('#header .btngroup');
+            $btncontainer.insertAfter('#save-btn-container');
+            $btngroup.appendTo($btncontainer);
         } else {
             if (data.licenseStatus === 'valid') {
                 $btngroup.prependTo('#header #button-container');
@@ -91,14 +93,14 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         }
 
         this.$btn = $('<a>', {
-            'class': 'btn submit icon',
+            'class': 'btn icon',
             'href': '#',
             'data-icon': "language",
             'text': Craft.t('app', 'New Translation')
         });
 
         this.$menubtn = $('<div>', {
-            'class': 'btn submit menubtn'
+            'class': 'btn menubtn'
         });
 
         if (!this.isEditEntryScreen()) {

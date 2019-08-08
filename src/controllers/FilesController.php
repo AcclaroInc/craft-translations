@@ -208,12 +208,21 @@ class FilesController extends Controller
 
                             $zip->close();
 
-                            Craft::$app->queue->push(new ImportFiles([
-                                'description' => 'Updating Translation Drafts',
+                            $job = Craft::$app->queue->push(new ImportFiles([
+                                'description' => 'Updating translation drafts',
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,
                                 'xmlPath' => $xmlPath,
                             ]));
+
+                            if ($job) {
+                                $params = [
+                                    'id' => (int) $job,
+                                    'notice' => 'Done updating translation drafts',
+                                    'url' => 'translations/orders/detail/'. $orderId
+                                ];
+                                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                            }
                             // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
                             $this->showUserMessages("File uploaded successfully: $fileName", true);
                         } else {
@@ -230,13 +239,22 @@ class FilesController extends Controller
                     //Upload File
                     if( move_uploaded_file($file->tempName, $xmlPath.'/'.$fileName)) {
 
-                        Craft::$app->queue->push(new ImportFiles([
-                            'description' => 'Updating Translation Drafts',
+                        $job = Craft::$app->queue->push(new ImportFiles([
+                            'description' => 'Updating translation drafts',
                             'orderId' => $orderId,
                             'totalFiles' => $total_files,
                             'xmlPath' => $xmlPath,
                         ]));
-                        // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
+                        
+                        if ($job) {
+                            $params = [
+                                'id' => (int) $job,
+                                'notice' => 'Done updating translation drafts',
+                                'url' => 'translations/orders/detail/'. $orderId
+                            ];
+                            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                        }
+
                         $this->showUserMessages("File uploaded successfully: $fileName", true);
                     } else {
                         $this->showUserMessages("Unable to upload file: $fileName");

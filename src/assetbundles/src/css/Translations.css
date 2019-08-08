@@ -86,7 +86,7 @@
 }
 
 .translations-dropdown {
-    margin: 5px 5px 0 0;
+    margin: 5px 10px 0 0;
     position: relative;
 }
 
@@ -478,4 +478,15 @@
 
 #translations-dashboard .buttons {
     margin: 0 0 14px;
+}
+
+.btngroup-container {
+    align-content: flex-end;
+    flex-direction: column;
+    padding-top: 15px;
+    width: 100%;
+}
+
+.btngroup-container .translations-dropdown {
+    margin: 5px 0px 0px 0px;
 }

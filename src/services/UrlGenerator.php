@@ -66,7 +66,9 @@ class UrlGenerator
                 );
             }
     
-            return Translations::$plugin->urlHelper->cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($file->targetSite)->handle);
+            return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), [
+                'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle
+            ]);
         }
 
         if ($element instanceof GlobalSet) {
