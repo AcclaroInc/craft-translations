@@ -57,11 +57,14 @@
                 }
             } else {
                 // No jobs running or job completed
-                Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
+                setTimeout(() => {
+                    this.trackJobProgressById(true, false, params);
+                }, 300);
+                // Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
 
-                if (params.url && window.location.pathname.includes('translations/orders')) {
-                    window.location.href=Craft.getUrl(params.url);
-                }
+                // if (params.url && window.location.pathname.includes('translations/orders')) {
+                //     window.location.href=Craft.getUrl(params.url);
+                // }
             }
         },
     };
