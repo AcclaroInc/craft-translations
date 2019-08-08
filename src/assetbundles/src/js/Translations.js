@@ -46,6 +46,7 @@
                 }
 
                 // Job completed
+                console.log(result);
                 if(!result) {
                     Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
 
@@ -57,9 +58,8 @@
                 }
             } else {
                 // No jobs running or job completed
-                setTimeout(() => {
-                    this.trackJobProgressById(true, false, params);
-                }, 300);
+                console.log('no jobs running, try again');
+                this.trackJobProgressById(true, false, params);
                 // Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
 
                 // if (params.url && window.location.pathname.includes('translations/orders')) {
