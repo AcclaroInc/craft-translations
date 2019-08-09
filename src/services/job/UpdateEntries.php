@@ -29,7 +29,7 @@ class UpdateEntries extends BaseJob
 
         $filesCount = count($files);
 
-        $totalElements = count($this->elementIds);
+        $totalElements = (count($this->elementIds) * count($order->getTargetSitesArray()));
         $currentElement = 0;
         $publishedFilesCount = 0;
 

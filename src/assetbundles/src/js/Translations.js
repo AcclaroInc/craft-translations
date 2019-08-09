@@ -38,18 +38,30 @@
                     this.trackJobProgressTimeout = null;
 
                     if (Craft.cp.jobInfo.length) {
-                        console.log('Craft.cp.jobInfo.length');
+                        let inQueue = false;
                         // Check to see if it matches our jobId
                         for (i = 0; i < Craft.cp.jobInfo.length; i++) {
-                            console.log(Craft.cp.jobInfo[i].id);
                             var matches = false;
                             if (params.id == Craft.cp.jobInfo[i].id) {
                                 matches = true;
+                                inQueue = true;
                             }
+                            
+                            if ((i + 1) == Craft.cp.jobInfo.length && !inQueue) {
+                                // Job is not in queue
+                                if (this.job) {
+                                    Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
+            
+                                    if (params.url && window.location.pathname.includes('translations/orders')) {
+                                        window.location.href=Craft.getUrl(params.url);
+                                    }    
+                                }
+                            }
+
                             if (matches) {
                                 this.job = Craft.cp.jobInfo[i];
 
-                                console.log(`Job progress: ${Craft.cp.jobInfo[i].progress}`);
+                                console.log(`Translation job progress: ${Craft.cp.jobInfo[i].progress}`);
                                 // Check again after a delay
                                 this.trackJobProgressById(true, false, params);
                             }

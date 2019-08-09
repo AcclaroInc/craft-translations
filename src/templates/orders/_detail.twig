@@ -309,6 +309,8 @@
         </div>
     </form>
 
+{% elseif orderSubmitted %}
+hello
 {% else %}
     <form method="post" class="translations-order-form" data-confirm-unload accept-charset="UTF-8">
         {{ csrfInput() }}

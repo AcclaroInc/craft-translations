@@ -429,6 +429,8 @@ class BaseController extends Controller
     {
         $variables = Craft::$app->getRequest()->resolve()[1];
 
+        $variables['orderSubmitted'] = Craft::$app->getRequest()->getParam('submit') ? Craft::$app->getRequest()->getParam('submit') : null;
+
         $variables['adminTabs'] = $this->adminTabs;
 
         $variables['pluginVersion'] = $this->pluginVersion;
