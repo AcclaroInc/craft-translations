@@ -223,6 +223,21 @@
     transform: translateX(-50%) translateY(-50%);
 }
 
+.translations-order-confirmation .readable{
+    text-align: center;
+}
+
+.translations-order-confirmation .thank-you{
+    margin-bottom: 5px;
+}
+
+.translations-order-confirmation .instructions{
+    color: #8f98a3;
+    font-size: 14px;
+    max-width: 450px;
+    margin: 5px auto 30px;
+}
+
 .translations-order-reporting {
     background-image: linear-gradient(#f7f7f8, #f4f5f6);
     padding: 2em;

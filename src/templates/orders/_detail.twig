@@ -310,7 +310,19 @@
     </form>
 
 {% elseif orderSubmitted %}
-hello
+<div class="translations-order-confirmation flex">
+    <div class="fullwidth readable">
+        {# <img src="{{url('./resources/img/image.jpg')}}" alt=""> #}
+        <div class="thank-you">
+            <h2>Thank You!</h2>
+            <p>Your order has been placed in the queue</p>
+        </div>
+        <div class="instructions">
+            <p>You can navigate away from this page or you will be automatically redirected once your order is created.</p>
+        </div>
+        <a href="{{ url('entries') }}" class="btn submit">Create New Order</a>
+    </div>
+</div>
 {% else %}
     <form method="post" class="translations-order-form" data-confirm-unload accept-charset="UTF-8">
         {{ csrfInput() }}
