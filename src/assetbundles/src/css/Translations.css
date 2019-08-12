@@ -224,11 +224,15 @@
 }
 
 .translations-order-confirmation .readable{
+    margin: 30px 0;
+}
+
+.translations-order-confirmation .readable{
     text-align: center;
 }
 
 .translations-order-confirmation .thank-you{
-    margin-bottom: 5px;
+    margin: 15px 0 5px;
 }
 
 .translations-order-confirmation .instructions{
@@ -498,10 +502,10 @@
 .btngroup-container {
     align-content: flex-end;
     flex-direction: column;
-    padding-top: 15px;
     width: 100%;
 }
 
-.btngroup-container .translations-dropdown {
-    margin: 5px 0px 0px 0px;
+#translations-field .translations-dropdown {
+    float: right;
+    margin: 0px 0px 0px 0px;
 }

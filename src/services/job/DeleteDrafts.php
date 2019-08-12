@@ -38,7 +38,10 @@ class DeleteDrafts extends BaseJob
                             ->siteId('*')
                             ->one();
 
-                $elementsService->deleteElement($draft, true);
+
+                if ($draft) {
+                    $elementsService->deleteElement($draft, true);
+                }
                 $transaction->commit();
             } catch (\Throwable $e) {
                 $transaction->rollBack();

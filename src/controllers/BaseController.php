@@ -971,7 +971,7 @@ class BaseController extends Controller
                 'notice' => 'Done creating translation drafts',
                 'url' => $order->getTranslator()->service !== 'export_import' ? 'translations/orders' : 'translations/orders/detail/'. $order->id
             ];
-            // Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
         } else {
             $this->redirect('translations/orders', 302, true);
         }

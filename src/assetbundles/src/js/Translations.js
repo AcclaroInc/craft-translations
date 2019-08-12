@@ -61,9 +61,14 @@
                             if (matches) {
                                 this.job = Craft.cp.jobInfo[i];
 
-                                console.log(`Translation job progress: ${Craft.cp.jobInfo[i].progress}`);
-                                // Check again after a delay
-                                this.trackJobProgressById(true, false, params);
+                                if (!this.job.error) {
+                                    console.log(`Translation job progress: ${Craft.cp.jobInfo[i].progress}`);
+                                    // Check again after a delay
+                                    this.trackJobProgressById(true, false, params);   
+                                } else {
+                                    console.log('Job failed');
+                                    Craft.cp.displayError(Craft.t('app', `${this.job.error}`));
+                                }
                             }
                         }
                     } else {
@@ -73,7 +78,7 @@
     
                             if (params.url && window.location.pathname.includes('translations/orders')) {
                                 window.location.href=Craft.getUrl(params.url);
-                            }    
+                            }
                         }
                     }
                 }

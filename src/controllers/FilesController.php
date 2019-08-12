@@ -239,6 +239,7 @@ class FilesController extends Controller
                     //Upload File
                     if( move_uploaded_file($file->tempName, $xmlPath.'/'.$fileName)) {
 
+                        // This generally executes too fast for page to refresh
                         $job = Craft::$app->queue->push(new ImportFiles([
                             'description' => 'Updating translation drafts',
                             'orderId' => $orderId,

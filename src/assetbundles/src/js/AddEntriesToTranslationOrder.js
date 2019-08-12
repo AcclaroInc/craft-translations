@@ -81,13 +81,20 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         this.data = data;
 
         var $btncontainer = document.createElement('div');
-            $btncontainer.className = "flex btngroup-container";
+            $btncontainer.id = "translations-field";
+            $btncontainer.className = "field";
 
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
-
+        
         if (this.isEditEntryScreen()) {
-            document.getElementById('header').appendChild($btncontainer);
-            $btngroup.appendTo($btncontainer);
+            $settings = document.getElementById('settings');
+            $settings.insertBefore($btncontainer, $settings.firstChild);
+            var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
+            var $inputgroup = $('<div>', {'class': 'input ltr'});
+            
+            $headinggroup.appendTo($btncontainer);
+            $inputgroup.appendTo($btncontainer);
+            $btngroup.appendTo($inputgroup);
         } else {
             if (data.licenseStatus === 'valid') {
                 $btngroup.prependTo('#header #button-container');
