@@ -27,10 +27,11 @@ class NeoFieldTranslator extends GenericFieldTranslator
     {
         $source = array();
 
-        $blocks = $element->getFieldValue($field->handle)->all();
+        $blocks = $element->getFieldValue($field->handle)->all(); // This is empty if not managed on a per site basis
 
         if ($blocks) {
-            foreach ($blocks->level(1) as $block) {
+            // foreach ($blocks->level(1) as $block) { // removed in 3.2
+            foreach ($blocks as $block) {
                 $keyPrefix = sprintf('%s.%s', $field->handle, $block->id);
 
                 $source = array_merge($source, $this->blockToTranslationSource($elementTranslator, $block, $keyPrefix));
