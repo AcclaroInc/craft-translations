@@ -1,7 +1,7 @@
 {
     "pluginName": "Translations for Craft",
-    "pluginDescription": "Easily translate your multisite entry content and eliminate error prone copy/paste workflows through bulk XML import/export and Acclaro Sync features.",
-    "pluginVersion": "1.1.0",
+    "pluginDescription": "Easily launch and manage multilingual Craft websites without having to copy/paste content or manually track updates.",
+    "pluginVersion": "1.2.0",
     "pluginAuthorName": "Acclaro",
     "pluginVendorName": "Acclaro",
     "pluginAuthorUrl": "http://www.acclaro.com/",
