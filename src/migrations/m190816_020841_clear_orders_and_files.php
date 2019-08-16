@@ -22,11 +22,11 @@ class m190816_020841_clear_orders_and_files extends Migration
             Craft::$app->getDb()->createCommand('truncate {{%translations_globalsetdrafts}}')->execute();
             Craft::$app->getDb()->createCommand('truncate {{%translations_orders}} cascade')->execute();
         } else {
-            $this->createCommand()->checkIntegrity(false)->execute();
-            $this->createCommand()->truncateTable('{{%translations_files}}')->execute();
-            $this->createCommand()->truncateTable('{{%translations_globalsetdrafts}}')->execute();
-            $this->createCommand()->truncateTable('{{%translations_orders}}')->execute();
-            $this->createCommand()->checkIntegrity(true)->execute();
+            Craft::$app->getDb()->createCommand()->checkIntegrity(false)->execute();
+            Craft::$app->getDb()->createCommand()->truncateTable('{{%translations_files}}')->execute();
+            Craft::$app->getDb()->createCommand()->truncateTable('{{%translations_globalsetdrafts}}')->execute();
+            Craft::$app->getDb()->createCommand()->truncateTable('{{%translations_orders}}')->execute();
+            Craft::$app->getDb()->createCommand()->checkIntegrity(true)->execute();
 
         }
         echo "Done clearing tables...\n";
