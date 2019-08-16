@@ -13,6 +13,7 @@ namespace acclaro\translations\controllers;
 use Craft;
 use DateTime;
 use Exception;
+use craft\queue\Queue;
 use craft\web\Controller;
 use craft\elements\Entry;
 use yii\web\HttpException;
@@ -23,6 +24,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
 use acclaro\translations\services\job\UpdateEntries;
+use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\translator\AcclaroTranslationService;
 
 /**
@@ -800,6 +802,18 @@ class BaseController extends Controller
             if (!$order) {
                 throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Invalid Order'));
             }
+
+            $queueOrders = Craft::$app->getSession()->get('queueOrders');
+            if (!empty($queueOrders) && ($key = array_search($orderId, $queueOrders)) !== false) {
+                if (Craft::$app->getQueue()->status($key) == Queue::STATUS_WAITING || Craft::$app->getQueue()->status($key) == Queue::STATUS_RESERVED ) {
+                    Craft::$app->getSession()->setError('This order is currently being processed.');
+                    return $this->redirect('translations/orders', 302, true);
+                } else {
+                    unset($queueOrders[$key]);
+                    Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                }
+            }
+
         } else {
             $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
 
@@ -953,6 +967,10 @@ class BaseController extends Controller
                         'orderId' => $order->id,
                         'wordCounts' => $wordCounts,
                     ]));
+
+                    $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                    $queueOrders[$job] = $order->id;
+                    Craft::$app->getSession()->set('queueOrders', $queueOrders);
                     
                 } else {
                     Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Saved.'));
@@ -1019,6 +1037,20 @@ class BaseController extends Controller
         }
 
         if ($orderId) {
+
+            if ($hardDelete) {
+                $drafts = [];
+                foreach ($order->getFiles() as $file) {
+                    $drafts[] = $file->draftId;
+                }
+                if ($drafts) {
+                    Craft::$app->queue->push(new DeleteDrafts([
+                        'description' => 'Deleting Translation Drafts',
+                        'drafts' => $drafts,
+                    ]));
+                }
+            }
+
             Craft::$app->getElements()->deleteElementById($orderId);
 
             return $this->asJson([

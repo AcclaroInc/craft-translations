@@ -419,7 +419,7 @@ class Translations extends Plugin
         // update acclaro order and files
         $draft = $event->draft;
 
-        $currentFile = self::$plugin->fileRepository->getFileByDraftId($draft->draftId, $draft->id);
+        $currentFile = self::$plugin->fileRepository->getFileByDraftId($draft->draftId);
 
         if (!$currentFile) {
             return;
