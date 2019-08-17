@@ -129,7 +129,11 @@ class UrlGenerator
                 throw new ServerErrorHttpException(Craft::t('app', 'Could not create a preview token.'));
             }
 
-            $previewUrl = Translations::$plugin->urlHelper->urlWithToken($element->getUrl(), $token);
+            if ($element->getUrl()) {
+                $previewUrl = Translations::$plugin->urlHelper->urlWithToken($element->getUrl(), $token);
+            } else {
+                $previewUrl = '';
+            }
         }
         
         return $previewUrl;
