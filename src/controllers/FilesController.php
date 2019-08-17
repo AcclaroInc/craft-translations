@@ -171,7 +171,7 @@ class FilesController extends Controller
 
         $this->order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
-        $total_files = count($this->order->files);
+        $total_files = (count($this->order->files) * count($this->order->getTargetSitesArray()));
 
         try
         {
