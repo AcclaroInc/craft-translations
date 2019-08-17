@@ -30,7 +30,8 @@ class NeoFieldTranslator extends GenericFieldTranslator
         $blocks = $element->getFieldValue($field->handle)->all();
 
         if ($blocks) {
-            foreach ($blocks->level(1) as $block) {
+            // foreach ($blocks->level(1) as $block) { // removed in 3.2
+            foreach ($blocks as $block) {
                 $keyPrefix = sprintf('%s.%s', $field->handle, $block->id);
 
                 $source = array_merge($source, $this->blockToTranslationSource($elementTranslator, $block, $keyPrefix));

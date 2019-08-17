@@ -12,6 +12,8 @@ namespace acclaro\translations\controllers;
 
 use Craft;
 use DateTime;
+use Exception;
+use craft\queue\Queue;
 use craft\web\Controller;
 use craft\elements\Entry;
 use yii\web\HttpException;
@@ -20,10 +22,10 @@ use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\SyncOrder;
-use acclaro\translations\services\job\SyncOrders;
-use acclaro\translations\services\job\CreateOrderTranslationDrafts;
-use acclaro\translations\services\job\SendOrderToTranslationService;
-use acclaro\translations\services\translation\AcclaroTranslationService;
+use acclaro\translations\services\job\CreateDrafts;
+use acclaro\translations\services\job\UpdateEntries;
+use acclaro\translations\services\job\DeleteDrafts;
+use acclaro\translations\services\translator\AcclaroTranslationService;
 
 /**
  * @author    Acclaro
@@ -121,7 +123,7 @@ class BaseController extends Controller
 
         $translator = $order->getTranslator();
 
-        $translationService = Translations::$plugin->translationFactory->makeTranslationService($translator->service, $translator->getSettings());
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
 
         if (!$translationService) {
             Craft::$app->end('Couldn’t find the translation service');
@@ -129,7 +131,7 @@ class BaseController extends Controller
             echo 'Translation service found'.PHP_EOL;
         }
 
-        $translationService->updateOrder(Translations::$plugin->jobFactory, $order);
+        $translationService->updateOrder($order);
 
         echo 'Updating order'.PHP_EOL;
 
@@ -184,7 +186,7 @@ class BaseController extends Controller
 
         $translator = $order->getTranslator();
 
-        $translationService = Translations::$plugin->translationFactory->makeTranslationService($translator->service, $translator->getSettings());
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
 
         if (!$translationService) {
             Craft::$app->end('Couldn’t find the translation service');
@@ -192,7 +194,7 @@ class BaseController extends Controller
             echo 'Translation service found'.PHP_EOL;
         }
 
-        $translationService->updateFile(Translations::$plugin->jobFactory, $order, $file);
+        $translationService->updateFile($order, $file);
 
         echo 'Updating file'.PHP_EOL;
 
@@ -221,7 +223,7 @@ class BaseController extends Controller
         $translator->service = $service;
         $translator->settings = json_encode($settings);
         
-        $translationService = Translations::$plugin->translationFactory->makeTranslationService($service, $settings);
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
 
         return $this->asJson(array(
             'success' => $translationService->authenticate($settings),
@@ -274,8 +276,9 @@ class BaseController extends Controller
         
         $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
 
+        
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
-
+        
         if (!$order) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Invalid Order'));
             return;
@@ -285,8 +288,8 @@ class BaseController extends Controller
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Source site is not supported'));
             return;
         }
-        
-        if ($order->sourceSite !== $sourceSite) {
+
+        if ((int) $order->sourceSite !== (int) $sourceSite) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'All entries within an order must have the same source site.'));
             return;
         }
@@ -428,6 +431,8 @@ class BaseController extends Controller
     {
         $variables = Craft::$app->getRequest()->resolve()[1];
 
+        $variables['orderSubmitted'] = Craft::$app->getRequest()->getParam('submit') ? Craft::$app->getRequest()->getParam('submit') : null;
+
         $variables['adminTabs'] = $this->adminTabs;
 
         $variables['pluginVersion'] = $this->pluginVersion;
@@ -435,6 +440,10 @@ class BaseController extends Controller
         $variables['orderId'] = isset($variables['orderId']) ? $variables['orderId'] : null;
 
         $variables['inputSourceSite'] = Craft::$app->getRequest()->getQueryParam('sourceSite');
+
+        if (empty($variables['inputSourceSite'])) {
+            $variables['inputSourceSite'] = Craft::$app->getRequest()->getParam('sourceSite');
+        }
         
         $variables['translatorId'] = isset($variables['order']) ? $variables['order']['translatorId'] : null;
 
@@ -443,7 +452,6 @@ class BaseController extends Controller
         $variables['licenseStatus'] = Craft::$app->plugins->getPluginLicenseKeyStatus('translations');
         
         if ($variables['inputSourceSite'] && ! Translations::$plugin->siteRepository->isSiteSupported($variables['inputSourceSite'])) {
-            // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Source site is not supported'));
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Source site is not supported'));
             return;
         }
@@ -461,6 +469,10 @@ class BaseController extends Controller
             $variables['order'] = Translations::$plugin->orderRepository->makeNewOrder($variables['inputSourceSite']);
 
             $variables['inputElements'] = Craft::$app->getRequest()->getQueryParam('elements');
+
+            if (empty($variables['inputElements'])) {
+                $variables['inputElements'] = Craft::$app->getRequest()->getParam('elements');
+            }
         }
         
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['order']['sourceSite']);
@@ -496,6 +508,9 @@ class BaseController extends Controller
 
         $variables['entriesCountBySection'] = array();
 
+        $variables['entriesCountByElement'] = 0;
+        $variables['entriesCountByElementCompleted'] = 0;
+
         foreach ($variables['elements'] as $element) {
             $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
 
@@ -519,51 +534,45 @@ class BaseController extends Controller
             //Is an order being created or are we on the detail page?
             if (!isset($variables['inputSourceSite']))
             {
-                $variables['entriesCountByElementCompleted'] = 0;
-                $variables['entriesCountByElement'] = 0;
-                
-                foreach ($variables['elements'] as $element) 
-                {
-                    $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
+                $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
 
-                    $variables['entriesCountByElement'] += count($variables['files'][$element->id]);
- 
-                    $isElementPublished = true;
+                $variables['entriesCountByElement'] += count($variables['files'][$element->id]);
 
-                    foreach ($variables['files'][$element->id] as $file) {
-                        if ($file->status !== 'published'){
-                            $isElementPublished = false;
-                        }
+                $isElementPublished = true;
 
-                        if ($element instanceof Entry) {
-                            if ($file->status === 'published') {
-                                $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
-
-                                $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
-                            } else {
-                                $variables['webUrls'][$file->id] = $file->previewUrl;
-                            }
-
-                            if($file->status === 'complete' || $file->status === 'published')
-                            {
-                                $variables['entriesCountByElementCompleted']++;
-                            }
-                        } elseif ($element instanceof GlobalSet) {
-                            if($file->status === 'complete' || $file->status === 'published')
-                            {
-                                $variables['entriesCountByElementCompleted']++;
-                            }
-                        }
-
-                        $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
-                        $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                foreach ($variables['files'][$element->id] as $file) {
+                    if ($file->status !== 'published') {
+                        $isElementPublished = false;
                     }
-                    $variables['isElementPublished'][$element->id] = $isElementPublished;
+
+                    if ($element instanceof Entry) {
+                        if ($file->status === 'published') {
+                            $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
+
+                            $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
+                        } else {
+                            $variables['webUrls'][$file->id] = $file->previewUrl;
+                        }
+
+                        if($file->status === 'complete' || $file->status === 'published') {
+                            $variables['entriesCountByElementCompleted']++;
+                        }
+                    } elseif ($element instanceof GlobalSet) {
+                        if($file->status === 'complete' || $file->status === 'published') {
+                            $variables['entriesCountByElementCompleted']++;
+                        }
+                    }
+
+                    $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
+                    $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 }
-                $variables['entriesCountByElement'] -=  $variables['entriesCountByElementCompleted'];
+                
+                $variables['isElementPublished'][$element->id] = $isElementPublished;
             }
         }
-        
+
+        $variables['entriesCountByElement'] -=  $variables['entriesCountByElementCompleted'];
+
         if (!$variables['translatorOptions']) {
             $variables['translatorOptions'] = array('' => Translations::$plugin->translator->translate('app', 'No Translators'));
         }
@@ -611,7 +620,7 @@ class BaseController extends Controller
 
         if (!is_null($variables['translator']) && $variables['translator']->service !== 'export_import')
         {
-            $translationService = Translations::$plugin->translationFactory->makeTranslationService($variables['translator']->service, json_decode($variables['translator']->settings, true));
+            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($variables['translator']->service, json_decode($variables['translator']->settings, true));
 
             $translatorUrl = $translationService->getOrderUrl($variables['order']);
             $variables['translator_url'] = $translatorUrl;
@@ -666,165 +675,28 @@ class BaseController extends Controller
         $this->renderTemplate('translations/translators/_detail', $variables);
     }
 
-    public function actionOrderEntries(array $variables = array())
-    {
-        $variables = Craft::$app->getRequest()->resolve()[1];
-
-        $variables['adminTabs'] = $this->adminTabs;
-
-        $variables['pluginVersion'] = $this->pluginVersion;
-
-        $variables['order'] = Translations::$plugin->orderRepository->getOrderById($variables['orderId']);
-
-        $variables['selectedSubnavItem'] = 'orders';
-
-        if (!$variables['order']) {
-            throw new HttpException(404);
-        }
-
-        $variables['elements'] = $variables['order']->getElements();
-
-        $variables['files'] = array();
-
-        $variables['fileUrls'] = array();
-
-        $variables['webUrls'] = array();
-
-        $variables['isElementPublished'] = array();
-
-        $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['order']['sourceSite']);
-
-        foreach ($variables['elements'] as $element) {
-            $variables['files'][$element->id] = Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
-
-            $isElementPublished = true;
-
-            foreach ($variables['files'][$element->id] as $file) {
-                if ($file->status !== 'published') {
-                    $isElementPublished = false;
-                }
-
-                if ($element instanceof Entry) {
-                    if ($file->status === 'published') {
-                        $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
-
-                        $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
-                    } else {
-                        $variables['webUrls'][$file->id] = $file->previewUrl;
-                    }
-                }
-                $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
-
-                $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-            }
-
-            $variables['isElementPublished'][$element->id] = $isElementPublished;
-        }
-
-        $this->renderTemplate('translations/orders/_entries', $variables);
-    }
-
-    public function actionPublishEntries()
+    public function actionUpdateEntries()
     {
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 
         $elementIds = Craft::$app->getRequest()->getParam('elements');
 
-        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        $job = Craft::$app->queue->push(new UpdateEntries([
+            'description' => 'Updating translation entries',
+            'orderId' => $orderId,
+            'elementIds' => $elementIds
+        ]));
 
-        $files = $order->getFiles();
-
-        $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
-
-        $filesCount = count($files);
-
-        $publishedFilesCount = 0;
-
-        foreach ($files as $file) {
-            if (!in_array($file->elementId, $elementIds)) {
-                continue;
-            }
-
-            $publishedFilesCount++;
-
-            if ($file->status === 'published') {
-                continue;
-            }
-
-            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-
-            if ($element instanceof GlobalSetModel) {
-                $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
-
-                // keep original global set name
-                $draft->name = $element->name;
-
-                $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
-
-                $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-            } else {
-                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId);
-
-                $success = Translations::$plugin->draftRepository->publishDraft($draft);
-
-                $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-            }
-
-            if ($success) {
-                $oldTokenRoute = json_encode(array(
-                    'action' => 'entries/view-shared-entry',
-                    'params' => array(
-                        'draftId' => $file->draftId,
-                    ),
-                ));
-
-                $newTokenRoute = json_encode(array(
-                    'action' => 'entries/view-shared-entry',
-                    'params' => array(
-                        'entryId' => $draft->id,
-                        'locale' => $file->targetSite,
-                    ),
-                ));
-
-                Craft::$app->db->createCommand()->update(
-                    'tokens',
-                    array('route' => $newTokenRoute),
-                    'route = :oldTokenRoute',
-                    array(':oldTokenRoute' => $oldTokenRoute)
-                );
-            } else {
-                if ($transaction !== null) {
-                    $transaction->rollback();
-                }
-
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
-
-                $this->redirect($uri, 302, true);
-
-                return;
-            }
-
-            $file->draftId = 0;
-            $file->status = 'published';
-
-            Translations::$plugin->fileRepository->saveFile($file);
+        if ($job) {
+            $params = [
+                'id' => (int) $job,
+                'notice' => 'Done updating translation entries',
+                'url' => 'translations/orders/detail/'. $orderId,
+            ];
+            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        } else {
+            $this->redirect('translations/orders', 302, true);
         }
-
-        if ($publishedFilesCount === $filesCount) {
-            $order->status = 'published';
-
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Entries published'));
-
-            Translations::$plugin->orderRepository->saveOrder($order);
-        }
-
-        if ($transaction !== null) {
-            $transaction->commit();
-        }
-
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Entries published.'));
-
-        $this->redirect('translations/orders/entries/'.$orderId, 302, true);
     }
 
     // Translator CRUD Methods
@@ -850,7 +722,7 @@ class BaseController extends Controller
         $pendingOrdersCount = count($pendingOrders);
 
         if ($pendingOrdersCount > 0) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'This translator cannot be deleted until all in-progress orders are completed.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'This translator cannot be deleted as orders has been created already.'));
 
             return;
         }
@@ -930,6 +802,18 @@ class BaseController extends Controller
             if (!$order) {
                 throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Invalid Order'));
             }
+
+            $queueOrders = Craft::$app->getSession()->get('queueOrders');
+            if (!empty($queueOrders) && ($key = array_search($orderId, $queueOrders)) !== false) {
+                if (Craft::$app->getQueue()->status($key) == Queue::STATUS_WAITING || Craft::$app->getQueue()->status($key) == Queue::STATUS_RESERVED ) {
+                    Craft::$app->getSession()->setError('This order is currently being processed.');
+                    return $this->redirect('translations/orders', 302, true);
+                } else {
+                    unset($queueOrders[$key]);
+                    Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                }
+            }
+
         } else {
             $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
 
@@ -942,187 +826,173 @@ class BaseController extends Controller
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
         }
 
-        $targetSites = Craft::$app->getRequest()->getParam('targetSites');
+        try {
 
-        if ($targetSites === '*') {
-            $targetSites = Craft::$app->getSites()->getAllSiteIds();
-        }
+            $targetSites = Craft::$app->getRequest()->getParam('targetSites');
 
-        $requestedDueDate = Craft::$app->getRequest()->getParam('requestedDueDate');
-        
-        $translatorId = Craft::$app->getRequest()->getParam('translatorId');
-        
-        $title = Craft::$app->getRequest()->getParam('title');
-
-        if (!$title) {
-            $title = sprintf(
-                'Translation Order #%s',
-                Translations::$plugin->orderRepository->getOrdersCount() + 1
-            );
-        }
-
-        $order->ownerId = Craft::$app->getRequest()->getParam('ownerId');
-        $order->title = $title;
-        $order->targetSites = $targetSites ? json_encode($targetSites) : null;
-        
-        if ($requestedDueDate) {
-            if (!is_array($requestedDueDate)) {
-                $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
-            } else {
-                $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
-            }
-        }
-        $order->requestedDueDate = $requestedDueDate ? $requestedDueDate : null;
-
-        $order->comments = Craft::$app->getRequest()->getParam('comments');
-        $order->translatorId = $translatorId;
-
-        $elementIds = Craft::$app->getRequest()->getParam('elements') ? Craft::$app->getRequest()->getParam('elements') : array();
-
-        $order->elementIds = json_encode($elementIds);
-
-        $entriesCount = 0;
-        $wordCounts = array();
-
-        foreach ($order->getElements() as $element) {
-            $entriesCount++;
-
-            $wordCounts[$element->id] = Translations::$plugin->elementTranslator->getWordCount($element);
-
-            if ($element instanceof Entry) {
-                $supportedSites = array();
-
-                foreach ($element->getSupportedSites() as $supportedSite) {
-                    $supportedSites[] = $supportedSite['siteId'];
-                }
-
-                $hasTargetSites = !array_diff($targetSites, $supportedSites);
-
-                if (!$hasTargetSites) {
-                    $message = sprintf(
-                        Translations::$plugin->translator->translate('app', "The target site(s) selected are not available for the entry “%s”. Please check your settings in Settings > Sections > %s to change this entry's target sites."),
-                        $element->title,
-                        $element->section->name
-                    );
-
-                    Craft::$app->getSession()->setError($message);
-                    return;
-                }
-            }
-        }
-
-        $order->entriesCount = $entriesCount;
-        $order->wordCount = array_sum($wordCounts);
-
-        // Manual Translation will make orders 'in progress' status after creation
-
-        $success = Craft::$app->getElements()->saveElement($order);
-        if (!$success) {
-            Craft::error('Couldn’t save the order', __METHOD__);
-        }
-
-        if (Craft::$app->getRequest()->getParam('submit')) {
-
-            // Check supported languages
-            if ($order->getTranslator()->service !== 'export_import') {
-                $translationService = Translations::$plugin->translationFactory->makeTranslationService($order->getTranslator()->service, $order->getTranslator()->getSettings());
-            
-                if ($translationService->getLanguages()) {
-                    $sourceLanguage = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($order->sourceSite)->language);
-                    $unsupported = false;
-                    $unsupportedLangs = [];
-                    $supportedLanguagePairs = [];
-
-                    foreach ($translationService->getLanguagePairs($sourceLanguage) as $key => $languagePair) {
-                        $supportedLanguagePairs[] = $languagePair->target['code'];
-                    }
-
-                    foreach (json_decode($order->targetSites) as $key => $siteId) {
-                        $site = Craft::$app->getSites()->getSiteById($siteId);
-                        $language = Translations::$plugin->siteRepository->normalizeLanguage($site->language);
-                        
-                        if (!in_array($language, array_column($translationService->getLanguages(), 'code'))) {
-                            $unsupported = true;
-                            $unsupportedLangs[] = array(
-                                'language' => $site->name .' ('.$site->language.')'
-                            );
-                        }
-                        
-                        if (!in_array($language, $supportedLanguagePairs)) {
-                            $unsupported = true;
-                            $unsupportedLangs[] = array(
-                                'language' => $site->name .' ('.$site->language.')'
-                            );
-                        }
-                    }
-
-                    if ($unsupported || !empty($unsupportedLangs)) {
-                        $order->status = 'failed';
-                        $success = Craft::$app->getElements()->saveElement($order);
-                        if (!$success) {
-                            Craft::error('Couldn’t save the order', __METHOD__);
-                        }
-                        Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The following language pair(s) are not supported: '.implode(', ', array_column($unsupportedLangs, 'language')).' Contact Acclaro for assistance.'));
-                        // return; // @todo This might be a better idea than failing the order
-                        return $this->redirect('translations/orders', 302, true);
-                    }
-
-                } else {
-                    // var_dump('Could not fetch languages');
-                }
+            if ($targetSites === '*') {
+                $targetSites = Craft::$app->getSites()->getAllSiteIds();
             }
 
-            $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Order Submitted to %s'), $order->translator->getName()));
+            $requestedDueDate = Craft::$app->getRequest()->getParam('requestedDueDate');
 
-            $drafts = Translations::$plugin->jobFactory->dispatchJob(CreateOrderTranslationDrafts::class, $order->getTargetSitesArray(), $order->getElements(), $order->title);
+            $translatorId = Craft::$app->getRequest()->getParam('translatorId');
 
-            foreach ($drafts as $draft) {
-                $file = Translations::$plugin->fileRepository->makeNewFile();
-                $element = Craft::$app->getElements()->getElementById($draft->id, null, $order->sourceSite);
-                
-                if ($draft instanceof GlobalSet) {
-                    $targetSite = $draft->site;
-                } else {
-                    $targetSite = $draft->siteId;
-                }
+            $title = Craft::$app->getRequest()->getParam('title');
 
-                $file->orderId = $order->id;
-                $file->elementId = $draft->id;
-                $file->draftId = $draft->draftId;
-                $file->sourceSite = $order->sourceSite;
-                $file->targetSite = $targetSite;
-                $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
-                $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                    $element,
-                    $draft->draftId,
-                    $order->sourceSite,
-                    $targetSite,
-                    $file->previewUrl
+            if (!$title) {
+                $title = sprintf(
+                    'Translation Order #%s',
+                    Translations::$plugin->orderRepository->getOrdersCount() + 1
                 );
-                $file->wordCount = isset($wordCounts[$draft->id]) ? $wordCounts[$draft->id] : 0;
-
-                Translations::$plugin->fileRepository->saveFile($file);
             }
 
-            // Only send order to translation service when not Manual
-            if ($order->translator->service !== 'export_import') {
-                Translations::$plugin->jobFactory->dispatchJob(SendOrderToTranslationService::class, $order);
-            } else {
-                $order->status = 'in progress';
-                $order->dateOrdered = new DateTime();
+            $order->ownerId = Craft::$app->getRequest()->getParam('ownerId');
+            $order->title = $title;
+            $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
-                $success = Craft::$app->getElements()->saveElement($order);
-                if (!$success) {
-                    Craft::error('Couldn’t save the order', __METHOD__);
+            if ($requestedDueDate) {
+                if (!is_array($requestedDueDate)) {
+                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
+                } else {
+                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
+                }
+            }
+            $order->requestedDueDate = $requestedDueDate ? $requestedDueDate : null;
+
+            $order->comments = Craft::$app->getRequest()->getParam('comments');
+            $order->translatorId = $translatorId;
+
+            $elementIds = Craft::$app->getRequest()->getParam('elements') ? Craft::$app->getRequest()->getParam('elements') : array();
+
+            $order->elementIds = json_encode($elementIds);
+
+            $entriesCount = 0;
+            $wordCounts = array();
+
+            foreach ($order->getElements() as $element) {
+                $entriesCount++;
+
+                $wordCounts[$element->id] = Translations::$plugin->elementTranslator->getWordCount($element);
+
+                if ($element instanceof Entry) {
+                    $supportedSites = array();
+
+                    foreach ($element->getSupportedSites() as $supportedSite) {
+                        $supportedSites[] = $supportedSite['siteId'];
+                    }
+
+                    $hasTargetSites = !array_diff($targetSites, $supportedSites);
+
+                    if (!$hasTargetSites) {
+                        $message = sprintf(
+                            Translations::$plugin->translator->translate('app', "The target site(s) selected are not available for the entry “%s”. Please check your settings in Settings > Sections > %s to change this entry's target sites."),
+                            $element->title,
+                            $element->section->name
+                        );
+
+                        Craft::$app->getSession()->setError($message);
+                        return;
+                    }
                 }
             }
 
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Submitted.'));
-        } else {
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Saved.'));
+            $order->entriesCount = $entriesCount;
+            $order->wordCount = array_sum($wordCounts);
+
+            // Manual Translation will make orders 'in progress' status after creation
+
+            $success = Craft::$app->getElements()->saveElement($order);
+            $job = '';
+            if (!$success) {
+                Craft::error('Couldn’t save the order', __METHOD__);
+            } else {
+                if (Craft::$app->getRequest()->getParam('submit')) {
+
+                    // Check supported languages
+                    if ($order->getTranslator()->service !== 'export_import') {
+                        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($order->getTranslator()->service, $order->getTranslator()->getSettings());
+
+                        if ($translationService->getLanguages()) {
+                            $sourceLanguage = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($order->sourceSite)->language);
+                            $unsupported = false;
+                            $unsupportedLangs = [];
+                            $supportedLanguagePairs = [];
+
+                            foreach ($translationService->getLanguagePairs($sourceLanguage) as $key => $languagePair) {
+                                $supportedLanguagePairs[] = $languagePair->target['code'];
+                            }
+
+                            foreach (json_decode($order->targetSites) as $key => $siteId) {
+                                $site = Craft::$app->getSites()->getSiteById($siteId);
+                                $language = Translations::$plugin->siteRepository->normalizeLanguage($site->language);
+
+                                if (!in_array($language, array_column($translationService->getLanguages(), 'code'))) {
+                                    $unsupported = true;
+                                    $unsupportedLangs[] = array(
+                                        'language' => $site->name .' ('.$site->language.')'
+                                    );
+                                }
+
+                                if (!in_array($language, $supportedLanguagePairs)) {
+                                    $unsupported = true;
+                                    $unsupportedLangs[] = array(
+                                        'language' => $site->name .' ('.$site->language.')'
+                                    );
+                                }
+                            }
+
+                            if ($unsupported || !empty($unsupportedLangs)) {
+                                $order->status = 'failed';
+                                $success = Craft::$app->getElements()->saveElement($order);
+                                if (!$success) {
+                                    Craft::error('Couldn’t save the order', __METHOD__);
+                                }
+                                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The following language pair(s) are not supported: '.implode(', ', array_column($unsupportedLangs, 'language')).' Contact Acclaro for assistance.'));
+                                // return; // @todo This might be a better idea than failing the order
+                                return $this->redirect('translations/orders', 302, true);
+                            }
+
+                        } else {
+                            // var_dump('Could not fetch languages');
+                        }
+                    }
+
+                    $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Order Submitted to %s'), $order->translator->getName()));
+                    
+                    $order->wordCount = array_sum($wordCounts);
+                    
+                    $job = Craft::$app->queue->push(new CreateDrafts([
+                        'description' => 'Creating translation drafts',
+                        'orderId' => $order->id,
+                        'wordCounts' => $wordCounts,
+                    ]));
+
+                    $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                    $queueOrders[$job] = $order->id;
+                    Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                    
+                } else {
+                    Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Saved.'));
+                }
+            }
+
+        } catch (Exception $e) {
+            Craft::error('Couldn’t save the order. Error: '.$e->getMessage(), __METHOD__);
+            $order->status = 'failed';
+            Craft::$app->getElements()->saveElement($order);
         }
 
-        return $this->redirect('translations/orders', 302, true);
+        if ($job) {
+            $params = [
+                'id' => (int) $job,
+                'notice' => 'Done creating translation drafts',
+                'url' => $order->getTranslator()->service !== 'export_import' ? 'translations/orders' : 'translations/orders/detail/'. $order->id
+            ];
+            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        } else {
+            $this->redirect('translations/orders', 302, true);
+        }
     }
 
     public function actionDeleteOrder()
@@ -1167,6 +1037,20 @@ class BaseController extends Controller
         }
 
         if ($orderId) {
+
+            if ($hardDelete) {
+                $drafts = [];
+                foreach ($order->getFiles() as $file) {
+                    $drafts[] = $file->draftId;
+                }
+                if ($drafts) {
+                    Craft::$app->queue->push(new DeleteDrafts([
+                        'description' => 'Deleting Translation Drafts',
+                        'drafts' => $drafts,
+                    ]));
+                }
+            }
+
             Craft::$app->getElements()->deleteElementById($orderId);
 
             return $this->asJson([
@@ -1175,32 +1059,61 @@ class BaseController extends Controller
         }
     }
 
-    public function actionSyncOrder($params = array())
+    public function actionSyncOrder()
     {
+        $this->requireLogin();
+        $this->requireAdmin();
         $this->requirePostRequest();
 
-        $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
+        $orderId = Craft::$app->getRequest()->getParam('orderId');
 
-        $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         if ($order) {
-            Translations::$plugin->jobFactory->dispatchJob(SyncOrder::class, $order);
-            
-            return $this->asJson([
-                'success' => true,
-                'error' => null
-            ]);
+            $job = Craft::$app->queue->push(new SyncOrder([
+                'description' => 'Syncing order '. $order->title,
+                'order' => $order
+            ]));
+
+            if ($job) {
+                $params = [
+                    'id' => (int) $job,
+                    'notice' => 'Done syncing order '. $order->title,
+                    'url' => 'translations/orders/detail/'. $order->id
+                ];
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            } else {
+                $this->redirect('translations/orders', 302, true);
+            }
         }
     }
     
     public function actionSyncOrders()
     {
-        Translations::$plugin->jobFactory->dispatchJob(SyncOrders::class);
+        $orders = Translations::$plugin->orderRepository->getInProgressOrders();
 
-        return $this->asJson([
-            'success' => true,
-            'error' => null
-        ]);
+        foreach ($orders as $order) {
+            // Don't update manual orders
+            if ($order->translator->service === 'export_import') {
+                continue;
+            }
+
+            $job = Craft::$app->queue->push(new SyncOrder([
+                'description' => 'Syncing order '. $order->title,
+                'order' => $order
+            ]));
+        }
+
+        if ($job) {
+            $params = [
+                'id' => (int) $job,
+                'notice' => 'Done syncing orders',
+                'url' => 'translations/orders'
+            ];
+            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        } else {
+            $this->redirect('translations/orders', 302, true);
+        }
     }
 
     public function actionEditOrderName()
@@ -1222,11 +1135,11 @@ class BaseController extends Controller
         }
 
         /*if ($order->getTranslator()->service == 'acclaro') {
-            $translationService = Translations::$plugin->translationFactory->makeTranslationService($order->getTranslator()->service, $order->getTranslator()->getSettings());
+            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($order->getTranslator()->service, $order->getTranslator()->getSettings());
             $res = $translationService->editOrderName($order->serviceOrderId, $name);
         }*/
 
-        $translationService = Translations::$plugin->translationFactory->makeTranslationService('export_import', $order->getTranslator()->getSettings());
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService('export_import', $order->getTranslator()->getSettings());
         $res = $translationService->editOrderName($order, $name);
         Craft::$app->getElements()->saveElement($order);
 

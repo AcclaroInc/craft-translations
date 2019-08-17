@@ -11,6 +11,7 @@
 namespace acclaro\translations;
 
 use Craft;
+use craft\db\Table;
 use yii\base\Event;
 use craft\base\Plugin;
 use craft\web\UrlManager;
@@ -21,7 +22,7 @@ use craft\events\DraftEvent;
 use craft\services\Elements;
 use craft\events\PluginEvent;
 use craft\events\ElementEvent;
-use craft\services\EntryRevisions;
+use craft\services\Drafts;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\DeleteElementEvent;
@@ -32,6 +33,7 @@ use acclaro\translations\assetbundles\EntryAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
+use acclaro\translations\services\job\DeleteDrafts;
 
 class Translations extends Plugin
 {
@@ -60,7 +62,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.0.1';
+    public $schemaVersion = '1.2.0';
 
     // Public Methods
     // =========================================================================
@@ -86,17 +88,17 @@ class Translations extends Plugin
         }
 
         Event::on(
-            EntryRevisions::class,
-            EntryRevisions::EVENT_BEFORE_SAVE_DRAFT,
+            Drafts::class,
+            Drafts::EVENT_BEFORE_APPLY_DRAFT,
             function (DraftEvent $event) {
                 // Craft::debug(
-                //     'EntryRevisions::EVENT_BEFORE_SAVE_DRAFT',
+                //     'Drafts::EVENT_BEFORE_APPLY_DRAFT',
                 //     __METHOD__
                 // );
                 Craft::info(
                     Craft::t(
                         'translations',
-                        '{name} EntryRevisions::EVENT_BEFORE_SAVE_DRAFT',
+                        '{name} Drafts::EVENT_BEFORE_APPLY_DRAFT',
                         ['name' => $this->name]
                     ),
                     __METHOD__
@@ -107,15 +109,15 @@ class Translations extends Plugin
         );
         
         Event::on(
-            EntryRevisions::class,
-            EntryRevisions::EVENT_AFTER_PUBLISH_DRAFT,
+            Drafts::class,
+            Drafts::EVENT_AFTER_APPLY_DRAFT,
             function (DraftEvent $event) {
                 Craft::debug(
-                    'EntryRevisions::EVENT_AFTER_PUBLISH_DRAFT',
+                    'Drafts::EVENT_AFTER_APPLY_DRAFT',
                     __METHOD__
                 );
                 if ($event->draft) {
-                    $this->_onPublishDraft($event);
+                    $this->_onApplyDraft($event);
                 }
             }
         );
@@ -147,15 +149,15 @@ class Translations extends Plugin
         );
 
         /**
-         * EVENT_AFTER_DELETE_DRAFT gets triggered after EVENT_AFTER_PUBLISH_DRAFT
+         * EVENT_AFTER_DELETE_DRAFT gets triggered after EVENT_AFTER_APPLY_DRAFT
          * May need to find another solution to the entry draft deletion
          */
         // Event::on(
-        //     EntryRevisions::class,
-        //     EntryRevisions::EVENT_AFTER_DELETE_DRAFT,
+        //     Drafts::class,
+        //     Drafts::EVENT_AFTER_DELETE_DRAFT,
         //     function (DraftEvent $event) {
         //         Craft::debug(
-        //             'EntryRevisions::EVENT_AFTER_DELETE_DRAFT',
+        //             'Drafts::EVENT_AFTER_DELETE_DRAFT',
         //             __METHOD__
         //         );
         //         if ($event->draft) {
@@ -190,7 +192,34 @@ class Translations extends Plugin
         );
     }
 
-        /**
+    /**
+     * @inheritdoc
+     */
+    public function uninstall()
+    {
+        // Let's clean up the drafts table
+        $files = self::$plugin->fileRepository->getFiles();
+        $drafts = array_column($files, 'draftId');
+
+        if ($drafts) {
+            Craft::$app->queue->push(new DeleteDrafts([
+                'description' => 'Deleting Translation Drafts',
+                'drafts' => $drafts,
+            ]));
+        }
+
+        if (($migration = $this->createInstallMigration()) !== null) {
+            try {
+                $this->getMigrator()->migrateDown($migration);
+            } catch (MigrationException $e) {
+                return false;
+            }
+        }
+        $this->afterUninstall();
+        return null;
+    }
+
+    /**
      * @inheritdoc
      */
     public function getCpNavItem()
@@ -267,7 +296,6 @@ class Translations extends Plugin
                     'translations/orders' => 'translations/base/order-index',
                     'translations/orders/new' => 'translations/base/order-detail',
                     'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
-                    'translations/orders/entries/<orderId:\d+>' => 'translations/base/order-entries',
                     // 'translations/orders/reporting' => 'translations/base/index',
                     'translations/translators' => 'translations/base/translator-index',
                     'translations/translators/new' => 'translations/base/translator-detail',
@@ -309,6 +337,7 @@ class Translations extends Plugin
         self::$view->registerAssetBundle(UniversalAssets::class);
 
         $numberOfCompleteOrders = count(self::$plugin->orderRepository->getCompleteOrders());
+        self::$view->registerJs("$(function(){ Craft.Translations });");
         self::$view->registerJs("$(function(){ Craft.Translations.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
     }
     
@@ -385,12 +414,12 @@ class Translations extends Plugin
         // and send notification to acclaro
     }
 
-    private function _onPublishDraft(Event $event)
+    private function _onApplyDraft(Event $event)
     {
         // update acclaro order and files
         $draft = $event->draft;
 
-        $currentFile = self::$plugin->fileRepository->getFileByDraftId($draft->draftId, $draft->id);
+        $currentFile = self::$plugin->fileRepository->getFileByDraftId($draft->draftId);
 
         if (!$currentFile) {
             return;
@@ -418,14 +447,16 @@ class Translations extends Plugin
         }
     }
 
-    private function _onDeleteDraft(Event $event) {
+    private function _onDeleteDraft(Event $event)
+    {
 
         $draft = $event->draft;
 
         return self::$plugin->fileRepository->delete($draft->draftId);
     }
 
-    private function _onDeleteElement(Event $event) {
+    private function _onDeleteElement(Event $event)
+    {
 
         if (Craft::$app->getRequest()->getParam('hardDelete')) {
             $event->hardDelete = true;

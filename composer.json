@@ -1,6 +1,6 @@
 {
     "name": "acclaro/translations",
-    "description": "Easily translate your multisite entry content and eliminate error prone copy/paste workflows through bulk XML import/export and Acclaro Sync features.",
+    "description": "Easily launch and manage multilingual Craft websites without having to copy/paste content or manually track updates.",
     "type": "craft-plugin",
     "keywords": [
         "craft",
@@ -24,8 +24,9 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^3.0.0-RC1",
+        "craftcms/cms": "^3.2.0",
         "guzzlehttp/guzzle": "^6.3",
+        "php": ">=7.1.0",
         "sebastian/diff": "^3.0"
     },
     "autoload": {

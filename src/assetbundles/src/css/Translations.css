@@ -86,7 +86,7 @@
 }
 
 .translations-dropdown {
-    margin: 5px 5px 0 0;
+    margin: 5px 10px 0 0;
     position: relative;
 }
 
@@ -221,6 +221,25 @@
     top: calc(50% - 5px);
     width: 60%;
     transform: translateX(-50%) translateY(-50%);
+}
+
+.translations-order-confirmation .readable{
+    margin: 30px 0;
+}
+
+.translations-order-confirmation .readable{
+    text-align: center;
+}
+
+.translations-order-confirmation .thank-you{
+    margin: 15px 0 5px;
+}
+
+.translations-order-confirmation .instructions{
+    color: #8f98a3;
+    font-size: 14px;
+    max-width: 450px;
+    margin: 5px auto 30px;
 }
 
 .translations-order-reporting {
@@ -478,4 +497,15 @@
 
 #translations-dashboard .buttons {
     margin: 0 0 14px;
+}
+
+.btngroup-container {
+    align-content: flex-end;
+    flex-direction: column;
+    width: 100%;
+}
+
+#translations-field .translations-dropdown {
+    float: right;
+    margin: 0px 0px 0px 0px;
 }

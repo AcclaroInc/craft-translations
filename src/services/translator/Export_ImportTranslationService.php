@@ -8,19 +8,18 @@
  * @copyright Copyright (c) 2018 Acclaro
  */
 
-namespace acclaro\translations\services\translation;
+namespace acclaro\translations\services\translator;
 
 use Craft;
 use DateTime;
 use Exception;
+use craft\elements\Entry;
 use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
-use acclaro\translations\services\job\UpdateDraftFromXml;
-use acclaro\translations\services\job\Factory as JobFactory;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
@@ -54,7 +53,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function updateOrder(JobFactory $jobFactory, Order $order)
+    public function updateOrder(Order $order)
     {
         if ($order->status !== 'complete') {
             $order->logActivity(
@@ -69,11 +68,11 @@ class Export_ImportTranslationService implements TranslationServiceInterface
      * {@inheritdoc}
      */
 
-    public function updateFile(JobFactory $jobFactory, Order $order, FileModel $file){
+    public function updateFile(Order $order, FileModel $file){
         return;
     }
 
-    public function updateIOFile(JobFactory $jobFactory, Order $order, FileModel $file, $target)
+    public function updateIOFile(Order $order, FileModel $file, $target)
     { 
         if (empty($target)) 
         {
@@ -94,10 +93,38 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
 
-            $jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
-
+            $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite);
         }
     }
+
+    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite)
+    {
+        $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
+
+        if ($draft instanceof Entry) {
+            if (isset($targetData['title'])) {
+                $draft->title = $targetData['title'];
+            }
+
+            if (isset($targetData['slug'])) {
+                $draft->slug = $targetData['slug'];
+            }
+        }
+
+        $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+        $draft->setFieldValues($post);
+
+        $draft->siteId = $targetSite;
+
+        // save the draft
+        if ($draft instanceof Entry) {
+            Translations::$plugin->draftRepository->saveDraft($draft);
+        } elseif ($draft instanceof GlobalSetDraftModel) {
+            Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
+        }
+    }
+
 
     /**
      * {@inheritdoc}

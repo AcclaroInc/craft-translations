@@ -11,52 +11,47 @@
 namespace acclaro\translations\services\job;
 
 use Craft;
-use acclaro\translations\services\App;
-use acclaro\translations\elements\Order;
+use Exception;
+
+use craft\queue\BaseJob;
+use craft\elements\Entry;
 use acclaro\translations\Translations;
 
-class SyncOrder implements JobInterface
+class SyncOrder extends BaseJob
 {
-    /**
-     * @var \Craft\Order
-     */
-    protected $order;
+    public $order;
 
-    /**
-     * @param \Craft\Order  $order
-     */
-    public function __construct(
-        Order $order
-    ) {
-        $this->order = $order;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function handle()
+    public function execute($queue)
     {
-        $translationService = Translations::$plugin->translationFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
-        
+        $totalElements = count($this->order->files);
+        $currentElement = 0;
+
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
+    
         // Don't update manual orders
         if ($this->order->translator->service === 'export_import') {
             return;
         }
 
-        $translationService->updateOrder(Translations::$plugin->jobFactory, $this->order);
+        $translationService->updateOrder($this->order);
 
         Translations::$plugin->orderRepository->saveOrder($this->order);
 
         foreach ($this->order->files as $file) {
-
+            $this->setProgress($queue, $currentElement++ / $totalElements);
             // Let's make sure we're not updating published files
             if ($file->status == 'published') {
                 continue;
             }
 
-            $translationService->updateFile(Translations::$plugin->jobFactory, $this->order, $file);
+            $translationService->updateFile($this->order, $file);
 
             Translations::$plugin->fileRepository->saveFile($file);
         }
+    }
+
+    protected function defaultDescription()
+    {
+        return 'Syncing order '. $this->order->title;
     }
 }

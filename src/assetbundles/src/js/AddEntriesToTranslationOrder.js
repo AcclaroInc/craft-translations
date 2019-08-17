@@ -80,10 +80,21 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         this.data = data;
 
-        var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
+        var $btncontainer = document.createElement('div');
+            $btncontainer.id = "translations-field";
+            $btncontainer.className = "field";
 
+        var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
+        
         if (this.isEditEntryScreen()) {
-            $btngroup.insertBefore('#header .btngroup');
+            $settings = document.getElementById('settings');
+            $settings.insertBefore($btncontainer, $settings.firstChild);
+            var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
+            var $inputgroup = $('<div>', {'class': 'input ltr'});
+            
+            $headinggroup.appendTo($btncontainer);
+            $inputgroup.appendTo($btncontainer);
+            $btngroup.appendTo($inputgroup);
         } else {
             if (data.licenseStatus === 'valid') {
                 $btngroup.prependTo('#header #button-container');
@@ -231,6 +242,45 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             this.entries.push(this.getEditEntryId());
             this.updateCreateNewLink();
         }
+
+        this.$btn.on('click', function(e) {
+            e.preventDefault();
+
+            var $form = $('<form>', {
+                'method': 'POST',
+                'action': Craft.getUrl('translations/orders/new')
+            });
+
+            $form.hide();
+
+            $form.appendTo('body');
+
+            $form.append(Craft.getCsrfInput());
+
+            var $hiddenSourceSite = $('<input>', {
+                'type': 'hidden',
+                'name': 'sourceSite',
+                'value': self.getSourceSite()
+            });
+
+            $hiddenSourceSite.appendTo($form);
+
+            for (var j = 0; j < self.entries.length; j++) {
+                $('<input>', {
+                    'type': 'hidden',
+                    'name': 'elements[]',
+                    'value': self.entries[j]
+                }).appendTo($form);
+            }
+
+            var $submit = $('<input>', {
+                'type': 'submit'
+            });
+
+            $submit.appendTo($form);
+
+            $form.submit();
+        });
     }
 };
 

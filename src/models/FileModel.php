@@ -83,11 +83,13 @@ class FileModel extends Model
             case 'in progress':
                 return 'In progress';
             case 'complete':
-                return 'Ready to publish';
+                return 'Ready to update';
             case 'canceled':
                 return 'Canceled';
             case 'published':
-                return 'Published';
+                return 'Updated';
+            case 'failed':
+                return 'Failed';
         }
     }
     
@@ -100,6 +102,7 @@ class FileModel extends Model
                 return 'orange';
             case 'complete':
                 return 'blue';
+            case 'failed':
             case 'canceled':
                 return 'red';
             case 'published':

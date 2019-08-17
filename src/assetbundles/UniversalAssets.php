@@ -24,6 +24,7 @@ class UniversalAssets extends AssetBundle
         ];
 
         $this->js = [
+            'js/Translations.js',
             'js/ShowCompleteOrdersIndicator.js',
         ];
 

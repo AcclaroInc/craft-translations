@@ -66,14 +66,19 @@ class UrlGenerator
                 );
             }
     
-            return Translations::$plugin->urlHelper->cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($file->targetSite)->handle);
+            return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), [
+                'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle
+            ]);
         }
 
         if ($element instanceof GlobalSet) {
             return Translations::$plugin->urlHelper->cpUrl('translations/globals/'.$element->handle.'/drafts/'.$file->draftId);
         }
 
-        return Translations::$plugin->urlHelper->cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/drafts/'.$file->draftId);
+        return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), [
+            'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle,
+            'draftId' => $file->draftId
+        ]);
     }
 
     public function generateFileWebUrl(Element $element, FileModel $file)
@@ -103,34 +108,26 @@ class UrlGenerator
         }
         
         $className = get_class($element);
-        // If we're looking at the live version of an entry, just use
-        // the entry's main URL as its share URL
+        
         if ($className === Entry::class && $element->getStatus() === Entry::STATUS_LIVE) {
-            // $variables['shareUrl'] = $element->getUrl();
             $previewUrl = $element->getUrl();
         } else {
-            switch ($className) {
-                case EntryDraft::class:
-                    /** @var EntryDraft $element */
-                    $params = ['draftId' => $element->draftId];
-                    break;
-                case EntryVersion::class:
-                    /** @var EntryVersion $element */
-                    $params = ['versionId' => $element->versionId];
-                    break;
-                default:
-                    $params = [
-                        'entryId' => $element->id,
-                        'siteId' => $element->siteId
-                    ];
-                    break;
+            $route = [
+                'preview/preview', [
+                    'elementType' => $className,
+                    'sourceId' => $element->sourceId,
+                    'siteId' => $element->siteId,
+                    'draftId' => $element->draftId,
+                    'revisionId' => $element->revisionId
+                ]
+            ];
+
+            $expiryDate = (new \DateTime())->add(new \DateInterval('P3M'));
+            $token = Craft::$app->getTokens()->createToken($route, null, $expiryDate);
+
+            if (!$token) {
+                throw new ServerErrorHttpException(Craft::t('app', 'Could not create a preview token.'));
             }
-            // Create the token
-            $token = Craft::$app->getTokens()->createToken([
-                'entries/view-shared-entry',
-                $params,
-                new DateTime('+3 months')
-            ]);
 
             if ($element->getUrl()) {
                 $previewUrl = Translations::$plugin->urlHelper->urlWithToken($element->getUrl(), $token);
