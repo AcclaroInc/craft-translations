@@ -40,7 +40,7 @@ class UpdateEntries extends BaseJob
 
             $publishedFilesCount++;
 
-            if ($file->status === 'published') {
+            if ($file->status !== 'complete') {
                 continue;
             }
 

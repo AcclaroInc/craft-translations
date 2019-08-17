@@ -220,7 +220,7 @@
         <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
             <div class="elementindex">
                 <div class="main">
-                    {% if order.status == 'complete' %}
+                    {% if order.status == 'complete' or order.status == 'in progress' %}
                     <div class="toolbar">
                         <div class="buttons right">
                             <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to update these entries?'|t }}" disabled="disabled" value="{{ 'Update Selected Entries'|t }}">
@@ -232,7 +232,7 @@
                             <table class="data fullwidth">
                                 <thead>
                                     <tr>
-                                        {% if order.status == 'complete' %}
+                                        {% if order.status == 'complete' or order.status == 'in progress' %}
                                         <td class="thin checkbox-cell translations-checkbox-cell">
                                             <input class="checkbox" id="element-0" type="checkbox">
                                             <label class="checkbox" for="element-0"></label>
@@ -249,10 +249,22 @@
                                 <tbody>
                                     {% for element in elements %}
                                     
+                                            {% set allowUpdate = 1 %}
+                                            {% for file in files[element.id] %}
+                                                {% if file.status != 'complete' and file.status != 'published' %}
+                                                    {% set allowUpdate = 0 %}
+                                                {% endif %}
+                                            {% endfor %}
+
                                             <tr>
-                                                {% if order.status == 'complete' %}
+                                                {% if allowUpdate %}
                                                 <td class="thin checkbox-cell translations-checkbox-cell">
                                                     <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"{% if isElementPublished[element.id] %} disabled="disabled"{% endif %}>
+                                                    <label class="checkbox" for="element-{{ element.id }}"></label>
+                                                </td>
+                                                {% else %}
+                                                <td class="thin checkbox-cell translations-checkbox-cell">
+                                                    <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="" disabled="disabled">
                                                     <label class="checkbox" for="element-{{ element.id }}"></label>
                                                 </td>
                                                 {% endif %}
