@@ -146,9 +146,21 @@ class ImportFiles extends BaseJob
                 //Translation Service
                 $translationService = Translations::$plugin->translatorFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
 
-                $translationService->updateIOFile($this->order, $draft_file, $xml_content);
+                $fileUpdated = true;
 
-                $draft_file->status = 'complete';
+                try {
+                    $translationService->updateIOFile($this->order, $draft_file, $xml_content);
+                } catch(Exception $e) {
+                    $fileUpdated = false;
+                    $this->order->logActivity(Translations::$plugin->translator->translate('app', 'Could not update '. $xml. ' Error: ' .$e->getMessage()));
+                    Translations::$plugin->orderRepository->saveOrder($this->order);
+                }
+
+                if ($fileUpdated) {
+                    $draft_file->status = 'complete';
+                } else {
+                    $draft_file->status = 'in progress';
+                }
 
                 //If Successfully saved
                 $success = Translations::$plugin->fileRepository->saveFile($draft_file);
