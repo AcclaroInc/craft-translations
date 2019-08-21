@@ -25,6 +25,7 @@ use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
 use acclaro\translations\services\job\UpdateEntries;
 use acclaro\translations\services\job\DeleteDrafts;
+use acclaro\translations\services\job\RegeneratePreviewUrls;
 use acclaro\translations\services\translator\AcclaroTranslationService;
 
 /**
@@ -1148,6 +1149,35 @@ class BaseController extends Controller
             return $this->asJson([
                 'success' => true,'error' => null
             ]);
+        }
+    }
+
+    public function actionRegeneratePreviewUrls()
+    {
+        $this->requireLogin();
+        $this->requireAdmin();
+        $this->requirePostRequest();
+
+        $orderId = Craft::$app->getRequest()->getParam('orderId');
+
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+
+        if ($order) {
+            $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
+                'description' => 'Regenerating preview urls for '. $order->title,
+                'order' => $order
+            ]));
+
+            if ($job) {
+                $params = [
+                    'id' => (int) $job,
+                    'notice' => 'Done regenerating preview urls for '. $order->title,
+                    'url' => 'translations/orders/detail/'. $order->id
+                ];
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            } else {
+                $this->redirect('translations/orders', 302, true);
+            }
         }
     }
 
