@@ -91,7 +91,7 @@ class UrlGenerator
             return $element->url;
         }
 
-        return $this->generateElementPreviewUrl($element, $file);
+        return $this->generateElementPreviewUrl($element, $file->targetSite);
     }
 
     public function generateCpUrl($path)
@@ -109,7 +109,7 @@ class UrlGenerator
         
         $className = get_class($element);
         
-        if ($className === Entry::class && $element->getStatus() === Entry::STATUS_LIVE) {
+        if ($className === Entry::class && !$element->getIsDraft()) {
             $previewUrl = $element->getUrl();
         } else {
             $route = [

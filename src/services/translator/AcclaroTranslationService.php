@@ -20,6 +20,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
+use acclaro\translations\services\job\acclaro\UdpateReviewFileUrls;
 
 class AcclaroTranslationService implements TranslationServiceInterface
 {
@@ -183,6 +184,19 @@ class AcclaroTranslationService implements TranslationServiceInterface
         //     ];
         //     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
         // }
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function udpateReviewFileUrls(Order $order)
+    {
+        $job = Craft::$app->queue->push(new UdpateReviewFileUrls([
+            'description' => 'Updating Acclaro review urls',
+            'order' => $order,
+            'sandboxMode' => $this->sandboxMode,
+            'settings' => $this->settings
+        ]));
     }
 
     public function getOrderUrl(Order $order)

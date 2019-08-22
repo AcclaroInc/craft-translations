@@ -188,11 +188,24 @@
             </tbody>
         </table>
 
-        {# {% if order.status == 'complete' %}
-            <a href="{{ url('translations/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries & Bulk Publish'|t }}</a>
-        {% else %}
-            <a href="{{ url('translations/orders/entries/'~order.id) }}" class="btn submit">{{ 'View Entries in this Order'|t }}</a>
-        {% endif %} #}
+        {% if order.status != 'published' %}
+        <form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ forms.hidden({
+                name: 'action',
+                value: 'translations/base/regenerate-preview-urls',
+            }) }}
+
+            {{ forms.hidden({
+                name: 'orderId',
+                value: order.id
+            }) }}
+
+            <div class="buttons">
+                <input type="submit" class="btn right" value="{{ "Regenerate Preview Urls"|t('app') }}" />
+            </div>
+        </form>
+        {% endif %}
 
           <div class="translations-order-detail-activity-log">
             <h2>{{ 'Order Activity Log'|t }}</h2>
