@@ -67,7 +67,7 @@ class CreateDrafts extends BaseJob
                 try {
 
                     //if (!$a++) throw new Exception('Custom exception!!');
-                    $element = Craft::$app->getElements()->getElementById($draft->id, null, $order->sourceSite);
+                    $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
 
                     $file->orderId = $order->id;
                     $file->elementId = $draft->sourceId;
@@ -89,7 +89,7 @@ class CreateDrafts extends BaseJob
                 } catch (Exception $e) {
 
                     $file->orderId = $order->id;
-                    $file->elementId = $draft->id;
+                    $file->elementId = $draft->sourceId;
                     $file->draftId = $draft->draftId;
                     $file->sourceSite = $order->sourceSite;
                     $file->targetSite = $targetSite;
