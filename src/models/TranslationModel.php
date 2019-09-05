@@ -25,6 +25,9 @@ use acclaro\translations\Translations;
  */
 class TranslationModel extends Model
 {
+    /**
+     * @var int|null
+     */
     public $id;
     
     public $sourceSite;
@@ -35,10 +38,13 @@ class TranslationModel extends Model
     
     public $target;
 
+    public $attributes;
+
     public function rules()
     {
         return [
-            [['sourceSite', 'targetSite', 'source', 'target'], 'required'],
+            ['id', 'number', 'integerOnly' => true],
+            [['id', 'sourceSite', 'targetSite', 'source', 'target'], 'required'],
             [['sourceSite', 'targetSite'], SiteIdValidator::class],
             [['dateCreated', 'dateUpdated'], DateTimeValidator::class],
         ];

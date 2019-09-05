@@ -13,7 +13,9 @@ use acclaro\translations\Translations;
 
 use Craft;
 use Exception;
+use craft\i18n\PhpMessageSource;
 use yii\i18n\MessageSource;
+use yii\base\Application;
 use ReflectionClass;
 use acclaro\translations\models\TranslationModel;
 use acclaro\translations\records\TranslationRecord;
@@ -52,11 +54,19 @@ class TranslationRepository
         return $translations;
     }
 
+    /**
+     * @return \acclaro\translations\models\TranslationModel
+     */
     public function makeNewTranslation()
     {
         return new TranslationModel();
     }
 
+    /**
+     * @param  \acclaro\translations\models\TranslationModel $translation
+     * @throws \Exception
+     * @return bool
+     */
     public function saveTranslation(TranslationModel $translation)
     {
         $isNew = !$translation->id;
@@ -67,11 +77,13 @@ class TranslationRepository
             if (!$record) {
                 throw new Exception('No translation exists with that ID.');
             }
+            $record->setAttributes($translation->getAttributes(), false);
         } else {
             $record = new TranslationRecord();
+            $new_translation = $translation->getAttributes();
+            unset($new_translation['id']);
+            $record->setAttributes($new_translation, false);
         }
-
-        $record->setAttributes($translation->getAttributes(), false);
 
         if (!$record->validate()) {
             $translation->addErrors($record->getErrors());
@@ -113,7 +125,7 @@ class TranslationRepository
             $translations[$key] = new TranslationModel($record->toArray([
                 'id',
                 'sourceSite',
-                'targetSites',
+                'targetSite',
                 'source',
                 'target'
             ]));
@@ -126,30 +138,34 @@ class TranslationRepository
     {
         $translations = $this->getTranslations();
 
+        $reflectionClass = new ReflectionClass('yii\i18n\MessageSource');
+
+        $reflectionProperty = $reflectionClass->getProperty('_messages');
+        
+        $reflectionProperty->setAccessible(true);
+        
+        $messages = $reflectionProperty->getValue(Craft::$app->getI18n()->getMessageSource('yii'));
+        
+        foreach ($translations as $translation) {
+            $sourceLanguage = Craft::$app->sites->getSiteById($translation->sourceSite)->language;
+            $targetLanguage = Craft::$app->sites->getSiteById($translation->targetSite)->language;
+            
+            $key = sprintf('%s/%s', $sourceLanguage, 'yii');
+            $messages[$key][$translation->source] = $translation->target;
+            $key = sprintf('%s/%s', $targetLanguage, 'yii');
+            $messages[$key][$translation->source] = $translation->target;
+            Craft::$app->getI18n()->translate('yii', $translation->source, [], $targetLanguage);
+        }
+        
+        $reflectionProperty->setValue(Craft::$app->getI18n()->getMessageSource('yii'), $messages);
+        
+        $reflectionProperty->setAccessible(false);
         /**
-         * Look into what this does
+         * TODO: Load translations to proper sites languages
          */
-        // $reflectionClass = new ReflectionClass(MessageSource::class);
-
-        // $reflectionProperty = $reflectionClass->getProperty('_messages');
-
-        // $reflectionProperty->setAccessible(true);
-
-
-        // $messages = $reflectionProperty->getValue(Craft::$app->systemMessages);
-
-        // foreach ($translations as $translation) {
-        //     $key = sprintf('%s.%s', $translation->sourceSite, 'craft');
-
-        //     $messages[$key][$translation->source] = $translation->target;
-
-        //     $key = sprintf('%s.%s', $translation->targetSite, 'craft');
-
-        //     $messages[$key][$translation->source] = $translation->target;
-        // }
-
-        // $reflectionProperty->setValue(Craft::$app->systemMessages, $messages);
-
-        // $reflectionProperty->setAccessible(false);
+        // echo '<pre>';
+        // var_dump(Craft::$app->getI18n());
+        // echo '</pre>';
+        // die;
     }
 }

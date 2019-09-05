@@ -3,6 +3,7 @@
 namespace acclaro\translations\services;
 
 use craft\base\Component;
+use yii\base\Application as Application;
 
 /**
  * App Service
