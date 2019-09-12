@@ -66,7 +66,7 @@ class UpdateEntries extends BaseJob
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
 
                 if ($draft) {
-                    $success = Translations::$plugin->draftRepository->publishDraft($draft);
+                    $success = Translations::$plugin->draftRepository->applyTranslationDraft($file->id);
                 } else {
                     $success = false;
                 }

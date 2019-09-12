@@ -15,6 +15,8 @@ use Exception;
 use craft\db\Query;
 use craft\elements\Entry;
 use acclaro\translations\Translations;
+use acclaro\translations\models\FileModel;
+use acclaro\translations\records\FileRecord;
 
 class DraftRepository
 {
@@ -91,5 +93,69 @@ class DraftRepository
         }
 
         return $response;
+    }
+
+    public function isTranslationDraft($draftId)
+    {
+        $data = [];
+
+        $attributes = [
+            'draftId' => (int) $draftId
+        ];
+
+        $record = FileRecord::findOne($attributes);
+
+        if (!$record) {
+            return $data;
+        }
+        
+        $file = new FileModel($record->toArray([
+            'id',
+            'targetSite',
+            'status'
+        ]));
+
+        if ($file) {
+            $data = [
+                'id' => $file->id,
+                'targetSite' => $file->targetSite,
+                'status' => $file->status,
+            ];
+        }
+
+        return $data;
+    }
+
+    public function applyTranslationDraft($fileId)
+    {
+        $file = Translations::$plugin->fileRepository->getFileById($fileId);
+        
+        // Get file's draft
+        $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+        if (!$draft) {
+            throw new NotFoundHttpException('Draft not found');
+        }
+
+        try {
+            // Let's try saving the element prior to applying draft
+            if (!Craft::$app->getElements()->saveElement($draft)) {
+                throw new InvalidElementException($draft);
+            }
+            
+            // Let's remove the auto-propagated drafts
+            Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+            
+            // Apply the draft to the entry
+            $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
+        } catch (InvalidElementException $e) {
+            Craft::$app->getSession()->setError(Craft::t('app', 'Couldn’t publish draft.'));
+            // Send the draft back to the template
+            Craft::$app->getUrlManager()->setRouteParams([
+                'entry' => $draft
+            ]);
+            return null;
+        }
+
+        return $newEntry;
     }
 }

@@ -343,9 +343,16 @@ class Translations extends Plugin
     
     private function _includeEditDraftResource($draftId)
     {
-        self::$view->registerAssetBundle(EditDraftAssets::class);
+        $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
 
-        self::$view->registerJs("$(function(){ Craft.Translations.ApplyTranslations.init({$draftId}); });");
+        // If this is a translation draft, load the JS
+        if (!empty($response)) {
+            self::$view->registerAssetBundle(EditDraftAssets::class);
+
+            $response = json_encode($response);
+
+            self::$view->registerJs("$(function(){ Craft.Translations.ApplyTranslations.init({$draftId}, {$response}); });");
+        }
     }
     
     private function _includeEntryResources()

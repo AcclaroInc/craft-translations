@@ -87,9 +87,6 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
         
         if (this.isEditEntryScreen()) {
-            /**
-             * Add Translations button
-             */
             $settings = document.getElementById('settings');
             $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
