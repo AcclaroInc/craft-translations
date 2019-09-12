@@ -23,7 +23,7 @@ use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
-use acclaro\translations\services\job\UpdateEntries;
+use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
 use acclaro\translations\services\translator\AcclaroTranslationService;
@@ -676,14 +676,14 @@ class BaseController extends Controller
         $this->renderTemplate('translations/translators/_detail', $variables);
     }
 
-    public function actionUpdateEntries()
+    public function actionApplyDrafts()
     {
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 
         $elementIds = Craft::$app->getRequest()->getParam('elements');
 
-        $job = Craft::$app->queue->push(new UpdateEntries([
-            'description' => 'Updating translation entries',
+        $job = Craft::$app->queue->push(new ApplyDrafts([
+            'description' => 'Applying translation drafts',
             'orderId' => $orderId,
             'elementIds' => $elementIds
         ]));
@@ -691,7 +691,7 @@ class BaseController extends Controller
         if ($job) {
             $params = [
                 'id' => (int) $job,
-                'notice' => 'Done updating translation entries',
+                'notice' => 'Done applying translation drafts',
                 'url' => 'translations/orders/detail/'. $orderId,
             ];
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
