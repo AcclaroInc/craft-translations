@@ -12,6 +12,7 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
+use craft\db\Query;
 use craft\elements\Entry;
 use acclaro\translations\Translations;
 
@@ -57,5 +58,38 @@ class DraftRepository
         Craft::$app->elements->saveElement($draft);
 
         return Craft::$app->getDrafts()->applyDraft($draft);
+    }
+
+    public function deleteAutoPropagatedDrafts($draftId, $targetSite)
+    {
+        if (empty($draftId) || empty($targetSite)) {
+            return;
+        }
+
+        $transaction = Craft::$app->getDb()->beginTransaction();
+        try {
+            $query = (new Query())
+                ->select('elements_sites.id')
+                ->from(['{{%elements_sites}} elements_sites'])
+                ->innerJoin('{{%elements}} elements', '[[elements.id]] = [[elements_sites.elementId]]')
+                ->where(['elements.draftId' => $draftId,])
+                ->andWhere(['!=', 'elements_sites.siteId', $targetSite])
+                ->all();
+
+            $propagatedElements = [];
+            foreach ($query as $key => $id) {
+                $propagatedElements[] = $id['id'];
+            }
+            $response = Craft::$app->db->createCommand()
+                ->delete('{{%elements_sites}}', array('IN', 'id', $propagatedElements))
+                ->execute();
+            
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+
+        return $response;
     }
 }

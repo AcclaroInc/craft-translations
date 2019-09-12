@@ -25,6 +25,8 @@ use craft\helpers\ElementHelper;
 use yii\web\NotFoundHttpException;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
+use acclaro\translations\models\FileModel;
+use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ImportFiles;
 use acclaro\translations\services\repository\SiteRepository;
 
@@ -271,6 +273,70 @@ class FilesController extends Controller
         {
             $this->returnErrorJson($exception->getMessage());
         }
+    }
+
+    public function actionIsTranslationDraft()
+    {
+        $this->requirePostRequest();
+
+        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        
+        $attributes = [
+            'draftId' => (int) $draftId
+        ];
+
+        $record = FileRecord::findOne($attributes);
+
+        if (!$record) {
+            return $this->asJson(array(
+                'success' => false,
+                'error' => Translations::$plugin->translator->translate('app', 'No file exists with draft ID “{id}”.', array('id' => $draftId))
+            ));
+        }
+        
+        $file = new FileModel($record->toArray([
+            'id',
+            'targetSite',
+            'status'
+        ]));
+
+        $data = [];
+        if ($file) {
+            $data = [
+                'file' => $file->id,
+                'targetSite' => $file->targetSite,
+                'status' => $file->status,
+            ];
+
+            return $this->asJson(array(
+                'success' => true,
+                'data' => $data,
+            ));
+        } else {
+            return $this->asJson(array(
+                'success' => false,
+                'error' => Translations::$plugin->translator->translate('app', 'No file exists with draft ID “{id}”.', array('id' => $draftId))
+            ));
+        }
+    }
+
+    public function actionApplyTranslationDraft()
+    {
+        $this->requirePostRequest();
+
+        $fileId = Craft::$app->getRequest()->getParam('fileId');
+
+        $file = Translations::$plugin->fileRepository->getFileById($fileId);
+        $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+
+        $response = Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+
+        $response = Craft::$app->getDrafts()->applyDraft($draft);
+
+        return $this->asJson(array(
+            'success' => true,
+            'data' => $response,
+        ));
     }
 
 	/**
