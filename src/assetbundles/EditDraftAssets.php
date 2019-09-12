@@ -24,7 +24,8 @@ class EditDraftAssets extends AssetBundle
         ];
 
         $this->js = [
-            'js/DisableFields.js',
+            // 'js/DisableFields.js',
+            'js/ApplyTranslations.js',
         ];
 
         $this->css = [

@@ -17,7 +17,7 @@ use craft\queue\BaseJob;
 use craft\elements\Entry;
 use acclaro\translations\Translations;
 
-class UpdateEntries extends BaseJob
+class ApplyDrafts extends BaseJob
 {
     public $orderId;
     public $elementIds;
@@ -66,7 +66,7 @@ class UpdateEntries extends BaseJob
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
 
                 if ($draft) {
-                    $success = Translations::$plugin->draftRepository->publishDraft($draft);
+                    $success = Translations::$plugin->draftRepository->applyTranslationDraft($file->id);
                 } else {
                     $success = false;
                 }
@@ -97,7 +97,7 @@ class UpdateEntries extends BaseJob
                     array(':oldTokenRoute' => $oldTokenRoute)
                 );
             } else {
-                $order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t update entry '. '"'. $element->title .'"'));
+                $order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t apply draft for '. '"'. $element->title .'"'));
                 Translations::$plugin->orderRepository->saveOrder($order);
 
                 continue;
@@ -113,7 +113,7 @@ class UpdateEntries extends BaseJob
         if ($publishedFilesCount === $filesCount) {
             $order->status = 'published';
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Entries published'));
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts applied'));
 
             Translations::$plugin->orderRepository->saveOrder($order);
         }
@@ -121,6 +121,6 @@ class UpdateEntries extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Updating translation entries';
+        return 'Applying translation drafts';
     }
 }

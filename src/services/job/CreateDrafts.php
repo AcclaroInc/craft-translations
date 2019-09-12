@@ -86,6 +86,9 @@ class CreateDrafts extends BaseJob
 
                     Translations::$plugin->fileRepository->saveFile($file);
 
+                    // Delete draft elements that are automatically propagated for other sites
+                    // Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+
                 } catch (Exception $e) {
 
                     $file->orderId = $order->id;
