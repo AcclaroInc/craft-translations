@@ -78,7 +78,13 @@ Craft.Translations.GlobalSetEdit = {
 
         var $btngroup = $('<div>', {'class': 'btngroup submit right translations-dropdown'});
 
-        $btngroup.insertBefore('#header > .submit');
+        var submitBtn = $('#header > .submit').length;
+
+        if (submitBtn > 0) {
+            $btngroup.insertBefore('#header > .submit');
+        } else {
+            $btngroup.insertBefore('#header .submit');
+        }
 
         var $btn = $('<a>', {
             'class': 'btn submit icon',
