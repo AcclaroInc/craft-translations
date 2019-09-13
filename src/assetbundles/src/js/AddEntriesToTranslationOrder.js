@@ -23,7 +23,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
     getEditEntryId: function() {
         return $('form#main-form input[type=hidden][name=entryId]').val();
     },
-
+    
     updateSelectedEntries: function() {
         var entries = [];
 

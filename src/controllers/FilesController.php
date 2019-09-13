@@ -16,6 +16,7 @@ use ZipArchive;
 use craft\helpers\Path;
 use craft\web\Controller;
 use craft\helpers\Assets;
+use craft\models\Section;
 use yii\web\HttpException;
 use craft\web\UploadedFile;
 use craft\helpers\FileHelper;
@@ -270,6 +271,26 @@ class FilesController extends Controller
         catch (Exception $exception)
         {
             $this->returnErrorJson($exception->getMessage());
+        }
+    }
+
+    public function actionApplyTranslationDraft()
+    {
+        $this->requirePostRequest();
+        $request = Craft::$app->getRequest();
+        
+        // Get the file
+        $fileId = Craft::$app->getRequest()->getParam('fileId');
+
+        $response = Translations::$plugin->draftRepository->applyTranslationDraft($fileId);
+
+        if (
+            $response &&
+            $request->getAcceptsJson()
+        ) {
+            return $this->asJson([
+                'success' => true,
+            ]);
         }
     }
 

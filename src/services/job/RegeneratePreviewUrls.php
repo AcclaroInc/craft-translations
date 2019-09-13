@@ -33,15 +33,19 @@ class RegeneratePreviewUrls extends BaseJob
 
             try {
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-                $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-                $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
-                $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                    $element,
-                    $file->draftId,
-                    $file->sourceSite,
-                    $file->targetSite,
-                    $file->previewUrl
-                );
+
+                if ($draft) {
+                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+                    $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
+                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
+                        $element,
+                        $file->draftId,
+                        $file->sourceSite,
+                        $file->targetSite,
+                        $file->previewUrl
+                    );
+                }
+
                 Translations::$plugin->fileRepository->saveFile($file);
                 $transaction->commit();
             } catch (\Throwable $e) {

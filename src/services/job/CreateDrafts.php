@@ -65,8 +65,12 @@ class CreateDrafts extends BaseJob
                 }
 
                 try {
-
-                    //if (!$a++) throw new Exception('Custom exception!!');
+                    // Prevent duplicate files
+                    $isExistingFile = Translations::$plugin->draftRepository->isTranslationDraft($draft->draftId);
+                    if (!empty($isExistingFile)) {
+                        continue;
+                    }
+                    
                     $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
 
                     $file->orderId = $order->id;
@@ -85,6 +89,9 @@ class CreateDrafts extends BaseJob
                     $file->wordCount = isset($this->wordCounts[$draft->id]) ? $this->wordCounts[$draft->id] : 0;
 
                     Translations::$plugin->fileRepository->saveFile($file);
+
+                    // Delete draft elements that are automatically propagated for other sites
+                    // Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
 
                 } catch (Exception $e) {
 

@@ -315,12 +315,12 @@ class Translations extends Plugin
     {
         $this->_includeUniversalResources();
 
-        if (preg_match('#^entries/[^/]+/[^/]+/drafts/(\d+)$#', $path, $match)) {
-            $this->_includeEditDraftResource($match[1]);
-        }
-
         if (preg_match('#^entries(/|$)#', $path)) {
             $this->_includeEntryResources();
+
+            if (isset(Craft::$app->getRequest()->getQueryParams()['draftId'])) {
+                $this->_includeEditDraftResource(Craft::$app->getRequest()->getQueryParams()['draftId']);
+            }
         }
 
         if (preg_match('#^globals/([^/]+)$#', $path, $match)) {
@@ -343,7 +343,16 @@ class Translations extends Plugin
     
     private function _includeEditDraftResource($draftId)
     {
-        self::$view->registerAssetBundle(EditDraftAssets::class);
+        $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
+
+        // If this is a translation draft, load the JS
+        if (!empty($response)) {
+            self::$view->registerAssetBundle(EditDraftAssets::class);
+
+            $response = json_encode($response);
+
+            self::$view->registerJs("$(function(){ Craft.Translations.ApplyTranslations.init({$draftId}, {$response}); });");
+        }
     }
     
     private function _includeEntryResources()

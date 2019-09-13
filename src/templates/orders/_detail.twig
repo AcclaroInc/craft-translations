@@ -222,7 +222,7 @@
 
         {{ forms.hidden({
             name: 'action',
-            value: 'translations/base/update-entries',
+            value: 'translations/base/apply-drafts',
         }) }}
 
         {{ forms.hidden({
@@ -236,7 +236,7 @@
                     {% if order.status == 'complete' or order.status == 'in progress' %}
                     <div class="toolbar">
                         <div class="buttons right">
-                            <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to update these entries?'|t }}" disabled="disabled" value="{{ 'Update Selected Entries'|t }}">
+                            <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to apply translation drafts to these entries?'|t }}" disabled="disabled" value="{{ 'Apply Translation Drafts'|t }}">
                         </div>
                     </div>
                     {% endif %}
@@ -254,7 +254,7 @@
                                         <th scope="col">{{ 'Title'|t }}</th>
                                         <th scope="col">{{ 'Section'|t }}</th>
                                         <th scope="col">{{ 'Source Site'|t }}</th>
-                                        <th scope="col">{{ 'Target Sites(s)'|t }}</th>
+                                        <th scope="col">{{ 'Target Site(s)'|t }}</th>
                                         <th scope="col">{{ 'Status'|t }}</th>
                                         <th scope="col">{{ 'Date Updated'|t }}</th>
                                     </tr>

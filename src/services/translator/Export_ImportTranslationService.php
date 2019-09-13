@@ -120,7 +120,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         // save the draft
         if ($draft instanceof Entry) {
             Translations::$plugin->draftRepository->saveDraft($draft);
-        } elseif ($draft instanceof GlobalSetDraftModel) {
+        } elseif ($draft instanceof GlobalSet) {
             Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
         }
     }
