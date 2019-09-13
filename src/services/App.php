@@ -3,6 +3,7 @@
 namespace acclaro\translations\services;
 
 use craft\base\Component;
+use yii\base\Application as Application;
 
 /**
  * App Service
@@ -110,7 +111,7 @@ class App extends Component
     public $fieldTranslatorFactory;
     
     /**
-     * @var translators\Factory
+     * @var translator\Factory
      */
     public $translatorFactory;
     
