@@ -65,8 +65,12 @@ class CreateDrafts extends BaseJob
                 }
 
                 try {
-
-                    //if (!$a++) throw new Exception('Custom exception!!');
+                    // Prevent duplicate files
+                    $isExistingFile = Translations::$plugin->draftRepository->isTranslationDraft($draft->draftId);
+                    if (!empty($isExistingFile)) {
+                        continue;
+                    }
+                    
                     $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
 
                     $file->orderId = $order->id;
