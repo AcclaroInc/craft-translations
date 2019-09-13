@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.2.3 - 2019-09-13
+
+### Added
+- Support for Craft 3.2+ draft publishing
+- Ability to publish site-specific drafts without overwriting content in other sites
+- Deletion of auto-propagated drafts
+- Support for Craft 3.3+ global HTML markup
+- Additional logic to prevent duplicate files within orders
+
+### Changed
+- Changed `job\UpdateEntries` to `job\ApplyDrafts`
+
+### Fixed
+- Bug with regenerating preview URLs for previously published drafts
+- Typo in order detail page
+- Bug related to GlobalSetDrafts element
+- File import bug related to translatable dropdown fields
+
 ## 1.2.2 - 2019-08-22
 
 ### Fixed
