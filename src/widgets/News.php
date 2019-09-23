@@ -117,6 +117,7 @@ class News extends Widget
         $client = new Client(array(
             'base_uri' => 'https://www.acclaro.com/',
             'timeout' => 2.0,
+            'verify' => false
         ));
 
         $response = $client->get('feed/');
