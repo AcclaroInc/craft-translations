@@ -13,6 +13,7 @@ namespace acclaro\translations\services\translator;
 use Craft;
 use DateTime;
 use Exception;
+use craft\elements\Entry;
 use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.2.5 - 2019-10-01
+
+### Fixed
+- Added class declaration for Acclaro translator
+
 ## 1.2.4 - 2019-09-25
 
 ### Fixed
