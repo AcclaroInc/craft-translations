@@ -30,7 +30,6 @@ class TranslatorRepository
             'id',
             'label',
             'service',
-            'sites',
             'status',
             'settings',
         ]));
@@ -51,7 +50,6 @@ class TranslatorRepository
                 'id',
                 'label',
                 'service',
-                'sites',
                 'status',
                 'settings',
             ]));
@@ -76,7 +74,6 @@ class TranslatorRepository
                 'id',
                 'label',
                 'service',
-                'sites',
                 'status',
                 'settings',
             ]));

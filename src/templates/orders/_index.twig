@@ -6,13 +6,17 @@
 
 {% set tabs = adminTabs %}
 {% set selectedTab = 'orders' %}
+{% set disabled = '' %}
+{% if (orderCount == 0) %}
+    {% set disabled = 'disabled' %}
+{% endif %}
 
 {% block actionButton %}
 <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
     <input type="hidden" name="action" value="translations/base/sync-orders">
     {{ csrfInput() }}
     <div class="btngroup" style="margin-right:5px;">
-        <input type="submit" class="btn big submit" value="{{ "Sync Orders"|t('app') }}" />
+        <input type="submit" class="btn big submit {{ disabled }}" value="{{ "Sync Orders"|t('app') }}" {{ disabled }}/>
     </div>
     <div class="sync-status"></div>
 </form>
@@ -46,15 +50,19 @@
 {% endblock %}
 
 {% block content %}
-    <div class="elementindex">
-        {{ parent() }}
+    {% if (orderCount > 0) %}
+        <div class="elementindex">
+            {{ parent() }}
 
-        {{ macros.setElementIndexSource('all') }}
+            {{ macros.setElementIndexSource('all') }}
 
-        {% include "_elements/indexcontainer" with {
-            showSiteMenu: true
-        } %}
-    </div>
+            {% include "_elements/indexcontainer" with {
+                showSiteMenu: true
+            } %}
+        </div>
+    {% else %}
+        <span style="font-size: 16px"> {{ 'No translation orders available'|t }} </span>
+    {% endif %}
 {% endblock %}
 
 

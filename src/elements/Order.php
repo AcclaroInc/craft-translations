@@ -66,6 +66,8 @@ class Order extends Element
     public $activityLog;
     
     public $dateOrdered;
+
+    public $dateUpdated;
     
     public $serviceOrderId;
     
@@ -177,6 +179,7 @@ class Order extends Element
             'targetSites' => Craft::t('app', 'Sites'),
             'status' => Craft::t('app', 'Status'),
             'dateOrdered' => Craft::t('app', 'Created'),
+            'dateUpdated' => Craft::t('app', 'Updated'),
         ];
     }
 
@@ -256,6 +259,9 @@ class Order extends Element
             case 'dateOrdered':
                 return $value ? date('n/j/y', strtotime($value)) : '--';
 
+            case 'dateUpdated':
+                return $value ? date('n/j/y', strtotime($value->format('Y-m-d H:i:s'))) : '--';
+
             case 'actionButton':
 
                 if (($this->getTranslator()->service == 'export_import' && $this->status === 'published') || ($this->getTranslator()->service == 'acclaro' && $this->status !== 'new' && $this->status !== 'failed')) {
@@ -297,6 +303,7 @@ class Order extends Element
             'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
             'status' => ['label' => Translations::$plugin->translator->translate('app', 'Status')],
             'dateOrdered' => ['label' => Translations::$plugin->translator->translate('app', 'Created')],
+            'dateUpdated' => ['label' => Translations::$plugin->translator->translate('app', 'Updated')],
             'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
         ];
 
