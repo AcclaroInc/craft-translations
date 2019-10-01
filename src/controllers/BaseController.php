@@ -377,6 +377,8 @@ class BaseController extends Controller
 
         $variables['translators'] = Translations::$plugin->translatorRepository->getActiveTranslators();
 
+        $variables['orderCount'] = Translations::$plugin->orderRepository->getOrdersCount();
+
         $variables['selectedSubnavItem'] = 'orders';
 
         $this->renderTemplate('translations/orders/_index', $variables);
@@ -396,11 +398,6 @@ class BaseController extends Controller
         $variables['translators'] = Translations::$plugin->translatorRepository->getTranslators();
 
         $variables['translatorTargetSites'] = array();
-        foreach ($variables['translators'] as $key => $translator) {
-            foreach (json_decode($translator->sites) as $key => $site) {
-                $variables['translatorTargetSites'][$site] = Craft::$app->getSites()->getSiteById($site);
-            }
-        }
 
         $variables['selectedSubnavItem'] = 'translators';
         
@@ -755,12 +752,6 @@ class BaseController extends Controller
             $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
         }
 
-        $sites = Craft::$app->getRequest()->getBodyParam('sites');
-
-        if ($sites === '*') {
-            $sites = Craft::$app->getSites()->getAllSiteIds();
-        }
-
         $service = Craft::$app->getRequest()->getBodyParam('service');
         
         $allSettings = Craft::$app->getRequest()->getBodyParam('settings');
@@ -769,7 +760,6 @@ class BaseController extends Controller
 
         $translator->label = Craft::$app->getRequest()->getBodyParam('label');
         $translator->service = $service;
-        $translator->sites = $sites ? json_encode($sites) : null;
         $translator->settings = json_encode($settings);
         $translator->status = Craft::$app->getRequest()->getBodyParam('status');
 
@@ -1092,7 +1082,8 @@ class BaseController extends Controller
     public function actionSyncOrders()
     {
         $orders = Translations::$plugin->orderRepository->getInProgressOrders();
-
+        $job = '';
+        $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
         foreach ($orders as $order) {
             // Don't update manual orders
             if ($order->translator->service === 'export_import') {
@@ -1109,11 +1100,11 @@ class BaseController extends Controller
             $params = [
                 'id' => (int) $job,
                 'notice' => 'Done syncing orders',
-                'url' => 'translations/orders'
+                'url' => $url
             ];
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
         } else {
-            $this->redirect('translations/orders', 302, true);
+            $this->redirect($url, 302, true);
         }
     }
 

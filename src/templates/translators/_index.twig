@@ -24,7 +24,6 @@
                 <th>{{ 'Name'|t }}</th>
                 <th>{{ 'Status'|t }}</th>
                 <th>{{ 'Service'|t }}</th>
-                <th>{{ 'Sites'|t }}</th>
                 <th style="text-align:right;">{{ 'Actions'|t }}</th>
                 <th>&nbsp;</th>
             </tr>
@@ -49,11 +48,7 @@
                         {{ 'Acclaro' }}
                     {% endswitch %}
                 </td>
-                <td style="overflow-wrap:break-word;">
-                {% for site in translator.sitesArray %}
-                    {{translatorTargetSites[site].name}} <span class="light">({{ translatorTargetSites[site].language }})</span>{% if not loop.last %}<br>{% endif %}
-                {% endfor %}
-                </td>
+
                 <td style="text-align:right;">
                     <form method="post" accept-charset="UTF-8">
                         {{ csrfInput() }}

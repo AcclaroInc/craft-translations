@@ -24,12 +24,9 @@ Craft.Translations.TranslatorDetail = {
         var $service = $('#service');
         var service = $service.val();
         var serviceValid = !!service;
-        var $sites = $(':checkbox[name="sites[]"]');
-        var sitesValid = $sites.filter(':checked').length > 0;
-        var valid = serviceValid && sitesValid;
+        var valid = serviceValid;
 
         this.toggleInputState($service, serviceValid, Craft.t('app', 'Please choose a translation service.'));
-        this.toggleInputState($sites, sitesValid, Craft.t('app', 'Please choose one or more sites.'));
 
         switch (service) {
             case 'acclaro':
@@ -58,19 +55,6 @@ Craft.Translations.TranslatorDetail = {
                 .appendTo($input)
                 .append($('<li>', {'text': message}));
         }
-    },
-
-    checkSelectedSites: function(sites) {
-        sites = JSON.parse(sites);
-        var $checkboxes = $(':checkbox[name="sites[]"]');
-        $checkboxes.each(function(){
-            var $el = $(this);
-            var value = $el.val();
-            if (sites.includes(value)) {
-                $el[0].defaultChecked = true;
-            }
-        });
-
     },
 
     serializeSettings: function(service) {
@@ -138,11 +122,6 @@ Craft.Translations.TranslatorDetail = {
         $('#service').on('change', $.proxy(this.updateService, this));
 
         this.updateService();
-        
-        var sites = selectedSites;
-        if (sites !== '') {
-            this.checkSelectedSites(sites);
-        }
         
 
         $('.translations-authenticate-translation-service').on('click', function(e) {
