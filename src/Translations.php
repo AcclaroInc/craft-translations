@@ -467,6 +467,35 @@ class Translations extends Plugin
     private function _onDeleteElement(Event $event)
     {
 
+        if (!empty($event->element->draftId)) {
+            $response = Translations::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
+            if ($response) {
+
+                $currentFile = self::$plugin->fileRepository->getFileByDraftId($event->element->draftId);
+
+                if ($currentFile) {
+                    $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
+
+                    $currentFile->status = 'canceled';
+
+                    $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->targetSite);
+                    $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
+
+                    $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->sourceSite);
+                    $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
+                    $currentFile->source = Translations::$plugin->elementToXmlConverter->toXml(
+                        $element,
+                        0,
+                        $currentFile->sourceSite,
+                        $currentFile->targetSite,
+                        $currentFile->previewUrl
+                    );
+
+                    self::$plugin->fileRepository->saveFile($currentFile);
+                }
+            }
+        }
+
         if (Craft::$app->getRequest()->getParam('hardDelete')) {
             $event->hardDelete = true;
         }
