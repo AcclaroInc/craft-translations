@@ -6,13 +6,6 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}
 
-{% js %}
-    var selectedSites = '';
-    if ({{translator.sites|json_encode|raw}} != null) {
-        selectedSites = {{translator.sites|json_encode|raw}};
-    }
-{% endjs %}
-
 {% set title = 'Translations'|t %}
 {% block actionButton %}
 <small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
@@ -74,14 +67,6 @@
             id: 'label',
             size: 20,
             placeholder: 'Optional'|t,
-        }) }}
-
-        {{ forms.checkboxSelectField({
-            label: 'Sites(s)'|t,
-            options: targetSiteCheckboxOptions,
-            value: translator.sites,
-            name: 'sites',
-            id: 'sites',
         }) }}
 
         <p><a href="{{ url('settings/sites') }}" target="_blank">{{ 'Configure multi-site settings'|t }} &raquo;</a></p>
