@@ -450,6 +450,9 @@ class Translations extends Plugin
                 if ($currentFile) {
                     $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
+                    $order->logActivity(Translations::$plugin->translator->translate('app', 'Draft '. $event->element->draftId .' deleted.'));
+                    Translations::$plugin->orderRepository->saveOrder($order);
+
                     $currentFile->status = 'canceled';
 
                     $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->targetSite);
