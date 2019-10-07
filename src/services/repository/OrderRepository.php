@@ -102,7 +102,7 @@ class OrderRepository
             'in preparation' => 'in preparation',
             'in progress' => 'in progress',
             'complete' => 'complete',
-            'canceled' => 'canceled',
+            'canceled' => 'cancelled',
             'published' => 'published',
         );
     }

@@ -257,7 +257,6 @@
                                         <th scope="col">{{ 'Target Site(s)'|t }}</th>
                                         <th scope="col">{{ 'Status'|t }}</th>
                                         <th scope="col">{{ 'Date Updated'|t }}</th>
-                                        <th scope="col">{{ 'Date Applied'|t }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -319,14 +318,6 @@
                                                     {% for file in files[element.id] %}
                                                         {% if not loop.first %}
                                                         <br>
-                                                        {% endif %}
-                                                        {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
-                                                    {% endfor %}
-                                                </td>
-                                                <td>
-                                                    {% for file in files[element.id] %}
-                                                        {% if not loop.first %}
-                                                            <br>
                                                         {% endif %}
                                                         {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
                                                     {% endfor %}

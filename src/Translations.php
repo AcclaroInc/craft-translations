@@ -62,7 +62,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.2.0';
+    public $schemaVersion = '1.2.1';
 
     // Public Methods
     // =========================================================================
@@ -147,24 +147,6 @@ class Translations extends Plugin
                 $this->_onDeleteElement($event);
             }
         );
-
-        /**
-         * EVENT_AFTER_DELETE_DRAFT gets triggered after EVENT_AFTER_APPLY_DRAFT
-         * May need to find another solution to the entry draft deletion
-         */
-        // Event::on(
-        //     Drafts::class,
-        //     Drafts::EVENT_AFTER_DELETE_DRAFT,
-        //     function (DraftEvent $event) {
-        //         Craft::debug(
-        //             'Drafts::EVENT_AFTER_DELETE_DRAFT',
-        //             __METHOD__
-        //         );
-        //         if ($event->draft) {
-        //             $this->_onDeleteDraft($event);
-        //         }
-        //     }
-        // );
 
         /**
          * Maybe we can do a plugin walkthrough here?
@@ -454,14 +436,6 @@ class Translations extends Plugin
 
             Craft::$app->elements->saveElement($order);
         }
-    }
-
-    private function _onDeleteDraft(Event $event)
-    {
-
-        $draft = $event->draft;
-
-        return self::$plugin->fileRepository->delete($draft->draftId);
     }
 
     private function _onDeleteElement(Event $event)

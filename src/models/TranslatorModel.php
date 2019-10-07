@@ -37,8 +37,6 @@ class TranslatorModel extends Model
     
     public $label;
     
-    public $sites;
-    
     public $settings;
     
     public $attributes;
@@ -47,9 +45,8 @@ class TranslatorModel extends Model
     {
         return [
             ['id', 'number', 'integerOnly' => true],
-            [['id', 'label', 'service', 'sites', 'settings', 'uid'], 'required'],
+            [['id', 'label', 'service', 'settings', 'uid'], 'required'],
             [['label','service'], 'StringValidator'],
-            ['sites', SiteIdValidator::class],
             [['dateCreated', 'dateUpdated'], DateTimeValidator::class],
         ];
     }
@@ -66,11 +63,6 @@ class TranslatorModel extends Model
     public function getName()
     {
         return $this->label ? $this->label : Translations::$plugin->translatorRepository->getTranslatorServiceLabel($this->service);
-    }
-
-    public function getSitesArray()
-    {
-        return $this->sites ? json_decode($this->sites, true) : array();
     }
 
     public function getSettings()

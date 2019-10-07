@@ -327,5 +327,4 @@ class FilesController extends Controller
     	return $msg;
     }
 
-
 }
