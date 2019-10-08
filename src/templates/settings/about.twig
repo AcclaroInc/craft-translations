@@ -1,0 +1,47 @@
+{% extends "translations/_layouts/settings" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'About'|t %}
+{% block actionButton %}
+<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+{% endblock %}
+
+{% block content %}
+    <div class="translations-about readable">
+        <a href="https://www.acclaro.com/" class="translations-about-logo"></a>
+
+        <h1 style="margin-bottom: 0px;">{{ 'Translations'|t }}</h1>
+
+        <h4 style="margin-top: 0px;">{{ 'by Acclaro Inc.'|t }}</h4>
+        
+        <a href="{{cpUrl('utilities/updates')}}" class="btn submit">{{ 'Check for updates'|t }}</a><br><br>
+
+        <div>
+            <h3>{{ 'General Information'|t }}</h3>
+            <p>This plugin is made available by <a href="https://www.acclaro.com/">Acclaro</a>. Any usage of it on a public site requires that the site owners have purchased the plugin either from Acclaro or the Craft plugin store.</p>
+            
+            <p>Prior to installation and use of this plugin it is strongly recommended that you backup your site content.</p>
+
+            <p>Any usage of this plugin either on production or in a sandbox environment indicates your acceptance of the legal terms described in the <a href="https://craftcms.github.io/license/">Craft Software License.</a></p>
+        </div>
+
+        <div>
+            <br>
+            <h3>{{ 'Need some help?'|t }}</h3>
+
+            <p>Interested in Acclaro <a href="https://info.acclaro.com/translation-plugin-for-craft3-support-info">technical support</a> or <a href="https://www.acclaro.com/services/website-translation/">professional translation services</a>? These may be purchased separately.</p>
+
+            <p>For setup related questions, please review our <a href="https://github.com/AcclaroInc/craft-translations/wiki" target="_blank">{{ 'GitHub Wiki'|t }}</a>.</p>
+            
+            <p>Still have a question? Please <a href="mailto:support@acclaro.com">contact us</a> with any additional plugin questions or support needs.</p>
+        </div>
+
+        <div>
+            </br>
+            <h3>{{ 'How are we doing?'|t }}</h3>
+
+            <p>We love to hear from our customers, click the link below to fill out a quick survey and let us know how we're doing. <a href="https://www.surveymonkey.com/r/translationsplugin">Leave Feedback »</a></p>
+        </div>
+        <p class="translations-about-copyright">{{ 'Copyright %d Acclaro Inc. All rights reserved.'|t|format(now|date('Y')) }}</p>
+    </div>
+{% endblock %}

@@ -43,11 +43,6 @@ class BaseController extends Controller
     protected $allowAnonymous = true;
     
     /**
-     * @var array
-     */
-    protected $adminTabs;
-
-    /**
      * @var int
      */
     protected $pluginVersion;
@@ -61,25 +56,6 @@ class BaseController extends Controller
     ) {
         parent::__construct($id, $module);
 
-        $this->adminTabs = array(
-            'dashboard' => array(
-                'label' => Translations::$plugin->translator->translate('app', 'Dashboard'),
-                'url' => Translations::$plugin->urlGenerator->generateCpUrl('translations'),
-            ),
-            'orders' => array(
-                'label' => Translations::$plugin->translator->translate('app', 'Orders'),
-                'url' => Translations::$plugin->urlGenerator->generateCpUrl('translations/orders'),
-            ),
-            'translators' => array(
-                'label' => Translations::$plugin->translator->translate('app', 'Translators'),
-                'url' => Translations::$plugin->urlGenerator->generateCpUrl('translations/translators'),
-            ),
-            'about' => array(
-                'label' => Translations::$plugin->translator->translate('app', 'About'),
-                'url' => Translations::$plugin->urlGenerator->generateCpUrl('translations/about'),
-            ),
-        );
-        
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin('translations')->getVersion();
     }
 
@@ -369,8 +345,6 @@ class BaseController extends Controller
     {
         $variables = array();
 
-        $variables['adminTabs'] = $this->adminTabs;
-
         $variables['pluginVersion'] = $this->pluginVersion;
         
         $variables['searchParams'] = Translations::$plugin->orderSearchParams->getParams();
@@ -391,8 +365,6 @@ class BaseController extends Controller
     {
         $variables = array();
 
-        $variables['adminTabs'] = $this->adminTabs;
-
         $variables['pluginVersion'] = $this->pluginVersion;
 
         $variables['translators'] = Translations::$plugin->translatorRepository->getTranslators();
@@ -404,24 +376,6 @@ class BaseController extends Controller
         $this->renderTemplate('translations/translators/_index', $variables);
     }
 
-    /**
-     * @return mixed
-     */
-    public function actionAboutIndex()
-    {
-        $variables = array();
-
-        $variables['adminTabs'] = $this->adminTabs;
-
-        $variables['pluginVersion'] = $this->pluginVersion;
-
-        $variables['translators'] = Translations::$plugin->translatorRepository->getTranslators();
-
-        $variables['selectedSubnavItem'] = 'about';
-        
-        $this->renderTemplate('translations/_about', $variables);
-    }
-
     // Detail Page Methods
     // =========================================================================
 
@@ -430,8 +384,6 @@ class BaseController extends Controller
         $variables = Craft::$app->getRequest()->resolve()[1];
 
         $variables['orderSubmitted'] = Craft::$app->getRequest()->getParam('submit') ? Craft::$app->getRequest()->getParam('submit') : null;
-
-        $variables['adminTabs'] = $this->adminTabs;
 
         $variables['pluginVersion'] = $this->pluginVersion;
 
@@ -636,8 +588,6 @@ class BaseController extends Controller
     {   
         $variables = Craft::$app->getRequest()->resolve()[1];
         
-        $variables['adminTabs'] = $this->adminTabs;
-
         $variables['pluginVersion'] = $this->pluginVersion;
 
         $variables['translatorId'] = isset($variables['translatorId']) ? $variables['translatorId'] : null;

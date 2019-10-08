@@ -1,9 +1,6 @@
 {% extends '_layouts/cp' %}
 {% import '_includes/forms' as forms %}
 
-{% set tabs = adminTabs %}
-{% set selectedTab = 'translators' %}
-
 {% set title = 'Translators'|t %}
 {% block actionButton %}
 <a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New Translator'|t }}</a>

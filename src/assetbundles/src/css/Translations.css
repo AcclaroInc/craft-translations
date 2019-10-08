@@ -509,3 +509,23 @@
     float: right;
     margin: 0px 0px 0px 0px;
 }
+
+.translations-icon {
+    color: #8f98a3;
+    display: flex;
+    font-size: 1.2rem;
+    margin-right: 12px;
+}
+
+.settings-sel {
+    background: #fff;
+}
+
+.settings-sel .translations-icon {
+    color: #b9bfc6;
+}
+
+.sidebar nav li a.settings-sel {
+    background: #737f8c !important;
+    color: #fff !important;
+}

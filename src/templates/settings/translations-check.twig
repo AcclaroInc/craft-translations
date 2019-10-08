@@ -1,0 +1,62 @@
+{% extends "translations/_layouts/settings" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'Translations Check'|t %}
+
+{% set isCraft32 = true %}
+{% set isMultisite = true %}
+{% set isPHP71 = true %}
+
+{% block actionButton %}
+<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+{% endblock %}
+
+{% block content %}
+<div class="readable">
+    <h2>{{ "Requirements"|t('app') }}</h2>
+
+    <table class="data fullwidth" dir="ltr">
+        <tbody>
+            <tr>
+                <td class="thin centeralign">
+                    {% if not isCraft32 %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="error"></span>
+                    {% else %}
+                        <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
+                </td>
+                <td>Craft CMS 3.2+ <span class="info">{{ 'Craft 3.2 or higher is required.' }}</span>{% endif %}</td>
+            </tr>
+            <tr>
+                <td class="thin centeralign">
+                    {% if not isPHP71 %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="error"></span>
+                    {% else %}
+                        <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
+                </td>
+                <td>PHP 7.1+ <span class="info">{{ 'PHP 7.1 or higher is required.' }}</span>{% endif %}</td>
+            </tr>
+            <tr>
+                <td class="thin centeralign">
+                    {% if not isMultisite %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="error"></span>
+                    {% else %}
+                        <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
+                </td>
+                <td>DOM extension <span class="info">{{ 'The <a href="https://docs.craftcms.com/v3/requirements.html#optional-php-extensions">DOM</a> extension is required.' }}</span>{% endif %}</td>
+            </tr>
+            <tr>
+                <td class="thin centeralign">
+                    {% if not isMultisite %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="error"></span>
+                    {% else %}
+                        <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
+                </td>
+                <td>Multisite enabled <span class="info">{{ 'Configure your sites in Settings > Sites' }}</span>{% endif %}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>{{ "Section Propagation"|t('app') }}</h2>
+    <h2>{{ "Supported Fields"|t('app') }}</h2>
+</div>
+{% endblock %}

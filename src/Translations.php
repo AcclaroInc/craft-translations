@@ -18,6 +18,7 @@ use craft\web\UrlManager;
 use craft\elements\Entry;
 use craft\services\Plugins;
 use craft\events\ModelEvent;
+use craft\helpers\UrlHelper;
 use craft\events\DraftEvent;
 use craft\services\Elements;
 use craft\events\PluginEvent;
@@ -58,6 +59,11 @@ class Translations extends Plugin
      * @var bool
      */
     public $hasCpSection = true;
+
+    /**
+     * @var bool
+     */
+    public $hasCpSettings = true;
 
     /**
      * @var string
@@ -221,15 +227,36 @@ class Translations extends Plugin
             'label' => 'Translators',
             'url' => 'translations/translators',
         ];
-        $subNavs['about'] = [
-            'label' => 'About',
-            'url' => 'translations/about',
+        $subNavs['settings'] = [
+            'label' => 'Settings',
+            'url' => 'settings/plugins/translations',
         ];
 
         $navItem = array_merge($navItem, [
             'subnav' => $subNavs,
         ]);
         return $navItem;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSettingsResponse()
+    {
+        // Just redirect to the plugin settings page
+        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('translations/settings'));
+    }
+
+    protected function createSettingsModel()
+    {
+        return new \acclaro\translations\models\Settings();
+    }
+
+    protected function settingsHtml()
+    {
+        return \Craft::$app->getView()->renderTemplate('translations/settings/general', [
+            'settings' => $this->getSettings()
+        ]);
     }
 
     /**
@@ -278,15 +305,13 @@ class Translations extends Plugin
                     'translations/orders' => 'translations/base/order-index',
                     'translations/orders/new' => 'translations/base/order-detail',
                     'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
-                    // 'translations/orders/reporting' => 'translations/base/index',
                     'translations/translators' => 'translations/base/translator-index',
                     'translations/translators/new' => 'translations/base/translator-detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
-                    'translations/about' => 'translations/base/about-index',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/base/edit-global-set-draft',
-                    
                     'translations/orders/exportfile' => 'translations/files/export-file',
                     'translations/orders/importfile' => 'translations/files/import-file',
+                    'translations/settings' => 'translations/settings/index',
                 ]);
             }
         );

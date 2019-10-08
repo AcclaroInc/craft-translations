@@ -1,0 +1,11 @@
+{% extends "translations/_layouts/settings" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'Clear Orders'|t %}
+{% block actionButton %}
+<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+{% endblock %}
+
+{% block content %}
+<a data-action="base/clear-orders" data-confirm="{{ 'Are you sure you want to delete all orders and translation drafts?'|t('app') }}" data-redirect="{{ 'translations/settings/clear-orders' }}" class="formsubmit btn submit">{{ 'Clear orders'|t }}</a><br><br>
+{% endblock %}
