@@ -164,6 +164,7 @@ class WidgetController extends Controller
         $view->registerJs('window.translationsdashboard = new Craft.Translations.Dashboard(' . Json::encode($widgetTypeInfo) . ');');
 
         $view->registerJs($allWidgetJs);
+        $variables['licenseStatus'] = Craft::$app->plugins->getPluginLicenseKeyStatus('translations');
         $variables['widgetTypes'] = $widgetTypeInfo;
         $variables['selectedSubnavItem'] = 'dashboard';
         $variables['isSelectableWidget'] = $isSelectableWidget;
