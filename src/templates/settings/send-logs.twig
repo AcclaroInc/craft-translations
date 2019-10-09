@@ -6,7 +6,7 @@
 <small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
 {% endblock %}
 
-{% set subject = craft.app.getSystemName ~ ' logs ' ~  '[' ~ "now"|date("m/d/Y") ~ ']' %}
+{% set subject = craft.app.getSystemName ~ ' logs ' ~  '[' ~ "now"|date("d-m-Y H:i:s") ~ ']' %}
 {% set body = 'Craft version: ' ~ settings.craftVersion ~ '%0D%0APHP version: ' ~ settings.phpVersion ~ '%0D%0APHP DOM Enabled: ' ~ settings.DOMEnabled ~ '%0D%0AMultiSite: ' ~ settings.isMultisite ~ '%0D%0APlugin List: ' ~ settings.plugins %}
 
 {% block content %}
