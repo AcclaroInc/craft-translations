@@ -3,10 +3,6 @@
 
 {% set title = 'Translations Check'|t %}
 
-{% set isCraft32 = true %}
-{% set isMultisite = true %}
-{% set isPHP71 = true %}
-
 {% block actionButton %}
 <small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
 {% endblock %}
@@ -19,44 +15,124 @@
         <tbody>
             <tr>
                 <td class="thin centeralign">
-                    {% if not isCraft32 %}
-                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="error"></span>
+                    {% if settings.craftVersion < '3.2.0' %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
+                    {% endif %}
                 </td>
-                <td>Craft CMS 3.2+ <span class="info">{{ 'Craft 3.2 or higher is required.' }}</span>{% endif %}</td>
+                <td>Craft CMS 3.2+ <span class="info">{{ 'Craft 3.2 or higher is required.' }}</span></td>
             </tr>
             <tr>
                 <td class="thin centeralign">
-                    {% if not isPHP71 %}
-                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="error"></span>
+                    {% if settings.phpVersion < '7.1.0' %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
+                    {% endif %}
                 </td>
-                <td>PHP 7.1+ <span class="info">{{ 'PHP 7.1 or higher is required.' }}</span>{% endif %}</td>
+                <td>PHP 7.1+ <span class="info">{{ 'PHP 7.1 or higher is required.' }}</span></td>
             </tr>
             <tr>
                 <td class="thin centeralign">
-                    {% if not isMultisite %}
-                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="error"></span>
+                    {% if not settings.DOMEnabled %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
                 </td>
-                <td>DOM extension <span class="info">{{ 'The <a href="https://docs.craftcms.com/v3/requirements.html#optional-php-extensions">DOM</a> extension is required.' }}</span>{% endif %}</td>
+                <td>DOM extension <span class="info">{{ 'The PHP <a href="https://docs.craftcms.com/v3/requirements.html#optional-php-extensions">DOM</a> extension is required.' }}</span>{% endif %}</td>
             </tr>
             <tr>
                 <td class="thin centeralign">
-                    {% if not isMultisite %}
-                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="error"></span>
+                    {% if not settings.isMultisite %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
+                    {% endif %}
                 </td>
-                <td>Multisite enabled <span class="info">{{ 'Configure your sites in Settings > Sites' }}</span>{% endif %}</td>
+                <td>Is MultiSite <span class="info">{{ 'Multiple Sites are required. <a href="/admin/settings/sites">Configure your Sites</a>' }}</span></td>
             </tr>
         </tbody>
     </table>
 
-    <h2>{{ "Section Propagation"|t('app') }}</h2>
-    <h2>{{ "Supported Fields"|t('app') }}</h2>
+    <h2>{{ "Section Propagation Methods"|t('app') }}</h2>
+    <table class="data fullwidth" dir="ltr">
+        <tbody>
+            <tr>
+                <th></th>
+                <th class="light">Section Name</th>
+                <th class="light">Propagation Value</th>
+            </tr>
+            {% for section in settings.sections %}
+                <tr>
+                    <td>
+                        {% if section.propagationMethod == 'none' %}
+                            <span class="error" title="{{ 'Error'|t('app') }}" data-icon="alert"></span>
+                        {% elseif section.propagationMethod == 'language' %}
+                            <span class="warning" title="{{ 'Warning'|t('app') }}" data-icon="alert"></span>
+                        {% else %}
+                            <span class="success" title="{{ 'Success'|t('app') }}" data-icon="check"></span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ section.name }}
+                    </td>
+                    <td>
+                        {% switch section.propagationMethod %}
+                            {% case 'none' %}
+                                {{'Only save entries to the site they were created in'|t('app')}}
+                                 <span class="info">Section propagation is required to create translation drafts within this section. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                            {% case 'siteGroup' %}
+                                {{'Save entries to other sites in the same site group'|t('app')}}
+                                <span class="info">With this propagation method, translation drafts can only be created within the same site group. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                            {% case 'language' %}
+                                {{'Save entries to other sites with the same language'|t('app')}}
+                                <span class="info">With this propagation method, translation drafts can only be created for sites with the same language. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                            {% case 'all' %}
+                                {{'Save entries to all sites enabled for this section'|t('app')}}
+                                <span class="info">With this propagation method, translation drafts can be created for all enabled sites. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                        {% endswitch %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>{{ "Field Support"|t('app') }}</h2>
+    <table class="data fullwidth" dir="ltr">
+        <tbody>
+            <tr>
+                <th></th>
+                <th class="light">Field Name</th>
+                <th class="light">Class</th>
+            </tr>
+            {% for field in settings.fields %}
+            <tr>
+                <td class="thin centeralign">
+                    {% if field.isSupported == 'true' %}
+                        <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
+                    {% elseif field.isSupported == 'unrelated' %}
+                        <span class="warning" title="{{ 'Warning'|t('app') }}" data-icon="alert"></span>
+                    {% else %}
+                        <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
+                    {% endif %}
+                </td>
+                <td>
+                    {{field.displayName}}
+                    {% if field.isSupported == 'true' %}
+                        <span class="info">{{ field.class ~ ' is supported for translations' }}</span>
+                    {% elseif field.isSupported == 'unrelated' %}
+                        <span class="info">{{ field.class ~ ' is not usually necessary for translations' }}</span>
+                    {% else %}
+                        <span class="info">{{ field.class ~ ' is not supported for translations' }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {{field.class}}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

@@ -510,19 +510,23 @@
     margin: 0px 0px 0px 0px;
 }
 
-.translations-icon {
-    color: #8f98a3;
+.translations-icon svg {
     display: flex;
-    font-size: 1.2rem;
+    height: auto;
     margin-right: 12px;
+    width: 16px;
+}
+
+.translations-icon svg path {
+    fill: #8f98a3;
 }
 
 .settings-sel {
     background: #fff;
 }
 
-.settings-sel .translations-icon {
-    color: #b9bfc6;
+.settings-sel .translations-icon svg path {
+    fill: #b9bfc6 !important;
 }
 
 .sidebar nav li a.settings-sel {

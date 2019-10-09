@@ -154,21 +154,24 @@ class Translations extends Plugin
             }
         );
 
-        /**
-         * Maybe we can do a plugin walkthrough here?
-         */
-        // Event::on(
-        //     Plugins::class,
-        //     Plugins::EVENT_AFTER_INSTALL_PLUGIN,
-        //     function (PluginEvent $event) {
-        //         Craft::debug(
-        //             'Plugins::EVENT_AFTER_INSTALL_PLUGIN',
-        //             __METHOD__
-        //         );
-        //         if ($event->plugin === $this) {
-        //         }
-        //     }
-        // );
+        Event::on(
+            Plugins::class,
+            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
+            function (PluginEvent $event) {
+                Craft::debug(
+                    'Plugins::EVENT_AFTER_INSTALL_PLUGIN',
+                    __METHOD__
+                );
+                if ($event->plugin === $this) {
+                    $request = Craft::$app->getRequest();
+                    if ($request->isCpRequest) {
+                        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl(
+                            'translations/settings'
+                        ))->send();
+                    }
+                }
+            }
+        );
 
         Craft::info(
             Craft::t(
@@ -312,6 +315,8 @@ class Translations extends Plugin
                     'translations/orders/exportfile' => 'translations/files/export-file',
                     'translations/orders/importfile' => 'translations/files/import-file',
                     'translations/settings' => 'translations/settings/index',
+                    'translations/settings/translations-check' => 'translations/settings/translations-check',
+                    'translations/settings/send-logs' => 'translations/settings/send-logs',
                 ]);
             }
         );
@@ -475,8 +480,10 @@ class Translations extends Plugin
                 if ($currentFile) {
                     $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
-                    $order->logActivity(Translations::$plugin->translator->translate('app', 'Draft '. $event->element->draftId .' deleted.'));
-                    Translations::$plugin->orderRepository->saveOrder($order);
+                    if ($order) {
+                        $order->logActivity(Translations::$plugin->translator->translate('app', 'Draft '. $event->element->draftId .' deleted.'));
+                        Translations::$plugin->orderRepository->saveOrder($order);
+                    }
 
                     $currentFile->status = 'canceled';
 
