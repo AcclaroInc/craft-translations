@@ -165,6 +165,10 @@ class WidgetController extends Controller
 
         $view->registerJs($allWidgetJs);
         $variables['licenseStatus'] = Craft::$app->plugins->getPluginLicenseKeyStatus('translations');
+        $variables['baseAssetsUrl'] = Craft::$app->assetManager->getPublishedUrl(
+            '@acclaro/translations/assetbundles/src',
+            true
+        );
         $variables['widgetTypes'] = $widgetTypeInfo;
         $variables['selectedSubnavItem'] = 'dashboard';
         $variables['isSelectableWidget'] = $isSelectableWidget;
