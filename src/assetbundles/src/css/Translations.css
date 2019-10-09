@@ -374,7 +374,7 @@
     padding-right: 20px;
 }
 
-.disabled{
+.translations .disabled{
     background: #000 !important;
     color: #fff !important;
     cursor: initial;
