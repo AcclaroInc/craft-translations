@@ -85,8 +85,6 @@ class TranslationRepository
             $record->setAttributes($new_translation, false);
         }
 
-        $record->setAttributes($translation->getAttributes(), false);
-
         if (!$record->validate()) {
             $translation->addErrors($record->getErrors());
 

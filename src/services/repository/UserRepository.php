@@ -22,4 +22,16 @@ class UserRepository
     {
         return User::find()->id($id)->one();
     }
+
+    public function userHasAccess($permission) {
+
+        $currentUser = Craft::$app->getUser()->getIdentity();
+        if (!$currentUser->can($permission)) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+
+            return false;
+        }
+
+        return true;
+    }
 }

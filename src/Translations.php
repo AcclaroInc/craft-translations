@@ -12,6 +12,8 @@ namespace acclaro\translations;
 
 use Craft;
 use craft\db\Table;
+use craft\events\RegisterUserPermissionsEvent;
+use craft\services\UserPermissions;
 use yii\base\Event;
 use craft\base\Plugin;
 use craft\web\UrlManager;
@@ -217,7 +219,7 @@ class Translations extends Plugin
     {
         $subNavs = [];
         $navItem = parent::getCpNavItem();
-        
+
         $subNavs['dashboard'] = [
             'label' => 'Dashboard',
             'url' => 'translations',
@@ -296,6 +298,12 @@ class Translations extends Plugin
                     $event->types[] = Order::class;
                 }
             );
+
+            $request = Craft::$app->getRequest();
+            // Install only for non-console Control Panel requests
+            if ($request->getIsCpRequest() && !$request->getIsConsoleRequest()) {
+                $this->installCpEventListeners();
+            }
         }
     }
 
@@ -508,5 +516,69 @@ class Translations extends Plugin
         if (Craft::$app->getRequest()->getParam('hardDelete')) {
             $event->hardDelete = true;
         }
+    }
+
+    /**
+     * Install site event listeners for Control Panel requests only
+     */
+    protected function installCpEventListeners()
+    {
+        // Handler: UserPermissions::EVENT_REGISTER_PERMISSIONS
+        Event::on(
+            UserPermissions::class,
+            UserPermissions::EVENT_REGISTER_PERMISSIONS,
+            function (RegisterUserPermissionsEvent $event) {
+                Craft::debug(
+                    'UserPermissions::EVENT_REGISTER_PERMISSIONS',
+                    __METHOD__
+                );
+                // Register our custom permissions
+                $event->permissions[Craft::t('translations', 'Translations')] = $this->customAdminCpPermissions();
+            }
+        );
+    }
+
+    /**
+     * Returns the custom Control Panel user permissions.
+     *
+     * @return array
+     */
+    protected function customAdminCpPermissions(): array
+    {
+        // The script meta containers for the global meta bundle
+
+        return [
+            'translations:translator' => [
+                'label' => Craft::t('translations', 'Translators'),
+                'nested' => [
+                    'translations:translator:create' => [
+                        'label' => Craft::t('translations', 'Create'),
+                    ],
+                    'translations:translator:edit' => [
+                        'label' => Craft::t('translations', 'Edit'),
+                    ],
+                    'translations:translator:delete' => [
+                        'label' => Craft::t('translations', 'Delete'),
+                    ]
+                ]
+            ],
+            'translations:orders' => [
+                'label' => Craft::t('translations', 'Orders'),
+                'nested' => [
+                    'translations:orders:create' => [
+                        'label' => Craft::t('translations', 'Create'),
+                    ],
+                    'translations:orders:import' => [
+                        'label' => Craft::t('translations', 'Import/Sync'),
+                    ],
+                    'translations:orders:apply-translations' => [
+                        'label' => Craft::t('translations', 'Apply Translations'),
+                    ]
+                ]
+            ],
+            'translations:settings' => [
+                'label' => Craft::t('translations', 'Settings'),
+            ]
+        ];
     }
 }

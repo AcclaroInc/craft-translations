@@ -158,8 +158,13 @@ class FilesController extends Controller
     public function actionImportFile()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:apply-translations')) {
+            return;
+        }
 
         //Track error and success messages.
         $message = "";

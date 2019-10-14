@@ -394,7 +394,13 @@ class BaseController extends Controller
         if (empty($variables['inputSourceSite'])) {
             $variables['inputSourceSite'] = Craft::$app->getRequest()->getParam('sourceSite');
         }
-        
+
+        if (!empty($variables['inputSourceSite'])) {
+            if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:create')) {
+                throw new HttpException(400, Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            }
+        }
+
         $variables['translatorId'] = isset($variables['order']) ? $variables['order']['translatorId'] : null;
 
         $variables['selectedSubnavItem'] = 'orders';
@@ -625,6 +631,10 @@ class BaseController extends Controller
 
     public function actionApplyDrafts()
     {
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:apply-translations')) {
+            return;
+        }
+
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 
         $elementIds = Craft::$app->getRequest()->getParam('elements');
@@ -653,8 +663,11 @@ class BaseController extends Controller
     public function actionDeleteTranslator()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:delete')) {
+            return;
+        }
 
         $translatorId = Craft::$app->getRequest()->getBodyParam('translatorId');
 
@@ -685,12 +698,16 @@ class BaseController extends Controller
     public function actionSaveTranslator()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
 
         $translatorId = Craft::$app->getRequest()->getBodyParam('id');
 
         if ($translatorId) {
+
+            if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:edit')) {
+                return;
+            }
+
             $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
 
             if (!$translator) {
@@ -699,6 +716,9 @@ class BaseController extends Controller
                 return;
             }
         } else {
+            if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:create')) {
+                return;
+            }
             $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
         }
 
@@ -732,8 +752,14 @@ class BaseController extends Controller
     public function actionSaveOrder()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if (!$currentUser->can('translations:orders:create')) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            return;
+        }
 
         $orderId = Craft::$app->getRequest()->getParam('id');
 
@@ -1031,6 +1057,14 @@ class BaseController extends Controller
     
     public function actionSyncOrders()
     {
+
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if (!$currentUser->can('translations:orders:import')) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            return;
+        }
+
         $orders = Translations::$plugin->orderRepository->getInProgressOrders();
         $job = '';
         $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
