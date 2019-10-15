@@ -353,6 +353,8 @@ class BaseController extends Controller
 
         $variables['orderCount'] = Translations::$plugin->orderRepository->getOrdersCount();
 
+        $variables['orderCountAcclaro'] = Translations::$plugin->orderRepository->getAcclaroOrdersCount();
+
         $variables['selectedSubnavItem'] = 'orders';
 
         $this->renderTemplate('translations/orders/_index', $variables);

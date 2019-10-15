@@ -41,11 +41,16 @@
         </table>
         <div class="buttons right" style="margin-top:14px;">
 
+            {% set disabled = '' %}
+            {% if (orderCountAcclaro == 0) %}
+                {% set disabled = 'disabled' %}
+            {% endif %}
+
             <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
                 <input type="hidden" name="action" value="translations/base/sync-orders">
                 {{ csrfInput() }}
                 <div class="btngroup" style="margin-right:5px;">
-                    <input type="submit" class="btn submit" value="{{ "Sync Orders"|t('app') }}" />
+                    <input type="submit" class="btn submit {{ disabled }}" value="{{ "Sync Orders"|t('app') }}" {{ disabled }} />
                 </div>
                 <div class="sync-status"></div>
             </form>

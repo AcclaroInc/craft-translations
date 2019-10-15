@@ -206,4 +206,20 @@ class TranslatorRepository
             throw $e;
         }
     }
+
+    /**
+     * @return array id => label
+     */
+    public function getAcclaroApiTranslators()
+    {
+        $translators = array();
+
+        foreach ($this->getActiveTranslators() as $translator) {
+            if ($translator->service == 'acclaro') {
+                $translators[] = $translator->id;
+            }
+        }
+
+        return $translators;
+    }
 }
