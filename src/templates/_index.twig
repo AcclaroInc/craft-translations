@@ -57,10 +57,12 @@
 
 {% block content %}
 
-    <div class="item"  style="top: 388px; padding-bottom: 10px;">
+    <div class="item" id="trial-notice" style="padding-bottom: 10px;">
         <div data-title="Notice" style="">
             <div class="front" style="position: relative;">
-                <div class="pane last">
+                <div class="pane">
+
+                    <a class="right icon delete close-notice" title="Close" style="margin-top: -1%; padding-left: 1%"></a>
 
                     {% set plugin = craft.app.plugins.getPlugin('translations', false) %}
 
@@ -77,19 +79,27 @@
 
                             <span style="padding: 0 2%"> | </span>
                             <span style="">
-                                <a href="https://www.surveymonkey.com/r/translationsplugin">
-                                    <img src="{{ baseAssetsUrl ~ '/img/feedback-craft-blue.svg' }}" height="25px" style="vertical-align: middle"/> {{ 'Submit Feedback'|t('app') }}
-                                </a>
-                                <a href="mailto:support@acclaro.com " style="padding: 0 2%">
-                                    <img src="{{ baseAssetsUrl ~ '/img/translations-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/> {{ 'Get Translations'|t('app') }}
-                                </a>
-                                {% if licenseStatus == 'valid' %}
-                                    <a href="https://info.acclaro.com/translation-plugin-for-craft3-support-info">
+                                <div class="link">
+                                    <a href="https://www.surveymonkey.com/r/translationsplugin">
+                                        <img src="{{ baseAssetsUrl ~ '/img/feedback-craft-blue.svg' }}" height="25px" style="vertical-align: middle"/> {{ 'Submit Feedback'|t('app') }}
+                                    </a>
+                                </div>
+
+                                <div class="link">
+                                    <a href="mailto:support@acclaro.com " style="">
+                                        <img src="{{ baseAssetsUrl ~ '/img/translations-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/> {{ 'Get Translations'|t('app') }}
+                                    </a>
+                                </div>
+
+                                <div class="link">
+                                    {% if licenseStatus == 'valid' %}
+                                        <a href="https://info.acclaro.com/translation-plugin-for-craft3-support-info">
                                          <img src="{{ baseAssetsUrl ~ '/img/upgrade-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/>  {{ 'Purchase Premium Support'|t('app') }}  </a>
                                 {% else %}
-                                    <a href="https://plugins.craftcms.com/translations">
+                                        <a href="https://plugins.craftcms.com/translations">
                                         <img src="{{ baseAssetsUrl ~ '/img/upgrade-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/> {{ 'Upgrade to Paid'|t('app') }}  </a>
-                                {% endif %}
+                                    {% endif %}
+                                </div>
                             </span>
                         </td>
                     </div>

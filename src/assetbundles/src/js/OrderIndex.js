@@ -47,6 +47,10 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
             }
         });
 
+        $(document).on("click", ".close-notice", function() {
+            $("#trial-notice").fadeOut();
+        })
+
         $(document).on("click", ".translations-restore-order", function() {
             var $button = $(this);
 

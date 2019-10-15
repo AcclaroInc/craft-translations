@@ -533,3 +533,8 @@
     background: #737f8c !important;
     color: #fff !important;
 }
+
+#trial-notice .link {
+    display: inline-block;
+    padding: 0 10px ;
+}
