@@ -162,7 +162,7 @@ class FilesController extends Controller
 
         $currentUser = Craft::$app->getUser()->getIdentity();
 
-        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:apply-translations')) {
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:import')) {
             return;
         }
 
