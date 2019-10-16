@@ -173,7 +173,7 @@ class AcclaroApiClient
             'name' => $name,
             'comments' => $comments,
             'duedate' => $dueDate,
-            'clientref' => $craftOrderId,
+            // 'clientref' => $craftOrderId,
             'delivery' => 'none',
             'estwordcount' => $wordCount,
         ));
@@ -232,7 +232,7 @@ class AcclaroApiClient
             'orderid' => $orderId,
             'sourcelang' => $sourceSite,
             'targetlang' => $targetSite,
-            'clientref' => $craftOrderId,
+            // 'clientref' => $craftOrderId,
         ), array(
             'file' => $sourceFile,
         ));
