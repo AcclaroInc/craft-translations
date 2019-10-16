@@ -219,23 +219,33 @@ class Translations extends Plugin
     {
         $subNavs = [];
         $navItem = parent::getCpNavItem();
+        $currentUser = Craft::$app->getUser()->getIdentity();
 
-        $subNavs['dashboard'] = [
-            'label' => 'Dashboard',
-            'url' => 'translations',
-        ];
-        $subNavs['orders'] = [
-            'label' => 'Orders',
-            'url' => 'translations/orders',
-        ];
-        $subNavs['translators'] = [
-            'label' => 'Translators',
-            'url' => 'translations/translators',
-        ];
-        $subNavs['settings'] = [
-            'label' => 'Settings',
-            'url' => 'settings/plugins/translations',
-        ];
+        if ($currentUser->can('translations:dashboard')) {
+            $subNavs['dashboard'] = [
+                'label' => 'Dashboard',
+                'url' => 'translations',
+            ];
+        }
+        if ($currentUser->can('translations:orders')) {
+            $subNavs['orders'] = [
+                'label' => 'Orders',
+                'url' => 'translations/orders',
+            ];
+        }
+        if ($currentUser->can('translations:translator')) {
+            $subNavs['translators'] = [
+                'label' => 'Translators',
+                'url' => 'translations/translators',
+            ];
+        }
+
+        if ($currentUser->can('translations:settings')) {
+            $subNavs['settings'] = [
+                'label' => 'Settings',
+                'url' => 'translations/settings',
+            ];
+        }
 
         $navItem = array_merge($navItem, [
             'subnav' => $subNavs,
@@ -548,28 +558,37 @@ class Translations extends Plugin
         // The script meta containers for the global meta bundle
 
         return [
+            'translations:dashboard' => [
+                'label' => Craft::t('translations', 'View Dashboard'),
+            ],
             'translations:translator' => [
-                'label' => Craft::t('translations', 'Translators'),
+                'label' => Craft::t('translations', 'View Translators'),
                 'nested' => [
                     'translations:translator:create' => [
-                        'label' => Craft::t('translations', 'Create'),
+                        'label' => Craft::t('translations', 'Create Translators'),
                     ],
                     'translations:translator:edit' => [
-                        'label' => Craft::t('translations', 'Edit'),
+                        'label' => Craft::t('translations', 'Edit Translators'),
                     ],
                     'translations:translator:delete' => [
-                        'label' => Craft::t('translations', 'Delete'),
+                        'label' => Craft::t('translations', 'Delete Translators'),
                     ]
                 ]
             ],
             'translations:orders' => [
-                'label' => Craft::t('translations', 'Orders'),
+                'label' => Craft::t('translations', 'View Orders'),
                 'nested' => [
                     'translations:orders:create' => [
-                        'label' => Craft::t('translations', 'Create'),
+                        'label' => Craft::t('translations', 'Create Orders'),
+                    ],
+                    'translations:orders:edit' => [
+                        'label' => Craft::t('translations', 'Edit Orders'),
+                    ],
+                    'translations:orders:delete' => [
+                        'label' => Craft::t('translations', 'Delete Orders'),
                     ],
                     'translations:orders:import' => [
-                        'label' => Craft::t('translations', 'Import/Sync'),
+                        'label' => Craft::t('translations', 'Import/Sync Orders'),
                     ],
                     'translations:orders:apply-translations' => [
                         'label' => Craft::t('translations', 'Apply Translations'),
@@ -577,7 +596,7 @@ class Translations extends Plugin
                 ]
             ],
             'translations:settings' => [
-                'label' => Craft::t('translations', 'Settings'),
+                'label' => Craft::t('translations', 'Access Settings'),
             ]
         ];
     }

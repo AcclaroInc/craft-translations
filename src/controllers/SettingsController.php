@@ -34,11 +34,7 @@ class SettingsController extends Controller
      */
     public function actionIndex()
     {
-        $variables = array();
-
-        $variables['test'] = 'test';
-
-        $this->renderTemplate('translations/settings/index', $variables);
+        $this->renderTemplate('translations/settings/index');
     }
     
     /**
@@ -46,6 +42,11 @@ class SettingsController extends Controller
      */
     public function actionTranslationsCheck()
     {
+        $this->requireLogin();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
+            return $this->redirect('translations', 302, true);
+        }
+
         $variables = array();
         $supportedFieldTypes = [
             'craft\fields\Tags',
@@ -113,6 +114,11 @@ class SettingsController extends Controller
      */
     public function actionSendLogs()
     {
+        $this->requireLogin();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
+            return $this->redirect('translations', 302, true);
+        }
+
         $variables['settings'] = [];
 
         $variables['settings']['craftVersion'] = Craft::$app->getVersion();
@@ -132,7 +138,9 @@ class SettingsController extends Controller
     public function actionDeleteAllOrders()
     {
         $this->requireLogin();
-        $this->requireAdmin();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
+            return $this->redirect('translations', 302, true);
+        }
 
         $orders = Order::find()->ids();
 
@@ -155,13 +163,14 @@ class SettingsController extends Controller
             }
         }
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translation orders deleted'));
     }
 
     public function actionDownloadLogs()
     {
         $this->requireLogin();
-        $this->requireAdmin();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
+            return $this->redirect('translations', 302, true);
+        }
 
         $zipName = 'logs';
         $zipDest = Craft::$app->path->getTempPath().'/'. $zipName .'_'.time().'.zip';

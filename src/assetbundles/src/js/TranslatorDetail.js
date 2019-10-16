@@ -105,8 +105,12 @@ Craft.Translations.TranslatorDetail = {
             },
             function(data) {
                 if (data.success) {
-                    $('#status').val('active');
-                    Craft.cp.displayNotice(Craft.t('app', 'You are now authenticated!'));
+                    if (!data.error) {
+                        $('#status').val('active');
+                        Craft.cp.displayNotice(Craft.t('app', 'You are now authenticated!'));
+                    } else {
+                        Craft.cp.displayError(Craft.t('app', data.error));
+                    }
                 } else {
                     $('#status').val('inactive');
                     Craft.cp.displayError(Craft.t('app', 'Invalid API token.'));
