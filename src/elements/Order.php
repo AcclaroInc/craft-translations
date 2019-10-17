@@ -150,7 +150,7 @@ class Order extends Element
                 'key' => 'all',
                 'label' => Translations::$plugin->translator->translate('app', 'All Orders'),
                 'criteria' => [],
-                'defaultSort' => ['postDate', 'desc']
+                'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
                 'key' => 'in-progress',
@@ -160,7 +160,7 @@ class Order extends Element
                         'new', 'in progress', 'in preparation', 'getting quote', 'needs approval', 'complete'
                     ]
                 ],
-                'defaultSort' => ['postDate', 'desc']
+                'defaultSort' => ['dateOrdered', 'desc']
             ]
         ];
 

@@ -597,6 +597,11 @@ class Translations extends Plugin
             ],
             'translations:settings' => [
                 'label' => Craft::t('translations', 'Access Settings'),
+                'nested' => [
+                    'translations:settings:clear-orders' => [
+                        'label' => Craft::t('translations', 'Clear Orders'),
+                    ],
+                ]
             ]
         ];
     }

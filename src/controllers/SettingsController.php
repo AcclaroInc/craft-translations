@@ -138,31 +138,36 @@ class SettingsController extends Controller
     public function actionDeleteAllOrders()
     {
         $this->requireLogin();
-        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
-            return $this->redirect('translations', 302, true);
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings:clear-orders')) {
+            return;
         }
 
         $orders = Order::find()->ids();
 
-        foreach ($orders as $key => $orderId) {
-            $order = Translations::$plugin->orderRepository->getOrderById($orderId);
-    
-            if ($order) {
-                $drafts = [];
-                foreach ($order->getFiles() as $file) {
-                    $drafts[] = $file->draftId;
+        try {
+            foreach ($orders as $key => $orderId) {
+                $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        
+                if ($order) {
+                    $drafts = [];
+                    foreach ($order->getFiles() as $file) {
+                        $drafts[] = $file->draftId;
+                    }
+                    if ($drafts) {
+                        Craft::$app->queue->push(new DeleteDrafts([
+                            'description' => 'Deleting Translation Drafts',
+                            'drafts' => $drafts,
+                        ]));
+                    }
+        
+                    Craft::$app->getElements()->deleteElementById($orderId);
                 }
-                if ($drafts) {
-                    Craft::$app->queue->push(new DeleteDrafts([
-                        'description' => 'Deleting Translation Drafts',
-                        'drafts' => $drafts,
-                    ]));
-                }
-    
-                Craft::$app->getElements()->deleteElementById($orderId);
             }
-        }
 
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Orders cleared.'));
+        } catch (\Throwable $th) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to clear orders.'));
+        }
     }
 
     public function actionDownloadLogs()

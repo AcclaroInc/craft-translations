@@ -961,12 +961,16 @@ class BaseController extends Controller
         }
 
         if ($job) {
-            $params = [
-                'id' => (int) $job,
-                'notice' => 'Done creating translation drafts',
-                'url' => $order->getTranslator()->service !== 'export_import' ? 'translations/orders' : 'translations/orders/detail/'. $order->id
-            ];
-            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            if ($order->getTranslator()->service == 'export_import') {
+                $params = [
+                    'id' => (int) $job,
+                    'notice' => 'Done creating translation drafts',
+                    'url' => 'translations/orders/detail/'. $order->id
+                ];
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            } else {
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Sending order to Acclaro, please refresh your Orders once complete'));
+            }
         } else {
             $this->redirect('translations/orders', 302, true);
         }
