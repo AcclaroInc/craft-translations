@@ -66,6 +66,8 @@ class Order extends Element
     public $activityLog;
     
     public $dateOrdered;
+
+    public $dateUpdated;
     
     public $serviceOrderId;
     
@@ -148,7 +150,7 @@ class Order extends Element
                 'key' => 'all',
                 'label' => Translations::$plugin->translator->translate('app', 'All Orders'),
                 'criteria' => [],
-                'defaultSort' => ['postDate', 'desc']
+                'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
                 'key' => 'in-progress',
@@ -158,7 +160,7 @@ class Order extends Element
                         'new', 'in progress', 'in preparation', 'getting quote', 'needs approval', 'complete'
                     ]
                 ],
-                'defaultSort' => ['postDate', 'desc']
+                'defaultSort' => ['dateOrdered', 'desc']
             ]
         ];
 
@@ -177,6 +179,7 @@ class Order extends Element
             'targetSites' => Craft::t('app', 'Sites'),
             'status' => Craft::t('app', 'Status'),
             'dateOrdered' => Craft::t('app', 'Created'),
+            'dateUpdated' => Craft::t('app', 'Updated'),
         ];
     }
 
@@ -246,7 +249,7 @@ class Order extends Element
                     return '<span class="status orange"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Ready to update':
                     return '<span class="status blue"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Canceled':
+                case 'Cancelled':
                     return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Updated':
                     return '<span class="status green"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
@@ -255,6 +258,9 @@ class Order extends Element
             case 'requestedDueDate':
             case 'dateOrdered':
                 return $value ? date('n/j/y', strtotime($value)) : '--';
+
+            case 'dateUpdated':
+                return $value ? date('n/j/y', strtotime($value->format('Y-m-d H:i:s'))) : '--';
 
             case 'actionButton':
 
@@ -297,6 +303,7 @@ class Order extends Element
             'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
             'status' => ['label' => Translations::$plugin->translator->translate('app', 'Status')],
             'dateOrdered' => ['label' => Translations::$plugin->translator->translate('app', 'Created')],
+            'dateUpdated' => ['label' => Translations::$plugin->translator->translate('app', 'Updated')],
             'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
         ];
 
@@ -420,7 +427,7 @@ class Order extends Element
             case 'complete':
                 return 'Ready to update';
             case 'canceled':
-                return 'Canceled';
+                return 'Cancelled';
             case 'published':
                 return 'Updated';
             case 'failed':

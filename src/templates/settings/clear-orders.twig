@@ -1,0 +1,26 @@
+{% extends "translations/_layouts/settings" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'Clear Orders'|t %}
+{% block actionButton %}
+<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+{% endblock %}
+
+{% block content %}
+<form id="delete-all-orders" class="utility" method="post" accept-charset="UTF-8">
+    {{ csrfInput() }}
+    {{ forms.hidden({
+        name: 'action',
+        value: 'translations/settings/delete-all-orders',
+    }) }}
+
+    <div class="readable">
+        <h3>{{ 'Need a fresh start?'|t('app') }}</h3>
+        {{ 'Clear all translation orders.'|t('app') }}
+    </div>
+    <div class="buttons">
+        <input type="submit" class="formsubmit btn submit" data-redirect="{{ '/admin/translations/settings/clear-orders' }}" value="{{ "Clear orders"|t('app') }}" />&nbsp;&nbsp;
+        <span class="warning" title="{{ 'Warning'|t('app') }}" data-icon="alert">{{' This action cannot be undone'}}</span>
+    </div>
+</form>
+{% endblock %}

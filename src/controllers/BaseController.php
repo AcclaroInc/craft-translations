@@ -43,11 +43,6 @@ class BaseController extends Controller
     protected $allowAnonymous = true;
     
     /**
-     * @var array
-     */
-    protected $adminTabs;
-
-    /**
      * @var int
      */
     protected $pluginVersion;
@@ -61,25 +56,6 @@ class BaseController extends Controller
     ) {
         parent::__construct($id, $module);
 
-        $this->adminTabs = array(
-            'dashboard' => array(
-                'label' => Translations::$plugin->translator->translate('app', 'Dashboard'),
-                'url' => Translations::$plugin->urlGenerator->generateCpUrl('translations'),
-            ),
-            'orders' => array(
-                'label' => Translations::$plugin->translator->translate('app', 'Orders'),
-                'url' => Translations::$plugin->urlGenerator->generateCpUrl('translations/orders'),
-            ),
-            'translators' => array(
-                'label' => Translations::$plugin->translator->translate('app', 'Translators'),
-                'url' => Translations::$plugin->urlGenerator->generateCpUrl('translations/translators'),
-            ),
-            'about' => array(
-                'label' => Translations::$plugin->translator->translate('app', 'About'),
-                'url' => Translations::$plugin->urlGenerator->generateCpUrl('translations/about'),
-            ),
-        );
-        
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin('translations')->getVersion();
     }
 
@@ -214,8 +190,14 @@ class BaseController extends Controller
     public function actionAuthenticateTranslationService()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+        $currentUser = Craft::$app->getUser()->getIdentity();
+        if (!$currentUser->can('translations:translator:edit')) {
+            return $this->asJson([
+                'success' => true,
+                'error' => Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action')
+            ]);
+        }
 
         $service = Craft::$app->getRequest()->getRequiredParam('service');
         $settings = Craft::$app->getRequest()->getRequiredParam('settings');
@@ -270,8 +252,10 @@ class BaseController extends Controller
     public function actionAddElementsToOrder()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:create')) {
+            return;
+        }
 
         $orderId = Craft::$app->getRequest()->getParam('id');
         
@@ -369,13 +353,15 @@ class BaseController extends Controller
     {
         $variables = array();
 
-        $variables['adminTabs'] = $this->adminTabs;
-
         $variables['pluginVersion'] = $this->pluginVersion;
         
         $variables['searchParams'] = Translations::$plugin->orderSearchParams->getParams();
 
         $variables['translators'] = Translations::$plugin->translatorRepository->getActiveTranslators();
+
+        $variables['orderCount'] = Translations::$plugin->orderRepository->getOrdersCount();
+
+        $variables['orderCountAcclaro'] = Translations::$plugin->orderRepository->getAcclaroOrdersCount();
 
         $variables['selectedSubnavItem'] = 'orders';
 
@@ -389,40 +375,15 @@ class BaseController extends Controller
     {
         $variables = array();
 
-        $variables['adminTabs'] = $this->adminTabs;
-
         $variables['pluginVersion'] = $this->pluginVersion;
 
         $variables['translators'] = Translations::$plugin->translatorRepository->getTranslators();
 
         $variables['translatorTargetSites'] = array();
-        foreach ($variables['translators'] as $key => $translator) {
-            foreach (json_decode($translator->sites) as $key => $site) {
-                $variables['translatorTargetSites'][$site] = Craft::$app->getSites()->getSiteById($site);
-            }
-        }
 
         $variables['selectedSubnavItem'] = 'translators';
         
         $this->renderTemplate('translations/translators/_index', $variables);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function actionAboutIndex()
-    {
-        $variables = array();
-
-        $variables['adminTabs'] = $this->adminTabs;
-
-        $variables['pluginVersion'] = $this->pluginVersion;
-
-        $variables['translators'] = Translations::$plugin->translatorRepository->getTranslators();
-
-        $variables['selectedSubnavItem'] = 'about';
-        
-        $this->renderTemplate('translations/_about', $variables);
     }
 
     // Detail Page Methods
@@ -434,8 +395,6 @@ class BaseController extends Controller
 
         $variables['orderSubmitted'] = Craft::$app->getRequest()->getParam('submit') ? Craft::$app->getRequest()->getParam('submit') : null;
 
-        $variables['adminTabs'] = $this->adminTabs;
-
         $variables['pluginVersion'] = $this->pluginVersion;
 
         $variables['orderId'] = isset($variables['orderId']) ? $variables['orderId'] : null;
@@ -445,7 +404,13 @@ class BaseController extends Controller
         if (empty($variables['inputSourceSite'])) {
             $variables['inputSourceSite'] = Craft::$app->getRequest()->getParam('sourceSite');
         }
-        
+
+        if (!empty($variables['inputSourceSite'])) {
+            if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:create')) {
+                return $this->redirect('entries', 302, true);
+            }
+        }
+
         $variables['translatorId'] = isset($variables['order']) ? $variables['order']['translatorId'] : null;
 
         $variables['selectedSubnavItem'] = 'orders';
@@ -639,8 +604,6 @@ class BaseController extends Controller
     {   
         $variables = Craft::$app->getRequest()->resolve()[1];
         
-        $variables['adminTabs'] = $this->adminTabs;
-
         $variables['pluginVersion'] = $this->pluginVersion;
 
         $variables['translatorId'] = isset($variables['translatorId']) ? $variables['translatorId'] : null;
@@ -678,6 +641,10 @@ class BaseController extends Controller
 
     public function actionApplyDrafts()
     {
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:apply-translations')) {
+            return;
+        }
+
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 
         $elementIds = Craft::$app->getRequest()->getParam('elements');
@@ -706,8 +673,11 @@ class BaseController extends Controller
     public function actionDeleteTranslator()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:delete')) {
+            return;
+        }
 
         $translatorId = Craft::$app->getRequest()->getBodyParam('translatorId');
 
@@ -738,12 +708,16 @@ class BaseController extends Controller
     public function actionSaveTranslator()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
 
         $translatorId = Craft::$app->getRequest()->getBodyParam('id');
 
         if ($translatorId) {
+
+            if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:edit')) {
+                return;
+            }
+
             $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
 
             if (!$translator) {
@@ -752,13 +726,10 @@ class BaseController extends Controller
                 return;
             }
         } else {
+            if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:create')) {
+                return;
+            }
             $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
-        }
-
-        $sites = Craft::$app->getRequest()->getBodyParam('sites');
-
-        if ($sites === '*') {
-            $sites = Craft::$app->getSites()->getAllSiteIds();
         }
 
         $service = Craft::$app->getRequest()->getBodyParam('service');
@@ -769,7 +740,6 @@ class BaseController extends Controller
 
         $translator->label = Craft::$app->getRequest()->getBodyParam('label');
         $translator->service = $service;
-        $translator->sites = $sites ? json_encode($sites) : null;
         $translator->settings = json_encode($settings);
         $translator->status = Craft::$app->getRequest()->getBodyParam('status');
 
@@ -792,8 +762,14 @@ class BaseController extends Controller
     public function actionSaveOrder()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if (!$currentUser->can('translations:orders:create')) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            return;
+        }
 
         $orderId = Craft::$app->getRequest()->getParam('id');
 
@@ -985,12 +961,16 @@ class BaseController extends Controller
         }
 
         if ($job) {
-            $params = [
-                'id' => (int) $job,
-                'notice' => 'Done creating translation drafts',
-                'url' => $order->getTranslator()->service !== 'export_import' ? 'translations/orders' : 'translations/orders/detail/'. $order->id
-            ];
-            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            if ($order->getTranslator()->service == 'export_import') {
+                $params = [
+                    'id' => (int) $job,
+                    'notice' => 'Done creating translation drafts',
+                    'url' => 'translations/orders/detail/'. $order->id
+                ];
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            } else {
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Sending order to Acclaro, please refresh your Orders once complete'));
+            }
         } else {
             $this->redirect('translations/orders', 302, true);
         }
@@ -999,8 +979,14 @@ class BaseController extends Controller
     public function actionDeleteOrder()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+        $currentUser = Craft::$app->getUser()->getIdentity();
+        if (!$currentUser->can('translations:orders:delete')) {
+            return $this->asJson([
+                'success' => false,
+                'error' => Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action')
+            ]);
+        }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
         $hardDelete = Craft::$app->getRequest()->getParam('hardDelete');
@@ -1063,8 +1049,10 @@ class BaseController extends Controller
     public function actionSyncOrder()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:import')) {
+            return $this->redirect('translations', 302, true);
+        }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 
@@ -1091,8 +1079,17 @@ class BaseController extends Controller
     
     public function actionSyncOrders()
     {
-        $orders = Translations::$plugin->orderRepository->getInProgressOrders();
 
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if (!$currentUser->can('translations:orders:import')) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            return;
+        }
+
+        $orders = Translations::$plugin->orderRepository->getInProgressOrders();
+        $job = '';
+        $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
         foreach ($orders as $order) {
             // Don't update manual orders
             if ($order->translator->service === 'export_import') {
@@ -1109,19 +1106,21 @@ class BaseController extends Controller
             $params = [
                 'id' => (int) $job,
                 'notice' => 'Done syncing orders',
-                'url' => 'translations/orders'
+                'url' => $url
             ];
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
         } else {
-            $this->redirect('translations/orders', 302, true);
+            $this->redirect($url, 302, true);
         }
     }
 
     public function actionEditOrderName()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:edit')) {
+            return $this->redirect('translations', 302, true);
+        }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
         $name = Craft::$app->getRequest()->getParam('order_name');
@@ -1155,8 +1154,10 @@ class BaseController extends Controller
     public function actionRegeneratePreviewUrls()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:edit')) {
+            return $this->redirect('translations', 302, true);
+        }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 

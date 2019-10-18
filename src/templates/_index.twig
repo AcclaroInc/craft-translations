@@ -45,7 +45,7 @@
     {% set showSiteMenu = elementInstance.isLocalized() %}
 {% endif %}
 
-{% do view.registerJsFile("https://cdn.jsdelivr.net/npm/apexcharts") %}
+{# {% do view.registerJsFile("https://cdn.jsdelivr.net/npm/apexcharts") %} #}
 
 {% js "$('#content').css({'background': 'none'});" %}
 
@@ -56,6 +56,60 @@
 {% endblock %}
 
 {% block content %}
+
+    <div class="item" id="trial-notice" style="padding-bottom: 10px;">
+        <div data-title="Notice" style="">
+            <div class="front" style="position: relative;">
+                <div class="pane">
+
+                    <a class="right icon delete close-notice" title="Close" style="margin-top: -1%; padding-left: 1%"></a>
+
+                    {% set plugin = craft.app.plugins.getPlugin('translations', false) %}
+
+                    <div class="body" style="text-align: center">
+                        <td style="text-align:center;">
+                            <span>
+                                {% if licenseStatus == 'valid' %}
+                                    You are currently using a <span style="font-weight: bold; text-transform: uppercase">Paid</span> version of the Translations plugin for Craft.
+                                {% else %}
+                                    You are currently using a <span style="font-weight: bold; text-transform: uppercase">Free Trial</span> version of the Translations plugin for Craft.
+                                {% endif %}
+
+                            </span>
+
+                            <span style="padding: 0 2%"> | </span>
+                            <span style="">
+                                <div class="link">
+                                    <a href="https://www.surveymonkey.com/r/translationsplugin">
+                                        <img src="{{ baseAssetsUrl ~ '/img/feedback-craft-blue.svg' }}" height="25px" style="vertical-align: middle"/> {{ 'Submit Feedback'|t('app') }}
+                                    </a>
+                                </div>
+
+                                <div class="link">
+                                    {% set subject = 'Hello Acclaro' %}
+                                    {% set body = 'I’m interested in learning more about your professional translation services and how you can help with the launch of global Craft sites.%0D%0A%0D%0AThank you,%0D%0AYour Name%0D%0AYour Company%0D%0AYour Phone Number' %}
+                                    <a href="mailto:support@acclaro.com?subject={{subject}}&body={{body}}" style="">
+                                        <img src="{{ baseAssetsUrl ~ '/img/translations-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/> {{ 'Get Translations'|t('app') }}
+                                    </a>
+                                </div>
+
+                                <div class="link">
+                                    {% if licenseStatus == 'valid' %}
+                                        <a href="https://info.acclaro.com/translation-plugin-for-craft3-support-info">
+                                         <img src="{{ baseAssetsUrl ~ '/img/upgrade-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/>  {{ 'Purchase Premium Support'|t('app') }}  </a>
+                                {% else %}
+                                        <a href="https://plugins.craftcms.com/translations">
+                                        <img src="{{ baseAssetsUrl ~ '/img/upgrade-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/> {{ 'Upgrade to Paid'|t('app') }}  </a>
+                                    {% endif %}
+                                </div>
+                            </span>
+                        </td>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="translations-dashboard" style="visibility:hidden;">
         {% for widget in widgets %}
             {% if widget %}

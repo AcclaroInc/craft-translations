@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.3.0 - 2019-10-18
+
+### Added
+- [CodeMirror](https://github.com/luwes/craft3-codemirror) support
+- Granular user permissions for translations
+- Settings Page
+    - Translation settings check for system requirements, propagation methods, and supported field types
+    - Send logs to Acclaro
+    - Clear translation orders
+- Small UI improvements
+
+### Fixed
+- PostgreSQL `translations_translations` indexing issue
+
+### Removed
+- Translator Sites requirement and options
+
 ## 1.2.5 - 2019-10-01
 
 ### Fixed

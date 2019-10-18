@@ -29,6 +29,7 @@ use benf\neo\Field as NeoField;
 use typedlinkfield\fields\LinkField;
 use craft\redactor\Field as RedactorField;
 use fruitstudios\linkit\fields\LinkitField;
+use luwes\codemirror\fields\CodeMirrorField;
 use verbb\supertable\fields\SuperTableField;
 use nystudio107\seomatic\fields\SeoSettings;
 
@@ -56,6 +57,7 @@ class Factory
         SuperTableField::class  => SuperTableFieldTranslator::class,
         Table::class            => TableFieldTranslator::class,
         Tags::class             => TagFieldTranslator::class,
+        CodeMirrorField::class       => GenericFieldTranslator::class,
     );
 
     public function makeTranslator(Field $field)

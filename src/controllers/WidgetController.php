@@ -91,7 +91,30 @@ class WidgetController extends Controller
      * @return mixed
      */
     public function actionIndex()
-    {   
+    {
+        $this->requireLogin();
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if (!$currentUser->can('translations:dashboard')) {
+            switch (true) {
+                case $currentUser->can('translations:orders'):
+                    return $this->redirect('translations/orders', 302, true);
+                    break;
+
+                case $currentUser->can('translations:translator'):
+                    return $this->redirect('translations/translators', 302, true);
+                    break;
+                
+                case $currentUser->can('translations:settings'):
+                    return $this->redirect('translations/settings', 302, true);
+                    break;
+                
+                default:
+                    return $this->redirect('entries', 302, true);
+                    break;
+            }
+        }
+
         $view = $this->getView();
         $namespace = $view->getNamespace();
 
@@ -164,6 +187,11 @@ class WidgetController extends Controller
         $view->registerJs('window.translationsdashboard = new Craft.Translations.Dashboard(' . Json::encode($widgetTypeInfo) . ');');
 
         $view->registerJs($allWidgetJs);
+        $variables['licenseStatus'] = Craft::$app->plugins->getPluginLicenseKeyStatus('translations');
+        $variables['baseAssetsUrl'] = Craft::$app->assetManager->getPublishedUrl(
+            '@acclaro/translations/assetbundles/src',
+            true
+        );
         $variables['widgetTypes'] = $widgetTypeInfo;
         $variables['selectedSubnavItem'] = 'dashboard';
         $variables['isSelectableWidget'] = $isSelectableWidget;

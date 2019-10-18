@@ -40,7 +40,7 @@ class SyncOrder extends BaseJob
         foreach ($this->order->files as $file) {
             $this->setProgress($queue, $currentElement++ / $totalElements);
             // Let's make sure we're not updating published files
-            if ($file->status == 'published') {
+            if ($file->status == 'published' || $file->status == 'canceled') {
                 continue;
             }
 

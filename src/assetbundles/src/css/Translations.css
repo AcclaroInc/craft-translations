@@ -374,7 +374,7 @@
     padding-right: 20px;
 }
 
-.disabled{
+.translations .disabled{
     background: #000 !important;
     color: #fff !important;
     cursor: initial;
@@ -508,4 +508,33 @@
 #translations-field .translations-dropdown {
     float: right;
     margin: 0px 0px 0px 0px;
+}
+
+.translations-icon svg {
+    display: flex;
+    height: auto;
+    margin-right: 12px;
+    width: 16px;
+}
+
+.translations-icon svg path {
+    fill: #8f98a3;
+}
+
+.settings-sel {
+    background: #fff;
+}
+
+.settings-sel .translations-icon svg path {
+    fill: #b9bfc6 !important;
+}
+
+.sidebar nav li a.settings-sel {
+    background: #737f8c !important;
+    color: #fff !important;
+}
+
+#trial-notice .link {
+    display: inline-block;
+    padding: 0 10px ;
 }

@@ -102,7 +102,7 @@ class OrderRepository
             'in preparation' => 'in preparation',
             'in progress' => 'in progress',
             'complete' => 'complete',
-            'canceled' => 'canceled',
+            'canceled' => 'cancelled',
             'published' => 'published',
         );
     }
@@ -176,6 +176,25 @@ class OrderRepository
     public function deleteOrder($orderId)
     {
         return Craft::$app->elements->deleteElementById($orderId);
+    }
+
+    /**
+     * @return int
+     */
+    public function getAcclaroOrdersCount()
+    {
+        $orderCount = 0;
+        $translators = Translations::$plugin->translatorRepository->getAcclaroApiTranslators();
+        if ($translators) {
+            $orderCount = Order::find()
+                ->andWhere(Db::parseParam('translations_orders.translatorId', $translators))
+                ->andWhere(Db::parseParam('translations_orders.status', array(
+                    'getting quote', 'needs approval', 'in preparation', 'in progress'
+                )))
+                ->count();
+        }
+
+        return $orderCount;
     }
 
 }

@@ -146,7 +146,6 @@ class Install extends Migration
                     'id'            => $this->primaryKey(),
                     'label'         => $this->string()->notNull()->defaultValue(''),
                     'service'       => $this->string()->notNull()->defaultValue(''),
-                    'sites'         => $this->text()->notNull(),
                     'status'        => $this->enum('status', ['active', 'inactive'])->defaultValue('inactive'),
                     'settings'      => $this->text()->notNull(),
                     'dateCreated'   => $this->dateTime()->notNull(),

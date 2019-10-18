@@ -94,7 +94,7 @@ class FilesController extends Controller
             foreach ($order->files as $file)
             {
                 // skip failed files
-                if ($file->status == 'failed') continue;
+                if ($file->status == 'failed' || $file->status == 'canceled' ) continue;
 
                 $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
@@ -158,8 +158,13 @@ class FilesController extends Controller
     public function actionImportFile()
     {
         $this->requireLogin();
-        $this->requireAdmin();
         $this->requirePostRequest();
+
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:import')) {
+            return;
+        }
 
         //Track error and success messages.
         $message = "";
@@ -326,6 +331,5 @@ class FilesController extends Controller
 
     	return $msg;
     }
-
 
 }

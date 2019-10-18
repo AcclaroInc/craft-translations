@@ -12,12 +12,15 @@ namespace acclaro\translations;
 
 use Craft;
 use craft\db\Table;
+use craft\events\RegisterUserPermissionsEvent;
+use craft\services\UserPermissions;
 use yii\base\Event;
 use craft\base\Plugin;
 use craft\web\UrlManager;
 use craft\elements\Entry;
 use craft\services\Plugins;
 use craft\events\ModelEvent;
+use craft\helpers\UrlHelper;
 use craft\events\DraftEvent;
 use craft\services\Elements;
 use craft\events\PluginEvent;
@@ -60,9 +63,14 @@ class Translations extends Plugin
     public $hasCpSection = true;
 
     /**
+     * @var bool
+     */
+    public $hasCpSettings = true;
+
+    /**
      * @var string
      */
-    public $schemaVersion = '1.2.0';
+    public $schemaVersion = '1.2.1';
 
     // Public Methods
     // =========================================================================
@@ -148,39 +156,24 @@ class Translations extends Plugin
             }
         );
 
-        /**
-         * EVENT_AFTER_DELETE_DRAFT gets triggered after EVENT_AFTER_APPLY_DRAFT
-         * May need to find another solution to the entry draft deletion
-         */
-        // Event::on(
-        //     Drafts::class,
-        //     Drafts::EVENT_AFTER_DELETE_DRAFT,
-        //     function (DraftEvent $event) {
-        //         Craft::debug(
-        //             'Drafts::EVENT_AFTER_DELETE_DRAFT',
-        //             __METHOD__
-        //         );
-        //         if ($event->draft) {
-        //             $this->_onDeleteDraft($event);
-        //         }
-        //     }
-        // );
-
-        /**
-         * Maybe we can do a plugin walkthrough here?
-         */
-        // Event::on(
-        //     Plugins::class,
-        //     Plugins::EVENT_AFTER_INSTALL_PLUGIN,
-        //     function (PluginEvent $event) {
-        //         Craft::debug(
-        //             'Plugins::EVENT_AFTER_INSTALL_PLUGIN',
-        //             __METHOD__
-        //         );
-        //         if ($event->plugin === $this) {
-        //         }
-        //     }
-        // );
+        Event::on(
+            Plugins::class,
+            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
+            function (PluginEvent $event) {
+                Craft::debug(
+                    'Plugins::EVENT_AFTER_INSTALL_PLUGIN',
+                    __METHOD__
+                );
+                if ($event->plugin === $this) {
+                    $request = Craft::$app->getRequest();
+                    if ($request->isCpRequest) {
+                        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl(
+                            'translations/settings'
+                        ))->send();
+                    }
+                }
+            }
+        );
 
         Craft::info(
             Craft::t(
@@ -226,28 +219,59 @@ class Translations extends Plugin
     {
         $subNavs = [];
         $navItem = parent::getCpNavItem();
-        
-        $subNavs['dashboard'] = [
-            'label' => 'Dashboard',
-            'url' => 'translations',
-        ];
-        $subNavs['orders'] = [
-            'label' => 'Orders',
-            'url' => 'translations/orders',
-        ];
-        $subNavs['translators'] = [
-            'label' => 'Translators',
-            'url' => 'translations/translators',
-        ];
-        $subNavs['about'] = [
-            'label' => 'About',
-            'url' => 'translations/about',
-        ];
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if ($currentUser->can('translations:dashboard')) {
+            $subNavs['dashboard'] = [
+                'label' => 'Dashboard',
+                'url' => 'translations',
+            ];
+        }
+        if ($currentUser->can('translations:orders')) {
+            $subNavs['orders'] = [
+                'label' => 'Orders',
+                'url' => 'translations/orders',
+            ];
+        }
+        if ($currentUser->can('translations:translator')) {
+            $subNavs['translators'] = [
+                'label' => 'Translators',
+                'url' => 'translations/translators',
+            ];
+        }
+
+        if ($currentUser->can('translations:settings')) {
+            $subNavs['settings'] = [
+                'label' => 'Settings',
+                'url' => 'translations/settings',
+            ];
+        }
 
         $navItem = array_merge($navItem, [
             'subnav' => $subNavs,
         ]);
         return $navItem;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSettingsResponse()
+    {
+        // Just redirect to the plugin settings page
+        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('translations/settings'));
+    }
+
+    protected function createSettingsModel()
+    {
+        return new \acclaro\translations\models\Settings();
+    }
+
+    protected function settingsHtml()
+    {
+        return \Craft::$app->getView()->renderTemplate('translations/settings/general', [
+            'settings' => $this->getSettings()
+        ]);
     }
 
     /**
@@ -284,6 +308,12 @@ class Translations extends Plugin
                     $event->types[] = Order::class;
                 }
             );
+
+            $request = Craft::$app->getRequest();
+            // Install only for non-console Control Panel requests
+            if ($request->getIsCpRequest() && !$request->getIsConsoleRequest()) {
+                $this->installCpEventListeners();
+            }
         }
     }
 
@@ -296,15 +326,15 @@ class Translations extends Plugin
                     'translations/orders' => 'translations/base/order-index',
                     'translations/orders/new' => 'translations/base/order-detail',
                     'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
-                    // 'translations/orders/reporting' => 'translations/base/index',
                     'translations/translators' => 'translations/base/translator-index',
                     'translations/translators/new' => 'translations/base/translator-detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
-                    'translations/about' => 'translations/base/about-index',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/base/edit-global-set-draft',
-                    
                     'translations/orders/exportfile' => 'translations/files/export-file',
                     'translations/orders/importfile' => 'translations/files/import-file',
+                    'translations/settings' => 'translations/settings/index',
+                    'translations/settings/settings-check' => 'translations/settings/settings-check',
+                    'translations/settings/send-logs' => 'translations/settings/send-logs',
                 ]);
             }
         );
@@ -456,19 +486,123 @@ class Translations extends Plugin
         }
     }
 
-    private function _onDeleteDraft(Event $event)
-    {
-
-        $draft = $event->draft;
-
-        return self::$plugin->fileRepository->delete($draft->draftId);
-    }
-
     private function _onDeleteElement(Event $event)
     {
+
+        if (!empty($event->element->draftId)) {
+            $response = Translations::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
+            if ($response) {
+
+                $currentFile = self::$plugin->fileRepository->getFileByDraftId($event->element->draftId);
+
+                if ($currentFile) {
+                    $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
+
+                    if ($order) {
+                        $order->logActivity(Translations::$plugin->translator->translate('app', 'Draft '. $event->element->draftId .' deleted.'));
+                        Translations::$plugin->orderRepository->saveOrder($order);
+                    }
+
+                    $currentFile->status = 'canceled';
+
+                    $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->targetSite);
+                    $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
+
+                    $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->sourceSite);
+                    $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
+                    $currentFile->source = Translations::$plugin->elementToXmlConverter->toXml(
+                        $element,
+                        0,
+                        $currentFile->sourceSite,
+                        $currentFile->targetSite,
+                        $currentFile->previewUrl
+                    );
+
+                    self::$plugin->fileRepository->saveFile($currentFile);
+                }
+            }
+        }
 
         if (Craft::$app->getRequest()->getParam('hardDelete')) {
             $event->hardDelete = true;
         }
+    }
+
+    /**
+     * Install site event listeners for Control Panel requests only
+     */
+    protected function installCpEventListeners()
+    {
+        // Handler: UserPermissions::EVENT_REGISTER_PERMISSIONS
+        Event::on(
+            UserPermissions::class,
+            UserPermissions::EVENT_REGISTER_PERMISSIONS,
+            function (RegisterUserPermissionsEvent $event) {
+                Craft::debug(
+                    'UserPermissions::EVENT_REGISTER_PERMISSIONS',
+                    __METHOD__
+                );
+                // Register our custom permissions
+                $event->permissions[Craft::t('translations', 'Translations')] = $this->customAdminCpPermissions();
+            }
+        );
+    }
+
+    /**
+     * Returns the custom Control Panel user permissions.
+     *
+     * @return array
+     */
+    protected function customAdminCpPermissions(): array
+    {
+        // The script meta containers for the global meta bundle
+
+        return [
+            'translations:dashboard' => [
+                'label' => Craft::t('translations', 'View Dashboard'),
+            ],
+            'translations:translator' => [
+                'label' => Craft::t('translations', 'View Translators'),
+                'nested' => [
+                    'translations:translator:create' => [
+                        'label' => Craft::t('translations', 'Create Translators'),
+                    ],
+                    'translations:translator:edit' => [
+                        'label' => Craft::t('translations', 'Edit Translators'),
+                    ],
+                    'translations:translator:delete' => [
+                        'label' => Craft::t('translations', 'Delete Translators'),
+                    ]
+                ]
+            ],
+            'translations:orders' => [
+                'label' => Craft::t('translations', 'View Orders'),
+                'nested' => [
+                    'translations:orders:create' => [
+                        'label' => Craft::t('translations', 'Create Orders'),
+                    ],
+                    'translations:orders:edit' => [
+                        'label' => Craft::t('translations', 'Edit Orders'),
+                    ],
+                    'translations:orders:delete' => [
+                        'label' => Craft::t('translations', 'Delete Orders'),
+                    ],
+                    'translations:orders:import' => [
+                        'label' => Craft::t('translations', 'Import/Sync Orders'),
+                    ],
+                    'translations:orders:apply-translations' => [
+                        'label' => Craft::t('translations', 'Apply Translations'),
+                    ]
+                ]
+            ],
+            'translations:settings' => [
+                'label' => Craft::t('translations', 'Access Settings'),
+                'nested' => [
+                    'translations:settings:clear-orders' => [
+                        'label' => Craft::t('translations', 'Clear Orders'),
+                    ],
+                ]
+            ]
+        ];
     }
 }
