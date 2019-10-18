@@ -86,7 +86,9 @@
                                 </div>
 
                                 <div class="link">
-                                    <a href="mailto:support@acclaro.com " style="">
+                                    {% set subject = 'Hello Acclaro' %}
+                                    {% set body = 'I’m interested in learning more about your professional translation services and how you can help with the launch of global Craft sites.%0D%0A%0D%0AThank you,%0D%0AYour Name%0D%0AYour Company%0D%0AYour Phone Number' %}
+                                    <a href="mailto:support@acclaro.com?subject={{subject}}&body={{body}}" style="">
                                         <img src="{{ baseAssetsUrl ~ '/img/translations-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/> {{ 'Get Translations'|t('app') }}
                                     </a>
                                 </div>
