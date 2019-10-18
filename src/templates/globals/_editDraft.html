@@ -7,7 +7,6 @@
     <div class="select">
         <select onchange="document.location.href='{{ url('globals/{locale}/'~globalSetHandle) }}'.replace('{locale}', this.value);">
             {% for site in craft.app.sites.getAllSites() %}
-                {{dump(site)}}
                 <option value="{{ site.handle }}"{% if site.id == draft.site %} selected{% endif %}>{{ site.name }}</option>
             {% endfor %}
         </select>
