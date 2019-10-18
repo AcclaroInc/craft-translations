@@ -333,7 +333,7 @@ class Translations extends Plugin
                     'translations/orders/exportfile' => 'translations/files/export-file',
                     'translations/orders/importfile' => 'translations/files/import-file',
                     'translations/settings' => 'translations/settings/index',
-                    'translations/settings/translations-check' => 'translations/settings/translations-check',
+                    'translations/settings/settings-check' => 'translations/settings/settings-check',
                     'translations/settings/send-logs' => 'translations/settings/send-logs',
                 ]);
             }

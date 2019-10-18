@@ -40,7 +40,7 @@ class SettingsController extends Controller
     /**
      * @return mixed
      */
-    public function actionTranslationsCheck()
+    public function actionSettingsCheck()
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
@@ -106,7 +106,7 @@ class SettingsController extends Controller
             ];
         }
 
-        $this->renderTemplate('translations/settings/translations-check', $variables);
+        $this->renderTemplate('translations/settings/settings-check', $variables);
     }
 
     /**

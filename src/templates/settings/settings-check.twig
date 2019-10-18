@@ -99,7 +99,9 @@
     </table>
 
     <h2>{{ "Field Type Support"|t('app') }}</h2>
-    <table class="data fullwidth" dir="ltr">
+    
+    {# Fields #}
+    <table class="data fullwidth" dir="ltr" style="padding-bottom:60px;">
         <tbody>
             <tr>
                 <th></th>
@@ -134,5 +136,14 @@
             {% endfor %}
         </tbody>
     </table>
+
+    {# Legend #}
+    <div class="message" style="padding-bottom:60px;">
+        <h4 class="light">Field Type Legend</h4>
+        <div class="subject"><span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span> = Supported</div>
+        <div class="subject"><span class="warning" title="{{ 'Warning'|t('app') }}" data-icon="alert"></span> = Not supported but not necessary</div>
+        <div class="subject"><span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span> = Not supported</div>
+    </div>
+
 </div>
 {% endblock %}
