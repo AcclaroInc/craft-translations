@@ -189,14 +189,14 @@ class AcclaroApiClient
 
     public function getOrder($orderId)
     {
-        return $this->post('GetOrder', array(
+        return $this->get('GetOrder', array(
             'orderid' => $orderId,
         ));
     }
 
     public function getFileInfo($orderId)
     {
-        return $this->post('GetFileInfo', array(
+        return $this->get('GetFileInfo', array(
             'orderid' => $orderId,
         ));
     }
@@ -240,7 +240,7 @@ class AcclaroApiClient
 
     public function getFileStatus($orderId, $fileId)
     {
-        return $this->post('GetFileStatus', array(
+        return $this->get('GetFileStatus', array(
             'orderid' => $orderId,
             'fileid' => $fileId,
         ));
@@ -255,7 +255,7 @@ class AcclaroApiClient
             'fileid' => $fileId,
         );
 
-        $request = new Request('POST', $endpoint.'?'.http_build_query($query, '', '&'));
+        $request = new Request('GET', $endpoint.'?'.http_build_query($query, '', '&'));
 
         if ($this->loggingEnabled) {
             $this->logRequest($request, $endpoint);
@@ -299,12 +299,12 @@ class AcclaroApiClient
     
     public function getLanguages()
     {
-        return $this->post('GetLanguages');
+        return $this->get('GetLanguages');
     }
     
     public function getLanguagePairs($sourceLang)
     {
-        return $this->post('GetLanguagePairs', array(
+        return $this->get('GetLanguagePairs', array(
             'sourcelang' => $sourceLang,
         ));
     }
