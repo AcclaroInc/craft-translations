@@ -72,7 +72,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         return;
     }
 
-    public function updateIOFile(Order $order, FileModel $file, $target)
+    public function updateIOFile(Order $order, FileModel $file, $target, $file_name)
     { 
         if (empty($target)) 
         {
@@ -93,11 +93,11 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
 
-            $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite);
+            return $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite, $order, $file_name);
         }
     }
 
-    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite)
+    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite, $order, $file_name)
     {
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
 
@@ -119,10 +119,19 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
         // save the draft
         if ($draft instanceof Entry) {
-            Translations::$plugin->draftRepository->saveDraft($draft);
+            $res = Translations::$plugin->draftRepository->saveDraft($draft);
+            if (!$res) {
+                $order->logActivity(
+                    sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                );
+
+                return false;
+            }
         } elseif ($draft instanceof GlobalSet) {
             Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
         }
+
+        return true;
     }
 
 

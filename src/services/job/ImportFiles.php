@@ -146,17 +146,19 @@ class ImportFiles extends BaseJob
                 //Translation Service
                 $translationService = Translations::$plugin->translatorFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
 
-                $fileUpdated = true;
+                $fileUpdated = $isDraftSave = true;
 
                 try {
-                    $translationService->updateIOFile($this->order, $draft_file, $xml_content);
+                    $isDraftSave = $translationService->updateIOFile($this->order, $draft_file, $xml_content, $xml);
                 } catch(Exception $e) {
                     $fileUpdated = false;
                     $this->order->logActivity(Translations::$plugin->translator->translate('app', 'Could not update '. $xml. ' Error: ' .$e->getMessage()));
                     Translations::$plugin->orderRepository->saveOrder($this->order);
                 }
 
-                if ($fileUpdated) {
+                if (!$isDraftSave) {
+                    $draft_file->status = 'failed';
+                } else if ($fileUpdated) {
                     $draft_file->status = 'complete';
                 } else {
                     $draft_file->status = 'in progress';
@@ -167,15 +169,17 @@ class ImportFiles extends BaseJob
 
                 if ($success)
                 {
-                    $this->order->logActivity(
-                        sprintf(Translations::$plugin->translator->translate('app', "File %s imported successfully!"), $xml)
-                    );
+                    if ($isDraftSave) {
+                        $this->order->logActivity(
+                            sprintf(Translations::$plugin->translator->translate('app', "File %s imported successfully!"), $xml)
+                        );
 
-                    //Verify All files on this order were successfully imported.
-                    if ($this->isOrderCompleted())
-                    {
-                        //Save Order with status complete
-                        $translationService->updateOrder($this->order);
+                        //Verify All files on this order were successfully imported.
+                        if ($this->isOrderCompleted())
+                        {
+                            //Save Order with status complete
+                            $translationService->updateOrder($this->order);
+                        }
                     }
 
                     Translations::$plugin->orderRepository->saveOrder($this->order);
