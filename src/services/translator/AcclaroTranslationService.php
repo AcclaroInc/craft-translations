@@ -113,6 +113,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
         $fileStatusResponse = $this->acclaroApiClient->getFileStatus($order->serviceOrderId, $targetFileId);
 
         $file->status = $fileStatusResponse->status;
+        $file->dateDelivered = new \DateTime();
 
         // download the file
         $target = $this->acclaroApiClient->getFile($order->serviceOrderId, $targetFileId);
