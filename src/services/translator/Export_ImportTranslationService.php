@@ -80,6 +80,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         }
 
         $file->status = 'complete';
+        $file->dateDelivered = new \DateTime();
        
         if ($target) 
         {
