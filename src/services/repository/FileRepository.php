@@ -41,6 +41,7 @@ class FileRepository
             'previewUrl',
             'serviceFileId',
             'dateUpdated',
+            'dateDelivered',
         ]));
 
         return $file;
@@ -77,6 +78,7 @@ class FileRepository
             'target',
             'previewUrl',
             'serviceFileId',
+            'dateDelivered',
         ]));
 
         return $file;
@@ -150,6 +152,7 @@ class FileRepository
                 'target',
                 'previewUrl',
                 'serviceFileId',
+                'dateDelivered',
             ]));
         }
 
@@ -180,7 +183,8 @@ class FileRepository
                 'target',
                 'previewUrl',
                 'serviceFileId',
-                'dateUpdated'
+                'dateUpdated',
+                'dateDelivered',
             ]));
         }
 
