@@ -86,8 +86,8 @@ class Install extends Migration
                     'serviceFileId'     => $this->string()->defaultValue(''),
                     'dateCreated'       => $this->dateTime()->notNull(),
                     'dateUpdated'       => $this->dateTime()->notNull(),
-                    'uid'               => $this->uid(),
-                    'dateDelivered'     => $this->dateTime()
+                    'dateDelivered'     => $this->dateTime(),
+                    'uid'               => $this->uid()
                 ]
             );
         }
