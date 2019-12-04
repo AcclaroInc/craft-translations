@@ -107,7 +107,7 @@ class AcclaroApiClient
                 $response = $this->client->send($request, ['timeout' => 0]);
             } catch (Exception $e) {
                 //@TODO
-                var_dump($e);
+
                 return null;
             }
         }
