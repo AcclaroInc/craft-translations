@@ -1,0 +1,54 @@
+<div id="recent-entries-widget" class="recententries-container">
+    {#<div class="spinner body-loading"></div>#}
+    <div class="elements hidden">
+        <div class="tableview">
+            <table class="data fullwidth table">
+                <tr>
+                    <td class="checkbox-cell"></td>
+                    <th>Name</th>
+                    <th>Date Created</th>
+                    <th class="nowrap" style="text-align:right;">Compare Changes</th>
+                </tr>
+                {% for i in 1..limit %}
+                    <tr id="item-entry-{{i}}">&nbsp;</tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="buttons right" style="margin-top:14px;">
+            <a class="btn" href="{{ url('entries') }}">{{ 'View All Entries'|t }}</a>
+            <a href="#" id="new-entry-orders" class="btn submit disabled" target="_blank">{{ "Create New Order"|t('app') }}</a>
+        </div>
+
+    </div>
+</div>
+
+<div class="hidden">
+    <div id="diff-modal-entry" class="modal" tabindex="-1" role="dialog" style="padding:15px;overflow-y:auto;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header field">
+                    <div class="modal-title">
+                        <h1>New Source Entry Details</h1>
+                        <div class="buttons">
+                            <a href="#" id="close-diff-modal-entry" class="btn">Close</a>
+                        </div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Entry ID:</label>
+                        <div class="instructions entryId"></div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Entry Title:</label>
+                        <div class="instructions entryName"></div>
+                    </div>
+                    <div class="heading">
+                        <label for="">Site:</label>
+                        <div class="instructions siteLabel"></div>
+                    </div>
+                </div>
+                <div id="modal-body-entry" class="modal-body-entry"></div>
+            </div>
+        </div>
+    </div>
+</div>

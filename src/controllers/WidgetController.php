@@ -51,6 +51,7 @@ use acclaro\translations\assetbundles\RecentlyModifiedAssets;
 use acclaro\translations\widgets\News;
 use acclaro\translations\widgets\Translators;
 use acclaro\translations\widgets\RecentOrders;
+use acclaro\translations\widgets\RecentEntries;
 use acclaro\translations\widgets\RecentlyModified;
 use acclaro\translations\widgets\LanguageCoverage;
 
@@ -484,6 +485,7 @@ class WidgetController extends Controller
             News::class,
             Translators::class,
             RecentOrders::class,
+            RecentEntries::class,
             RecentlyModified::class,
             LanguageCoverage::class,
         ];
@@ -721,10 +723,12 @@ class WidgetController extends Controller
         $user = Craft::$app->getUser()->getIdentity();
         $this->saveWidget($this->createWidget(RecentOrders::class));
         $this->saveWidget($this->createWidget(RecentlyModified::class));
+        $this->saveWidget($this->createWidget(RecentEntries::class));
         $this->saveWidget($this->createWidget(LanguageCoverage::class));
         $this->saveWidget($this->createWidget(Translators::class));
         $this->saveWidget($this->createWidget(News::class));
-        
+        $this->saveWidget($this->createWidget(RecentEntries::class));
+
         // Update user preferences
         $preferences = [
             'hasTranslationsDashboard' => true,
@@ -948,4 +952,76 @@ class WidgetController extends Controller
             $this->_progress = round(100 * $progress);
         }
     }
+
+    public function actionGetRecentEntries($limit = 0)
+    {
+        // Get the post request
+        $this->requirePostRequest();
+
+        // Set variables
+        $limit = Craft::$app->getRequest()->getParam('limit');
+        $days = Craft::$app->getRequest()->getParam('days');
+        $files = [];
+        $data = [];
+        $i = 0;
+
+        // Get array of entry IDs sorted by most recently updated
+        $fromDate = (new \DateTime("-{$days} days"))->format(\DateTime::ATOM);
+        $entries = Entry::find()
+            ->dateCreated(">= {$fromDate}")
+            ->orderBy(['dateCreated' => SORT_DESC])
+            ->ids();
+
+        // Loop through entry IDs
+        foreach ($entries as $id) {
+            // Check to see if we have a file that meets the conditions
+
+            // Now we can get the element
+            $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
+
+            // Current entries XML
+            $currentXML = Translations::$plugin->elementToXmlConverter->toXml($element, 0, Craft::$app->getSites()->getPrimarySite()->id, Craft::$app->getSites()->getPrimarySite()->id);
+            $currentXML = simplexml_load_string($currentXML)->body->asXML();
+
+            $blank = '';
+
+            // Load a new Diff class
+            $differ = new Differ();
+
+            // Check to see if there is a difference between translated XML and current entries XML
+            if (strlen($differ->diff($blank, $currentXML)) > '21') {
+                // Create data array
+                $data[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
+                $data[$i]['entryId'] = $element->id;
+                $data[$i]['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
+                $data[$i]['entryDateTimestamp'] = $element->dateUpdated->format('Y-m-d H:i:s');
+                $data[$i]['siteId'] = $element->siteId;
+                $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
+                $data[$i]['entryUrl'] = UrlHelper::cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
+                //$data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
+                $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element));
+                $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
+                $data[$i]['diff'] = $differ->diff($blank, $currentXML);
+
+                // Sort data array by most recent
+                usort($data, function($a, $b) {
+                    return $b['entryDateTimestamp'] <=> $a['entryDateTimestamp'];
+                });
+
+                // Only return set limit
+                if ($i + 1 < $limit) {
+                    $i++;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        return $this->asJson([
+            'success' => true,
+            'data' => $data,
+            'error' => null
+        ]);
+    }
+
 }

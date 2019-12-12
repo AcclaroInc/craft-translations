@@ -412,18 +412,27 @@
     transition: all 0.05s ease-in-out;
 }
 
-#diff-modal .heading {
+#recent-entries-widget .view-diff-entry {
+    transition: all 0.05s ease-in-out;
+}
+
+#recent-entries-widget tr.sel .view-diff-entry {
+    margin-right: 10px;
+    transition: all 0.05s ease-in-out;
+}
+
+#diff-modal .heading, #diff-modal-entry .heading {
     border-bottom: 1px dotted #e3e5e8;
     display: flex;
     justify-content: flex-start;
     padding: 10px 0px;
 }
 
-#diff-modal .instructions {
+#diff-modal .instructions, #diff-modal-entry .instructions {
     margin: 0 0 0 10px;
 }
 
-#diff-modal .modal-title {
+#diff-modal .modal-title, #diff-modal-entry .modal-title {
     display: flex;
     justify-content: space-between;
 }
