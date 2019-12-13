@@ -39,7 +39,7 @@ class SendOrder extends BaseJob
         $totalElements = count($order->files);
         $currentElement = 0;
         $orderUrl = UrlHelper::siteUrl() .'admin/translations/orders/detail/'.$order->id;
-        $orderUrl = "Order Url: <a href='$orderUrl'>$orderUrl</a>";
+        $orderUrl = "Craft Order Url: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
 
         $orderResponse = $acclaroApiClient->createOrder(
