@@ -257,6 +257,7 @@
                                         <th scope="col">{{ 'Status'|t }}</th>
                                         <th scope="col">{{ 'Date Updated'|t }}</th>
                                         <th scope="col">{{ 'Date Delivered'|t }}</th>
+                                        <th scope="col">{{ 'Compare Changes'|t }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -330,6 +331,18 @@
                                                         {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
                                                     {% endfor %}
                                                 </td>
+                                                <td style="">
+                                                    {% for file in files[element.id] %}
+                                                        {% if not loop.first %}
+                                                            <br>
+                                                        {% endif %}
+                                                        {% if file.status == 'complete' %}
+                                                            <a href="{{ url('translations/orders/get-file-diff') }}/{{ file.id }}" data-file-id="{{ file.id }}" class="view-diff" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
+                                                        {% else %}
+                                                            <a href="#" data-file-id="{{ file.id }}" class="disabled" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
                                             </tr>
                                         
                                     {% endfor %}
@@ -341,6 +354,65 @@
             </div>
         </div>
     </form>
+
+
+    <div class="hidden">
+        <div id="diff-modal-entry" class="modal" tabindex="-1" role="dialog" style="padding:15px;overflow-y:auto;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header field">
+                        <div class="modal-title">
+                            <h1>Entry Modification Details</h1>
+                            <div class="buttons">
+                                <form method="post" accept-charset="UTF-8">
+                                    {{ csrfInput() }}
+
+                                    {{ forms.hidden({
+                                        name: 'action',
+                                        value: 'translations/base/apply-drafts',
+                                    }) }}
+
+                                    {{ forms.hidden({
+                                        name: 'orderId',
+                                        value: order.id,
+                                    }) }}
+                                    <input type="hidden" name="elements[]" value="" id="diff-element">
+                                    <input type="submit" class="btn submit apply-translation" value="Apply Translation"/>
+                                    <a href="#" id="close-diff-modal-entry" class="btn">Close</a>
+                                </form>
+
+                            </div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Entry ID:</label>
+                            <div class="instructions entryId"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Entry Title:</label>
+                            <div class="instructions entryName"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Site:</label>
+                            <div class="instructions siteLabel"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Last Translated:</label>
+                            <div class="instructions fileDate"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Date Updated:</label>
+                            <div class="instructions entryDate"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Words Difference:</label>
+                            <div class="instructions wordDifference"></div>
+                        </div>
+                    </div>
+                    <div id="modal-body-entry" class="modal-body-entry"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% elseif orderSubmitted %}
 <div class="translations-order-confirmation flex">

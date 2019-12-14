@@ -79,7 +79,6 @@
                     }
 
                     $('.new-entry-check .checkbox').on('click', function(e) {
-                        console.log(' khkhkh ');
                         $(e.target).closest('tr[id^=item-entry-]').toggleClass('sel');
                         Craft.Translations.RecentEntries.prototype.updateSelected();
                     });
@@ -89,7 +88,7 @@
 
                         var diffHtml = Diff2Html.getPrettyHtml(
                             content[$(e.target).attr('data-id')].diff,
-                            {inputFormat: 'diff', showFiles: false, matching: 'lines', outputFormat: 'side-by-side'}
+                            {inputFormat: 'diff', showFiles: false, matching: 'lines', outputFormat: 'line-by-line'}
                         );
 
                         var classNames = [
@@ -103,9 +102,6 @@
 
                         // Show the modal
                         $modal_entry.show();
-
-                        // Set the reorder button
-                        $('.reorderUrl').attr('href', Craft.getUrl('translations/orders/new?sourceSite='+ content[$(e.target).attr('data-id')].siteId +'&elements[]='+ content[$(e.target).attr('data-id')].entryId));
 
                         // Set modification details
                         for (let index = 0; index < classNames.length; index++) {

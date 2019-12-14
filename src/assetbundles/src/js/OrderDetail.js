@@ -237,6 +237,62 @@ Craft.Translations.OrderDetail = {
                 'json'
             );
         });
+
+        $('.view-diff').on('click', function(e) {
+            e.preventDefault();
+            var $el = $(this);
+            //var file_id = $el.attr('data-file-id');
+            var location = $el.attr('href');
+
+            $modal = new Garnish.Modal($('#diff-modal-entry').removeClass('hidden'), {
+                autoShow: false,
+            });
+
+            $.get(
+                location,
+                function (data) {
+                    if (!data.success) {
+                        alert(data.error);
+                    } else {
+                        data = data.data;
+
+                        var diffHtml = Diff2Html.getPrettyHtml(
+                            data.diff,
+                            {inputFormat: 'diff', showFiles: false, matching: 'lines', outputFormat: 'side-by-side'}
+                        );
+
+                        var classNames = [
+                            'entryId',
+                            'entryName',
+                            'siteLabel',
+                            'fileDate',
+                            'entryDate',
+                            'wordDifference'
+                        ];
+
+                        // Show the modal
+                        $modal.show();
+
+                        // Set modification details
+                        for (let index = 0; index < classNames.length; index++) {
+                            $('.' + classNames[index]).html(data[classNames[index]]);
+                        }
+                        $('#diff-element').val(data.entryId);
+
+                        // Add the diff html
+                        document.getElementById("modal-body-entry").innerHTML = diffHtml;
+
+                        $('#close-diff-modal-entry').on('click', function(e) {
+                            e.preventDefault();
+                            $modal.hide();
+                        });
+                    }
+                },
+                'json'
+            );
+
+        });
+
     }
 };
 

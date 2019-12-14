@@ -29,9 +29,11 @@ class OrderAssets extends AssetBundle
             'js/OrderIndex.js',
             'js/ExportFiles.js',
             'js/ImportFiles.js',
+            'js/diff2html.min.js',
         ];
 
         $this->css = [
+            'css/diff2html.min.css',
         ];
 
         parent::init();
