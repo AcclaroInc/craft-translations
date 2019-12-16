@@ -27,6 +27,10 @@ class FileRepository
     {
         $record = FileRecord::findOne($fileId);
 
+        if (!$record) {
+            return false;
+        }
+
         $file = new FileModel($record->toArray([
             'id',
             'orderId',
