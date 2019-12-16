@@ -255,8 +255,8 @@
                                         <th scope="col">{{ 'Source Site'|t }}</th>
                                         <th scope="col">{{ 'Target Site(s)'|t }}</th>
                                         <th scope="col">{{ 'Status'|t }}</th>
-                                        <th scope="col">{{ 'Date Updated'|t }}</th>
-                                        <th scope="col">{{ 'Date Delivered'|t }}</th>
+                                        <th scope="col">{{ 'Last Delivered'|t }}</th>
+                                        <th scope="col">{{ 'Applied'|t }}</th>
                                         <th scope="col">{{ 'Compare Changes'|t }}</th>
                                     </tr>
                                 </thead>
@@ -318,17 +318,21 @@
                                                 <td>
                                                     {% for file in files[element.id] %}
                                                         {% if not loop.first %}
-                                                        <br>
+                                                            <br>
                                                         {% endif %}
-                                                        {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                                        {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
                                                     {% endfor %}
                                                 </td>
                                                 <td>
                                                     {% for file in files[element.id] %}
-                                                        {% if not loop.first %}
-                                                            <br>
-                                                        {% endif %}
-                                                        {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
+                                                            {% if not loop.first %}
+                                                                <br>
+                                                            {% endif %}
+                                                            {% if file.status == 'published' %}
+                                                                {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                                            {% else %}
+                                                                <span style="padding-left: 8px">--</span>
+                                                            {% endif %}
                                                     {% endfor %}
                                                 </td>
                                                 <td style="">
@@ -336,10 +340,10 @@
                                                         {% if not loop.first %}
                                                             <br>
                                                         {% endif %}
-                                                        {% if file.status == 'complete' %}
+                                                        {% if file.status in ['complete', 'published'] %}
                                                             <a href="{{ url('translations/orders/get-file-diff') }}/{{ file.id }}" data-file-id="{{ file.id }}" class="view-diff" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
                                                         {% else %}
-                                                            <a href="#" data-file-id="{{ file.id }}" class="disabled" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
+                                                            --
                                                         {% endif %}
                                                     {% endfor %}
                                                 </td>
