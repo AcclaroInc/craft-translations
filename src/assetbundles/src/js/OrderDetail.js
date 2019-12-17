@@ -278,6 +278,13 @@ Craft.Translations.OrderDetail = {
                             $('.' + classNames[index]).html(data[classNames[index]]);
                         }
                         $('#diff-element').val(data.entryId);
+                        if(data.fileStatus == 'complete') {
+                            $('#apply-translation').attr('disabled', false);
+                            $('#apply-translation').removeClass('disabled');
+                        } else {
+                            $('#apply-translation').attr('disabled', true);
+                            $('#apply-translation').addClass('disabled');
+                        }
 
                         // Add the diff html
                         document.getElementById("modal-body-entry").innerHTML = diffHtml;

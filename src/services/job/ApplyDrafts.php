@@ -38,8 +38,6 @@ class ApplyDrafts extends BaseJob
                 continue;
             }
 
-            $publishedFilesCount++;
-
             if ($file->status !== 'complete') {
                 continue;
             }
@@ -105,6 +103,7 @@ class ApplyDrafts extends BaseJob
 
             $file->draftId = 0;
             $file->status = 'published';
+            $publishedFilesCount++;
 
             Translations::$plugin->fileRepository->saveFile($file);
         }
