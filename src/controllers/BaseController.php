@@ -1403,13 +1403,20 @@ class BaseController extends Controller
             // Now we can get the element
             $element = Craft::$app->getElements()->getElementById($file->elementId, null, Craft::$app->getSites()->getPrimarySite()->id);
 
+            if ($element instanceof Entry) {
+                $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
+            } else if ($element instanceof GlobalSet) {
+                $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId);
+                $data['entryName'] = $element->name;
+            }
+
             // Create data array
-            $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
             $data['entryId'] = $element->id;
             $data['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
             $data['siteId'] = $element->siteId;
             $data['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
-            $data['entryUrl'] = UrlHelper::cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
+            $handle = isset($element->section) ? $element->section->handle : '';
+            $data['entryUrl'] = UrlHelper::cpUrl('entries/'.$handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
             $data['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
             $data['fileStatus'] = $file->status;
             $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
