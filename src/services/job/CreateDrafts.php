@@ -86,7 +86,7 @@ class CreateDrafts extends BaseJob
                         $targetSite,
                         $file->previewUrl
                     );
-                    $file->wordCount = isset($this->wordCounts[$draft->id]) ? $this->wordCounts[$draft->id] : 0;
+                    $file->wordCount = isset($this->wordCounts[$element->id]) ? $this->wordCounts[$element->id] : 0;
 
                     Translations::$plugin->fileRepository->saveFile($file);
 

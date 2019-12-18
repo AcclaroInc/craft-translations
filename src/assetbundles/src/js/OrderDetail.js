@@ -277,7 +277,7 @@ Craft.Translations.OrderDetail = {
                         for (let index = 0; index < classNames.length; index++) {
                             $('.' + classNames[index]).html(data[classNames[index]]);
                         }
-                        $('#diff-element').val(data.entryId);
+                        $('#diff-element').val(data.fileId);
                         if(data.fileStatus == 'complete') {
                             $('#apply-translation').attr('disabled', false);
                             $('#apply-translation').removeClass('disabled');

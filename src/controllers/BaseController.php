@@ -1401,8 +1401,16 @@ class BaseController extends Controller
             $differ = new Differ();
 
             // Now we can get the element
-            $element = Craft::$app->getElements()->getElementById($file->elementId, null, Craft::$app->getSites()->getPrimarySite()->id);
+            if ($file->status == 'complete') {
+                $element = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+            } else {
+                $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
+            }
 
+            if (empty($element)) {
+                $element = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+            }
+            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
             if ($element instanceof Entry) {
                 $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
             } else if ($element instanceof GlobalSet) {
@@ -1412,6 +1420,7 @@ class BaseController extends Controller
 
             // Create data array
             $data['entryId'] = $element->id;
+            $data['fileId'] = $file->id;
             $data['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
             $data['siteId'] = $element->siteId;
             $data['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
@@ -1419,7 +1428,6 @@ class BaseController extends Controller
             $data['entryUrl'] = UrlHelper::cpUrl('entries/'.$handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
             $data['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
             $data['fileStatus'] = $file->status;
-            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
             $data['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
             $data['diff'] = $differ->diff($translatedXML, $currentXML);
         }

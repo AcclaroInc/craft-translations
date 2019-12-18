@@ -373,14 +373,14 @@
 
                                     {{ forms.hidden({
                                         name: 'action',
-                                        value: 'translations/base/apply-drafts',
+                                        value: 'translations/files/apply-translation-draft',
                                     }) }}
 
                                     {{ forms.hidden({
                                         name: 'orderId',
                                         value: order.id,
                                     }) }}
-                                    <input type="hidden" name="elements[]" value="" id="diff-element">
+                                    <input type="hidden" name="fileId" value="" id="diff-element">
                                     <input type="submit" class="btn submit apply-translation disabled" id="apply-translation" value="Apply Translation" disabled/>
                                     <a href="#" id="close-diff-modal-entry" class="btn">Close</a>
                                 </form>
