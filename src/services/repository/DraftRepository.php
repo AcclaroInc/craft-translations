@@ -132,33 +132,24 @@ class DraftRepository
     {
         $file = Translations::$plugin->fileRepository->getFileById($fileId);
 
-        $isGlobal = false;
         // Get file's draft
         $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-        if(empty($draft)) {
-            $isGlobal = true;
-            $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
-        }
 
         if (!$draft) {
             throw new NotFoundHttpException('Draft not found');
         }
 
         try {
-            if ($isGlobal) {
-                $newEntry = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
-            } else {
-                // Let's try saving the element prior to applying draft
-                if (!Craft::$app->getElements()->saveElement($draft)) {
-                    throw new InvalidElementException($draft);
-                }
-
-                // Let's remove the auto-propagated drafts
-                Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
-
-                // Apply the draft to the entry
-                $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
+            // Let's try saving the element prior to applying draft
+            if (!Craft::$app->getElements()->saveElement($draft)) {
+                throw new InvalidElementException($draft);
             }
+
+            // Let's remove the auto-propagated drafts
+            Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+
+            // Apply the draft to the entry
+            $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
 
 
         } catch (InvalidElementException $e) {
