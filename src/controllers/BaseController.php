@@ -19,6 +19,7 @@ use craft\elements\Entry;
 use yii\web\HttpException;
 use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
+use SebastianBergmann\Diff\Differ;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\SyncOrder;
@@ -1377,5 +1378,64 @@ class BaseController extends Controller
         Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
 
         return $this->redirect($globalSet->getCpEditUrl(), 302, true);
+    }
+
+    public function actionGetFileDiff() {
+
+        $variables = Craft::$app->getRequest()->resolve()[1];
+        $fileId = isset($variables['fileId']) ? $variables['fileId'] : null;
+
+        $file = Translations::$plugin->fileRepository->getFileById($fileId);
+        $data = [];
+
+        if ($file && ($file->status == 'complete' || $file->status == 'published')) {
+            // Current entries XML
+            $currentXML = $file->target;
+            $currentXML = simplexml_load_string($currentXML)->body->asXML();
+
+            // Translated file XML
+            $translatedXML = $file->source;
+            $translatedXML = simplexml_load_string($translatedXML)->body->asXML();
+
+            // Load a new Diff class
+            $differ = new Differ();
+
+            // Now we can get the element
+            if ($file->status == 'complete') {
+                $element = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+            } else {
+                $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
+            }
+
+            if (empty($element)) {
+                $element = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+            }
+            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
+            if ($element instanceof Entry) {
+                $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
+            } else if ($element instanceof GlobalSet) {
+                $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId);
+                $data['entryName'] = $element->name;
+            }
+
+            // Create data array
+            $data['entryId'] = $element->id;
+            $data['fileId'] = $file->id;
+            $data['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
+            $data['siteId'] = $element->siteId;
+            $data['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
+            $handle = isset($element->section) ? $element->section->handle : '';
+            $data['entryUrl'] = UrlHelper::cpUrl('entries/'.$handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
+            $data['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
+            $data['fileStatus'] = $file->status;
+            $data['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
+            $data['diff'] = $differ->diff($translatedXML, $currentXML);
+        }
+
+        return $this->asJson([
+            'success' => true,
+            'data' => $data,
+            'error' => null
+        ]);
     }
 }

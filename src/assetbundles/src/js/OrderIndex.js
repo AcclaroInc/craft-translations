@@ -47,8 +47,15 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
             }
         });
 
+        var userName = $('#user-info').children().first().html();
+        var paidNotification = localStorage.getItem(userName+"PaidNotification");
+        if(!paidNotification){
+            document.getElementById("trial-notice").style.display = "block";
+        }
+
         $(document).on("click", ".close-notice", function() {
             $("#trial-notice").fadeOut();
+            localStorage.setItem(userName+"PaidNotification", "true");
         })
 
         $(document).on("click", ".translations-restore-order", function() {

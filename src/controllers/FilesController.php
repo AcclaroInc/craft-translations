@@ -284,10 +284,94 @@ class FilesController extends Controller
         $this->requirePostRequest();
         $request = Craft::$app->getRequest();
         
-        // Get the file
+        // Get the fileId param
         $fileId = Craft::$app->getRequest()->getParam('fileId');
+        if (!$fileId) {
+            $this->showUserMessages("File not found.");
+            return;
+        }
 
-        $response = Translations::$plugin->draftRepository->applyTranslationDraft($fileId);
+        // Get the file
+        $file = Translations::$plugin->fileRepository->getFileById($fileId);
+        if (!$file) {
+            $this->showUserMessages("File not found.");
+            return;
+        }
+
+        // Get the element
+        $element = Craft::$app->elements->getElementById($file->elementId);
+        if (!$element) {
+            $this->showUserMessages("Entry not found for file.");
+            return;
+        }
+
+        $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+        if (!$order) {
+            $this->showUserMessages("Order not found.");
+            return;
+        }
+
+        if ($element instanceof GlobalSet) {
+            $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+            
+            $draft->name = $element->name;
+
+            if ($draft) {
+                $response = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+                $message = 'Draft applied for '. '"'. $element->name .'"';
+            } else {
+                $response = false;
+            }
+
+            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+        } else {
+            $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+
+            if ($draft) {
+                $response = Translations::$plugin->draftRepository->applyTranslationDraft($file->id);
+                $message = 'Draft applied for '. '"'. $element->title .'"';
+            } else {
+                $response = false;
+            }
+
+            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+        }
+
+        if ($response) {
+            $order->logActivity(Translations::$plugin->translator->translate('app', $message));
+
+            $oldTokenRoute = json_encode(array(
+                'action' => 'entries/view-shared-entry',
+                'params' => array(
+                    'draftId' => $file->draftId,
+                ),
+            ));
+
+            $newTokenRoute = json_encode(array(
+                'action' => 'entries/view-shared-entry',
+                'params' => array(
+                    'entryId' => $draft->id,
+                    'locale' => $file->targetSite,
+                ),
+            ));
+
+            Craft::$app->db->createCommand()->update(
+                'tokens',
+                array('route' => $newTokenRoute),
+                'route = :oldTokenRoute',
+                array(':oldTokenRoute' => $oldTokenRoute)
+            );
+        } else {
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t apply draft for '. '"'. $element->title .'"'));
+            Translations::$plugin->orderRepository->saveOrder($order);
+        }
+
+        $file->draftId = 0;
+        $file->status = 'published';
+
+        Translations::$plugin->fileRepository->saveFile($file);
+
+        Translations::$plugin->orderRepository->saveOrder($order);
 
         if (
             $response &&

@@ -15,6 +15,7 @@ use Exception;
 
 use craft\queue\BaseJob;
 use craft\elements\Entry;
+use craft\elements\GlobalSet;
 use acclaro\translations\Translations;
 
 class ApplyDrafts extends BaseJob
@@ -38,8 +39,6 @@ class ApplyDrafts extends BaseJob
                 continue;
             }
 
-            $publishedFilesCount++;
-
             if ($file->status !== 'complete') {
                 continue;
             }
@@ -49,7 +48,7 @@ class ApplyDrafts extends BaseJob
 
             $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
-            if ($element instanceof GlobalSetModel) {
+            if ($element instanceof GlobalSet) {
                 $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
 
                 // keep original global set name
@@ -105,6 +104,7 @@ class ApplyDrafts extends BaseJob
 
             $file->draftId = 0;
             $file->status = 'published';
+            $publishedFilesCount++;
 
             Translations::$plugin->fileRepository->saveFile($file);
         }

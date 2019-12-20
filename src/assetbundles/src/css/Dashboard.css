@@ -109,3 +109,11 @@ body.rtl .widgetmanagerhud .colspan-picker a.highlight.last { border-left: mediu
   .widgetmanagerhud .body { min-width: 300px; }
   .widgetmanagerhud .widgetmanagerhud-col-colspan-picker { display: none; }
 .widgetmanagerhud .widgetmanagerhud-col-move { display: none; } }
+
+@media only screen and (max-width: 1050px) { #trial-notice .pane {width: calc(100% - 7px)} }
+
+.notice-pane{
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}

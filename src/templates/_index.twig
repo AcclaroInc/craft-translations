@@ -57,16 +57,16 @@
 
 {% block content %}
 
-    <div class="item" id="trial-notice" style="padding-bottom: 10px;">
+    <div class="item" id="trial-notice" style="padding-bottom: 10px; display: none; width: calc(100% - 0px)">
         <div data-title="Notice" style="">
             <div class="front" style="position: relative;">
-                <div class="pane">
+                <div class="pane notice-pane">
 
-                    <a class="right icon delete close-notice" title="Close" style="margin-top: -1%; padding-left: 1%"></a>
+                    <a class="right icon delete close-notice" title="Close" style="margin-top: -1%; padding-left: 1%; font-size: 1.2rem"></a>
 
                     {% set plugin = craft.app.plugins.getPlugin('translations', false) %}
 
-                    <div class="body" style="text-align: center">
+                    <div class="body" style="width:100%; text-align: center">
                         <td style="text-align:center;">
                             <span>
                                 {% if licenseStatus == 'valid' %}

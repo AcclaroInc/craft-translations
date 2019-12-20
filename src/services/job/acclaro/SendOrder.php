@@ -17,6 +17,7 @@ use Exception;
 use craft\queue\BaseJob;
 use craft\elements\GlobalSet;
 use craft\elements\Entry;
+use craft\helpers\UrlHelper;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
 
@@ -37,11 +38,14 @@ class SendOrder extends BaseJob
 
         $totalElements = count($order->files);
         $currentElement = 0;
+        $orderUrl = UrlHelper::siteUrl() .'admin/translations/orders/detail/'.$order->id;
+        $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
+        $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
 
         $orderResponse = $acclaroApiClient->createOrder(
             $order->title,
-            $order->comments,
-            $order->requestedDueDate ? DateTime::createFromFormat(DateTime::ISO8601, $order->requestedDueDate) : '',
+            $comments,
+            $order->requestedDueDate,
             $order->id,
             $order->wordCount
         );

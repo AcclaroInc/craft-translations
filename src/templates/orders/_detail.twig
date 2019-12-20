@@ -255,7 +255,9 @@
                                         <th scope="col">{{ 'Source Site'|t }}</th>
                                         <th scope="col">{{ 'Target Site(s)'|t }}</th>
                                         <th scope="col">{{ 'Status'|t }}</th>
-                                        <th scope="col">{{ 'Date Updated'|t }}</th>
+                                        <th scope="col">{{ 'Last Delivered'|t }}</th>
+                                        <th scope="col">{{ 'Applied'|t }}</th>
+                                        <th style="text-align:right;" scope="col">{{ 'Compare Changes'|t }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -280,7 +282,7 @@
                                                     <label class="checkbox" for="element-{{ element.id }}"></label>
                                                 </td>
                                                 {% endif %}
-                                                <td>
+                                                <td style="width: 250px;word-wrap: break-word;">
                                                     <div class="element small hasstatus">
                                                         <span class="status {{ (element.className == 'craft\\elements\\GlobalSet') ? 'green' : element.status }}"></span>
                                                         <div class="label">
@@ -293,33 +295,81 @@
                                                 <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                                 <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
                                                 <td>
-                                                {% for file in files[element.id] %}
-                                                    {% if not loop.first %}
-                                                    <br>
-                                                    {% endif %}
-                                                    <a href="{{ fileUrls[file.id] }}">
-                                                        {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
-                                                    </a>
-                                                    {% if element.className != 'craft\\elements\\GlobalSet' %}
-                                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
-                                                    {% endif %}
-                                                {% endfor %}
+                                                    <table>
+                                                    {% for file in files[element.id] %}
+                                                        <tr>
+                                                        <td>
+                                                            <a href="{{ fileUrls[file.id] }}">
+                                                                {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
+                                                            </a>
+                                                            {% if element.className != 'craft\\elements\\GlobalSet' %}
+                                                                <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                                            {% endif %}
+                                                        </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </table>
                                                 </td>
                                                 <td>
+                                                    <table>
                                                     {% for file in files[element.id] %}
-                                                        {% if not loop.first %}
-                                                        <br>
-                                                        {% endif %}
+                                                        <tr>
+                                                        <td>
                                                         <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
+                                                        </td>
+                                                        </tr>
                                                     {% endfor %}
+                                                    </table>
                                                 </td>
-                                                <td>
+                                                <td style="text-align:right;width:150px;">
+                                                    <table>
                                                     {% for file in files[element.id] %}
-                                                        {% if not loop.first %}
-                                                        <br>
-                                                        {% endif %}
-                                                        {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                                        <tr>
+                                                        <td>
+                                                        {# {% if not loop.first %}
+                                                            <br>
+                                                        {% endif %} #}
+                                                        {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
+                                                        </td>
+                                                        </tr>
                                                     {% endfor %}
+                                                    </table>
+                                                </td>
+                                                <td style="text-align:right;width:150px;">
+                                                    <table>
+                                                    {% for file in files[element.id] %}
+                                                            {# {% if not loop.first %}
+                                                                <br>
+                                                            {% endif %} #}
+                                                            <tr>
+                                                            <td>
+                                                            {% if file.status == 'published' %}
+                                                                {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                                            {% else %}
+                                                                <span style="padding-left: 8px">--</span>
+                                                            {% endif %}
+                                                            </td>
+                                                            </tr>
+                                                    {% endfor %}
+                                                    </table>
+                                                </td>
+                                                <td style="text-align:right;width:80px;">
+                                                    <table>
+                                                    {% for file in files[element.id] %}
+                                                        {# {% if not loop.first %}
+                                                            <br>
+                                                        {% endif %} #}
+                                                        <tr>
+                                                        <td>
+                                                        {% if file.status in ['complete', 'published'] %}
+                                                            <a href="{{ url('translations/orders/get-file-diff') }}/{{ file.id }}" data-file-id="{{ file.id }}" class="view-diff" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
+                                                        {% else %}
+                                                            --
+                                                        {% endif %}
+                                                        </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </table>
                                                 </td>
                                             </tr>
                                         
@@ -332,6 +382,65 @@
             </div>
         </div>
     </form>
+
+
+    <div class="hidden">
+        <div id="diff-modal-entry" class="modal" tabindex="-1" role="dialog" style="padding:15px;overflow-y:auto;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header field">
+                        <div class="modal-title">
+                            <h1>Entry Modification Details</h1>
+                            <div class="buttons">
+                                <form method="post" accept-charset="UTF-8">
+                                    {{ csrfInput() }}
+
+                                    {{ forms.hidden({
+                                        name: 'action',
+                                        value: 'translations/files/apply-translation-draft',
+                                    }) }}
+
+                                    {{ forms.hidden({
+                                        name: 'orderId',
+                                        value: order.id,
+                                    }) }}
+                                    <input type="hidden" name="fileId" value="" id="diff-element">
+                                    <input type="submit" class="btn submit apply-translation disabled" id="apply-translation" value="Apply Translation" disabled/>
+                                    <a href="#" id="close-diff-modal-entry" class="btn">Close</a>
+                                </form>
+
+                            </div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Entry ID:</label>
+                            <div class="instructions entryId"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Entry Title:</label>
+                            <div class="instructions entryName"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Site:</label>
+                            <div class="instructions siteLabel"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Last Translated:</label>
+                            <div class="instructions fileDate"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Date Updated:</label>
+                            <div class="instructions entryDate"></div>
+                        </div>
+                        <div class="heading">
+                            <label for="">Words Difference:</label>
+                            <div class="instructions wordDifference"></div>
+                        </div>
+                    </div>
+                    <div id="modal-body-entry" class="modal-body-entry"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% elseif orderSubmitted %}
 <div class="translations-order-confirmation flex">

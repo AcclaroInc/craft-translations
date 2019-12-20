@@ -27,6 +27,10 @@ class FileRepository
     {
         $record = FileRecord::findOne($fileId);
 
+        if (!$record) {
+            return false;
+        }
+
         $file = new FileModel($record->toArray([
             'id',
             'orderId',
@@ -41,6 +45,7 @@ class FileRepository
             'previewUrl',
             'serviceFileId',
             'dateUpdated',
+            'dateDelivered',
         ]));
 
         return $file;
@@ -77,6 +82,7 @@ class FileRepository
             'target',
             'previewUrl',
             'serviceFileId',
+            'dateDelivered',
         ]));
 
         return $file;
@@ -113,6 +119,7 @@ class FileRepository
                 'previewUrl',
                 'serviceFileId',
                 'dateUpdated',
+                'dateDelivered',
             ]));
         }
 
@@ -149,6 +156,7 @@ class FileRepository
                 'target',
                 'previewUrl',
                 'serviceFileId',
+                'dateDelivered',
             ]));
         }
 
@@ -179,7 +187,8 @@ class FileRepository
                 'target',
                 'previewUrl',
                 'serviceFileId',
-                'dateUpdated'
+                'dateUpdated',
+                'dateDelivered',
             ]));
         }
 
