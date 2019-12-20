@@ -257,7 +257,7 @@
                                         <th scope="col">{{ 'Status'|t }}</th>
                                         <th scope="col">{{ 'Last Delivered'|t }}</th>
                                         <th scope="col">{{ 'Applied'|t }}</th>
-                                        <th scope="col">{{ 'Compare Changes'|t }}</th>
+                                        <th style="text-align:right;" scope="col">{{ 'Compare Changes'|t }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -282,7 +282,7 @@
                                                     <label class="checkbox" for="element-{{ element.id }}"></label>
                                                 </td>
                                                 {% endif %}
-                                                <td>
+                                                <td style="width: 250px;word-wrap: break-word;">
                                                     <div class="element small hasstatus">
                                                         <span class="status {{ (element.className == 'craft\\elements\\GlobalSet') ? 'green' : element.status }}"></span>
                                                         <div class="label">
@@ -295,57 +295,81 @@
                                                 <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                                 <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
                                                 <td>
-                                                {% for file in files[element.id] %}
-                                                    {% if not loop.first %}
-                                                    <br>
-                                                    {% endif %}
-                                                    <a href="{{ fileUrls[file.id] }}">
-                                                        {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
-                                                    </a>
-                                                    {% if element.className != 'craft\\elements\\GlobalSet' %}
-                                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
-                                                    {% endif %}
-                                                {% endfor %}
-                                                </td>
-                                                <td>
+                                                    <table>
                                                     {% for file in files[element.id] %}
-                                                        {% if not loop.first %}
-                                                        <br>
-                                                        {% endif %}
-                                                        <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
-                                                    {% endfor %}
-                                                </td>
-                                                <td>
-                                                    {% for file in files[element.id] %}
-                                                        {% if not loop.first %}
-                                                            <br>
-                                                        {% endif %}
-                                                        {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
-                                                    {% endfor %}
-                                                </td>
-                                                <td>
-                                                    {% for file in files[element.id] %}
-                                                            {% if not loop.first %}
-                                                                <br>
+                                                        <tr>
+                                                        <td>
+                                                            <a href="{{ fileUrls[file.id] }}">
+                                                                {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
+                                                            </a>
+                                                            {% if element.className != 'craft\\elements\\GlobalSet' %}
+                                                                <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
                                                             {% endif %}
+                                                        </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </table>
+                                                </td>
+                                                <td>
+                                                    <table>
+                                                    {% for file in files[element.id] %}
+                                                        <tr>
+                                                        <td>
+                                                        <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
+                                                        </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </table>
+                                                </td>
+                                                <td style="text-align:right;width:150px;">
+                                                    <table>
+                                                    {% for file in files[element.id] %}
+                                                        <tr>
+                                                        <td>
+                                                        {# {% if not loop.first %}
+                                                            <br>
+                                                        {% endif %} #}
+                                                        {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
+                                                        </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </table>
+                                                </td>
+                                                <td style="text-align:right;width:150px;">
+                                                    <table>
+                                                    {% for file in files[element.id] %}
+                                                            {# {% if not loop.first %}
+                                                                <br>
+                                                            {% endif %} #}
+                                                            <tr>
+                                                            <td>
                                                             {% if file.status == 'published' %}
                                                                 {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
                                                             {% else %}
                                                                 <span style="padding-left: 8px">--</span>
                                                             {% endif %}
+                                                            </td>
+                                                            </tr>
                                                     {% endfor %}
+                                                    </table>
                                                 </td>
-                                                <td style="">
+                                                <td style="text-align:right;width:80px;">
+                                                    <table>
                                                     {% for file in files[element.id] %}
-                                                        {% if not loop.first %}
+                                                        {# {% if not loop.first %}
                                                             <br>
-                                                        {% endif %}
+                                                        {% endif %} #}
+                                                        <tr>
+                                                        <td>
                                                         {% if file.status in ['complete', 'published'] %}
                                                             <a href="{{ url('translations/orders/get-file-diff') }}/{{ file.id }}" data-file-id="{{ file.id }}" class="view-diff" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
                                                         {% else %}
                                                             --
                                                         {% endif %}
+                                                        </td>
+                                                        </tr>
                                                     {% endfor %}
+                                                    </table>
                                                 </td>
                                             </tr>
                                         

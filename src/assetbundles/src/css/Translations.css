@@ -185,6 +185,11 @@
     margin: 0 0 4em;
 }
 
+.translations-order-detail-summary table table tbody th,
+.translations-order-detail-summary table table tbody td {
+    border: 0px !important;
+}
+
 .translations-order-detail-entries {
     width: 40%;
 }
