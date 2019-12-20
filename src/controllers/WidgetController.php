@@ -727,7 +727,6 @@ class WidgetController extends Controller
         $this->saveWidget($this->createWidget(LanguageCoverage::class));
         $this->saveWidget($this->createWidget(Translators::class));
         $this->saveWidget($this->createWidget(News::class));
-        $this->saveWidget($this->createWidget(RecentEntries::class));
 
         // Update user preferences
         $preferences = [
