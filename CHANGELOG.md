@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.4.0 - 2019-10-18
+
+### Added
+- New source entries widget
+- Updated order detail page
+    - Compare file changes
+- Improved errors for failed API requests
+- Additional XML import error reporting
+- Bug fixes
+
 ## 1.3.0 - 2019-10-18
 
 ### Added
