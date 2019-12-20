@@ -8,11 +8,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 - New source entries widget
-- Updated order detail page
-    - Compare file changes
 - Improved errors for failed API requests
 - Additional XML import error reporting
 - Bug fixes
+
+### Updated
+- Updated order detail page
+    - Compare file changes
+- API request methods
 
 ## 1.3.0 - 2019-10-18
 
