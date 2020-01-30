@@ -97,7 +97,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             $btngroup.appendTo($inputgroup);
         } else {
             if (data.licenseStatus === 'valid') {
-                $btngroup.prependTo('#header #button-container');
+                $btngroup.insertBefore('#header #action-button');
             }
         }
 

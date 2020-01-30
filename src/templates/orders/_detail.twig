@@ -7,7 +7,7 @@
 
 {% set title = 'Translations'|t %}
 {% block actionButton %}
-<small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+    <small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
 {% endblock %}
 
 {% set crumbs = [
@@ -31,222 +31,225 @@
 
 
 {% block content %}
-{% if isSubmitted %}
+    {% if isSubmitted %}
 
-    <div class="translations-order-detail-summary">
+        <div style="display: flex">
+            <div class="translations-order-detail-summary">
 
-        {% if order.translator.service is defined and order.translator.service == 'export_import' %}
+                {% if order.translator.service is defined and order.translator.service == 'export_import' %}
 
-            {% if order.status == 'published'%}
-                <a class="btn disabled right margin-left" id="">{{ 'Import'|t }}</a>
-                <a class="btn disabled right" id="">{{ 'Export'|t }}</a>
-            {% else %}
-                <div class="buttons translations-order-detail-button-wrapper">
-                    <a class="btn submit right" id="import-tool">{{ 'Import'|t('app') }}</a>
-                    <div class="utility-status"></div>
-                </div>
-                <div class="hud-wrapper hidden">
-                    <div id="translations-import-form" class="form meta">
+                    {% if order.status == 'published'%}
+                        <a class="btn disabled right margin-left" id="">{{ 'Import'|t }}</a>
+                        <a class="btn disabled right" id="">{{ 'Export'|t }}</a>
+                    {% else %}
+                        <div class="buttons translations-order-detail-button-wrapper">
+                            <a class="btn submit right" id="import-tool">{{ 'Import'|t('app') }}</a>
+                            <div class="utility-status"></div>
+                        </div>
+                        <div class="hud-wrapper hidden">
+                            <div id="translations-import-form" class="form meta">
+                                {{ forms.hidden({
+                                    name: 'orderId',
+                                    id: 'order_id',
+                                    value: orderId,
+                                }) }}
+                            </div>
+                        </div>
+
+                        <form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
+                            <input type="hidden" name="action" value="translations/files/create-export-zip">
+                            {{ csrfInput() }}
+
+                            {{ forms.hidden({
+                                name: 'orderId',
+                                value: order.id
+                            }) }}
+
+                            <div class="buttons translations-order-detail-button-wrapper">
+                                <input type="submit" class="btn submit right" value="{{ "Export"|t('app') }}" />
+                                <div class="utility-status"></div>
+                            </div>
+                        </form>
+                        {% js 'new Craft.Translations.ExportFiles(\'export-zip\');' %}
+                    {% endif %}
+                {% else %}
+                    {# {% if order.status != 'complete' and order.status != 'published' %} #}
+                    {% if order.status != 'published' %}
+                        <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
+                            {{ csrfInput() }}
+                            {{ forms.hidden({
+                                name: 'action',
+                                value: 'translations/base/sync-order',
+                            }) }}
+
+                            {{ forms.hidden({
+                                name: 'orderId',
+                                value: order.id
+                            }) }}
+
+                            <div class="buttons translations-order-detail-button-wrapper">
+                                <input type="submit" class="btn submit right" value="{{ "Sync"|t('app') }}" />
+                                <div class="sync-status"></div>
+                            </div>
+                        </form>
+                    {% endif %}
+                {% endif %}
+
+                {% if order.translator.service is defined and order.translator.service != 'export_import' %}
+                    <h2>{{ 'Order'|t }} #{{ order.serviceOrderId }} - {{ order.title }}</h2>
+                {% else %}
+                    <h2>{{ 'Order'|t }} #{{ order.id }} - {{ order.title }}</h2>
+                {% endif %}
+
+
+                <table class="data">
+                    <tbody>
+                    <tr>
+                        <th>{{ 'ID'|t }}</th>
+                        {% if order.translator.service is defined and order.translator.service != 'export_import' %}
+                            <td><a href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }}</a></td>
+                        {% else %}
+                            <td>#{{ order.id }}</td>
+                        {% endif %}
+                    </tr>
+
+                    <tr>
+                        <th>{{ 'Name'|t }}</th>
+                        <td> <span class="order_label"> <span id="order_name"> {{ order.title }} </span> &nbsp;
+                                {% if order.translator.service is defined and order.translator.service == 'export_import' %}
+                                    <a class="icon edit editOrder" title="Edit Order Name"></a>
+                                {% endif %}
+                            </span>
+                            <span id="order_name_input" style="display: none">
+                                <input type="hidden" id="order_id" value="{{ order.id }}">
+                                <input type="text" id="new_order_name" value="{{ order.title }}">
+                                <a id="saveOrderName" data-icon="check" title="Save"></a>
+                                <a class="icon delete cancelOrderName" title="Cancel"></a>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{ 'Translator'|t }}</th>
+                        <td>{{ order.translatorId ? order.translator.name : 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ 'Source Site'|t }}</th>
+                        <td>
+                            {{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span><br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{ 'Target Sites'|t }}</th>
+                        <td>
+                            {% for targetSite in orderTargetSitesObject %}
+                                {{targetSite.name}} <span class="light">({{ targetSite.language }})</span>
+                                {% if not loop.last %}<br>{% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{ 'Created Date'|t }}</th>
+                        <td>{{ order.dateOrdered ? order.dateOrdered|date('n/j/Y') : '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ 'Status'|t }}</th>
+                        <td>
+                            <input type="radio" name="__status" disabled="disabled"{% if order.status == 'new' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Pending submission'|t }}<br>
+                            <input type="radio" name="__status" disabled="disabled"{% if order.status == 'in progress' or order.status == 'getting quote' or order.status == 'needs approval' or order.status == 'in preparation' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'In progress'|t }}<br>
+                            <input type="radio" name="__status" disabled="disabled"{% if order.status == 'complete' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Ready to update'|t }}<br>
+                            <input type="radio" name="__status" disabled="disabled"{% if order.status == 'published' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Updated'|t }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{ 'Requested Due Date'|t }}</th>
+                        <td>{{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+            <div class="translations-order-detail-entries">
+
+                <h2>{{ 'Order Entries Translation Status'|t }}</h2>
+
+                <table class="data">
+                    <tbody>
+                    <tr>
+                        <td>{{ 'Expecting '|t  }}<td>
+                        <td>{{entriesCountByElement}}<td>
+                    <tr>
+                    <tr>
+                        <td>{{ 'Complete '|t  }}<td>
+                        <td>{{entriesCountByElementCompleted}}<td>
+                    <tr>
+                    </tbody>
+                </table>
+
+                {% if order.status != 'published' %}
+                    <form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
+                        {{ csrfInput() }}
+                        {{ forms.hidden({
+                            name: 'action',
+                            value: 'translations/base/regenerate-preview-urls',
+                        }) }}
+
                         {{ forms.hidden({
                             name: 'orderId',
-                            id: 'order_id',
-                            value: orderId,
+                            value: order.id
                         }) }}
-                    </div>
-                 </div>
 
-                 <form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
-                    <input type="hidden" name="action" value="translations/files/create-export-zip">
-                    {{ csrfInput() }}
+                        <div class="buttons">
+                            <input type="submit" class="btn right" value="{{ "Regenerate Preview Urls"|t('app') }}" />
+                        </div>
+                    </form>
+                {% endif %}
 
-                    {{ forms.hidden({
-                        name: 'orderId',
-                        value: order.id
-                    }) }}
-
-                    <div class="buttons translations-order-detail-button-wrapper">
-                        <input type="submit" class="btn submit right" value="{{ "Export"|t('app') }}" />
-                        <div class="utility-status"></div>
-                    </div>
-                </form>
-                {% js 'new Craft.Translations.ExportFiles(\'export-zip\');' %}
-            {% endif %}
-        {% else %}
-            {# {% if order.status != 'complete' and order.status != 'published' %} #}
-            {% if order.status != 'published' %}
-                <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
-                    {{ csrfInput() }}
-                    {{ forms.hidden({
-                        name: 'action',
-                        value: 'translations/base/sync-order',
-                    }) }}
-
-                    {{ forms.hidden({
-                        name: 'orderId',
-                        value: order.id
-                    }) }}
-
-                    <div class="buttons translations-order-detail-button-wrapper">
-                        <input type="submit" class="btn submit right" value="{{ "Sync"|t('app') }}" />
-                        <div class="sync-status"></div>
-                    </div>
-                </form>
-            {% endif %}
-        {% endif %}
-        
-        {% if order.translator.service is defined and order.translator.service != 'export_import' %}
-            <h2>{{ 'Order'|t }} #{{ order.serviceOrderId }} - {{ order.title }}</h2>
-        {% else %}
-             <h2>{{ 'Order'|t }} #{{ order.id }} - {{ order.title }}</h2>
-        {% endif %}
-
-
-        <table class="data">
-            <tbody>
-                <tr>
-                    <th>{{ 'ID'|t }}</th>
-                    {% if order.translator.service is defined and order.translator.service != 'export_import' %}
-                        <td><a href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }}</a></td>
-                    {% else %}
-                        <td>#{{ order.id }}</td>
-                    {% endif %}
-                </tr>
-              
-                <tr>
-                    <th>{{ 'Name'|t }}</th>
-                    <td> <span class="order_label"> <span id="order_name"> {{ order.title }} </span> &nbsp;
-                            {% if order.translator.service is defined and order.translator.service == 'export_import' %}
-                                <a class="icon edit editOrder" title="Edit Order Name"></a>
-                            {% endif %}
-                        </span>
-                        <span id="order_name_input" style="display: none">
-                            <input type="hidden" id="order_id" value="{{ order.id }}">
-                            <input type="text" id="new_order_name" value="{{ order.title }}">
-                            <a id="saveOrderName" data-icon="check" title="Save"></a>
-                            <a class="icon delete cancelOrderName" title="Cancel"></a>
-                        </span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>{{ 'Translator'|t }}</th>
-                    <td>{{ order.translatorId ? order.translator.name : 'N/A' }}</td>
-                </tr>
-                <tr>
-                    <th>{{ 'Source Site'|t }}</th>
-                    <td>
-                        {{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span><br>
-                    </td>
-                </tr>
-                <tr>
-                    <th>{{ 'Target Sites'|t }}</th>
-                    <td>
-                        {% for targetSite in orderTargetSitesObject %}
-                            {{targetSite.name}} <span class="light">({{ targetSite.language }})</span>
-                            {% if not loop.last %}<br>{% endif %}
+                <div class="translations-order-detail-activity-log">
+                    <h2>{{ 'Order Activity Log'|t }}</h2>
+                    <ul class="bullets">
+                        {% for log in order.activityLogArray %}
+                            <li>{{ log.date }} &ndash; {{ log.message }}</li>
                         {% endfor %}
-                    </td>
-                </tr>
-                 <tr>
-                    <th>{{ 'Created Date'|t }}</th>
-                    <td>{{ order.dateOrdered ? order.dateOrdered|date('n/j/Y') : '' }}</td>
-                </tr>
-                <tr>
-                    <th>{{ 'Status'|t }}</th>
-                    <td>
-                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'new' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Pending submission'|t }}<br>
-                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'in progress' or order.status == 'getting quote' or order.status == 'needs approval' or order.status == 'in preparation' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'In progress'|t }}<br>
-                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'complete' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Ready to update'|t }}<br>
-                        <input type="radio" name="__status" disabled="disabled"{% if order.status == 'published' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Updated'|t }}
-                    </td>
-                </tr>
-                <tr>
-                    <th>{{ 'Requested Due Date'|t }}</th>
-                    <td>{{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }}</td>
-                </tr>
-            </tbody>
-        </table>
-   
-    </div>
+                    </ul>
+                </div>
+            </div>
 
-    <div class="translations-order-detail-entries right">
-        
-        <h2>{{ 'Order Entries Translation Status'|t }}</h2>
+        </div>
 
-        <table class="data">
-            <tbody>
-                <tr>
-                    <td>{{ 'Expecting '|t  }}<td>
-                    <td>{{entriesCountByElement}}<td>
-                <tr>
-                <tr>
-                    <td>{{ 'Complete '|t  }}<td>
-                    <td>{{entriesCountByElementCompleted}}<td>
-                <tr>
-            </tbody>
-        </table>
-
-        {% if order.status != 'published' %}
-        <form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
+        <form method="post" accept-charset="UTF-8">
             {{ csrfInput() }}
+
             {{ forms.hidden({
                 name: 'action',
-                value: 'translations/base/regenerate-preview-urls',
+                value: 'translations/base/apply-drafts',
             }) }}
 
             {{ forms.hidden({
                 name: 'orderId',
-                value: order.id
+                value: order.id,
             }) }}
 
-            <div class="buttons">
-                <input type="submit" class="btn right" value="{{ "Regenerate Preview Urls"|t('app') }}" />
-            </div>
-        </form>
-        {% endif %}
-
-          <div class="translations-order-detail-activity-log">
-            <h2>{{ 'Order Activity Log'|t }}</h2>
-            <ul class="bullets">
-                {% for log in order.activityLogArray %}
-                <li>{{ log.date }} &ndash; {{ log.message }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-
-    <form method="post" accept-charset="UTF-8">
-        {{ csrfInput() }}
-
-        {{ forms.hidden({
-            name: 'action',
-            value: 'translations/base/apply-drafts',
-        }) }}
-
-        {{ forms.hidden({
-            name: 'orderId',
-            value: order.id,
-        }) }}
-
-        <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
-            <div class="elementindex">
-                <div class="main">
-                    {% if order.status == 'complete' or order.status == 'in progress' %}
-                    <div class="toolbar">
-                        <div class="buttons right">
-                            <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to apply translation drafts to these entries?'|t }}" disabled="disabled" value="{{ 'Apply Translation Drafts'|t }}">
-                        </div>
-                    </div>
-                    {% endif %}
-                    <div class="elements">
-                        <div class="tableview">
-                            <table class="data fullwidth">
-                                <thead>
+            <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
+                <div class="elementindex">
+                    <div class="main">
+                        {% if order.status == 'complete' or order.status == 'in progress' %}
+                            <div class="toolbar">
+                                <div class="buttons right">
+                                    <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to apply translation drafts to these entries?'|t }}" disabled="disabled" value="{{ 'Apply Translation Drafts'|t }}">
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="elements">
+                            <div class="tableview">
+                                <table class="data fullwidth">
+                                    <thead>
                                     <tr>
                                         {% if order.status == 'complete' or order.status == 'in progress' %}
-                                        <td class="thin checkbox-cell translations-checkbox-cell">
-                                            <input class="checkbox" id="element-0" type="checkbox">
-                                            <label class="checkbox" for="element-0"></label>
-                                        </td>
+                                            <td class="thin checkbox-cell translations-checkbox-cell">
+                                                <input class="checkbox" id="element-0" type="checkbox">
+                                                <label class="checkbox" for="element-0"></label>
+                                            </td>
                                         {% else %}
                                             <td> &nbsp; </td>
                                         {% endif %}
@@ -259,265 +262,265 @@
                                         <th scope="col">{{ 'Applied'|t }}</th>
                                         <th style="text-align:right;" scope="col">{{ 'Compare Changes'|t }}</th>
                                     </tr>
-                                </thead>
-                                <tbody>
+                                    </thead>
+                                    <tbody>
                                     {% for element in elements %}
-                                    
-                                            {% set allowUpdate = 1 %}
-                                            {% for file in files[element.id] %}
-                                                {% if file.status != 'complete' and file.status != 'published' %}
-                                                    {% set allowUpdate = 0 %}
-                                                {% endif %}
-                                            {% endfor %}
 
-                                            <tr>
-                                                {% if allowUpdate %}
+                                        {% set allowUpdate = 1 %}
+                                        {% for file in files[element.id] %}
+                                            {% if file.status != 'complete' and file.status != 'published' %}
+                                                {% set allowUpdate = 0 %}
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        <tr>
+                                            {% if allowUpdate %}
                                                 <td class="thin checkbox-cell translations-checkbox-cell">
                                                     <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"{% if isElementPublished[element.id] %} disabled="disabled"{% endif %}>
                                                     <label class="checkbox" for="element-{{ element.id }}"></label>
                                                 </td>
-                                                {% else %}
+                                            {% else %}
                                                 <td class="thin checkbox-cell translations-checkbox-cell">
                                                     <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="" disabled="disabled">
                                                     <label class="checkbox" for="element-{{ element.id }}"></label>
                                                 </td>
-                                                {% endif %}
-                                                <td style="width: 250px;word-wrap: break-word;">
-                                                    <div class="element small hasstatus">
-                                                        <span class="status {{ (element.className == 'craft\\elements\\GlobalSet') ? 'green' : element.status }}"></span>
-                                                        <div class="label">
+                                            {% endif %}
+                                            <td style="width: 250px;word-wrap: break-word;">
+                                                <div class="element small hasstatus">
+                                                    <span class="status {{ (element.className == 'craft\\elements\\GlobalSet') ? 'green' : element.status }}"></span>
+                                                    <div class="label">
                                                             <span class="title">
                                                                 <a href="{{ element.cpEditUrl }}">{{ element.title ?? element.name }}</a>
                                                             </span>
-                                                        </div>
                                                     </div>
-                                                </td>
-                                                <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
-                                                <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
-                                                <td>
-                                                    <table>
+                                                </div>
+                                            </td>
+                                            <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
+                                            <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
+                                            <td>
+                                                <table>
                                                     {% for file in files[element.id] %}
                                                         <tr>
-                                                        <td>
-                                                            <a href="{{ fileUrls[file.id] }}">
-                                                                {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
-                                                            </a>
-                                                            {% if element.className != 'craft\\elements\\GlobalSet' %}
-                                                                <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
-                                                            {% endif %}
-                                                        </td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                    </table>
-                                                </td>
-                                                <td>
-                                                    <table>
-                                                    {% for file in files[element.id] %}
-                                                        <tr>
-                                                        <td>
-                                                        <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
-                                                        </td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                    </table>
-                                                </td>
-                                                <td style="text-align:right;width:150px;">
-                                                    <table>
-                                                    {% for file in files[element.id] %}
-                                                        <tr>
-                                                        <td>
-                                                        {# {% if not loop.first %}
-                                                            <br>
-                                                        {% endif %} #}
-                                                        {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
-                                                        </td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                    </table>
-                                                </td>
-                                                <td style="text-align:right;width:150px;">
-                                                    <table>
-                                                    {% for file in files[element.id] %}
-                                                            {# {% if not loop.first %}
-                                                                <br>
-                                                            {% endif %} #}
-                                                            <tr>
                                                             <td>
-                                                            {% if file.status == 'published' %}
-                                                                {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
-                                                            {% else %}
-                                                                <span style="padding-left: 8px">--</span>
-                                                            {% endif %}
+                                                                <a href="{{ fileUrls[file.id] }}">
+                                                                    {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
+                                                                </a>
+                                                                {% if element.className != 'craft\\elements\\GlobalSet' %}
+                                                                    <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                                                {% endif %}
                                                             </td>
-                                                            </tr>
+                                                        </tr>
                                                     {% endfor %}
-                                                    </table>
-                                                </td>
-                                                <td style="text-align:right;width:80px;">
-                                                    <table>
+                                                </table>
+                                            </td>
+                                            <td>
+                                                <table>
+                                                    {% for file in files[element.id] %}
+                                                        <tr>
+                                                            <td>
+                                                                <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </table>
+                                            </td>
+                                            <td style="text-align:right;width:150px;">
+                                                <table>
+                                                    {% for file in files[element.id] %}
+                                                        <tr>
+                                                            <td>
+                                                                {# {% if not loop.first %}
+                                                                    <br>
+                                                                {% endif %} #}
+                                                                {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </table>
+                                            </td>
+                                            <td style="text-align:right;width:150px;">
+                                                <table>
                                                     {% for file in files[element.id] %}
                                                         {# {% if not loop.first %}
                                                             <br>
                                                         {% endif %} #}
                                                         <tr>
-                                                        <td>
-                                                        {% if file.status in ['complete', 'published'] %}
-                                                            <a href="{{ url('translations/orders/get-file-diff') }}/{{ file.id }}" data-file-id="{{ file.id }}" class="view-diff" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
-                                                        {% else %}
-                                                            --
-                                                        {% endif %}
-                                                        </td>
+                                                            <td>
+                                                                {% if file.status == 'published' %}
+                                                                    {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                                                {% else %}
+                                                                    <span style="padding-left: 8px">--</span>
+                                                                {% endif %}
+                                                            </td>
                                                         </tr>
                                                     {% endfor %}
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        
+                                                </table>
+                                            </td>
+                                            <td style="text-align:right;width:80px;">
+                                                <table>
+                                                    {% for file in files[element.id] %}
+                                                        {# {% if not loop.first %}
+                                                            <br>
+                                                        {% endif %} #}
+                                                        <tr>
+                                                            <td>
+                                                                {% if file.status in ['complete', 'published'] %}
+                                                                    <a href="{{ url('translations/orders/get-file-diff') }}/{{ file.id }}" data-file-id="{{ file.id }}" class="view-diff" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
+                                                                {% else %}
+                                                                    --
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </table>
+                                            </td>
+                                        </tr>
+
                                     {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
-
-
-    <div class="hidden">
-        <div id="diff-modal-entry" class="modal" tabindex="-1" role="dialog" style="padding:15px;overflow-y:auto;">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header field">
-                        <div class="modal-title">
-                            <h1>Entry Modification Details</h1>
-                            <div class="buttons">
-                                <form method="post" accept-charset="UTF-8">
-                                    {{ csrfInput() }}
-
-                                    {{ forms.hidden({
-                                        name: 'action',
-                                        value: 'translations/files/apply-translation-draft',
-                                    }) }}
-
-                                    {{ forms.hidden({
-                                        name: 'orderId',
-                                        value: order.id,
-                                    }) }}
-                                    <input type="hidden" name="fileId" value="" id="diff-element">
-                                    <input type="submit" class="btn submit apply-translation disabled" id="apply-translation" value="Apply Translation" disabled/>
-                                    <a href="#" id="close-diff-modal-entry" class="btn">Close</a>
-                                </form>
-
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                        <div class="heading">
-                            <label for="">Entry ID:</label>
-                            <div class="instructions entryId"></div>
-                        </div>
-                        <div class="heading">
-                            <label for="">Entry Title:</label>
-                            <div class="instructions entryName"></div>
-                        </div>
-                        <div class="heading">
-                            <label for="">Site:</label>
-                            <div class="instructions siteLabel"></div>
-                        </div>
-                        <div class="heading">
-                            <label for="">Last Translated:</label>
-                            <div class="instructions fileDate"></div>
-                        </div>
-                        <div class="heading">
-                            <label for="">Date Updated:</label>
-                            <div class="instructions entryDate"></div>
-                        </div>
-                        <div class="heading">
-                            <label for="">Words Difference:</label>
-                            <div class="instructions wordDifference"></div>
-                        </div>
                     </div>
-                    <div id="modal-body-entry" class="modal-body-entry"></div>
+                </div>
+            </div>
+        </form>
+
+
+        <div class="hidden">
+            <div id="diff-modal-entry" class="modal" tabindex="-1" role="dialog" style="padding:15px;overflow-y:auto;">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header field">
+                            <div class="modal-title">
+                                <h1>Entry Modification Details</h1>
+                                <div class="buttons">
+                                    <form method="post" accept-charset="UTF-8">
+                                        {{ csrfInput() }}
+
+                                        {{ forms.hidden({
+                                            name: 'action',
+                                            value: 'translations/files/apply-translation-draft',
+                                        }) }}
+
+                                        {{ forms.hidden({
+                                            name: 'orderId',
+                                            value: order.id,
+                                        }) }}
+                                        <input type="hidden" name="fileId" value="" id="diff-element">
+                                        <input type="submit" class="btn submit apply-translation disabled" id="apply-translation" value="Apply Translation" disabled/>
+                                        <a href="#" id="close-diff-modal-entry" class="btn">Close</a>
+                                    </form>
+
+                                </div>
+                            </div>
+                            <div class="heading">
+                                <label for="">Entry ID:</label>
+                                <div class="instructions entryId"></div>
+                            </div>
+                            <div class="heading">
+                                <label for="">Entry Title:</label>
+                                <div class="instructions entryName"></div>
+                            </div>
+                            <div class="heading">
+                                <label for="">Site:</label>
+                                <div class="instructions siteLabel"></div>
+                            </div>
+                            <div class="heading">
+                                <label for="">Last Translated:</label>
+                                <div class="instructions fileDate"></div>
+                            </div>
+                            <div class="heading">
+                                <label for="">Date Updated:</label>
+                                <div class="instructions entryDate"></div>
+                            </div>
+                            <div class="heading">
+                                <label for="">Words Difference:</label>
+                                <div class="instructions wordDifference"></div>
+                            </div>
+                        </div>
+                        <div id="modal-body-entry" class="modal-body-entry"></div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-{% elseif orderSubmitted %}
-<div class="translations-order-confirmation flex">
-    <div class="fullwidth readable">
-        <img src="{{ cpAssetUrl }}/images/success.png" alt="">
-        <div class="thank-you">
-            <h2>Thank You!</h2>
-            <p>Your order has been placed in the queue</p>
-        </div>
-        <div class="instructions">
-            <p>You can navigate away from this page. If you are not automatically redirected after your order is created, you can <a href="{{ url('translations/orders') }}">view your orders here</a>.</p>
-        </div>
-        <a href="{{ url('entries') }}" class="btn submit">Create New Order</a>
-    </div>
-</div>
-{% else %}
-    <form method="post" class="translations-order-form" data-confirm-unload accept-charset="UTF-8">
-        {{ csrfInput() }}
-
-        {{ forms.hidden({
-            name: 'action',
-            value: 'translations/base/save-order',
-        }) }}
-
-        {{ forms.hidden({
-            name: 'id',
-            value: orderId,
-        }) }}
-
-        {{ forms.hidden({
-            name: 'sourceSite',
-            value: order.sourceSite,
-        }) }}
-
-        {% if orderId %}
-        <h1>{{ 'Edit Order'|t }}</h1>
-        {% else %}
-        <h1>{{ 'Create New Order'|t }}</h1>
-        {% endif %}
-
-        <div class="translations-order-step-btngroup">
-            <ul>
-                <li>
-                    <a class="btn big{% if orderId %} prev{% endif %}" href="#step1">1 - {{ 'Choose Entries'|t }}</a>
-                </li>
-                <li>
-                    <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step2">2 - {{ 'Select Sites'|t }}</a>
-                </li>
-                <li>
-                    <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step3">3 - {{ 'Add Details'|t }}</a>
-                </li>
-                <li>
-                    <a class="btn big{% if orderId is empty %} disabled{% endif %}" href="#step4">4 - {{ 'Submit'|t }}</a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="translations-order-steps">
-            <div class="translations-order-step{% if orderId is empty %} active{% endif %}" id="step1">
-                <div class="translations-order-step-intro">
-                    <h2>{{ 'Choose Entries'|t }}</h2>
-
-                    <p>{{ 'Entries that are added to this order will appear below. You can add entries from either of the following:'|t }}</p>
-
-                    <ul class="bullets">
-                        <li>{{ 'Edit entry page'|t }}</li>
-                        <li>{{ 'Entries archive page'|t }}</li>
-                    </ul>
+    {% elseif orderSubmitted %}
+        <div class="translations-order-confirmation flex">
+            <div class="fullwidth readable">
+                <img src="{{ cpAssetUrl }}/images/success.png" alt="">
+                <div class="thank-you">
+                    <h2>Thank You!</h2>
+                    <p>Your order has been placed in the queue</p>
                 </div>
+                <div class="instructions">
+                    <p>You can navigate away from this page. If you are not automatically redirected after your order is created, you can <a href="{{ url('translations/orders') }}">view your orders here</a>.</p>
+                </div>
+                <a href="{{ url('entries') }}" class="btn submit">Create New Order</a>
+            </div>
+        </div>
+    {% else %}
+        <form method="post" class="translations-order-form" data-confirm-unload accept-charset="UTF-8">
+            {{ csrfInput() }}
 
-                {% if orderEntriesCount == 0 %}
-                <h2>{{ 'No entries selected'|t }}</h2>
-                <p><a href="{{ url('entries') }}">{{ 'Add entries from the Craft Entry listing screen.'|t }} &raquo;</a></p>
-                {% else %}
-                <table class="data">
-                    <caption><span data-order-attribute="entriesCount">{{ orderEntriesCount }}</span> {{ orderEntriesCount == 1 ? 'entry selected'|t : 'entries selected'|t }}, <span data-order-attribute="wordCount">{{ orderWordCount }}</span> {{ 'words'|t }}</caption>
-                    <thead>
+            {{ forms.hidden({
+                name: 'action',
+                value: 'translations/base/save-order',
+            }) }}
+
+            {{ forms.hidden({
+                name: 'id',
+                value: orderId,
+            }) }}
+
+            {{ forms.hidden({
+                name: 'sourceSite',
+                value: order.sourceSite,
+            }) }}
+
+            {% if orderId %}
+                <h1>{{ 'Edit Order'|t }}</h1>
+            {% else %}
+                <h1>{{ 'Create New Order'|t }}</h1>
+            {% endif %}
+
+            <div class="translations-order-step-btngroup">
+                <ul>
+                    <li>
+                        <a class="btn big{% if orderId %} prev{% endif %}" href="#step1">1 - {{ 'Choose Entries'|t }}</a>
+                    </li>
+                    <li>
+                        <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step2">2 - {{ 'Select Sites'|t }}</a>
+                    </li>
+                    <li>
+                        <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step3">3 - {{ 'Add Details'|t }}</a>
+                    </li>
+                    <li>
+                        <a class="btn big{% if orderId is empty %} disabled{% endif %}" href="#step4">4 - {{ 'Submit'|t }}</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="translations-order-steps">
+                <div class="translations-order-step{% if orderId is empty %} active{% endif %}" id="step1">
+                    <div class="translations-order-step-intro">
+                        <h2>{{ 'Choose Entries'|t }}</h2>
+
+                        <p>{{ 'Entries that are added to this order will appear below. You can add entries from either of the following:'|t }}</p>
+
+                        <ul class="bullets">
+                            <li>{{ 'Edit entry page'|t }}</li>
+                            <li>{{ 'Entries archive page'|t }}</li>
+                        </ul>
+                    </div>
+
+                    {% if orderEntriesCount == 0 %}
+                    <h2>{{ 'No entries selected'|t }}</h2>
+                    <p><a href="{{ url('entries') }}">{{ 'Add entries from the Craft Entry listing screen.'|t }} &raquo;</a></p>
+                    {% else %}
+                    <table class="data">
+                        <caption><span data-order-attribute="entriesCount">{{ orderEntriesCount }}</span> {{ orderEntriesCount == 1 ? 'entry selected'|t : 'entries selected'|t }}, <span data-order-attribute="wordCount">{{ orderWordCount }}</span> {{ 'words'|t }}</caption>
+                        <thead>
                         <tr>
                             <th>{{ 'Title'|t }}</th>
                             <th>{{ 'Section'|t }}</th>
@@ -525,137 +528,137 @@
                             <th>{{ 'Source Site'|t }}</th>
                             <th>&nbsp;</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for element in elements %}
-                        <tr data-word-count="{{ elementWordCounts[element.id] }}">
-                            <td>{% include "_elements/element" with {'element': element} only %}</td>
-                            <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
-                            <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
-                            <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
-                            <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    {% endif %}
-                </table>
-
-                <div class="item" data-position="left" data-colspan="1">
-                    <div class="buttons">
-                        <div class="btngroup submit first">
-                            <a class="btn submit translations-order-step-next" href="#step2">{{ 'Next'|t }}</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="translations-order-step" id="step2">
-                <div class="translations-order-step-intro">
-                    <h2>{{ 'Select Sites'|t }}</h2>
-
-                    <p>
-                        <i>{{ 'Select your source and target sites. Only one source site may be selected per order.'|t }}</i><br>
-                        <a href="{{ url('settings/sites') }}" target="_blank">{{ 'Add more sites from the Craft Sites settings page.'|t }} &raquo;</a>
-                    </p>
-                </div>
-
-                <div class="field">
-                    <div class="heading">
-                        <label>{{ 'Source Site'|t }}</label>
-                    </div>
-                    <div class="input {{ orientation }}">
-                        {{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span>
-                    </div>
-                </div>
-                
-                {{ forms.checkboxSelectField({
-                    label: 'Target Site(s)'|t,
-                    options: targetSiteCheckboxOptions,
-                    values: order.targetSites,
-                    name: 'targetSites',
-                    id: 'targetSites'
-                }) }}
-
-                <div class="item" data-position="left" data-colspan="1">
-                    <div class="buttons">
-                        <div class="btngroup submit first">
-                            <a class="btn submit translations-order-step-next" href="#step3">{{ 'Next'|t }}</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="translations-order-step" id="step3">
-                <div class="translations-order-step-intro">
-                    <h2>{{ 'Add Details'|t }}</h2>
-
-                    <p>
-                        <i>{{ 'Define additional details about this order.'|t }}</i>
-                    </p>
-                </div>
-
-                {{ forms.textField({
-                    label: 'Order Name'|t,
-                    value: order.title,
-                    name: 'title',
-                    id: 'title',
-                    size: 20,
-                    maxlength: 255,
-                    placeholder: 'Optional'
-                }) }}
-
-                {{ forms.selectField({
-                    fieldClass: 'hidden',
-                    label: 'Order Owner'|t,
-                    value: null,
-                    options: owners,
-                    name: 'ownerId',
-                    id: 'ownerId',
-                    size: 20
-                }) }}
-
-                {{ forms.dateField({
-                    label: 'Requested Due Date'|t,
-                    value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
-                    name: 'requestedDueDate',
-                    id: 'requestedDueDate',
-                    size: 20,
-                    placeholder: 'Optional'
-                }) }}
-
-                {{ forms.textareaField({
-                    label: 'Additional comments and instructions'|t,
-                    value: order.comments,
-                    name: 'comments',
-                    id: 'comments',
-                    maxlength: 2000,
-                    size: 20
-                }) }}
-
-                <div class="item" data-position="left" data-colspan="1">
-                    <div class="buttons">
-                        <div class="btngroup submit first">
-                            <a class="btn submit translations-order-step-next" href="#step4">{{ 'Next'|t }}</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="translations-order-step{% if orderId %} active{% endif %}" id="step4">
-                <div class="translations-order-step-intro">
-                    <h2>{{ 'Review & Submit'|t }}</h2>
-
-                    <p>
-                        <i>{{ 'Review the summary of this order and submit for Translation.'|t }}</i>
-                    </p>
-
-                    <table class="data">
+                        </thead>
                         <tbody>
-                            {% if order.serviceOrderId is not empty %}
-                            <tr>
-                                <th>{{ 'ID'|t }}</th>
-                                <td>{{ order.serviceOrderId }}</td>
+                        {% for element in elements %}
+                            <tr data-word-count="{{ elementWordCounts[element.id] }}">
+                                <td>{% include "_elements/element" with {'element': element} only %}</td>
+                                <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
+                                <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
+                                <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
+                                <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
                             </tr>
+                        {% endfor %}
+                        </tbody>
+                        {% endif %}
+                    </table>
+
+                    <div class="item" data-position="left" data-colspan="1">
+                        <div class="buttons">
+                            <div class="btngroup submit first">
+                                <a class="btn submit translations-order-step-next" href="#step2">{{ 'Next'|t }}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="translations-order-step" id="step2">
+                    <div class="translations-order-step-intro">
+                        <h2>{{ 'Select Sites'|t }}</h2>
+
+                        <p>
+                            <i>{{ 'Select your source and target sites. Only one source site may be selected per order.'|t }}</i><br>
+                            <a href="{{ url('settings/sites') }}" target="_blank">{{ 'Add more sites from the Craft Sites settings page.'|t }} &raquo;</a>
+                        </p>
+                    </div>
+
+                    <div class="field">
+                        <div class="heading">
+                            <label>{{ 'Source Site'|t }}</label>
+                        </div>
+                        <div class="input {{ orientation }}">
+                            {{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span>
+                        </div>
+                    </div>
+
+                    {{ forms.checkboxSelectField({
+                        label: 'Target Site(s)'|t,
+                        options: targetSiteCheckboxOptions,
+                        values: order.targetSites,
+                        name: 'targetSites',
+                        id: 'targetSites'
+                    }) }}
+
+                    <div class="item" data-position="left" data-colspan="1">
+                        <div class="buttons">
+                            <div class="btngroup submit first">
+                                <a class="btn submit translations-order-step-next" href="#step3">{{ 'Next'|t }}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="translations-order-step" id="step3">
+                    <div class="translations-order-step-intro">
+                        <h2>{{ 'Add Details'|t }}</h2>
+
+                        <p>
+                            <i>{{ 'Define additional details about this order.'|t }}</i>
+                        </p>
+                    </div>
+
+                    {{ forms.textField({
+                        label: 'Order Name'|t,
+                        value: order.title,
+                        name: 'title',
+                        id: 'title',
+                        size: 20,
+                        maxlength: 255,
+                        placeholder: 'Optional'
+                    }) }}
+
+                    {{ forms.selectField({
+                        fieldClass: 'hidden',
+                        label: 'Order Owner'|t,
+                        value: null,
+                        options: owners,
+                        name: 'ownerId',
+                        id: 'ownerId',
+                        size: 20
+                    }) }}
+
+                    {{ forms.dateField({
+                        label: 'Requested Due Date'|t,
+                        value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
+                        name: 'requestedDueDate',
+                        id: 'requestedDueDate',
+                        size: 20,
+                        placeholder: 'Optional'
+                    }) }}
+
+                    {{ forms.textareaField({
+                        label: 'Additional comments and instructions'|t,
+                        value: order.comments,
+                        name: 'comments',
+                        id: 'comments',
+                        maxlength: 2000,
+                        size: 20
+                    }) }}
+
+                    <div class="item" data-position="left" data-colspan="1">
+                        <div class="buttons">
+                            <div class="btngroup submit first">
+                                <a class="btn submit translations-order-step-next" href="#step4">{{ 'Next'|t }}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="translations-order-step{% if orderId %} active{% endif %}" id="step4">
+                    <div class="translations-order-step-intro">
+                        <h2>{{ 'Review & Submit'|t }}</h2>
+
+                        <p>
+                            <i>{{ 'Review the summary of this order and submit for Translation.'|t }}</i>
+                        </p>
+
+                        <table class="data">
+                            <tbody>
+                            {% if order.serviceOrderId is not empty %}
+                                <tr>
+                                    <th>{{ 'ID'|t }}</th>
+                                    <td>{{ order.serviceOrderId }}</td>
+                                </tr>
                             {% endif %}
                             <tr>
                                 <th>{{ 'Name'|t }}</th>
@@ -671,14 +674,14 @@
                                 <th>{{ 'Target Sites'|t }}</th>
                                 <td>
                                     {% if orderId %}
-                                    <span data-order-attribute="targetSites">
+                                        <span data-order-attribute="targetSites">
                                     {% for targetSite in orderTargetSitesObject %}
                                         {{targetSite.name}} <span class="light">({{ targetSite.language }})</span>
                                         {% if not loop.last %}<br>{% endif %}
                                     {% endfor %}
                                     </span>
                                     {% else %}
-                                    <span data-order-attribute="targetSites">{{ sites|join(', ') }}</span>
+                                        <span data-order-attribute="targetSites">{{ sites|join(', ') }}</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -694,69 +697,69 @@
                                 <th>{{ 'Words'|t }}</th>
                                 <td data-order-attribute="wordCount">{{ orderWordCount }}</td>
                             </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                {{ forms.selectField({
-                    label: 'Translation Service'|t,
-                    value: order.translatorId,
-                    options: translatorOptions,
-                    name: 'translatorId',
-                    id: 'translatorId',
-                    size: 20
-                }) }}
-
-                {% if '' in translatorOptions|keys %}
-                <a href="{{url('translations/translators')}}">Add a translator &raquo;</a>
-                {% endif %}
-
-                <div class="field">
-                    <div class="heading">
-                        <label>{{ 'Requested Due Date'|t }}</label>
-                        &nbsp;&nbsp;&nbsp;
-                        <a class="translations-order-step-prev" href="#step3">Edit &raquo;</a>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="input {{ orientation }}">
-                        <div data-order-attribute="requestedDueDate[date]">
-                        {% if order.requestedDueDate %}
-                            {{ order.requestedDueDate|date('n/j/Y') }}
-                        {% else %}
-                            <i>None</i>
-                        {% endif %}
+
+                    {{ forms.selectField({
+                        label: 'Translation Service'|t,
+                        value: order.translatorId,
+                        options: translatorOptions,
+                        name: 'translatorId',
+                        id: 'translatorId',
+                        size: 20
+                    }) }}
+
+                    {% if '' in translatorOptions|keys %}
+                        <a href="{{url('translations/translators')}}">Add a translator &raquo;</a>
+                    {% endif %}
+
+                    <div class="field">
+                        <div class="heading">
+                            <label>{{ 'Requested Due Date'|t }}</label>
+                            &nbsp;&nbsp;&nbsp;
+                            <a class="translations-order-step-prev" href="#step3">Edit &raquo;</a>
+                        </div>
+                        <div class="input {{ orientation }}">
+                            <div data-order-attribute="requestedDueDate[date]">
+                                {% if order.requestedDueDate %}
+                                    {{ order.requestedDueDate|date('n/j/Y') }}
+                                {% else %}
+                                    <i>None</i>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="field">
-                    <div class="heading">
-                        <label>{{ 'Additional comments and instructions'|t }}</label>
-                        &nbsp;&nbsp;&nbsp;
-                        <a class="translations-order-step-prev" href="#step3">Edit &raquo;</a>
+                    <div class="field">
+                        <div class="heading">
+                            <label>{{ 'Additional comments and instructions'|t }}</label>
+                            &nbsp;&nbsp;&nbsp;
+                            <a class="translations-order-step-prev" href="#step3">Edit &raquo;</a>
+                        </div>
+                        <div class="input {{ orientation }}">
+                            <div data-order-attribute="comments" style="white-space: pre-wrap">{% if order.comments %}{{ order.comments }}{% else %}<i>None</i>{% endif %}</div>
+                        </div>
                     </div>
-                    <div class="input {{ orientation }}">
-                        <div data-order-attribute="comments" style="white-space: pre-wrap">{% if order.comments %}{{ order.comments }}{% else %}<i>None</i>{% endif %}</div>
-                    </div>
-                </div>
 
-                <div class="item" data-position="left" data-colspan="1">
-                    <div class="buttons">
-                        <div class="btngroup submit">
-                            <button type="submit" name="submit" value="submit" class="translations-order-submit-btn btn big submit{% if orderEntriesCount == 0 %} disabled{% endif %}"{% if orderEntriesCount == 0 %} disabled="disabled"{% endif %}>{{ 'Submit'|t }}</button>
-                        </div>
-                        {% if licenseStatus == 'valid' %}
-                        <div class="btngroup submit">
-                            <button type="submit" class="translations-order-save-btn btn big">{{ 'Save'|t }}</button>
-                        </div>
-                        {% endif %}
-                        <div class="translations-loader hidden">
-                            <div class="spinner"></div>
-                            <p class="translations-loader-msg hidden">{{ 'Please wait and do not close this window until the page finishes loading.'|t }}</p>
+                    <div class="item" data-position="left" data-colspan="1">
+                        <div class="buttons">
+                            <div class="btngroup submit">
+                                <button type="submit" name="submit" value="submit" class="translations-order-submit-btn btn big submit{% if orderEntriesCount == 0 %} disabled{% endif %}"{% if orderEntriesCount == 0 %} disabled="disabled"{% endif %}>{{ 'Submit'|t }}</button>
+                            </div>
+                            {% if licenseStatus == 'valid' %}
+                                <div class="btngroup submit">
+                                    <button type="submit" class="translations-order-save-btn btn big">{{ 'Save'|t }}</button>
+                                </div>
+                            {% endif %}
+                            <div class="translations-loader hidden">
+                                <div class="spinner"></div>
+                                <p class="translations-loader-msg hidden">{{ 'Please wait and do not close this window until the page finishes loading.'|t }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </form>
-{% endif %}
+        </form>
+    {% endif %}
 {% endblock %}
