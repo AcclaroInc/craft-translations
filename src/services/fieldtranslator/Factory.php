@@ -41,11 +41,11 @@ class Factory
     private $nativeFieldTypes = array(
         // Assets::class           => AssetsFieldTranslator::class,
         Categories::class       => CategoryFieldTranslator::class,
-        Checkboxes::class       => MultiOptionsFieldTranslator::class,
+        Checkboxes::class       => MultiSelectFieldTranslator::class,
         Dropdown::class         => SingleOptionFieldTranslator::class,
         Entries::class          => EntriesFieldTranslator::class,
         Matrix::class           => MatrixFieldTranslator::class,
-        MultiSelect::class      => MultiOptionsFieldTranslator::class,
+        MultiSelect::class      => MultiSelectFieldTranslator::class,
         LinkField::class        => LinkFieldTranslator::class,
         LinkitField::class      => LinkitFieldTranslator::class,
         NeoField::class         => NeoFieldTranslator::class,
@@ -57,7 +57,7 @@ class Factory
         SuperTableField::class  => SuperTableFieldTranslator::class,
         Table::class            => TableFieldTranslator::class,
         Tags::class             => TagFieldTranslator::class,
-        CodeMirrorField::class       => GenericFieldTranslator::class,
+        CodeMirrorField::class  => GenericFieldTranslator::class,
     );
 
     public function makeTranslator(Field $field)
@@ -72,8 +72,8 @@ class Factory
             $translatorClass = $this->nativeFieldTypes[$class];
 
             switch ($translatorClass) {
-                case MultiOptionsFieldTranslator::class:
-                    return new MultiOptionsFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
+                case MultiSelectFieldTranslator::class:
+                    return new MultiSelectFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
                 case SingleOptionFieldTranslator::class:
                     return new SingleOptionFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
                 case TagFieldTranslator::class:
