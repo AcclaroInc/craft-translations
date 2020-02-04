@@ -136,35 +136,32 @@ class TranslationRepository
 
     public function loadTranslations()
     {
+        // Get stored string translations
         $translations = $this->getTranslations();
-
+        
+        // Create reflection class of i18n and make accessible
         $reflectionClass = new ReflectionClass('yii\i18n\MessageSource');
         $reflectionProperty = $reflectionClass->getProperty('_messages');
-        
         $reflectionProperty->setAccessible(true);
         
-        $messages = $reflectionProperty->getValue(Craft::$app->getI18n()->getMessageSource('yii'));
+        // Get i18n messages
+        $messages = $reflectionProperty->getValue(Craft::$app->getI18n()->getMessageSource('site'));
         
+        // Set site i18n messages from stored translations
         foreach ($translations as $translation) {
             $sourceLanguage = Craft::$app->sites->getSiteById($translation->sourceSite)->language;
             $targetLanguage = Craft::$app->sites->getSiteById($translation->targetSite)->language;
+            $key = sprintf('%s/%s', $targetLanguage, 'site');
+            $messages[$key][$translation->source] = $translation->target;
             
-            $key = sprintf('%s/%s', $sourceLanguage, 'yii');
-            $messages[$key][$translation->source] = $translation->target;
-            $key = sprintf('%s/%s', $targetLanguage, 'yii');
-            $messages[$key][$translation->source] = $translation->target;
-            Craft::$app->getI18n()->translate('yii', $translation->source, [], $targetLanguage);
+            if ($sourceLanguage !== $targetLanguage) {
+                Craft::$app->getI18n()->translate('site', $translation->source, [], $targetLanguage);
+            }
+
         }
         
-        $reflectionProperty->setValue(Craft::$app->getI18n()->getMessageSource('yii'), $messages);
+        $reflectionProperty->setValue(Craft::$app->getI18n()->getMessageSource('site'), $messages);
         
         $reflectionProperty->setAccessible(false);
-        /**
-         * TODO: Load translations to proper sites languages
-         */
-        // echo '<pre>';
-        // var_dump(Craft::$app->getI18n());
-        // echo '</pre>';
-        // die;
     }
 }
