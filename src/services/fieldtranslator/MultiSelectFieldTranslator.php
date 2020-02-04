@@ -14,6 +14,7 @@ use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use craft\fields\MultiSelect;
+use craft\fields\data\MultiOptionsFieldData;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
@@ -27,10 +28,10 @@ class MultiSelectFieldTranslator extends GenericFieldTranslator
     {
         $source = array();
 
-        $fieldData = $element->getFieldValue($field->handle)->all();
+        $fieldData = $element->getFieldValue($field->handle);
 
         if ($fieldData) {
-            if ($fieldData instanceof MultiSelect) {
+            if ($fieldData instanceof MultiOptionsFieldData) {
                 foreach ($fieldData->getOptions() as $option) {
                     if ($option->selected) {
                         $key = sprintf('%s.%s', $field->handle, $option->value);
@@ -59,9 +60,9 @@ class MultiSelectFieldTranslator extends GenericFieldTranslator
      */
     public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
-        $fieldData = $element->getFieldValue($field->handle)->all();
+        $fieldData = $element->getFieldValue($field->handle);
 
-        if ($fieldData instanceof MultiSelect) {
+        if ($fieldData instanceof MultiOptionsFieldData) {
             $fieldData = array_map(
                 function ($option) {
                     return $option->value;
@@ -120,7 +121,7 @@ class MultiSelectFieldTranslator extends GenericFieldTranslator
      */
     public function getFieldValue(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
-        $fieldData = $element->getFieldValue($field->handle)->all();
+        $fieldData = $element->getFieldValue($field->handle);
 
         if ($fieldData instanceof MultiOptionsFieldData) {
             $fieldData = array_map(
@@ -144,7 +145,7 @@ class MultiSelectFieldTranslator extends GenericFieldTranslator
      */
     public function getWordCount(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
-        $value = Translations::$plugin->getFieldValue($elementTranslator, $element, $field)->all();
+        $value = $this->getFieldValue($elementTranslator, $element, $field);
 
         $wordCount = 0;
 
