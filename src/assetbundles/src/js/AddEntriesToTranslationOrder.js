@@ -27,14 +27,14 @@ Craft.Translations.AddEntriesToTranslationOrder = {
     updateSelectedEntries: function() {
         var entries = [];
 
-        $('.elementindex table.data tbody tr.sel[data-id]').each(function() {
+        $('.elements table.data tbody tr.sel[data-id]').each(function() {
             entries.push($(this).data('id'));
         });
 
         this.entries = unique(entries);
 
-        this.$btn.toggleClass('disabled', this.entries.length === 0);
-        this.$menubtn.toggleClass('disabled', this.entries.length === 0);
+        $(this.$btn[0]).toggleClass('disabled', this.entries.length === 0);
+        $(this.$menubtn[0]).toggleClass('disabled', this.entries.length === 0);
 
         this.updateCreateNewLink();
     },
@@ -233,7 +233,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         var self = this;
 
-        $(document).on('click', '.elementindex .checkbox, .elementindex .selectallcontainer .btn', function() {
+        $(document).on('click', '.elements .checkbox, .elements .selectallcontainer .btn', function() {
             setTimeout($.proxy(self.updateSelectedEntries, self), 100);
         });
 
