@@ -47,15 +47,16 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
             }
         });
 
-        var userName = $('#user-info').children().first().html();
-        var paidNotification = localStorage.getItem(userName+"PaidNotification");
-        if(!paidNotification){
-            document.getElementById("trial-notice").style.display = "block";
+        var paidNotification = localStorage.getItem(Craft.username+"PaidNotification");
+        if(paidNotification == null || paidNotification == "false"){
+            if (document.getElementById("trial-notice")) {
+                document.getElementById("trial-notice").style.display = "block";
+            }
         }
 
         $(document).on("click", ".close-notice", function() {
             $("#trial-notice").fadeOut();
-            localStorage.setItem(userName+"PaidNotification", "true");
+            localStorage.setItem(Craft.username+"PaidNotification", "true");
         })
 
         $(document).on("click", ".translations-restore-order", function() {
