@@ -441,6 +441,24 @@
     justify-content: space-between;
 }
 
+#duplicate-modal {
+    height: 350px;
+    width: 550px;
+}
+
+#duplicate-modal ul{
+    list-style: inside;
+    margin-left: 10px;
+}
+
+#duplicate-modal .modal-body {
+    line-height: 2em;
+}
+
+.bold {
+    font-weight: bold;
+}
+
 @media only screen and (max-width: 720px) {
     .translations-order-step-btngroup {
         display: block;
