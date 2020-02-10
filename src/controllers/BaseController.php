@@ -60,6 +60,19 @@ class BaseController extends Controller
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin('translations')->getVersion();
     }
 
+    public function authenticateService($service, $settings)
+    {
+        $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
+        $translator->service = $service;
+        $translator->settings = json_encode($settings);
+        
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
+
+        $authenticate = $translationService->authenticate($settings);
+
+        return $authenticate;
+    }
+
     // Callback & Request Methods
     // =========================================================================
     
@@ -203,14 +216,10 @@ class BaseController extends Controller
         $service = Craft::$app->getRequest()->getRequiredParam('service');
         $settings = Craft::$app->getRequest()->getRequiredParam('settings');
 
-        $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
-        $translator->service = $service;
-        $translator->settings = json_encode($settings);
-        
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
+        $response = self::authenticateService($service, $settings);
 
         return $this->asJson(array(
-            'success' => $translationService->authenticate($settings),
+            'success' => $response,
         ));
     }
 
@@ -777,6 +786,18 @@ class BaseController extends Controller
         if ($orderId) {
             $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
+            // Authenticate service
+            $translator = $order->getTranslator();
+            $service = $translator->service;
+            $settings = $translator->getSettings();
+            $authenticate = self::authenticateService($service, $settings);
+            
+            if (!$authenticate && $service == 'acclaro') {
+                $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
+                Craft::$app->getSession()->setError($message);
+                return;
+            }
+
             if (!$order) {
                 throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Invalid Order'));
             }
@@ -847,6 +868,18 @@ class BaseController extends Controller
 
             $entriesCount = 0;
             $wordCounts = array();
+
+            // Authenticate service
+            $translator = $order->getTranslator();
+            $service = $translator->service;
+            $settings = $translator->getSettings();
+            $authenticate = self::authenticateService($service, $settings);
+            
+            if (!$authenticate && $service == 'acclaro') {
+                $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
+                Craft::$app->getSession()->setError($message);
+                return;
+            }
 
             foreach ($order->getElements() as $element) {
                 $entriesCount++;
@@ -1059,6 +1092,18 @@ class BaseController extends Controller
 
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
+        // Authenticate service
+        $translator = $order->getTranslator();
+        $service = $translator->service;
+        $settings = $translator->getSettings();
+        $authenticate = self::authenticateService($service, $settings);
+        
+        if (!$authenticate && $service == 'acclaro') {
+            $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
+            Craft::$app->getSession()->setError($message);
+            return;
+        }
+
         if ($order) {
             $job = Craft::$app->queue->push(new SyncOrder([
                 'description' => 'Syncing order '. $order->title,
@@ -1163,6 +1208,18 @@ class BaseController extends Controller
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+
+        // Authenticate service
+        $translator = $order->getTranslator();
+        $service = $translator->service;
+        $settings = $translator->getSettings();
+        $authenticate = self::authenticateService($service, $settings);
+        
+        if (!$authenticate && $service == 'acclaro') {
+            $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
+            Craft::$app->getSession()->setError($message);
+            return;
+        }
 
         if ($order) {
             $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
