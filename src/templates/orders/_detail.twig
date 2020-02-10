@@ -233,21 +233,20 @@
             <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
                 <div class="elementindex">
                     <div class="main">
-                        {% if order.status == 'complete' or order.status == 'in progress' %}
-                            <input type="hidden" value="{{ url('translations/base/add-entries') }}" id="addEntriesLink">
-                            <input type="hidden" value="1" id="checkDuplicate">
-                            <div class="toolbar">
-                                <div class="buttons right">
-                                    {% if order.status != 'complete' %}
-                                        <input type="button" class="btn submit addEntries form-submit" value="{{ 'Add Entries'|t }}">
-                                    {% endif %}
+                        <div class="toolbar">
+                            <div class="buttons right">
+                                {% if order.status != 'complete' %}
+                                    <input type="hidden" value="{{ url('translations/base/add-entries') }}" id="addEntriesLink">
+                                    <input type="hidden" value="1" id="checkDuplicate">
+                                    <input type="button" class="btn submit addEntries form-submit" value="{{ 'Add Entries'|t }}">
+                                {% endif %}
 
-                                    {% if order.status == 'complete' or order.status == 'in progress' %}
-                                        <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to apply translation drafts to these entries?'|t }}" disabled="disabled" value="{{ 'Apply Translation Drafts'|t }}">
-                                    {% endif %}
-                                </div>
+                                {% if order.status == 'complete' or order.status == 'in progress' %}
+                                    <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to apply translation drafts to these entries?'|t }}" disabled="disabled" value="{{ 'Apply Translation Drafts'|t }}">
+                                {% endif %}
                             </div>
-                        {% endif %}
+                        </div>
+
                         <div class="elements">
                             <div class="tableview">
                                 <table class="data fullwidth">
@@ -305,6 +304,7 @@
                                             </td>
                                             <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                             <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
+                                            <input type="hidden" value="1" name="sourceSites[]" value="{{ sourceSite.id }}">
                                             <td>
                                                 <table>
                                                     {% for file in files[element.id] %}
@@ -793,7 +793,7 @@
                             {{ 'How would you like to proceed?'|t }}
                         </div>
                         <div class="heading">
-                            <input type="radio" name="skip_replace" value="skip"> <span class="bold"> {{ 'Skip'|t }} </span>{{ ' duplicate entries'|t }}<br/>
+                            <input type="radio" name="skip_replace" value="skip" checked> <span class="bold"> {{ 'Skip'|t }} </span>{{ ' duplicate entries'|t }}<br/>
                             <input type="radio" name="skip_replace" value="replace"> <span class="bold"> {{ 'Replace'|t }} </span> {{ ' duplicate entries'|t }}<br/>
                         </div>
                     </div>

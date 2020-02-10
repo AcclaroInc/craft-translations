@@ -310,6 +310,14 @@ Craft.Translations.OrderDetail = {
 
         $(".addEntries").on('click', function (e) {
             elementIds = [];
+
+            var sourceSites = [];
+            $("input:hidden.sourceSites").each(function() {
+                sourceSites.push($(this).val());
+            });
+
+            console.log(sourceSites);
+
             this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
                 storageKey: null,
                 sources: null,
