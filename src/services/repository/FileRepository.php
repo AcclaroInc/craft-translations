@@ -92,12 +92,15 @@ class FileRepository
      * @param  int|string $orderId
      * @return \acclaro\translations\models\FileModel
      */
-    public function getFilesByOrderId(int $orderId, $elementId = null)
+    public function getFilesByOrderId(int $orderId, $elementId = null, $site=null)
     {
         $attributes = array('orderId' => $orderId);
 
         if ($elementId) {
             $attributes['elementId'] = $elementId;
+        }
+        if ($site) {
+            $attributes['targetSite'] = $site;
         }
 
         $records = FileRecord::find()->where($attributes)->all();

@@ -233,13 +233,20 @@
             <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
                 <div class="elementindex">
                     <div class="main">
-                        {% if order.status == 'complete' or order.status == 'in progress' %}
-                            <div class="toolbar">
-                                <div class="buttons right">
+                        <div class="toolbar">
+                            <div class="buttons right">
+                                {% if order.status != 'complete' %}
+                                    <input type="hidden" value="{{ url('translations/base/add-entries') }}" id="addEntriesLink">
+                                    <input type="hidden" value="1" id="checkDuplicate">
+                                    <input type="button" class="btn submit addEntries form-submit" value="{{ 'Add Entries'|t }}">
+                                {% endif %}
+
+                                {% if order.status == 'complete' or order.status == 'in progress' %}
                                     <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to apply translation drafts to these entries?'|t }}" disabled="disabled" value="{{ 'Apply Translation Drafts'|t }}">
-                                </div>
+                                {% endif %}
                             </div>
-                        {% endif %}
+                        </div>
+
                         <div class="elements">
                             <div class="tableview">
                                 <table class="data fullwidth">
@@ -297,6 +304,7 @@
                                             </td>
                                             <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                             <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
+                                            <input type="hidden" value="1" name="sourceSites[]" value="{{ sourceSite.id }}">
                                             <td>
                                                 <table>
                                                     {% for file in files[element.id] %}
@@ -762,4 +770,42 @@
             </div>
         </form>
     {% endif %}
+    <div class="hidden">
+        <div id="duplicate-modal" class="modal" role="dialog" >
+            <div class="body">
+                <div class="main">
+                    <div class="modal-header field">
+                        <div class="modal-title">
+                            <h1> {{ 'Duplicate Entries'|t }}</h1>
+                        </div>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="heading">
+                            <div> {{ 'The following entries are already added to the order '|t }}  "{{ order.title }} ({{ order.id }}):" </div>
+                        </div>
+
+                        <div class="bold">
+                            <ul class="dup-entries-title"> </ul>
+                        </div>
+
+                        <div class="bold">
+                            {{ 'How would you like to proceed?'|t }}
+                        </div>
+                        <div class="heading">
+                            <input type="radio" name="skip_replace" value="skip" checked> <span class="bold"> {{ 'Skip'|t }} </span>{{ ' duplicate entries'|t }}<br/>
+                            <input type="radio" name="skip_replace" value="replace"> <span class="bold"> {{ 'Replace'|t }} </span> {{ ' duplicate entries'|t }}<br/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <div class="buttons right">
+                        <div class="btn" tabindex="0">{{ 'Cancel'|t }}</div>
+                        <div class="btn submit" id="duplicate-continue">{{ 'Continue'|t }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

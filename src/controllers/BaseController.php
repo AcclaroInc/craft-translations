@@ -1495,4 +1495,163 @@ class BaseController extends Controller
             'error' => null
         ]);
     }
+
+    public function actionAddEntries()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        if (!$currentUser->can('translations:orders:edit')) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            return;
+        }
+
+        $orderId = Craft::$app->getRequest()->getParam('orderId');
+
+        if (!$orderId) {
+            return $this->asJson([
+                'success' => false,
+                'error' => Translations::$plugin->translator->translate('app', 'Missing order ID')
+            ]);
+        }
+
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+
+        if (!$order) {
+            return $this->asJson([
+                'success' => false,
+                'error' => Translations::$plugin->translator->translate('app', 'No order exists with the ID “{id}”.', array('id' => $orderId))
+            ]);
+        }
+        $job = '';
+        try {
+
+            $elementIds = Craft::$app->getRequest()->getParam('elements') ? Craft::$app->getRequest()->getParam('elements') : array();
+            $skipOrReplace = null;
+            $existingElementIds = json_decode($order->elementIds);
+            $duplicateElements = array_intersect($existingElementIds, $elementIds);
+
+            if(Craft::$app->getRequest()->getParam('checkDuplicate')) {
+                if ($duplicateElements) {
+                    $dupElementsTitle = [];
+                    foreach ($duplicateElements as $dupId) {
+                        $element = Craft::$app->getElements()->getElementById($dupId, null, $order->siteId);
+                        $dupElementsTitle[] = $element->title;
+                    }
+
+                    return $this->asJson([
+                        'success' => true,
+                        'data' => ['duplicates' => $dupElementsTitle],
+                        'error' => null
+                    ]);
+                }
+            } else {
+                $skipOrReplace = Craft::$app->getRequest()->getParam('skipOrReplace');
+            }
+
+            // if have duplicate elements and user selected to skip
+            if ($duplicateElements && $skipOrReplace != 'replace') {
+                $elementIds = array_diff($elementIds, $duplicateElements);
+            }
+
+            $elements = array_values(array_unique(array_merge($existingElementIds, $elementIds)));
+            $order->elementIds = json_encode($elements);
+
+            $entriesCount = 0;
+            $wordCounts = [];
+
+            foreach ($order->getElements() as $element) {
+
+                $entriesCount++;
+                $wordCounts[$element->id] = Translations::$plugin->elementTranslator->getWordCount($element);
+            }
+
+            $order->entriesCount = $entriesCount;
+            $order->wordCount = array_sum($wordCounts);
+
+            // Manual Translation will make orders 'in progress' status after creation
+
+            $success = Craft::$app->getElements()->saveElement($order);
+
+            if (!$success) {
+                return $this->asJson([
+                    'success' => false,
+                    'error' => Translations::$plugin->translator->translate('app', 'Couldn’t save the order')
+                ]);
+            } else {
+
+                $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
+
+                foreach ($order->getTargetSitesArray() as $key => $site) {
+                    foreach ($elements as $element) {
+                        if (in_array($element->id, $elementIds)) {
+                            if (in_array($element->id, $duplicateElements)) {
+                                if ($skipOrReplace == 'replace') {
+                                    $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Updating File '.$element->title)));
+                                    $file = Translations::$plugin->fileRepository->getFilesByOrderId($order->id, $element->id, $site);
+                                    if (!$file) {
+                                        continue;
+                                    }
+                                    $file = $file[0];
+
+                                    if ($file->status == 'complete' || $file->status == 'published') {
+                                        continue;
+                                    } else if($file->status == 'canceled' || $file->status == 'failed') {
+                                        $file->status = 'in progress';
+                                    }
+
+                                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
+                                        $element,
+                                        $file->draftId,
+                                        $order->sourceSite,
+                                        $site,
+                                        $file->previewUrl
+                                    );
+                                    $file->wordCount = isset($wordCounts[$element->id]) ? $wordCounts[$element->id] : 0;
+
+                                    Translations::$plugin->fileRepository->saveFile($file);
+                                }
+                            } else {
+                                $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Adding file '.$element->title)));
+                                Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts);
+                            }
+                        }
+                    }
+                }
+
+                $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                $queueOrders[$job] = $order->id;
+                Craft::$app->getSession()->set('queueOrders', $queueOrders);
+
+            }
+
+        } catch (Exception $e) {
+
+            $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Add Entries Failed '.$e->getMessage())));
+            Craft::error('Couldn’t save the order. Error: '.$e->getMessage(), __METHOD__);
+//            $order->status = 'failed';
+//            Craft::$app->getElements()->saveElement($order);
+        }
+
+        if ($job) {
+            if ($order->getTranslator()->service == 'export_import') {
+                $params = [
+                    'id' => (int) $job,
+                    'notice' => 'Done creating translation drafts',
+                    'url' => 'translations/orders/detail/'. $order->id
+                ];
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            } else {
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Sending new order to Acclaro, please refresh your Orders once complete'));
+            }
+        }
+
+        return $this->asJson([
+            'success' => true,
+            'data' => ['duplicates' => []],
+            'error' => null
+        ]);
+    }
 }

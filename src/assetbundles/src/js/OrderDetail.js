@@ -80,6 +80,7 @@ Craft.Translations.OrderDetail = {
 
     init: function() {
         var self = this;
+        var elementIds = [];
 
         $('input, select').on('keypress', function(e) {
             if (e.which === 13) {
@@ -300,6 +301,95 @@ Craft.Translations.OrderDetail = {
 
         });
 
+        $("#duplicate-continue").on("click", function (e) {
+            var skip_or_replace = $("input[name='skip_replace']:checked").val();
+            $('#checkDuplicate').val(0);
+
+            addEntries(skip_or_replace);
+        });
+
+        $(".addEntries").on('click', function (e) {
+            elementIds = [];
+
+            var sourceSites = [];
+            $("input:hidden.sourceSites").each(function() {
+                sourceSites.push($(this).val());
+            });
+
+            console.log(sourceSites);
+
+            this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
+                storageKey: null,
+                sources: null,
+                elementIndex: null,
+                criteria: {siteId: this.elementSiteId},
+                multiSelect: 1,
+                onSelect: $.proxy(function(elements) {
+
+                    if (elements.length) {
+                        for (var i = 0; i < elements.length; i++) {
+                            var element = elements[i];
+                            elementIds.push(element.id);
+                        }
+
+                        addEntries();
+                    }
+                }, this),
+                closeOtherModals: false,
+            });
+
+            this.assetSelectionModal.show();
+
+        });
+
+        function addEntries(skipOrReplace=null) {
+
+            var order_id = $('#order_id').val();
+            var checkDuplicate = $('#checkDuplicate').val();
+            var post_data = {
+                action: 'translations/base/add-entries',
+                elements: elementIds,
+                orderId: order_id,
+                checkDuplicate: checkDuplicate,
+                skipOrReplace: skipOrReplace,
+            };
+
+            post_data[Craft.csrfTokenName] = Craft.csrfTokenValue;
+
+            var addEntriesUrl = $('#addEntriesLink').val();
+
+            $.post(
+                'translations/base/add-entries',
+                post_data,
+                function (data) {
+                    if (!data.success) {
+                        alert(data.error);
+                    } else {
+
+                        if (data.data.duplicates.length>0) {
+                            if (data.data.duplicates) {
+                                $.each( data.data.duplicates, function( i, val ) {
+                                    $(".dup-entries-title").append('<li>'+val+'</li>');
+                                })
+                                $dup_modal.show();
+                            }
+                        } else {
+                            console.log(" Adding entries... ");
+                            console.log(data);
+
+                            Craft.cp.displayNotice(Craft.t('app', 'New entries added.'));
+
+                            location.reload();
+                        }
+                    }
+                },
+                'json'
+            );
+        }
+
+        $dup_modal = new Garnish.Modal($('#duplicate-modal').removeClass('hidden'), {
+            autoShow: false,
+        });
     }
 };
 

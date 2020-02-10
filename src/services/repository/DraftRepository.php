@@ -13,7 +13,9 @@ namespace acclaro\translations\services\repository;
 use Craft;
 use Exception;
 use craft\db\Query;
+use craft\elements\User;
 use craft\elements\Entry;
+use craft\elements\GlobalSet;
 use yii\web\NotFoundHttpException;
 use acclaro\translations\Translations;
 use craft\errors\InvalidElementException;
@@ -162,5 +164,124 @@ class DraftRepository
         }
 
         return $newEntry;
+    }
+
+    public function createDrafts($element, $order, $site, $wordCounts) {
+
+        switch (get_class($element)) {
+            case Entry::class:
+                $draft = $this->createEntryDraft($element, $site, $order->title);
+                break;
+            case GlobalSet::class:
+                $draft = $this->createGlobalSetDraft($element, $site, $order->title);
+                break;
+        }
+
+        $file = Translations::$plugin->fileRepository->makeNewFile();
+
+        if ($draft instanceof GlobalSet) {
+            $targetSite = $draft->site;
+        } else {
+            $targetSite = $draft->siteId;
+        }
+
+        try {
+            // Prevent duplicate files
+            $isExistingFile = $this->isTranslationDraft($draft->draftId);
+            if (!empty($isExistingFile)) {
+                return;
+            }
+
+            $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
+
+            $file->orderId = $order->id;
+            $file->elementId = $draft->sourceId;
+            $file->draftId = $draft->draftId;
+            $file->sourceSite = $order->sourceSite;
+            $file->targetSite = $targetSite;
+            $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
+            $file->source = Translations::$plugin->elementToXmlConverter->toXml(
+                $element,
+                $draft->draftId,
+                $order->sourceSite,
+                $targetSite,
+                $file->previewUrl
+            );
+            $file->wordCount = isset($wordCounts[$element->id]) ? $wordCounts[$element->id] : 0;
+
+            Translations::$plugin->fileRepository->saveFile($file);
+
+            // Delete draft elements that are automatically propagated for other sites
+            // Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+
+            return true;
+        } catch (Exception $e) {
+
+            $file->orderId = $order->id;
+            $file->elementId = $draft->sourceId;
+            $file->draftId = $draft->draftId;
+            $file->sourceSite = $order->sourceSite;
+            $file->targetSite = $targetSite;
+            $file->status = 'failed';
+            $file->wordCount = isset($wordCounts[$draft->id]) ? $wordCounts[$draft->id] : 0;
+
+            Translations::$plugin->fileRepository->saveFile($file);
+
+            return false;
+        }
+
+    }
+
+    public function createEntryDraft(Entry $entry, $site, $orderName)
+    {
+
+        try{
+            $creator = User::find()
+                ->admin()
+                ->orderBy(['elements.id' => SORT_ASC])
+                ->one();
+            $creatorId = $creator->id;
+
+            $name = sprintf('%s [%s]', $orderName, Craft::$app->getSites()->getSiteById($site)->handle);
+
+            $notes = '';
+            //$supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
+            $newAttributes = [
+                // 'enabledForSite' => in_array($site, $supportedSites),
+                'siteId' => $site,
+            ];
+
+            $draft = Translations::$plugin->draftRepository->makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes);
+
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error('CreateEntryDraft exception:: '.$e->getMessage());
+            return [];
+        }
+
+    }
+
+    public function createGlobalSetDraft(GlobalSet $globalSet, $site, $orderName)
+    {
+        try {
+            $draft = Translations::$plugin->globalSetDraftRepository->makeNewDraft();
+            $draft->name = sprintf('%s [%s]', $orderName, $site);
+            $draft->id = $globalSet->id;
+            $draft->site = $site;
+
+            $post = Translations::$plugin->elementTranslator->toPostArray($globalSet);
+
+            $draft->setFieldValues($post);
+
+            Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
+
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error('CreateGlobalSetDraft exception:: '.$e->getMessage());
+            return [];
+        }
+
     }
 }
