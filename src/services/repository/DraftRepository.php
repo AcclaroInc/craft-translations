@@ -214,7 +214,7 @@ class DraftRepository
             // Delete draft elements that are automatically propagated for other sites
             // Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
 
-            return true;
+            return $file;
         } catch (Exception $e) {
 
             $file->orderId = $order->id;

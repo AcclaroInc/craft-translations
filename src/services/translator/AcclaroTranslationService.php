@@ -213,4 +213,62 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         return $this->acclaroApiClient->editOrderName($orderId, $name);
     }
+
+    public function sendOrderFile($order, $file, $settings) {
+
+        $tempPath = Craft::$app->path->getTempPath();
+        $acclaroApiClient = new AcclaroApiClient(
+            $settings['apiToken'],
+            !empty($settings['sandboxMode'])
+        );
+
+        if ($file) {
+
+            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+
+            $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
+            $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
+
+            if ($element instanceof GlobalSetModel) {
+                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+            } else {
+                $filename = $element->slug.'-'.$targetSite.'.xml';
+            }
+
+            $path = $tempPath.'/'.$filename;
+
+            $stream = fopen($path, 'w+');
+
+            fwrite($stream, $file->source);
+
+            $fileResponse = $acclaroApiClient->sendSourceFile(
+                $order->serviceOrderId,
+                $sourceSite,
+                $targetSite,
+                $file->id,
+                $path
+            );
+
+            $file->serviceFileId = $fileResponse->fileid ? $fileResponse->fileid : $file->id;
+            $file->status = $fileResponse->status;
+
+            $fileCallbackResponse = $acclaroApiClient->requestFileCallback(
+                $order->serviceOrderId,
+                $file->serviceFileId,
+                Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
+            );
+
+            $acclaroApiClient->addReviewUrl(
+                $order->serviceOrderId,
+                $file->serviceFileId,
+                $file->previewUrl
+            );
+            // }
+
+            fclose($stream);
+
+            unlink($path);
+        }
+
+    }
 }

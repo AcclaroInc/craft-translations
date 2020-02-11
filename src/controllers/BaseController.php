@@ -1558,7 +1558,15 @@ class BaseController extends Controller
                                 }
                             } else {
                                 $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Adding file '.$element->title)));
-                                Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts);
+                                $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts);
+                            }
+
+                            if ($order->translator->service !== 'export_import') {
+                                $translator = $order->getTranslator();
+
+                                $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+
+                                $translationService->sendOrderFile($order, $file, $translator->getSettings());
                             }
                         }
                     }
