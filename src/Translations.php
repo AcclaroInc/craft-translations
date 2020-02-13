@@ -489,7 +489,6 @@ class Translations extends Plugin
 
     private function _onDeleteElement(Event $event)
     {
-
         if (!empty($event->element->draftId)) {
             $response = Translations::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
             if ($response) {
@@ -524,7 +523,8 @@ class Translations extends Plugin
             }
         }
 
-        if (Craft::$app->getRequest()->getParam('hardDelete')) {
+        $request = Craft::$app->getRequest();
+        if (!$request->getIsConsoleRequest() && $request->getParam('hardDelete')) {
             $event->hardDelete = true;
         }
     }
