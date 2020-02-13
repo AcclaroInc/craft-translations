@@ -1546,17 +1546,6 @@ class BaseController extends Controller
                                     }
 
                                     $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts, $file);
-
-                                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                                        $element,
-                                        $file->draftId,
-                                        $order->sourceSite,
-                                        $site,
-                                        $file->previewUrl
-                                    );
-                                    $file->wordCount = isset($wordCounts[$element->id]) ? $wordCounts[$element->id] : 0;
-
-                                    Translations::$plugin->fileRepository->saveFile($file);
                                 }
                             } else {
                                 $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Adding file '.$element->title)));
