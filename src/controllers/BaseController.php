@@ -1545,6 +1545,8 @@ class BaseController extends Controller
                                         $file->status = 'in progress';
                                     }
 
+                                    $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts, $file);
+
                                     $file->source = Translations::$plugin->elementToXmlConverter->toXml(
                                         $element,
                                         $file->draftId,

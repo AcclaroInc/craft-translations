@@ -166,7 +166,7 @@ class DraftRepository
         return $newEntry;
     }
 
-    public function createDrafts($element, $order, $site, $wordCounts) {
+    public function createDrafts($element, $order, $site, $wordCounts, $file=null) {
 
         switch (get_class($element)) {
             case Entry::class:
@@ -177,7 +177,9 @@ class DraftRepository
                 break;
         }
 
-        $file = Translations::$plugin->fileRepository->makeNewFile();
+        if (!($file instanceof FileModel)){
+            $file = Translations::$plugin->fileRepository->makeNewFile();
+        }
 
         if ($draft instanceof GlobalSet) {
             $targetSite = $draft->site;
