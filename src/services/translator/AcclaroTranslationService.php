@@ -263,7 +263,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $file->serviceFileId,
                 $file->previewUrl
             );
-            // }
+
+            Translations::$plugin->fileRepository->saveFile($file);
 
             fclose($stream);
 
