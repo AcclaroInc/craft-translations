@@ -48,6 +48,8 @@ class BaseController extends Controller
      */
     protected $pluginVersion;
 
+    protected static $sendToQueueLimit = 5;
+
     // Public Methods
     // =========================================================================
     
@@ -647,24 +649,35 @@ class BaseController extends Controller
         }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
-
         $elementIds = Craft::$app->getRequest()->getParam('elements');
 
-        $job = Craft::$app->queue->push(new ApplyDrafts([
-            'description' => 'Applying translation drafts',
-            'orderId' => $orderId,
-            'elementIds' => $elementIds
-        ]));
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        $totalElements = (count($elementIds) * count($order->getTargetSitesArray()));
 
-        if ($job) {
-            $params = [
-                'id' => (int) $job,
-                'notice' => 'Done applying translation drafts',
-                'url' => 'translations/orders/detail/'. $orderId,
-            ];
-            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        if ($totalElements > self::$sendToQueueLimit ) {
+
+            $job = Craft::$app->queue->push(new ApplyDrafts([
+                'description' => 'Applying translation drafts',
+                'orderId' => $orderId,
+                'elementIds' => $elementIds
+            ]));
+
+            if ($job) {
+                $params = [
+                    'id' => (int) $job,
+                    'notice' => 'Done applying translation drafts',
+                    'url' => 'translations/orders/detail/'. $orderId,
+                ];
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            } else {
+                $this->redirect('translations/orders', 302, true);
+            }
         } else {
-            $this->redirect('translations/orders', 302, true);
+
+            Translations::$plugin->draftRepository->applyDrafts($orderId, $elementIds);
+
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Done applying translation drafts'));
+
         }
     }
 
@@ -939,17 +952,24 @@ class BaseController extends Controller
                     $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Order Submitted to %s'), $order->translator->getName()));
                     
                     $order->wordCount = array_sum($wordCounts);
-                    
-                    $job = Craft::$app->queue->push(new CreateDrafts([
-                        'description' => 'Creating translation drafts',
-                        'orderId' => $order->id,
-                        'wordCounts' => $wordCounts,
-                    ]));
 
-                    $queueOrders = Craft::$app->getSession()->get('queueOrders');
-                    $queueOrders[$job] = $order->id;
-                    Craft::$app->getSession()->set('queueOrders', $queueOrders);
-                    
+                    $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
+                    $totalElements = (count($elements) * count($order->getTargetSitesArray()));
+                    if ($totalElements > self::$sendToQueueLimit) {
+                        $job = Craft::$app->queue->push(new CreateDrafts([
+                            'description' => 'Creating translation drafts',
+                            'orderId' => $order->id,
+                            'wordCounts' => $wordCounts,
+                        ]));
+
+                        $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                        $queueOrders[$job] = $order->id;
+                        Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                    } else {
+                        $job =  null;
+                        Translations::$plugin->draftRepository->createOrderDrafts($order->id, $wordCounts);
+                    }
+
                 } else {
                     Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Saved.'));
                 }
@@ -972,6 +992,9 @@ class BaseController extends Controller
             } else {
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Sending order to Acclaro, please refresh your Orders once complete'));
             }
+        } else if(is_null($job)) {
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'New order created: '.$order->title));
+            $this->redirect('translations/orders/detail/'. $order->id);
         } else {
             $this->redirect('translations/orders', 302, true);
         }
@@ -1060,19 +1083,25 @@ class BaseController extends Controller
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         if ($order) {
-            $job = Craft::$app->queue->push(new SyncOrder([
-                'description' => 'Syncing order '. $order->title,
-                'order' => $order
-            ]));
+            if (count($order->files) > self::$sendToQueueLimit) {
+                $job = Craft::$app->queue->push(new SyncOrder([
+                    'description' => 'Syncing order '. $order->title,
+                    'order' => $order
+                ]));
 
-            if ($job) {
-                $params = [
-                    'id' => (int) $job,
-                    'notice' => 'Done syncing order '. $order->title,
-                    'url' => 'translations/orders/detail/'. $order->id
-                ];
-                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                if ($job) {
+                    $params = [
+                        'id' => (int) $job,
+                        'notice' => 'Done syncing order '. $order->title,
+                        'url' => 'translations/orders/detail/'. $order->id
+                    ];
+                    Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                } else {
+                    $this->redirect('translations/orders', 302, true);
+                }
             } else {
+
+                Translations::$plugin->orderRepository->syncOrder($order);
                 $this->redirect('translations/orders', 302, true);
             }
         }
@@ -1089,6 +1118,14 @@ class BaseController extends Controller
         }
 
         $orders = Translations::$plugin->orderRepository->getInProgressOrders();
+        $allFileCounts = 0;
+        foreach ($orders as $order) {
+            if ($order->translator->service === 'export_import') {
+                continue;
+            }
+            $allFileCounts = $allFileCounts + $order->files;
+        }
+
         $job = '';
         $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
         foreach ($orders as $order) {
@@ -1097,10 +1134,14 @@ class BaseController extends Controller
                 continue;
             }
 
-            $job = Craft::$app->queue->push(new SyncOrder([
-                'description' => 'Syncing order '. $order->title,
-                'order' => $order
-            ]));
+            if ($allFileCounts > self::$sendToQueueLimit) {
+                $job = Craft::$app->queue->push(new SyncOrder([
+                    'description' => 'Syncing order '. $order->title,
+                    'order' => $order
+                ]));
+            } else {
+                Translations::$plugin->orderRepository->syncOrder($order);
+            }
         }
 
         if ($job) {
@@ -1154,6 +1195,8 @@ class BaseController extends Controller
 
     public function actionRegeneratePreviewUrls()
     {
+        $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
+
         $this->requireLogin();
         $this->requirePostRequest();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:edit')) {
@@ -1165,20 +1208,26 @@ class BaseController extends Controller
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         if ($order) {
-            $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
-                'description' => 'Regenerating preview urls for '. $order->title,
-                'order' => $order
-            ]));
 
-            if ($job) {
-                $params = [
-                    'id' => (int) $job,
-                    'notice' => 'Done regenerating preview urls for '. $order->title,
-                    'url' => 'translations/orders/detail/'. $order->id
-                ];
-                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            if (count($order->files) > self::$sendToQueueLimit) {
+                $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
+                    'description' => 'Regenerating preview urls for '. $order->title,
+                    'order' => $order
+                ]));
+
+                if ($job) {
+                    $params = [
+                        'id' => (int) $job,
+                        'notice' => 'Done regenerating preview urls for '. $order->title,
+                        'url' => 'translations/orders/detail/'. $order->id
+                    ];
+                    Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                } else {
+                    $this->redirect('translations/orders', 302, true);
+                }
             } else {
-                $this->redirect('translations/orders', 302, true);
+                Translations::$plugin->fileRepository->regeneratePreviewUrls($order);
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done regenerating preview urls for '. $order->title));
             }
         }
     }
@@ -1562,33 +1611,15 @@ class BaseController extends Controller
                         }
                     }
                 }
-
-                $queueOrders = Craft::$app->getSession()->get('queueOrders');
-                $queueOrders[$job] = $order->id;
-                Craft::$app->getSession()->set('queueOrders', $queueOrders);
-
             }
 
         } catch (Exception $e) {
 
             $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Add Entries Failed '.$e->getMessage())));
-            Craft::error('Couldn’t save the order. Error: '.$e->getMessage(), __METHOD__);
-//            $order->status = 'failed';
-//            Craft::$app->getElements()->saveElement($order);
+            Craft::error('Add Entries Failed. Error: '.$e->getMessage(), __METHOD__);
         }
 
-        if ($job) {
-            if ($order->getTranslator()->service == 'export_import') {
-                $params = [
-                    'id' => (int) $job,
-                    'notice' => 'Done creating translation drafts',
-                    'url' => 'translations/orders/detail/'. $order->id
-                ];
-                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
-            } else {
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Sending new order to Acclaro, please refresh your Orders once complete'));
-            }
-        }
+        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Entries added.'));
 
         return $this->asJson([
             'success' => true,
