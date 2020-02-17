@@ -512,6 +512,13 @@
             <div class="translations-order-steps">
                 <div class="translations-order-step{% if orderId is empty %} active{% endif %}" id="step1">
                     <div class="translations-order-step-intro">
+                        {% if duplicateEntries %}
+                            <div class="warning-box">
+                                <span class="warning" data-icon="alert"></span> &nbsp;
+                                {{ 'This order contains entries that exist in another order. Remove duplicate entries below or click "Next" to continue.'|t }}
+                            </div>
+                        {% endif %}
+
                         <h2>{{ 'Choose Entries'|t }}</h2>
 
                         <p>{{ 'Entries that are added to this order will appear below. You can add entries from either of the following:'|t }}</p>
@@ -540,7 +547,19 @@
                         <tbody>
                         {% for element in elements %}
                             <tr data-word-count="{{ elementWordCounts[element.id] }}">
-                                <td>{% include "_elements/element" with {'element': element} only %}</td>
+                                <td>{% include "_elements/element" with {'element': element} only %}
+                                    {% if duplicateEntries[element.id] is defined %}
+
+                                        <span class="warning duplicate-element" data-icon="alert" data-element="{{ element.id }}"></span>
+                                        <div class="menu duplicate-orders" id="dup-element-{{ element.id }}" data-align="right">
+                                            {{ 'This entry exists in orders '|t }}
+                                            {% for orderId in duplicateEntries[element.id] %}
+                                                <a href="{{ url('translations/orders/detail/'~orderId) }}">#{{ orderId }}, </a>
+                                            {% endfor %}
+                                        </div>
+
+                                    {% endif %}
+                                </td>
                                 <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                 <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                 <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>

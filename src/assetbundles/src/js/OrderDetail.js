@@ -316,6 +316,13 @@ Craft.Translations.OrderDetail = {
             $dup_modal.hide();
         });
 
+        $('.duplicate-element').hover(function(e) {
+            var ele = $(this).attr('data-element');
+            $('#dup-element-'+ele).slideDown(500);
+        },function(e) {
+            var ele = $(this).attr('data-element');
+            $('#dup-element-'+ele).slideUp(500);
+        });
 
         $(".addEntries").on('click', function (e) {
             elementIds = [];

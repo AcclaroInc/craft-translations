@@ -469,6 +469,8 @@ class BaseController extends Controller
             }
         }
 
+        $variables['duplicateEntries'] = $this->checkOrderDuplicates($variables['elements']);
+
         $variables['orderEntriesCount'] = count($variables['elements']);
 
         $variables['orderWordCount'] = 0;
@@ -1626,5 +1628,23 @@ class BaseController extends Controller
             'data' => ['duplicates' => []],
             'error' => null
         ]);
+    }
+
+    /**
+     * @param $elements
+     * @return array
+     */
+    public function checkOrderDuplicates($elements) {
+
+        $orderIds = [];
+        foreach ($elements as $element) {
+
+            $orders = Translations::$plugin->fileRepository->getOrdersByElement($element->id);
+            if ($orders) {
+                $orderIds[$element->id] = $orders;
+            }
+        }
+
+        return $orderIds;
     }
 }

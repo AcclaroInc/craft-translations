@@ -332,4 +332,24 @@ class FileRepository
 
         return true;
     }
+
+    /**
+     * @param  int|string $elementId
+     * @return \acclaro\translations\models\FileModel
+     */
+    public function getOrdersByElement(int $elementId)
+    {
+
+        $attributes['elementId'] = $elementId;
+
+        $records = FileRecord::find()->select(['orderId'])->where($attributes)->groupBy('orderId')->all();
+
+        $orderIds = [];
+
+        foreach ($records as $key => $record) {
+            $orderIds[] = $record->orderId;
+        }
+
+        return $orderIds;
+    }
 }

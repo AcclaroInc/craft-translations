@@ -466,6 +466,20 @@
     margin:0;
 }
 
+.warning-box {
+    background: #faebd7;
+    padding: 12px;
+    font-weight: bold;
+}
+
+.duplicate-orders{
+    min-width: 2px;
+    max-height: 836px;
+    display: none;
+    width: 350px;
+    left: 50px;
+}
+
 .bold {
     font-weight: bold;
 }
