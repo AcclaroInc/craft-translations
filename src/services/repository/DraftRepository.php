@@ -363,7 +363,7 @@ class DraftRepository
             }
 
             if ($queue) {
-                $applyDraft->setProgress($queue, $currentElement++ / $totalElements);
+                $applyDraft->updateProgress($queue, $currentElement++ / $totalElements);
             }
 
             Craft::info('23fo2in2FJ: '. $currentElement .' | '. $totalElements);

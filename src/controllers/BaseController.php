@@ -1102,7 +1102,8 @@ class BaseController extends Controller
             } else {
 
                 Translations::$plugin->orderRepository->syncOrder($order);
-                $this->redirect('translations/orders', 302, true);
+
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done syncing order '. $order->title));
             }
         }
     }
@@ -1123,7 +1124,8 @@ class BaseController extends Controller
             if ($order->translator->service === 'export_import') {
                 continue;
             }
-            $allFileCounts = $allFileCounts + $order->files;
+
+            $allFileCounts = $allFileCounts + count($order->files);
         }
 
         $job = '';
@@ -1152,7 +1154,8 @@ class BaseController extends Controller
             ];
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
         } else {
-            $this->redirect($url, 302, true);
+
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done syncing orders'));
         }
     }
 

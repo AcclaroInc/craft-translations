@@ -28,6 +28,10 @@ class SendOrder extends BaseJob
         Translations::$plugin->orderRepository->sendAcclaroOrder($this->order, $this->settings, $queue);
     }
 
+    public function updateProgress($queue, $progress) {
+        $this->setProgress($queue, $progress);
+    }
+
     protected function defaultDescription()
     {
         return 'Sending order to Acclaro';
