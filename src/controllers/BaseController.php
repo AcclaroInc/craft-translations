@@ -1202,7 +1202,8 @@ class BaseController extends Controller
         $this->requireLogin();
         $this->requirePostRequest();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:edit')) {
-            return $this->redirect('translations', 302, true);
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'User does have permission to edit orders'));
+            return $this->redirect('translations/orders/detail/'. $order->id, 302, true);
         }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
@@ -1211,7 +1212,7 @@ class BaseController extends Controller
 
         if ($order) {
 
-            if (count($order->files) > self::$sendToQueueLimit) {
+            if (count($order->files) > (self::$sendToQueueLimit * 5)) { // Multiply allowed queue limit due to fast processing times
                 $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
                     'description' => 'Regenerating preview urls for '. $order->title,
                     'order' => $order
@@ -1225,7 +1226,7 @@ class BaseController extends Controller
                     ];
                     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                 } else {
-                    $this->redirect('translations/orders', 302, true);
+                    $this->redirect('translations/orders/detail/'. $order->id, 302, true);
                 }
             } else {
                 Translations::$plugin->fileRepository->regeneratePreviewUrls($order);
