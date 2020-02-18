@@ -1097,12 +1097,13 @@ class BaseController extends Controller
                     ];
                     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                 } else {
-                    $this->redirect('translations/orders', 302, true);
+                    Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app',  'Cannot sync order '. $order->title));
+                    return $this->redirect('translations/orders/detail/'. $order->id, 302, true);
                 }
             } else {
-
                 Translations::$plugin->orderRepository->syncOrder($order);
-                $this->redirect('translations/orders', 302, true);
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done syncing order '. $order->title));
+                return $this->redirect('translations/orders/detail/'. $order->id, 302, true);
             }
         }
     }
@@ -1123,7 +1124,7 @@ class BaseController extends Controller
             if ($order->translator->service === 'export_import') {
                 continue;
             }
-            $allFileCounts = $allFileCounts + $order->files;
+            $allFileCounts += count($order->files);
         }
 
         $job = '';
@@ -1152,7 +1153,8 @@ class BaseController extends Controller
             ];
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
         } else {
-            $this->redirect($url, 302, true);
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Cannot sync orders.'));
+            return $this->redirect($url, 302, true);
         }
     }
 
