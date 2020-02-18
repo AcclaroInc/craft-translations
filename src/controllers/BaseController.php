@@ -994,9 +994,9 @@ class BaseController extends Controller
             }
         } else if(is_null($job)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'New order created: '.$order->title));
-            $this->redirect('translations/orders/detail/'. $order->id);
+            return $this->redirect('translations/orders/detail/'. $order->id);
         } else {
-            $this->redirect('translations/orders', 302, true);
+            return $this->redirect('translations/orders', 302, true);
         }
     }
 
