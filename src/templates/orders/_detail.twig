@@ -771,9 +771,9 @@
         </form>
     {% endif %}
     <div class="hidden">
-        <div id="duplicate-modal" class="modal" role="dialog" >
+        <div id="duplicate-modal" class="modal elementselectormodal" role="dialog">
             <div class="body">
-                <div class="main">
+                <div class="main" style="overflow:auto;height: 350px">
                     <div class="modal-header field">
                         <div class="modal-title">
                             <h1> {{ 'Duplicate Entries'|t }}</h1>
@@ -794,14 +794,14 @@
                         </div>
                         <div class="heading">
                             <input type="radio" name="skip_replace" value="skip" checked> <span class="bold"> {{ 'Skip'|t }} </span>{{ ' duplicate entries'|t }}<br/>
-                            <input type="radio" name="skip_replace" value="replace"> <span class="bold"> {{ 'Replace'|t }} </span> {{ ' duplicate entries'|t }}<br/>
+                            <input type="radio" name="skip_replace" value="replace"> <span class="bold"> {{ 'Replace'|t }} </span> {{ ' current entries'|t }}<br/>
                         </div>
                     </div>
                 </div>
 
                 <div class="footer">
                     <div class="buttons right">
-                        <div class="btn" tabindex="0">{{ 'Cancel'|t }}</div>
+                        <div class="btn" id="duplicate-cancel" tabindex="0">{{ 'Cancel'|t }}</div>
                         <div class="btn submit" id="duplicate-continue">{{ 'Continue'|t }}</div>
                     </div>
                 </div>

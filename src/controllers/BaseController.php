@@ -48,6 +48,8 @@ class BaseController extends Controller
      */
     protected $pluginVersion;
 
+    protected static $sendToQueueLimit = 5;
+
     // Public Methods
     // =========================================================================
     
@@ -285,7 +287,7 @@ class BaseController extends Controller
         }
 
         if ((int) $order->sourceSite !== (int) $sourceSite) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'All entries within an order must have the same source site.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'All entries within an order must have the same source site'));
             return;
         }
 
@@ -316,7 +318,7 @@ class BaseController extends Controller
 
                         if (!$hasTargetSites) {
                             $message = sprintf(
-                                Translations::$plugin->translator->translate('app', "The target site(s) on this order are not available for the entry “%s”. Please check your settings in in Sections > %s."),
+                                Translations::$plugin->translator->translate('app', "The target site(s) on this order are not available for the entry “%s”. Please check your settings in in Sections > %s"),
                                 $element->title,
                                 $element->section->name
                             );
@@ -348,9 +350,9 @@ class BaseController extends Controller
             Craft::error('Couldn’t save the order', __METHOD__);
         }
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Added to order.'));
+        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Added to order'));
 
-        $this->redirect('translations/orders/detail/'. $order->id, 302, true);
+        return $this->redirect('translations/orders/detail/'. $order->id, 302, true);
     }
 
     // Index Page Methods
@@ -656,24 +658,35 @@ class BaseController extends Controller
         }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
-
         $elementIds = Craft::$app->getRequest()->getParam('elements');
 
-        $job = Craft::$app->queue->push(new ApplyDrafts([
-            'description' => 'Applying translation drafts',
-            'orderId' => $orderId,
-            'elementIds' => $elementIds
-        ]));
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        $totalElements = (count($elementIds) * count($order->getTargetSitesArray()));
 
-        if ($job) {
-            $params = [
-                'id' => (int) $job,
-                'notice' => 'Done applying translation drafts',
-                'url' => 'translations/orders/detail/'. $orderId,
-            ];
-            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+        if ($totalElements > self::$sendToQueueLimit ) {
+
+            $job = Craft::$app->queue->push(new ApplyDrafts([
+                'description' => 'Applying translation drafts',
+                'orderId' => $orderId,
+                'elementIds' => $elementIds
+            ]));
+
+            if ($job) {
+                $params = [
+                    'id' => (int) $job,
+                    'notice' => 'Done applying translation drafts',
+                    'url' => 'translations/orders/detail/'. $orderId,
+                ];
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            } else {
+                $this->redirect('translations/orders', 302, true);
+            }
         } else {
-            $this->redirect('translations/orders', 302, true);
+
+            Translations::$plugin->draftRepository->applyDrafts($orderId, $elementIds);
+
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Done applying translation drafts'));
+
         }
     }
 
@@ -703,14 +716,14 @@ class BaseController extends Controller
         $pendingOrdersCount = count($pendingOrders);
 
         if ($pendingOrdersCount > 0) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'This translator cannot be deleted as orders has been created already.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'This translator cannot be deleted as orders has been created already'));
 
             return;
         }
 
         Translations::$plugin->translatorRepository->deleteTranslator($translator);
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator deleted.'));
+        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator deleted'));
 
         return $this->redirect('translations/translators', 302, true);
     }
@@ -761,9 +774,9 @@ class BaseController extends Controller
 
         Translations::$plugin->translatorRepository->saveTranslator($translator);
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator saved.'));
+        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator saved'));
 
-        $this->redirect('translations/translators', 302, true);
+        return $this->redirect('translations/translators', 302, true);
     }
 
     // Order CRUD Methods
@@ -777,7 +790,7 @@ class BaseController extends Controller
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if (!$currentUser->can('translations:orders:create')) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action'));
             return;
         }
 
@@ -897,7 +910,7 @@ class BaseController extends Controller
 
                     if (!$hasTargetSites) {
                         $message = sprintf(
-                            Translations::$plugin->translator->translate('app', "The target site(s) selected are not available for the entry “%s”. Please check your settings in Settings > Sections > %s to change this entry's target sites."),
+                            Translations::$plugin->translator->translate('app', "The target site(s) selected are not available for the entry “%s”. Please check your settings in Settings > Sections > %s to change this entry's target sites"),
                             $element->title,
                             $element->section->name
                         );
@@ -959,7 +972,7 @@ class BaseController extends Controller
                                 if (!$success) {
                                     Craft::error('Couldn’t save the order', __METHOD__);
                                 }
-                                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The following language pair(s) are not supported: '.implode(', ', array_column($unsupportedLangs, 'language')).' Contact Acclaro for assistance.'));
+                                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The following language pair(s) are not supported: '.implode(', ', array_column($unsupportedLangs, 'language')).' Contact Acclaro for assistance'));
                                 // return; // @todo This might be a better idea than failing the order
                                 return $this->redirect('translations/orders', 302, true);
                             }
@@ -972,19 +985,26 @@ class BaseController extends Controller
                     $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Order Submitted to %s'), $order->translator->getName()));
                     
                     $order->wordCount = array_sum($wordCounts);
-                    
-                    $job = Craft::$app->queue->push(new CreateDrafts([
-                        'description' => 'Creating translation drafts',
-                        'orderId' => $order->id,
-                        'wordCounts' => $wordCounts,
-                    ]));
 
-                    $queueOrders = Craft::$app->getSession()->get('queueOrders');
-                    $queueOrders[$job] = $order->id;
-                    Craft::$app->getSession()->set('queueOrders', $queueOrders);
-                    
+                    $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
+                    $totalElements = (count($elements) * count($order->getTargetSitesArray()));
+                    if ($totalElements > self::$sendToQueueLimit) {
+                        $job = Craft::$app->queue->push(new CreateDrafts([
+                            'description' => 'Creating translation drafts',
+                            'orderId' => $order->id,
+                            'wordCounts' => $wordCounts,
+                        ]));
+
+                        $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                        $queueOrders[$job] = $order->id;
+                        Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                    } else {
+                        $job =  null;
+                        Translations::$plugin->draftRepository->createOrderDrafts($order->id, $wordCounts);
+                    }
+
                 } else {
-                    Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order Saved.'));
+                    Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Order saved'));
                 }
             }
 
@@ -1005,8 +1025,11 @@ class BaseController extends Controller
             } else {
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Sending order to Acclaro, please refresh your Orders once complete'));
             }
+        } else if(is_null($job)) {
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'New order created: '.$order->title));
+            return $this->redirect('translations/orders/detail/'. $order->id, 302, true);
         } else {
-            $this->redirect('translations/orders', 302, true);
+            return $this->redirect('translations/orders', 302, true);
         }
     }
 
@@ -1045,7 +1068,7 @@ class BaseController extends Controller
         if (!$order) {
             return $this->asJson([
                 'success' => false,
-                'error' => Translations::$plugin->translator->translate('app', 'No order exists with the ID “{id}”.', array('id' => $orderId))
+                'error' => Translations::$plugin->translator->translate('app', 'No order exists with the ID “{id}”', array('id' => $orderId))
             ]);
         }
 
@@ -1053,7 +1076,7 @@ class BaseController extends Controller
         if (($translator->service == 'export_import' && $order->status === 'published') || ($translator->service == 'acclaro' && $order->status !== 'new' && $order->status !== 'failed')) {
             return $this->asJson([
                 'success' => false,
-                'error' => Translations::$plugin->translator->translate('app', 'You cannot delete a submitted order.')
+                'error' => Translations::$plugin->translator->translate('app', 'You cannot delete a submitted order')
             ]);
         }
 
@@ -1105,20 +1128,30 @@ class BaseController extends Controller
         }
 
         if ($order) {
-            $job = Craft::$app->queue->push(new SyncOrder([
-                'description' => 'Syncing order '. $order->title,
-                'order' => $order
-            ]));
+            if (count($order->files) > self::$sendToQueueLimit) {
+                $job = Craft::$app->queue->push(new SyncOrder([
+                    'description' => 'Syncing order '. $order->title,
+                    'order' => $order
+                ]));
 
-            if ($job) {
-                $params = [
-                    'id' => (int) $job,
-                    'notice' => 'Done syncing order '. $order->title,
-                    'url' => 'translations/orders/detail/'. $order->id
-                ];
-                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                if ($job) {
+                    $params = [
+                        'id' => (int) $job,
+                        'notice' => 'Done syncing order '. $order->title,
+                        'url' => 'translations/orders/detail/'. $order->id
+                    ];
+                    Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                } else {
+                    Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Could not sync order'));
+
+                    return $this->redirect('translations/orders/detail/'. $order->id, 302, true);
+                }
             } else {
-                $this->redirect('translations/orders', 302, true);
+                Translations::$plugin->orderRepository->syncOrder($order);
+                
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Done syncing order'));
+                
+                return $this->redirect('translations/orders/detail/'. $order->id, 302, true);
             }
         }
     }
@@ -1129,11 +1162,19 @@ class BaseController extends Controller
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if (!$currentUser->can('translations:orders:import')) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action'));
             return;
         }
 
         $orders = Translations::$plugin->orderRepository->getInProgressOrders();
+        $allFileCounts = 0;
+        foreach ($orders as $order) {
+            if ($order->translator->service === 'export_import') {
+                continue;
+            }
+            $allFileCounts = $allFileCounts + $order->files;
+        }
+
         $job = '';
         $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
         foreach ($orders as $order) {
@@ -1142,10 +1183,14 @@ class BaseController extends Controller
                 continue;
             }
 
-            $job = Craft::$app->queue->push(new SyncOrder([
-                'description' => 'Syncing order '. $order->title,
-                'order' => $order
-            ]));
+            if ($allFileCounts > self::$sendToQueueLimit) {
+                $job = Craft::$app->queue->push(new SyncOrder([
+                    'description' => 'Syncing order '. $order->title,
+                    'order' => $order
+                ]));
+            } else {
+                Translations::$plugin->orderRepository->syncOrder($order);
+            }
         }
 
         if ($job) {
@@ -1176,7 +1221,7 @@ class BaseController extends Controller
         if (!$orderId) {
             return $this->asJson([
                 'success' => false,
-                'error' => Translations::$plugin->translator->translate('app', 'No order exists with the ID “{id}”.', array('id' => $orderId))
+                'error' => Translations::$plugin->translator->translate('app', 'No order exists with the ID “{id}”', array('id' => $orderId))
             ]);
         }
 
@@ -1199,6 +1244,8 @@ class BaseController extends Controller
 
     public function actionRegeneratePreviewUrls()
     {
+        $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
+
         $this->requireLogin();
         $this->requirePostRequest();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:edit')) {
@@ -1222,20 +1269,26 @@ class BaseController extends Controller
         }
 
         if ($order) {
-            $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
-                'description' => 'Regenerating preview urls for '. $order->title,
-                'order' => $order
-            ]));
 
-            if ($job) {
-                $params = [
-                    'id' => (int) $job,
-                    'notice' => 'Done regenerating preview urls for '. $order->title,
-                    'url' => 'translations/orders/detail/'. $order->id
-                ];
-                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+            if (count($order->files) > self::$sendToQueueLimit) {
+                $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
+                    'description' => 'Regenerating preview urls for '. $order->title,
+                    'order' => $order
+                ]));
+
+                if ($job) {
+                    $params = [
+                        'id' => (int) $job,
+                        'notice' => 'Done regenerating preview urls for '. $order->title,
+                        'url' => 'translations/orders/detail/'. $order->id
+                    ];
+                    Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                } else {
+                    $this->redirect('translations/orders', 302, true);
+                }
             } else {
-                $this->redirect('translations/orders', 302, true);
+                Translations::$plugin->fileRepository->regeneratePreviewUrls($order);
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done regenerating preview urls for '. $order->title));
             }
         }
     }
@@ -1248,8 +1301,7 @@ class BaseController extends Controller
         $variables = Craft::$app->getRequest()->resolve()[1];
 
         if (empty($variables['globalSetHandle'])) {
-            // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'globalSetHandle')));
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'globalSetHandle')));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist', array('name' => 'globalSetHandle')));
             return;
         }
 
@@ -1264,7 +1316,6 @@ class BaseController extends Controller
         }
 
         if (!isset($variables['globalSets'][$variables['globalSetHandle']])) {
-            // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Invalid global set handle'));
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Invalid global set handle'));
             return;
         }
@@ -1304,7 +1355,7 @@ class BaseController extends Controller
 
         if (!$globalSet) {
             // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'No global set exists with the ID “{id}”.', array('id' => $globalSetId)));
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No global set exists with the ID “{id}”.', array('id' => $globalSetId)));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No global set exists with the ID “{id}”', array('id' => $globalSetId)));
             return;
         }
 
@@ -1315,7 +1366,7 @@ class BaseController extends Controller
 
             if (!$draft) {
                 // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”', array('id' => $draftId)));
                 return;
             }
         } else {
@@ -1330,11 +1381,11 @@ class BaseController extends Controller
         $draft->setFieldValuesFromRequest($fieldsLocation);
         
         if (Translations::$plugin->globalSetDraftRepository->saveDraft($draft)) {
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved'));
 
-            $this->redirect($draft->getCpEditUrl(), 302, true);
+            return $this->redirect($draft->getCpEditUrl(), 302, true);
         } else {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t save draft.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t save draft'));
 
             Craft::$app->urlManager->setRouteParams(array(
                 'globalSet' => $draft
@@ -1352,7 +1403,7 @@ class BaseController extends Controller
 
         if (!$draft) {
             // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”', array('id' => $draftId)));
             return;
         }
 
@@ -1360,7 +1411,7 @@ class BaseController extends Controller
 
         if (!$globalSet) {
             // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'No global set exists with the ID “{id}”.', array('id' => $draft->id)));
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No global set exists with the ID “{id}”.', array('id' => $draft->id)));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No global set exists with the ID “{id}”', array('id' => $draft->id)));
             return;
         }
 
@@ -1401,11 +1452,11 @@ class BaseController extends Controller
         if (Translations::$plugin->globalSetDraftRepository->publishDraft($draft)) {
             $this->redirect($globalSet->getCpEditUrl(), 302, true);
             
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published'));
             
             return Translations::$plugin->globalSetDraftRepository->deleteDraft($draft);
         } else {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft'));
 
             // Send the draft back to the template
             Craft::$app->urlManager->setRouteParams(array(
@@ -1424,7 +1475,7 @@ class BaseController extends Controller
 
         if (!$draft) {
             // throw new HttpException(400, Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”', array('id' => $draftId)));
             return;
         }
 
@@ -1432,7 +1483,7 @@ class BaseController extends Controller
 
         Translations::$plugin->globalSetDraftRepository->deleteDraft($draft);
 
-        Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
+        Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted'));
 
         return $this->redirect($globalSet->getCpEditUrl(), 302, true);
     }
@@ -1504,7 +1555,7 @@ class BaseController extends Controller
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if (!$currentUser->can('translations:orders:edit')) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action'));
             return;
         }
 
@@ -1522,7 +1573,7 @@ class BaseController extends Controller
         if (!$order) {
             return $this->asJson([
                 'success' => false,
-                'error' => Translations::$plugin->translator->translate('app', 'No order exists with the ID “{id}”.', array('id' => $orderId))
+                'error' => Translations::$plugin->translator->translate('app', 'No order exists with the ID “{id}”', array('id' => $orderId))
             ]);
         }
         $job = '';
@@ -1602,51 +1653,32 @@ class BaseController extends Controller
                                         $file->status = 'in progress';
                                     }
 
-                                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                                        $element,
-                                        $file->draftId,
-                                        $order->sourceSite,
-                                        $site,
-                                        $file->previewUrl
-                                    );
-                                    $file->wordCount = isset($wordCounts[$element->id]) ? $wordCounts[$element->id] : 0;
-
-                                    Translations::$plugin->fileRepository->saveFile($file);
+                                    $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts, $file);
                                 }
                             } else {
                                 $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Adding file '.$element->title)));
-                                Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts);
+                                $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts);
+                            }
+
+                            if ($order->translator->service !== 'export_import') {
+                                $translator = $order->getTranslator();
+
+                                $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+
+                                $translationService->sendOrderFile($order, $file, $translator->getSettings());
                             }
                         }
                     }
                 }
-
-                $queueOrders = Craft::$app->getSession()->get('queueOrders');
-                $queueOrders[$job] = $order->id;
-                Craft::$app->getSession()->set('queueOrders', $queueOrders);
-
             }
 
         } catch (Exception $e) {
 
             $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Add Entries Failed '.$e->getMessage())));
-            Craft::error('Couldn’t save the order. Error: '.$e->getMessage(), __METHOD__);
-//            $order->status = 'failed';
-//            Craft::$app->getElements()->saveElement($order);
+            Craft::error('Add Entries Failed. Error: '.$e->getMessage(), __METHOD__);
         }
 
-        if ($job) {
-            if ($order->getTranslator()->service == 'export_import') {
-                $params = [
-                    'id' => (int) $job,
-                    'notice' => 'Done creating translation drafts',
-                    'url' => 'translations/orders/detail/'. $order->id
-                ];
-                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
-            } else {
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Sending new order to Acclaro, please refresh your Orders once complete'));
-            }
-        }
+        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Entries added.'));
 
         return $this->asJson([
             'success' => true,

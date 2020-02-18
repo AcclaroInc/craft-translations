@@ -11,14 +11,20 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
+use DateTime;
 use Exception;
 use craft\db\Query;
 use craft\helpers\Db;
 use craft\records\Element;
+use craft\helpers\UrlHelper;
+use craft\elements\GlobalSet;
 use craft\elements\db\ElementQuery;
+use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
-use acclaro\translations\Translations;
+use acclaro\translations\services\job\SyncOrder;
+use acclaro\translations\services\api\AcclaroApiClient;
+use acclaro\translations\services\job\acclaro\SendOrder;
 
 class OrderRepository
 {
@@ -195,6 +201,147 @@ class OrderRepository
         }
 
         return $orderCount;
+    }
+
+    /**
+     * @param $order
+     * @param $queue
+     * @throws Exception
+     */
+    public function syncOrder($order, $queue=null) {
+
+        $totalElements = count($order->files);
+        $currentElement = 0;
+
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($order->translator->service, $order->translator->getSettings());
+
+        // Don't update manual orders
+        if ($order->translator->service === 'export_import') {
+            return;
+        }
+
+        $translationService->updateOrder($order);
+
+        Translations::$plugin->orderRepository->saveOrder($order);
+
+        $syncOrderSvc = new SyncOrder();
+        foreach ($order->files as $file) {
+            if ($queue) {
+                $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
+            }
+            // Let's make sure we're not updating published files
+            if ($file->status == 'published' || $file->status == 'canceled') {
+                continue;
+            }
+
+            $translationService->updateFile($order, $file);
+
+            Translations::$plugin->fileRepository->saveFile($file);
+        }
+    }
+
+    /**
+     * @param $order
+     * @param $settings
+     * @param null $queue
+     * @throws \Throwable
+     * @throws \craft\errors\ElementNotFoundException
+     * @throws \yii\base\Exception
+     */
+    public function sendAcclaroOrder($order, $settings, $queue=null) {
+
+        $acclaroApiClient = new AcclaroApiClient(
+            $settings['apiToken'],
+            !empty($settings['sandboxMode'])
+        );
+
+        $totalElements = count($order->files);
+        $currentElement = 0;
+        $orderUrl = UrlHelper::siteUrl() .'admin/translations/orders/detail/'.$order->id;
+        $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
+        $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
+
+        $orderResponse = $acclaroApiClient->createOrder(
+            $order->title,
+            $comments,
+            $order->requestedDueDate,
+            $order->id,
+            $order->wordCount
+        );
+
+        $order->serviceOrderId = (!is_null($orderResponse)) ? $orderResponse->orderid : '';
+        $order->status = (!is_null($orderResponse)) ? $orderResponse->status : '';
+
+        $orderCallbackResponse = $acclaroApiClient->requestOrderCallback(
+            $order->serviceOrderId,
+            Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
+        );
+
+        $tempPath = Craft::$app->path->getTempPath();
+
+        $sendOrderSvc = new SendOrder();
+        foreach ($order->files as $file) {
+            if ($queue) {
+                $sendOrderSvc->setProgress($queue, $currentElement++ / $totalElements);
+            }
+
+            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+
+            $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
+            $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
+
+            if ($element instanceof GlobalSetModel) {
+                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+            } else {
+                $filename = $element->slug.'-'.$targetSite.'.xml';
+            }
+
+            $path = $tempPath.'/'.$filename;
+
+            $stream = fopen($path, 'w+');
+
+            fwrite($stream, $file->source);
+
+            $fileResponse = $acclaroApiClient->sendSourceFile(
+                $order->serviceOrderId,
+                $sourceSite,
+                $targetSite,
+                $file->id,
+                $path
+            );
+
+            $file->serviceFileId = $fileResponse->fileid ? $fileResponse->fileid : $file->id;
+            $file->status = $fileResponse->status;
+
+            $fileCallbackResponse = $acclaroApiClient->requestFileCallback(
+                $order->serviceOrderId,
+                $file->serviceFileId,
+                Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
+            );
+
+            $acclaroApiClient->addReviewUrl(
+                $order->serviceOrderId,
+                $file->serviceFileId,
+                $file->previewUrl
+            );
+            // }
+
+            fclose($stream);
+
+            unlink($path);
+        }
+
+        $submitOrderResponse = $acclaroApiClient->submitOrder($order->serviceOrderId);
+
+        $order->status = $submitOrderResponse->status;
+
+        $order->dateOrdered = new DateTime();
+
+        $success = Craft::$app->getElements()->saveElement($order);
+
+        foreach ($order->files as $file) {
+            Translations::$plugin->fileRepository->saveFile($file);
+        }
     }
 
 }

@@ -302,11 +302,20 @@ Craft.Translations.OrderDetail = {
         });
 
         $("#duplicate-continue").on("click", function (e) {
+
+            $('#duplicate-continue').attr('disabled', true);
+            $('#duplicate-continue').addClass('disabled');
+            $('#duplicate-modal').addClass('elements busy');
             var skip_or_replace = $("input[name='skip_replace']:checked").val();
             $('#checkDuplicate').val(0);
 
             addEntries(skip_or_replace);
         });
+
+        $("#duplicate-cancel").on("click", function (e) {
+            $dup_modal.hide();
+        });
+
 
         $(".addEntries").on('click', function (e) {
             elementIds = [];
@@ -326,6 +335,8 @@ Craft.Translations.OrderDetail = {
                 multiSelect: 1,
                 onSelect: $.proxy(function(elements) {
 
+                    $('#content').addClass('elements busy');
+
                     if (elements.length) {
                         for (var i = 0; i < elements.length; i++) {
                             var element = elements[i];
@@ -333,6 +344,9 @@ Craft.Translations.OrderDetail = {
                         }
 
                         addEntries();
+
+                        setTimeout(function(){ $('#content').removeClass('elements busy') }, 5000);
+
                     }
                 }, this),
                 closeOtherModals: false,
@@ -366,6 +380,7 @@ Craft.Translations.OrderDetail = {
                         alert(data.error);
                     } else {
 
+                        $(".dup-entries-title").empty();
                         if (data.data.duplicates.length>0) {
                             if (data.data.duplicates) {
                                 $.each( data.data.duplicates, function( i, val ) {

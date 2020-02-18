@@ -442,8 +442,11 @@
 }
 
 #duplicate-modal {
-    height: 350px;
+    height: 500px;
+    min-height: 500px;
     width: 550px;
+    padding-bottom: 0;
+    /*overflow:visible;*/
 }
 
 #duplicate-modal ul{
@@ -453,6 +456,14 @@
 
 #duplicate-modal .modal-body {
     line-height: 2em;
+}
+
+#duplicate-modal .main {
+    padding: 20px;
+}
+
+#duplicate-modal .footer {
+    margin:0;
 }
 
 .bold {
