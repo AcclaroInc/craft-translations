@@ -278,7 +278,7 @@ class BaseController extends Controller
         }
 
         if ((int) $order->sourceSite !== (int) $sourceSite) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'All entries within an order must have the same source site.'));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'All entries within an order must have the same source site'));
             return;
         }
 
@@ -1102,8 +1102,7 @@ class BaseController extends Controller
             } else {
 
                 Translations::$plugin->orderRepository->syncOrder($order);
-
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done syncing order '. $order->title));
+                $this->redirect('translations/orders', 302, true);
             }
         }
     }
@@ -1124,8 +1123,7 @@ class BaseController extends Controller
             if ($order->translator->service === 'export_import') {
                 continue;
             }
-
-            $allFileCounts = $allFileCounts + count($order->files);
+            $allFileCounts = $allFileCounts + $order->files;
         }
 
         $job = '';
@@ -1154,8 +1152,7 @@ class BaseController extends Controller
             ];
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
         } else {
-
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done syncing orders'));
+            $this->redirect($url, 302, true);
         }
     }
 
