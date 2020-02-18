@@ -27,6 +27,10 @@ class ApplyDrafts extends BaseJob
         Translations::$plugin->draftRepository->applyDrafts($this->orderId, $this->elementIds, $queue);
     }
 
+    public function updateProgress($queue, $progress) {
+        $this->setProgress($queue, $progress);
+    }
+
     protected function defaultDescription()
     {
         return 'Applying translation drafts';

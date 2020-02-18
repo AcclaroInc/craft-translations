@@ -295,7 +295,7 @@ class FileRepository
         foreach ($order->files as $file) {
 
             if ($queue) {
-                $service->setProgress($queue, $currentElement++ / $totalElements);
+                $service->updateProgress($queue, $currentElement++ / $totalElements);
             }
             $transaction = Craft::$app->getDb()->beginTransaction();
 

@@ -27,6 +27,10 @@ class RegeneratePreviewUrls extends BaseJob
 
         Translations::$plugin->fileRepository->regeneratePreviewUrls($this->order, $queue);
     }
+
+    public function updateProgress($queue, $progress) {
+        $this->setProgress($queue, $progress);
+    }
     
     protected function defaultDescription()
     {

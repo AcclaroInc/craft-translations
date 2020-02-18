@@ -79,6 +79,10 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
+        if (empty($orderResponse->status)) {
+            return;
+        }
+
         if ($order->status !== $orderResponse->status) {
             $order->logActivity(
                 sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderResponse->status)
@@ -95,6 +99,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
 
+        if (!is_array($fileInfoResponse)) {
+            return;
+        }
         // find the matching file
         foreach ($fileInfoResponse as $fileInfo) {
             if ($fileInfo->fileid == $file->serviceFileId) {

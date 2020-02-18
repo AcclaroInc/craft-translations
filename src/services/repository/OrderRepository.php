@@ -282,7 +282,7 @@ class OrderRepository
         $sendOrderSvc = new SendOrder();
         foreach ($order->files as $file) {
             if ($queue) {
-                $sendOrderSvc->setProgress($queue, $currentElement++ / $totalElements);
+                $sendOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
             }
 
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
