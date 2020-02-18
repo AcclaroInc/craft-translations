@@ -266,8 +266,8 @@ Craft.Translations.OrderDetail = {
                             'entryId',
                             'entryName',
                             'siteLabel',
+                            'dateDelivered',
                             'fileDate',
-                            'entryDate',
                             'wordDifference'
                         ];
 
