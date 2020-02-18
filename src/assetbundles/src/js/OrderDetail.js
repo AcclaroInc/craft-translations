@@ -316,6 +316,7 @@ Craft.Translations.OrderDetail = {
             $dup_modal.hide();
         });
 
+        $('.duplicate-warning', '#global-container').infoicon();
 
         $(".addEntries").on('click', function (e) {
             elementIds = [];

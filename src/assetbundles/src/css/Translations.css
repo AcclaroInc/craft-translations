@@ -466,6 +466,44 @@
     margin:0;
 }
 
+.warning-box {
+    background: #faebd7;
+    border-radius: 4px;
+    font-weight: bold;
+    padding: 12px;
+}
+
+.duplicate-warning {
+    cursor: pointer;
+    display: inline-flex;
+    height: 1.375em;
+    overflow: hidden;
+    text-align: center;
+    vertical-align: bottom;
+    vertical-align: middle;
+    width: 1em;
+}
+
+.duplicate-warning:before {
+    content: 'alert';
+    direction: ltr;
+    display: inline-block;
+    font-family: 'Craft';
+    font-feature-settings: "liga", "dlig";
+    font-style: normal;
+    font-variant: normal;
+    font-weight: normal;
+    line-height: 1.375;
+    opacity: 0.8;
+    text-align: center;
+    text-rendering: optimizeLegibility;
+    text-transform: none;
+    user-select: none;
+    vertical-align: baseline;
+    width: 100%;
+    word-wrap: normal !important;
+}
+
 .bold {
     font-weight: bold;
 }
