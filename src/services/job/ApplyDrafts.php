@@ -44,7 +44,7 @@ class ApplyDrafts extends BaseJob
             }
 
             $this->setProgress($queue, $currentElement++ / $totalElements);
-            Craft::info('23fo2in2FJ: '. $currentElement .' | '. $totalElements);
+            // Craft::info('23fo2in2FJ: '. $currentElement .' | '. $totalElements);
 
             $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
@@ -104,6 +104,8 @@ class ApplyDrafts extends BaseJob
 
             $file->draftId = 0;
             $file->status = 'published';
+            $now = new \DateTime();
+            $file->dateUpdated = $now->format('Y-m-d H:i:s');
             $publishedFilesCount++;
 
             Translations::$plugin->fileRepository->saveFile($file);

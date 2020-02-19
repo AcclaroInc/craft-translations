@@ -266,8 +266,8 @@ Craft.Translations.OrderDetail = {
                             'entryId',
                             'entryName',
                             'siteLabel',
+                            'dateApplied',
                             'dateDelivered',
-                            'fileDate',
                             'wordDifference'
                         ];
 
@@ -389,10 +389,14 @@ Craft.Translations.OrderDetail = {
                                 $dup_modal.show();
                             }
                         } else {
-                            console.log(" Adding entries... ");
-                            console.log(data);
+                            // console.log(" Adding entries... ");
+                            // console.log(data);
 
-                            Craft.cp.displayNotice(Craft.t('app', 'New entries added.'));
+                            if (post_data.skipOrReplace == 'replace') {
+                                Craft.cp.displayNotice(Craft.t('app', (post_data.elements.length <= 1) ? 'Entry replaced' : 'Entries replaced'));
+                            } else {
+                                Craft.cp.displayNotice(Craft.t('app', (post_data.elements.length <= 1) ? 'Entry added' : 'Entries added'));
+                            }
 
                             location.reload();
                         }

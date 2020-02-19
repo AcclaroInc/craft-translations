@@ -355,7 +355,7 @@
                                                         <tr>
                                                             <td>
                                                                 {% if file.status == 'published' %}
-                                                                    {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                                                    {{ element.dateUpdated ? element.dateUpdated|date('M j, Y g:i a') : '--' }}
                                                                 {% else %}
                                                                     <span style="padding-left: 8px">--</span>
                                                                 {% endif %}
@@ -440,7 +440,7 @@
                             </div>
                             <div class="heading">
                                 <label for="">Date Applied:</label>
-                                <div class="instructions fileDate"></div>
+                                <div class="instructions dateApplied"></div>
                             </div>
                             <div class="heading">
                                 <label for="">Words Difference:</label>
