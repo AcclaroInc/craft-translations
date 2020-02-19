@@ -16,6 +16,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
+use yii\db\Query;
 
 class FileRepository
 {
@@ -340,14 +341,19 @@ class FileRepository
     public function getOrdersByElement(int $elementId)
     {
 
-        $attributes['elementId'] = $elementId;
-
-        $records = FileRecord::find()->select(['orderId'])->where($attributes)->groupBy('orderId')->all();
+        $query = (new Query())
+            ->select('files.orderId')
+            ->from(['{{%translations_orders}} translations_orders'])
+            ->innerJoin('{{%translations_files}} files', '[[files.orderId]] = [[translations_orders.id]]')
+            ->where(['files.elementId' => $elementId,])
+            ->andWhere(['translations_orders.status' => ['new','getting quote','needs approval','in preparation','in progress']])
+            ->groupBy('orderId')
+            ->all();
 
         $orderIds = [];
 
-        foreach ($records as $key => $record) {
-            $orderIds[] = $record->orderId;
+        foreach ($query as $key => $id) {
+            $orderIds[] = $id['orderId'];
         }
 
         return $orderIds;
