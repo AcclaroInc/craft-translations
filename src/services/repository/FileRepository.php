@@ -9,13 +9,13 @@
  */
 
 namespace acclaro\translations\services\repository;
-use acclaro\translations\Translations;
 
 use Craft;
-
 use Exception;
+use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
+use acclaro\translations\services\job\RegeneratePreviewUrls;
 
 class FileRepository
 {
@@ -279,5 +279,77 @@ class FileRepository
         $attributes = ['draftId' => (int) $draftId];
 
         return FileRecord::findOne($attributes)->delete();
+    }
+
+    /**
+     * @param $order
+     * @param null $queue
+     * @return bool
+     * @throws \Throwable
+     */
+    public function regeneratePreviewUrls($order, $queue=null) {
+        $totalElements = count($order->files);
+        $currentElement = 0;
+
+        $service = new RegeneratePreviewUrls();
+        foreach ($order->files as $file) {
+
+            if ($queue) {
+                $service->updateProgress($queue, $currentElement++ / $totalElements);
+            }
+            $transaction = Craft::$app->getDb()->beginTransaction();
+
+            try {
+                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+
+                if ($draft) {
+                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+                    $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
+                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
+                        $element,
+                        $file->draftId,
+                        $file->sourceSite,
+                        $file->targetSite,
+                        $file->previewUrl
+                    );
+                }
+
+                Translations::$plugin->fileRepository->saveFile($file);
+                $transaction->commit();
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
+        }
+
+        if ($order->translator->service !== 'export_import') {
+            $translator = $order->getTranslator();
+
+            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+
+            $translationService->udpateReviewFileUrls($order);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  int|string $elementId
+     * @return \acclaro\translations\models\FileModel
+     */
+    public function getOrdersByElement(int $elementId)
+    {
+
+        $attributes['elementId'] = $elementId;
+
+        $records = FileRecord::find()->select(['orderId'])->where($attributes)->groupBy('orderId')->all();
+
+        $orderIds = [];
+
+        foreach ($records as $key => $record) {
+            $orderIds[] = $record->orderId;
+        }
+
+        return $orderIds;
     }
 }
