@@ -85,7 +85,7 @@ class FileModel extends Model
             case 'in progress':
                 return 'In progress';
             case 'complete':
-                return 'Ready to update';
+                return 'Ready to apply';
             case 'canceled':
                 return 'Cancelled';
             case 'published':

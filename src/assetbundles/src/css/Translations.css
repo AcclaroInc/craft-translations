@@ -479,8 +479,7 @@
     height: 1.375em;
     overflow: hidden;
     text-align: center;
-    vertical-align: bottom;
-    vertical-align: middle;
+    vertical-align: baseline;
     width: 1em;
 }
 
