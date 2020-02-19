@@ -1611,22 +1611,78 @@ class BaseController extends Controller
                 $elementIds = array_diff($elementIds, $duplicateElements);
             }
 
-            $elements = array_values(array_unique(array_merge($existingElementIds, $elementIds)));
+            $newAddElement = [];
+            foreach ($order->getTargetSitesArray() as $key => $site) {
+                foreach ($elementIds as $elementId) {
+                    $element = Craft::$app->getElements()->getElementById($elementId);
+                    $wordCounts[$element->id] = Translations::$plugin->elementTranslator->getWordCount($element);
+                    $file = '';
+
+                    if ($element instanceof Entry) {
+                        $sites = [];
+
+                        $elementSection = Craft::$app->getSections()->getSectionById($element->sectionId);
+                        foreach ($elementSection->getSiteIds() as $key => $sectionSite) {
+                            $sites[] = $sectionSite;
+                        }
+
+                        $hasTargetSites = !array_diff(json_decode($order->targetSites), $sites);
+                        if (!$hasTargetSites) {
+                            continue;
+                        }
+                    }
+
+                    if (in_array($element->id, $duplicateElements)) {
+                        if ($skipOrReplace == 'replace') {
+                            $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Updating File '.$element->title)));
+                            $file = Translations::$plugin->fileRepository->getFilesByOrderId($order->id, $element->id, $site);
+                            if (!$file) {
+                                continue;
+                            }
+                            $file = $file[0];
+
+                            if ($file->status == 'complete' || $file->status == 'published') {
+                                continue;
+                            } else if($file->status == 'canceled' || $file->status == 'failed') {
+                                $file->status = 'in progress';
+                            }
+
+                            $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts, $file);
+                        }
+                    } else {
+                        $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Adding file '.$element->title)));
+                        $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts);
+                        $newAddElement[] = $element->id;
+                    }
+
+                    if ($order->translator->service !== 'export_import') {
+                        $translator = $order->getTranslator();
+
+                        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+
+                        $file = Translations::$plugin->fileRepository->getFileByDraftId($file->draftId, $file->elementId);
+
+                        if ($file) {
+                            $translationService->sendOrderFile($order, $file, $translator->getSettings());
+                        }
+                    }
+
+                }
+            }
+
+            if ($newAddElement) {
+                $elements = array_values(array_unique(array_merge($existingElementIds, $newAddElement)));
+            }
             $order->elementIds = json_encode($elements);
 
             $entriesCount = 0;
             $wordCounts = [];
-
             foreach ($order->getElements() as $element) {
-
                 $entriesCount++;
                 $wordCounts[$element->id] = Translations::$plugin->elementTranslator->getWordCount($element);
             }
-
             $order->entriesCount = $entriesCount;
             $order->wordCount = array_sum($wordCounts);
-
-            // Manual Translation will make orders 'in progress' status after creation
 
             $success = Craft::$app->getElements()->saveElement($order);
 
@@ -1635,50 +1691,6 @@ class BaseController extends Controller
                     'success' => false,
                     'error' => Translations::$plugin->translator->translate('app', 'Couldn’t save the order')
                 ]);
-            } else {
-
-                $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
-
-                foreach ($order->getTargetSitesArray() as $key => $site) {
-                    foreach ($elements as $element) {
-                        $file = '';
-                        if (in_array($element->id, $elementIds)) {
-                            if (in_array($element->id, $duplicateElements)) {
-                                if ($skipOrReplace == 'replace') {
-                                    $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Updating File '.$element->title)));
-                                    $file = Translations::$plugin->fileRepository->getFilesByOrderId($order->id, $element->id, $site);
-                                    if (!$file) {
-                                        continue;
-                                    }
-                                    $file = $file[0];
-
-                                    if ($file->status == 'complete' || $file->status == 'published') {
-                                        continue;
-                                    } else if($file->status == 'canceled' || $file->status == 'failed') {
-                                        $file->status = 'in progress';
-                                    }
-
-                                    $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts, $file);
-                                }
-                            } else {
-                                $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Adding file '.$element->title)));
-                                $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts);
-                            }
-
-                            if ($order->translator->service !== 'export_import') {
-                                $translator = $order->getTranslator();
-
-                                $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
-
-                                $file = Translations::$plugin->fileRepository->getFileByDraftId($file->draftId, $file->elementId);
-
-                                if ($file) {
-                                    $translationService->sendOrderFile($order, $file, $translator->getSettings());
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
         } catch (Exception $e) {
