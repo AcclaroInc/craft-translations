@@ -23,7 +23,6 @@ class ApplyDrafts extends BaseJob
 
     public function execute($queue)
     {
-
         Translations::$plugin->draftRepository->applyDrafts($this->orderId, $this->elementIds, $queue);
     }
 

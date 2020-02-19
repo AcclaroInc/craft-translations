@@ -235,7 +235,7 @@
                     <div class="main">
                         <div class="toolbar">
                             <div class="buttons right">
-                                {% if order.status != 'complete' %}
+                                {% if order.status != 'complete' and order.status != 'published'%}
                                     <input type="hidden" value="{{ url('translations/base/add-entries') }}" id="addEntriesLink">
                                     <input type="hidden" value="1" id="checkDuplicate">
                                     <input type="button" class="btn submit addEntries form-submit" value="{{ 'Add Entries'|t }}">
@@ -355,7 +355,7 @@
                                                         <tr>
                                                             <td>
                                                                 {% if file.status == 'published' %}
-                                                                    {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                                                    {{ element.dateUpdated ? element.dateUpdated|date('M j, Y g:i a') : '--' }}
                                                                 {% else %}
                                                                     <span style="padding-left: 8px">--</span>
                                                                 {% endif %}
@@ -435,12 +435,12 @@
                                 <div class="instructions siteLabel"></div>
                             </div>
                             <div class="heading">
-                                <label for="">Last Translated:</label>
-                                <div class="instructions fileDate"></div>
+                                <label for="">Last Delivered:</label>
+                                <div class="instructions dateDelivered"></div>
                             </div>
                             <div class="heading">
-                                <label for="">Date Updated:</label>
-                                <div class="instructions entryDate"></div>
+                                <label for="">Date Applied:</label>
+                                <div class="instructions dateApplied"></div>
                             </div>
                             <div class="heading">
                                 <label for="">Words Difference:</label>

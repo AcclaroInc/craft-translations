@@ -1532,12 +1532,13 @@ class BaseController extends Controller
             // Create data array
             $data['entryId'] = $element->id;
             $data['fileId'] = $file->id;
-            $data['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
             $data['siteId'] = $element->siteId;
             $data['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
             $handle = isset($element->section) ? $element->section->handle : '';
             $data['entryUrl'] = UrlHelper::cpUrl('entries/'.$handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
-            $data['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
+            $data['dateApplied'] = ($file->status == 'published') ? $element->dateUpdated->format('M j, Y g:i a') : '--' ;
+            $dateDelivered = new DateTime($file->dateDelivered);
+            $data['dateDelivered'] = ($dateDelivered) ? $dateDelivered->format('M j, Y g:i a') : '';
             $data['fileStatus'] = $file->status;
             $data['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
             $data['diff'] = $differ->diff($translatedXML, $currentXML);
@@ -1640,6 +1641,7 @@ class BaseController extends Controller
 
                 foreach ($order->getTargetSitesArray() as $key => $site) {
                     foreach ($elements as $element) {
+                        $file = '';
                         if (in_array($element->id, $elementIds)) {
                             if (in_array($element->id, $duplicateElements)) {
                                 if ($skipOrReplace == 'replace') {
@@ -1668,7 +1670,11 @@ class BaseController extends Controller
 
                                 $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
 
-                                $translationService->sendOrderFile($order, $file, $translator->getSettings());
+                                $file = Translations::$plugin->fileRepository->getFileByDraftId($file->draftId, $file->elementId);
+
+                                if ($file) {
+                                    $translationService->sendOrderFile($order, $file, $translator->getSettings());
+                                }
                             }
                         }
                     }
