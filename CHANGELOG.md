@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.5.0 - 2020-02-25
+
+### Added
+- Support for Craft 3.4
+- Alternative to background tasks for small requests
+- Allow source entries to be added to existing orders
+- Duplicate entry warning
+
+### Fixed
+- Minor bug fixes
+
+### Updated
+- Composer dependencies
+
 ## 1.4.2 - 2020-02-04
 
 ### Fixed
