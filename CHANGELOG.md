@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Updated
 - Composer dependencies
 
+## 1.4.3 - 2020-02-13
+
+### Updated
+- Filter out console requests for _onDeleteElement() event
+
 ## 1.4.2 - 2020-02-04
 
 ### Fixed
