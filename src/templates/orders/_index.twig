@@ -1,8 +1,16 @@
 {% extends "_layouts/cp" %}
 {% import 'translations/_macros' as macros %}
 
-{% set title = "Orders"|t %}
+{% set title = "Orders"|t('app') %}
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
+
+{% set elementInstance = craft.app.elements.createElement(elementType) %}
+{% set context = 'index' %}
+
+{% if not elementInstance %}
+    {% exit 404 %}
+{% endif %}
+
 
 {% set disabled = '' %}
 {% if (orderCountAcclaro == 0) %}
@@ -10,30 +18,21 @@
 {% endif %}
 
 {% block actionButton %}
-<form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
-    <input type="hidden" name="action" value="translations/base/sync-orders">
-    {{ csrfInput() }}
-    <div class="btngroup" style="margin-right:5px;">
-        <input type="submit" class="btn big submit {{ disabled }}" value="{{ "Sync Orders"|t('app') }}" {{ disabled }}/>
-    </div>
-    <div class="sync-status"></div>
-</form>
-<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}">{{ 'Create New Order'|t }}</a>
+    <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
+        <input type="hidden" name="action" value="translations/base/sync-orders">
+        {{ csrfInput() }}
+        <div class="btngroup" style="margin-right:5px;">
+            <input type="submit" class="btn big submit {{ disabled }}" value="{{ "Sync Orders"|t('app') }}" {{ disabled }}/>
+        </div>
+        <div class="sync-status"></div>
+    </form>
+    <a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}">{{ 'Create New Order'|t }}</a>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
 
-{% set elementInstance = craft.app.elements.createElement(elementType) %}
-{% set context = 'index' %}
-
-{% set crumbs = [
-    { label: 'Translations'|t, url: url('translations') },
-    { label: 'Orders'|t, url: 'javascript:void(0)' },
-] %}
-
-{% if not elementInstance %}
-    {% exit 404 %}
-{% endif %}
+{% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}
+{% set customizableSources = (sources is not empty and context == 'index' and currentUser.can('customizeSources')) %}
 
 {% set showSiteMenu = (craft.app.getIsMultiSite() ? (showSiteMenu ?? 'auto') : false) %}
 {% if showSiteMenu == 'auto' %}
@@ -47,28 +46,51 @@
     {% endif %}
 {% endblock %}
 
-{% block content %}
-    {% if (orderCount > 0) %}
-        <div class="elementindex">
-            {{ parent() }}
 
-            {{ macros.setElementIndexSource('all') }}
+{% block sidebar %}
+    {% if sources is not empty %}
+        <nav>
+            {% include "_elements/sources" %}
+        </nav>
 
-            {% include "_elements/indexcontainer" with {
-                showSiteMenu: true
-            } %}
-        </div>
-    {% else %}
-        <span style="font-size: 16px"> {{ 'No translation orders available.'|t }} </span>
+        {% if customizableSources %}
+            <a class="customize-sources">
+                <span class="settings icon"></span>
+                <span class="label">{{ 'Customize'|t('app') }}</span>
+            </a>
+        {% endif %}
     {% endif %}
 {% endblock %}
 
 
+{% block toolbar %}
+    {% include '_elements/toolbar' with {
+        showSiteMenu: false,
+    } %}
+{% endblock %}
+
+
+{% block content %}
+    <div class="main">
+        <div class="elements"></div>
+    </div>
+{% endblock %}
+
+
+{% block footer %}
+    <div id="count-container" class="light flex-grow">&nbsp;</div>
+    {#<div id="export-btn" class="btn hidden">{{ 'Export…'|t('app') }}</div>#}
+{% endblock %}
+
+
 {% block initJs %}
-    Craft.elementIndex = Craft.createElementIndex('{{ elementType|e("js") }}', $('#main'), {
-        context:        '{{ context }}',
-        storageKey:     'elementindex.{{ elementType|e("js") }}',
-        criteria:       {{ {enabledForSite:null}|merge(searchParams)|json_encode|raw }}
+    Craft.elementIndex = Craft.createElementIndex('{{ elementType|e("js") }}', $('#page-container'), {
+    elementTypeName: '{{ elementInstance.displayName()|e("js") }}',
+    elementTypePluralName: '{{ elementInstance.pluralDisplayName()|e("js") }}',
+    context: '{{ context }}',
+    storageKey: 'elementindex.{{ elementType|e("js") }}',
+    criteria: Craft.defaultIndexCriteria,
+    toolbarSelector: '#toolbar'
     });
 {% endblock %}
 

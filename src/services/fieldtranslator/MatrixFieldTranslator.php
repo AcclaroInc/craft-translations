@@ -90,7 +90,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             $post[$fieldHandle]['new'.($i+1)] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
-                'enabledForSite'    => $block->getAttributes()['enabledForSite'],
+                'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,
                 'siteId'            => $targetSite,
                 'fields'            => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true),
             );

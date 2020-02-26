@@ -23,31 +23,12 @@ class SyncOrder extends BaseJob
 
     public function execute($queue)
     {
-        $totalElements = count($this->order->files);
-        $currentElement = 0;
 
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
-    
-        // Don't update manual orders
-        if ($this->order->translator->service === 'export_import') {
-            return;
-        }
+        Translations::$plugin->orderRepository->syncOrder($this->order, $queue);
+    }
 
-        $translationService->updateOrder($this->order);
-
-        Translations::$plugin->orderRepository->saveOrder($this->order);
-
-        foreach ($this->order->files as $file) {
-            $this->setProgress($queue, $currentElement++ / $totalElements);
-            // Let's make sure we're not updating published files
-            if ($file->status == 'published' || $file->status == 'canceled') {
-                continue;
-            }
-
-            $translationService->updateFile($this->order, $file);
-
-            Translations::$plugin->fileRepository->saveFile($file);
-        }
+    public function updateProgress($queue, $progress) {
+        $queue->setProgress($progress);
     }
 
     protected function defaultDescription()

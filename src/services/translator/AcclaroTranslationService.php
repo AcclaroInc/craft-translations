@@ -79,6 +79,10 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
+        if (empty($orderResponse->status)) {
+            return;
+        }
+
         if ($order->status !== $orderResponse->status) {
             $order->logActivity(
                 sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderResponse->status)
@@ -95,6 +99,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
 
+        if (!is_array($fileInfoResponse)) {
+            return;
+        }
         // find the matching file
         foreach ($fileInfoResponse as $fileInfo) {
             if ($fileInfo->fileid == $file->serviceFileId) {
@@ -212,5 +219,64 @@ class AcclaroTranslationService implements TranslationServiceInterface
     public function editOrderName($orderId, $name)
     {
         return $this->acclaroApiClient->editOrderName($orderId, $name);
+    }
+
+    public function sendOrderFile($order, $file, $settings) {
+
+        $tempPath = Craft::$app->path->getTempPath();
+        $acclaroApiClient = new AcclaroApiClient(
+            $settings['apiToken'],
+            !empty($settings['sandboxMode'])
+        );
+
+        if ($file) {
+
+            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+
+            $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
+            $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
+
+            if ($element instanceof GlobalSetModel) {
+                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+            } else {
+                $filename = $element->slug.'-'.$targetSite.'.xml';
+            }
+
+            $path = $tempPath.'/'.$filename;
+
+            $stream = fopen($path, 'w+');
+
+            fwrite($stream, $file->source);
+
+            $fileResponse = $acclaroApiClient->sendSourceFile(
+                $order->serviceOrderId,
+                $sourceSite,
+                $targetSite,
+                $file->id,
+                $path
+            );
+
+            $file->serviceFileId = $fileResponse->fileid ? $fileResponse->fileid : $file->id;
+            $file->status = $fileResponse->status;
+
+            $fileCallbackResponse = $acclaroApiClient->requestFileCallback(
+                $order->serviceOrderId,
+                $file->serviceFileId,
+                Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
+            );
+
+            $acclaroApiClient->addReviewUrl(
+                $order->serviceOrderId,
+                $file->serviceFileId,
+                $file->previewUrl
+            );
+
+            Translations::$plugin->fileRepository->saveFile($file);
+
+            fclose($stream);
+
+            unlink($path);
+        }
+
     }
 }

@@ -30,6 +30,7 @@ use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\DeleteElementEvent;
 use acclaro\translations\services\App;
+use acclaro\translations\elements\Order;
 use acclaro\translations\base\PluginTrait;
 use craft\console\Application as ConsoleApplication;
 use acclaro\translations\assetbundles\EntryAssets;

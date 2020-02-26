@@ -442,7 +442,7 @@ class WidgetController extends Controller
                         $data[$i]['entryDateTimestamp'] = $element->dateUpdated->format('Y-m-d H:i:s');
                         $data[$i]['siteId'] = $element->siteId;
                         $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
-                        $data[$i]['entryUrl'] = UrlHelper::cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
+                        $data[$i]['entryUrl'] = $element->getCpEditUrl();
                         $data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
                         $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
                         $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
@@ -996,7 +996,7 @@ class WidgetController extends Controller
                 $data[$i]['entryDateTimestamp'] = $element->dateUpdated->format('Y-m-d H:i:s');
                 $data[$i]['siteId'] = $element->siteId;
                 $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
-                $data[$i]['entryUrl'] = UrlHelper::cpUrl('entries/'.$element->section->handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
+                $data[$i]['entryUrl'] = $element->getCpEditUrl();
                 //$data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
                 $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element));
                 $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;

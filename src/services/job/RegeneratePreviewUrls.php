@@ -24,45 +24,14 @@ class RegeneratePreviewUrls extends BaseJob
 
     public function execute($queue)
     {
-        $totalElements = count($this->order->files);
-        $currentElement = 0;
 
-        foreach ($this->order->files as $file) {
-            $this->setProgress($queue, $currentElement++ / $totalElements);
-            $transaction = Craft::$app->getDb()->beginTransaction();
-
-            try {
-                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-
-                if ($draft) {
-                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-                    $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
-                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                        $element,
-                        $file->draftId,
-                        $file->sourceSite,
-                        $file->targetSite,
-                        $file->previewUrl
-                    );
-                }
-
-                Translations::$plugin->fileRepository->saveFile($file);
-                $transaction->commit();
-            } catch (\Throwable $e) {
-                $transaction->rollBack();
-                throw $e;
-            }
-        }
-
-        if ($this->order->translator->service !== 'export_import') {
-            $translator = $this->order->getTranslator();
-
-            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
-
-            $translationService->udpateReviewFileUrls($this->order);
-        }
+        Translations::$plugin->fileRepository->regeneratePreviewUrls($this->order, $queue);
     }
 
+    public function updateProgress($queue, $progress) {
+        $this->setProgress($queue, $progress);
+    }
+    
     protected function defaultDescription()
     {
         return 'Regenerating preview urls';
