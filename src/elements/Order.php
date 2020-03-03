@@ -157,7 +157,7 @@ class Order extends Element
                 'label' => Translations::$plugin->translator->translate('app', 'Orders in progress'),
                 'criteria' => [
                     'status' => [
-                        'new', 'in progress', 'in preparation', 'getting quote', 'needs approval', 'complete'
+                        'new', 'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval', 'complete'
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']

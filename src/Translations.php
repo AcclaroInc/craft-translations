@@ -71,7 +71,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.2.2';
+    public $schemaVersion = '1.2.3';
 
     // Public Methods
     // =========================================================================
