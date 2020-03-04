@@ -156,7 +156,9 @@
                         <td>
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'new' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Pending submission'|t }}<br>
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'in progress' or order.status == 'getting quote' or order.status == 'needs approval' or order.status == 'in preparation' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'In progress'|t }}<br>
+                            {% if order.translator.service == 'acclaro' %}
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'in review' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'In Review'|t }}<br>
+                            {% endif %}
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'complete' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Ready to Apply'|t }}<br>
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'published' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Applied'|t }}
                         </td>
