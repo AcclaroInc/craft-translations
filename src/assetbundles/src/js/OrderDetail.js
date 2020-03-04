@@ -318,6 +318,26 @@ Craft.Translations.OrderDetail = {
 
         $('.duplicate-warning', '#global-container').infoicon();
 
+        $("#sourceSiteSelect").change(function (e) {
+            $(window).off('beforeunload.windowReload');
+            var site = $("#sourceSiteSelect").val();
+            var url = document.URL;
+            url = url.replace(/(sourceSite=).*?(&)/,'$1' + site + '$2');
+            if(url.indexOf('#step2') == -1) {
+                url += '#step2';
+            }
+            window.location.href = url;
+
+        });
+        var hash = window.location.hash;
+        if (hash == '#step2') {
+            $('#step1').toggleClass( "active" );
+            $('#step2').toggleClass( "active" );
+            $('#step_first').removeClass('disabled');
+            $('#step_first').addClass('prev');
+            $('#step_two').toggleClass('disabled');
+        }
+
         $(".addEntries").on('click', function (e) {
             elementIds = [];
 
@@ -339,14 +359,21 @@ Craft.Translations.OrderDetail = {
                     $('#content').addClass('elements busy');
 
                     if (elements.length) {
+                        var elementUrl = '';
                         for (var i = 0; i < elements.length; i++) {
                             var element = elements[i];
                             elementIds.push(element.id);
+                            elementUrl += '&elements[]='+element.id;
+
                         }
 
-                        addEntries();
+                        if ($('#addNewEntries').val() == 1) {
+                            window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+elementUrl;
+                        } else {
+                            addEntries();
 
-                        setTimeout(function(){ $('#content').removeClass('elements busy') }, 5000);
+                            setTimeout(function(){ $('#content').removeClass('elements busy') }, 5000);
+                        }
 
                     }
                 }, this),

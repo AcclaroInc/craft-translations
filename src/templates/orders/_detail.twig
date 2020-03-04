@@ -495,10 +495,10 @@
             <div class="translations-order-step-btngroup">
                 <ul>
                     <li>
-                        <a class="btn big{% if orderId %} prev{% endif %}" href="#step1">1 - {{ 'Choose Entries'|t }}</a>
+                        <a class="btn big{% if orderId %} prev{% endif %}" href="#step1" id="step_first">1 - {{ 'Choose Entries'|t }}</a>
                     </li>
                     <li>
-                        <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step2">2 - {{ 'Select Sites'|t }}</a>
+                        <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step2" id="step_two">2 - {{ 'Select Sites'|t }}</a>
                     </li>
                     <li>
                         <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step3">3 - {{ 'Add Details'|t }}</a>
@@ -540,7 +540,7 @@
                             <th>{{ 'Title'|t }}</th>
                             <th>{{ 'Section'|t }}</th>
                             <th>{{ 'Date Updated'|t }}</th>
-                            <th>{{ 'Source Site'|t }}</th>
+                            {#<th>{{ 'Source Site'|t }}</th>#}
                             <th>&nbsp;</th>
                         </tr>
                         </thead>
@@ -559,7 +559,7 @@
                                 </td>
                                 <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                 <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
-                                <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
+                                {#<td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>#}
                                 <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
                             </tr>
                         {% endfor %}
@@ -570,7 +570,11 @@
                     <div class="item" data-position="left" data-colspan="1">
                         <div class="buttons">
                             <div class="btngroup submit first">
-                                <a class="btn submit translations-order-step-next" href="#step2">{{ 'Next'|t }}</a>
+                                <input type="hidden" id="addNewEntries" value="1">
+                                <a class="btn submit addEntries">{{ 'Add Entries'|t }}</a>
+                            </div>
+                            <div class="btngroup submit first">
+                                <a class="btn translations-order-step-next" href="#step2">{{ 'Next'|t }}</a>
                             </div>
                         </div>
                     </div>
@@ -591,7 +595,14 @@
                             <label>{{ 'Source Site'|t }}</label>
                         </div>
                         <div class="input {{ orientation }}">
-                            {{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span>
+
+                            {{ forms.selectField({
+                                value: sourceSite.id,
+                                options: {'':'Choose'|t ~ '...'}|merge(sourceSites),
+                                name: 'sourceSiteSelect',
+                                id: 'sourceSiteSelect'
+                            }) }}
+                            {#{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span>#}
                         </div>
                     </div>
 
