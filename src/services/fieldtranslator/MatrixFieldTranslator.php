@@ -53,15 +53,17 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         $blocks = $element->getFieldValue($fieldHandle)->all();
 
         if (!$blocks) {
-            return '';
+            return [];
         }
 
         $post = array(
             $fieldHandle => array(),
         );
 
+        $new = 0;
         foreach ($blocks as $i => $block) {
-            $post[$fieldHandle]['new'.($i+1)] = array(
+            $blockId = $block->id ?? 'new' . ++$new;
+            $post[$fieldHandle][$blockId] = array(
                 'type' => $block->getType()->handle,
                 'enabled' => $block->enabled,
                 'fields' => $elementTranslator->toPostArray($block),
@@ -85,9 +87,11 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         
         $fieldData = array_values($fieldData);        
         
+        $new = 0;
         foreach ($blocks as $i => $block) {
+            $blockId = $block->id ?? 'new' . ++$new;
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
-            $post[$fieldHandle]['new'.($i+1)] = array(
+            $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
                 'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,

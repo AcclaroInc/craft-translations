@@ -169,7 +169,8 @@ class DraftRepository
         return $newEntry;
     }
 
-    public function createOrderDrafts($orderId, $wordCounts, $queue=null) {
+    public function createOrderDrafts($orderId, $wordCounts, $queue=null)
+    {
 
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
@@ -213,7 +214,8 @@ class DraftRepository
         }
     }
 
-    public function createDrafts($element, $order, $site, $wordCounts, $file=null) {
+    public function createDrafts($element, $order, $site, $wordCounts, $file=null)
+    {
 
         switch (get_class($element)) {
             case Entry::class:
@@ -250,7 +252,7 @@ class DraftRepository
             $file->targetSite = $targetSite;
             $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
             $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                $element,
+                $draft,
                 $draft->draftId,
                 $order->sourceSite,
                 $targetSite,
@@ -340,7 +342,8 @@ class DraftRepository
      * @param null $queue
      * @throws NotFoundHttpException
      */
-    public function applyDrafts($orderId, $elementIds, $queue=null) {
+    public function applyDrafts($orderId, $elementIds, $queue=null)
+    {
 
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
         $files = $order->getFiles();
