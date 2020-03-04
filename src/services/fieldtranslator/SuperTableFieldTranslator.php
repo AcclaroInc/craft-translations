@@ -104,35 +104,36 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
         $blockTypes = SuperTable::$plugin->service->getBlockTypesByFieldId($field->id);
         $blockType = $blockTypes[0]; // There will only ever be one SuperTable_BlockType
 
-        $j = 0;
+        $new = 0;
         foreach ($blocks as $i => $block) {
           if (!$block instanceof ElementQuery) {
               if (is_array($block)) {
+                  $n = 0;
                   foreach ($block as $key => $elem) {
-                    $blockData = isset($fieldData[$j]) ? $fieldData[$j] : array();
-                    $post[$fieldHandle]['new'.($j+1)] = array(
+                    $blockId = $elem->id ?? 'new' . ++$new;
+                    $blockData = isset($fieldData[$n]) ? $fieldData[$n] : array();
+                    $post[$fieldHandle][$blockId] = array(
                       'type' => $blockType->id,
                       'fields' => $elementTranslator->toPostArrayFromTranslationTarget($elem, $sourceLanguage, $targetLanguage, $blockData, true),
                     );
-                    $j++;
                   }
               } else {
-                $blockData = isset($fieldData[$j]) ? $fieldData[$j] : array();
-                $post[$fieldHandle]['new'.($j+1)] = array(
+                $blockData = isset($fieldData[$new]) ? $fieldData[$new] : array();
+                $blockId = $block->id ?? 'new' . ++$new;
+                $post[$fieldHandle][$blockId] = array(
                   'type' => $blockType->id,
                   'fields' => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceLanguage, $targetLanguage, $blockData, true),
                 );
-                $j++;
               }
           } else {
             $blockElem = $element->getFieldValue($fieldHandle);
             foreach ($blockElem as $key => $block) {
+              $blockId = $block->id ?? 'new' . ++$new;
               $blockData = isset($fieldData[$key]) ? $fieldData[$key] : array();
-              $post[$fieldHandle]['new'.($j+1)] = array(
+              $post[$fieldHandle][$blockId] = array(
                 'type' => $blockType->id,
                 'fields' => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceLanguage, $targetLanguage, $blockData, true),
               );
-              $j++;
             }
           }
         }
