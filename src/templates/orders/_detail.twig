@@ -508,7 +508,7 @@
                     </li>
                 </ul>
             </div>
-
+            {% set elementIds = {} %}
             <div class="translations-order-steps">
                 <div class="translations-order-step{% if orderId is empty %} active{% endif %}" id="step1">
                     <div class="translations-order-step-intro">
@@ -562,6 +562,7 @@
                                 {#<td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>#}
                                 <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
                             </tr>
+                            {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                         {% endfor %}
                         </tbody>
                         {% endif %}
@@ -571,6 +572,7 @@
                         <div class="buttons">
                             <div class="btngroup submit first">
                                 <input type="hidden" id="addNewEntries" value="1">
+                                <input type="hidden" id="currentElementIds" value="{{ elementIds|join(',') }}">
                                 <a class="btn submit addEntries">{{ 'Add Entries'|t }}</a>
                             </div>
                             <div class="btngroup submit first">

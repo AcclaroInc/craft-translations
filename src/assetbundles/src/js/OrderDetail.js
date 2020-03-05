@@ -339,14 +339,12 @@ Craft.Translations.OrderDetail = {
         }
 
         $(".addEntries").on('click', function (e) {
-            elementIds = [];
+            elementIds = currentElementIds = [];
 
             var sourceSites = [];
             $("input:hidden.sourceSites").each(function() {
                 sourceSites.push($(this).val());
             });
-
-            console.log(sourceSites);
 
             this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
                 storageKey: null,
@@ -357,7 +355,9 @@ Craft.Translations.OrderDetail = {
                 onSelect: $.proxy(function(elements) {
 
                     $('#content').addClass('elements busy');
-
+                    if (typeof $('#currentElementIds').val() !== 'undefined') {
+                        currentElementIds = $('#currentElementIds').val().split(',');
+                    }
                     if (elements.length) {
                         var elementUrl = '';
                         for (var i = 0; i < elements.length; i++) {
@@ -365,8 +365,16 @@ Craft.Translations.OrderDetail = {
                             elementIds.push(element.id);
                             elementUrl += '&elements[]='+element.id;
 
+                            if (Array.isArray(currentElementIds)) {
+                                index = currentElementIds.indexOf(element.id.toString());
+                                if (index > -1) {
+                                    currentElementIds.splice(index, 1);
+                                }
+                            }
                         }
-
+                        for (var i = 0; i < currentElementIds.length; i++) {
+                            elementUrl += '&elements[]='+currentElementIds[i];
+                        }
                         if ($('#addNewEntries').val() == 1) {
                             window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+elementUrl;
                         } else {
