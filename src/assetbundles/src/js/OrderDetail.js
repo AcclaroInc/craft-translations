@@ -373,7 +373,9 @@ Craft.Translations.OrderDetail = {
                             }
                         }
                         for (var i = 0; i < currentElementIds.length; i++) {
-                            elementUrl += '&elements[]='+currentElementIds[i];
+                            if(currentElementIds[i]) {
+                                elementUrl += '&elements[]='+currentElementIds[i];
+                            }
                         }
                         if ($('#addNewEntries').val() == 1) {
                             window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+elementUrl;
