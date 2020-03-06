@@ -318,15 +318,33 @@ Craft.Translations.OrderDetail = {
 
         $('.duplicate-warning', '#global-container').infoicon();
 
+        $("#sourceSiteSelect").change(function (e) {
+            $(window).off('beforeunload.windowReload');
+            var site = $("#sourceSiteSelect").val();
+            var url = document.URL;
+            url = url.replace(/(sourceSite=).*?(&)/,'$1' + site + '$2');
+            if(url.indexOf('#step2') == -1) {
+                url += '#step2';
+            }
+            window.location.href = url;
+
+        });
+        var hash = window.location.hash;
+        if (hash == '#step2') {
+            $('#step1').toggleClass( "active" );
+            $('#step2').toggleClass( "active" );
+            $('#step_first').removeClass('disabled');
+            $('#step_first').addClass('prev');
+            $('#step_two').toggleClass('disabled');
+        }
+
         $(".addEntries").on('click', function (e) {
-            elementIds = [];
+            elementIds = currentElementIds = [];
 
             var sourceSites = [];
             $("input:hidden.sourceSites").each(function() {
                 sourceSites.push($(this).val());
             });
-
-            console.log(sourceSites);
 
             this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
                 storageKey: null,
@@ -337,16 +355,35 @@ Craft.Translations.OrderDetail = {
                 onSelect: $.proxy(function(elements) {
 
                     $('#content').addClass('elements busy');
-
+                    if (typeof $('#currentElementIds').val() !== 'undefined') {
+                        currentElementIds = $('#currentElementIds').val().split(',');
+                    }
                     if (elements.length) {
+                        var elementUrl = '';
                         for (var i = 0; i < elements.length; i++) {
                             var element = elements[i];
                             elementIds.push(element.id);
+                            elementUrl += '&elements[]='+element.id;
+
+                            if (Array.isArray(currentElementIds)) {
+                                index = currentElementIds.indexOf(element.id.toString());
+                                if (index > -1) {
+                                    currentElementIds.splice(index, 1);
+                                }
+                            }
                         }
+                        for (var i = 0; i < currentElementIds.length; i++) {
+                            if(currentElementIds[i]) {
+                                elementUrl += '&elements[]='+currentElementIds[i];
+                            }
+                        }
+                        if ($('#addNewEntries').val() == 1) {
+                            window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+elementUrl;
+                        } else {
+                            addEntries();
 
-                        addEntries();
-
-                        setTimeout(function(){ $('#content').removeClass('elements busy') }, 5000);
+                            setTimeout(function(){ $('#content').removeClass('elements busy') }, 5000);
+                        }
 
                     }
                 }, this),

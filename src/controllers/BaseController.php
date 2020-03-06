@@ -454,7 +454,7 @@ class BaseController extends Controller
         }
         
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['order']['sourceSite']);
-        
+
         if ($variables['order']->targetSites) {
             $variables['orderTargetSitesObject'] = array();
             foreach (json_decode($variables['order']->targetSites) as $key => $site) {
@@ -566,6 +566,16 @@ class BaseController extends Controller
         $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
         
         $targetSites = Craft::$app->getSites()->getAllSiteIds();
+
+        $variables['sourceSites'] = array();
+
+        foreach ($targetSites as $key => $site) {
+            $site = Craft::$app->getSites()->getSiteById($site);
+            $variables['sourceSites'][] = array(
+                'value' => $site->id,
+                'label' => $site->name. '('. $site->language. ')'
+            );
+        }
 
         // This removes same source as option
         if (($key = array_search($variables['inputSourceSite'], $targetSites)) !== false) {
@@ -829,7 +839,7 @@ class BaseController extends Controller
             }
 
         } else {
-            $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
+            $sourceSite = Craft::$app->getRequest()->getParam('sourceSiteSelect');
 
             if ($sourceSite && !Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
                 throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Source site is not supported'));
