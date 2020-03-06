@@ -569,13 +569,12 @@
                     </table>
 
                     <div class="item" data-position="left" data-colspan="1">
-                        <div class="buttons">
-                            <div class="btngroup submit first">
+                        <div class="buttons flex">
+                            <div class="submit">
                                 <input type="hidden" id="addNewEntries" value="1">
-                                <input type="hidden" id="currentElementIds" value="{{ elementIds|join(',') }}">
                                 <a class="btn submit addEntries">{{ 'Add Entries'|t }}</a>
                             </div>
-                            <div class="btngroup submit first">
+                            <div class="submit">
                                 <a class="btn translations-order-step-next" href="#step2">{{ 'Next'|t }}</a>
                             </div>
                         </div>
