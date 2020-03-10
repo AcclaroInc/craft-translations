@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.5.1 - 2020-03-10
+
+### Added
+- Support for all propagation method options in nested field settings
+- Ability to add entries directly from the create order form
+- Basic handling of Acclaro "In Review" orders
+
+### Updated
+- Switch to word count vs entry count for task processing
+- Minor bug fixes & additional updates
+
 ## 1.5.0 - 2020-02-25
 
 ### Added

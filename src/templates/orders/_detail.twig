@@ -156,6 +156,9 @@
                         <td>
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'new' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Pending submission'|t }}<br>
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'in progress' or order.status == 'getting quote' or order.status == 'needs approval' or order.status == 'in preparation' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'In progress'|t }}<br>
+                            {% if order.translator.service == 'acclaro' %}
+                            <input type="radio" name="__status" disabled="disabled"{% if order.status == 'in review' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'In Review'|t }}<br>
+                            {% endif %}
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'complete' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Ready to Apply'|t }}<br>
                             <input type="radio" name="__status" disabled="disabled"{% if order.status == 'published' %} checked="checked"{% endif %}>&nbsp;&nbsp;{{ 'Applied'|t }}
                         </td>
@@ -186,6 +189,14 @@
                     </tbody>
                 </table>
 
+                <div class="translations-order-detail-activity-log">
+                    <h2>{{ 'Order Activity Log'|t }}</h2>
+                    <ul class="bullets">
+                        {% for log in order.activityLogArray %}
+                            <li>{{ log.date }} &ndash; {{ log.message }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
                 {% if order.status != 'published' %}
                     <form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
                         {{ csrfInput() }}
@@ -199,20 +210,11 @@
                             value: order.id
                         }) }}
 
-                        <div class="buttons">
-                            <input type="submit" class="btn right" value="{{ "Regenerate Preview Urls"|t('app') }}" />
+                        <div class="buttons" style="margin-left: 40%">
+                            <a onclick="this.closest('form').submit();return false;">{{ "Regenerate Preview Urls"|t('app') }}</a>
                         </div>
                     </form>
                 {% endif %}
-
-                <div class="translations-order-detail-activity-log">
-                    <h2>{{ 'Order Activity Log'|t }}</h2>
-                    <ul class="bullets">
-                        {% for log in order.activityLogArray %}
-                            <li>{{ log.date }} &ndash; {{ log.message }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
             </div>
 
         </div>
@@ -468,7 +470,7 @@
             </div>
         </div>
     {% else %}
-        <form method="post" class="translations-order-form" data-confirm-unload accept-charset="UTF-8">
+        <form method="post" class="translations-order-form" accept-charset="UTF-8">
             {{ csrfInput() }}
 
             {{ forms.hidden({
@@ -495,10 +497,10 @@
             <div class="translations-order-step-btngroup">
                 <ul>
                     <li>
-                        <a class="btn big{% if orderId %} prev{% endif %}" href="#step1">1 - {{ 'Choose Entries'|t }}</a>
+                        <a class="btn big{% if orderId %} prev{% endif %}" href="#step1" id="step_first">1 - {{ 'Choose Entries'|t }}</a>
                     </li>
                     <li>
-                        <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step2">2 - {{ 'Select Sites'|t }}</a>
+                        <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step2" id="step_two">2 - {{ 'Select Sites'|t }}</a>
                     </li>
                     <li>
                         <a class="btn big {% if orderId %}prev{% else %}disabled{% endif %}" href="#step3">3 - {{ 'Add Details'|t }}</a>
@@ -508,7 +510,7 @@
                     </li>
                 </ul>
             </div>
-
+            {% set elementIds = {} %}
             <div class="translations-order-steps">
                 <div class="translations-order-step{% if orderId is empty %} active{% endif %}" id="step1">
                     <div class="translations-order-step-intro">
@@ -521,11 +523,14 @@
 
                         <h2>{{ 'Choose Entries'|t }}</h2>
 
-                        <p>{{ 'Entries that are added to this order will appear below. You can add entries from either of the following:'|t }}</p>
+                        <p>
+                            <span style="font-weight: 600">{{ "Select which Entries you'd like to include in this order with the Add Entries button below."|t }}</span> <br/>
+                            {{ "You can select multiple with:"|t }}
+                        </p>
 
                         <ul class="bullets">
-                            <li>{{ 'Edit entry page'|t }}</li>
-                            <li>{{ 'Entries archive page'|t }}</li>
+                            <li>{{ 'Mac: ⌘ + click'|t }}</li>
+                            <li>{{ 'Windows: CTRL + click'|t }}</li>
                         </ul>
                     </div>
 
@@ -540,7 +545,7 @@
                             <th>{{ 'Title'|t }}</th>
                             <th>{{ 'Section'|t }}</th>
                             <th>{{ 'Date Updated'|t }}</th>
-                            <th>{{ 'Source Site'|t }}</th>
+                            {#<th>{{ 'Source Site'|t }}</th>#}
                             <th>&nbsp;</th>
                         </tr>
                         </thead>
@@ -559,18 +564,24 @@
                                 </td>
                                 <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                 <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
-                                <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
+                                {#<td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>#}
                                 <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
                             </tr>
+                            {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                         {% endfor %}
                         </tbody>
                         {% endif %}
                     </table>
 
                     <div class="item" data-position="left" data-colspan="1">
-                        <div class="buttons">
-                            <div class="btngroup submit first">
-                                <a class="btn submit translations-order-step-next" href="#step2">{{ 'Next'|t }}</a>
+                        <div class="buttons flex">
+                            <div class="submit">
+                                <input type="hidden" id="addNewEntries" value="1">
+                                <input type="hidden" id="currentElementIds" value="{{ elementIds|join(',') }}">
+                                <a class="btn submit addEntries">{{ 'Add Entries'|t }}</a>
+                            </div>
+                            <div class="submit">
+                                <a class="btn translations-order-step-next" href="#step2">{{ 'Next'|t }}</a>
                             </div>
                         </div>
                     </div>
@@ -591,7 +602,14 @@
                             <label>{{ 'Source Site'|t }}</label>
                         </div>
                         <div class="input {{ orientation }}">
-                            {{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span>
+
+                            {{ forms.selectField({
+                                value: sourceSite.id,
+                                options: {'':'Choose'|t ~ '...'}|merge(sourceSites),
+                                name: 'sourceSiteSelect',
+                                id: 'sourceSiteSelect'
+                            }) }}
+                            {#{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span>#}
                         </div>
                     </div>
 

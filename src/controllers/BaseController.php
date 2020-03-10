@@ -48,7 +48,7 @@ class BaseController extends Controller
      */
     protected $pluginVersion;
 
-    protected static $sendToQueueLimit = 5;
+    const WORDCOUNT_LIMIT = 2000;
 
     // Public Methods
     // =========================================================================
@@ -454,7 +454,7 @@ class BaseController extends Controller
         }
         
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['order']['sourceSite']);
-        
+
         if ($variables['order']->targetSites) {
             $variables['orderTargetSitesObject'] = array();
             foreach (json_decode($variables['order']->targetSites) as $key => $site) {
@@ -567,6 +567,16 @@ class BaseController extends Controller
         
         $targetSites = Craft::$app->getSites()->getAllSiteIds();
 
+        $variables['sourceSites'] = array();
+
+        foreach ($targetSites as $key => $site) {
+            $site = Craft::$app->getSites()->getSiteById($site);
+            $variables['sourceSites'][] = array(
+                'value' => $site->id,
+                'label' => $site->name. '('. $site->language. ')'
+            );
+        }
+
         // This removes same source as option
         if (($key = array_search($variables['inputSourceSite'], $targetSites)) !== false) {
             unset($targetSites[$key]);
@@ -663,9 +673,10 @@ class BaseController extends Controller
         $elementIds = Craft::$app->getRequest()->getParam('elements');
 
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
-        $totalElements = (count($elementIds) * count($order->getTargetSitesArray()));
 
-        if ($totalElements > self::$sendToQueueLimit ) {
+        $totalWordCount = ($order->wordCount * count($order->getTargetSitesArray()));
+
+        if ($totalWordCount > self::WORDCOUNT_LIMIT ) {
 
             $job = Craft::$app->queue->push(new ApplyDrafts([
                 'description' => 'Applying translation drafts',
@@ -829,7 +840,7 @@ class BaseController extends Controller
             }
 
         } else {
-            $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
+            $sourceSite = Craft::$app->getRequest()->getParam('sourceSiteSelect');
 
             if ($sourceSite && !Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
                 throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Source site is not supported'));
@@ -988,9 +999,9 @@ class BaseController extends Controller
                     
                     $order->wordCount = array_sum($wordCounts);
 
-                    $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
-                    $totalElements = (count($elements) * count($order->getTargetSitesArray()));
-                    if ($totalElements > self::$sendToQueueLimit) {
+                    $totalWordCount = ($order->wordCount * count($order->getTargetSitesArray()));
+
+                    if ($totalWordCount > self::WORDCOUNT_LIMIT) {
                         $job = Craft::$app->queue->push(new CreateDrafts([
                             'description' => 'Creating translation drafts',
                             'orderId' => $order->id,
@@ -1130,7 +1141,8 @@ class BaseController extends Controller
         }
 
         if ($order) {
-            if (count($order->files) > self::$sendToQueueLimit) {
+            $totalWordCount = ($order->wordCount * count($order->getTargetSitesArray()));
+            if ($totalWordCount > self::WORDCOUNT_LIMIT) {
                 $job = Craft::$app->queue->push(new SyncOrder([
                     'description' => 'Syncing order '. $order->title,
                     'order' => $order
@@ -1166,11 +1178,12 @@ class BaseController extends Controller
         }
 
         $orders = Translations::$plugin->orderRepository->getInProgressOrders();
-        $allFileCounts = 0;
+        $allFileCounts = $totalWordCount = 0;
         foreach ($orders as $order) {
             if ($order->translator->service === 'export_import') {
                 continue;
             }
+            $totalWordCount += ($order->wordCount * count($order->getTargetSitesArray()));
             $allFileCounts += count($order->files);
         }
 
@@ -1182,7 +1195,7 @@ class BaseController extends Controller
                 continue;
             }
 
-            if ($allFileCounts > self::$sendToQueueLimit) {
+            if ($totalWordCount > self::WORDCOUNT_LIMIT) {
                 $job = Craft::$app->queue->push(new SyncOrder([
                     'description' => 'Syncing order '. $order->title,
                     'order' => $order
@@ -1271,7 +1284,9 @@ class BaseController extends Controller
 
         if ($order) {
 
-            if (count($order->files) > (self::$sendToQueueLimit * 5)) { // Multiply allowed queue limit due to fast processing times
+            $totalWordCount = ($order->wordCount * count($order->getTargetSitesArray()));
+
+            if ($totalWordCount > self::WORDCOUNT_LIMIT) {
                 $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
                     'description' => 'Regenerating preview urls for '. $order->title,
                     'order' => $order

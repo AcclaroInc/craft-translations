@@ -106,10 +106,12 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         $this->parseBlockData($allBlockData, $fieldData);
 
+        $new = 0;
         foreach ($blocks as $i => $block) {
+            $blockId = $block->id ?? 'new' . ++$new;
             $blockData = isset($allBlockData[$i]) ? $allBlockData[$i] : array();
 
-            $post[$fieldHandle]['new'.($i+1)] = array(
+            $post[$fieldHandle][$blockId] = array(
                 'modified' => '1',
                 'type' => $block->getType()->handle,
                 'enabled' => $block->enabled,

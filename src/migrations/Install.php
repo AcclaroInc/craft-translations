@@ -121,7 +121,7 @@ class Install extends Migration
                     'ownerId'           => $this->integer()->notNull(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSites'       => $this->string(1020)->notNull()->defaultValue(''),
-                    'status'            => $this->enum('status', ['new','getting quote','needs approval','in preparation','in progress','complete','canceled','published','failed'])->defaultValue('new'),
+                    'status'            => $this->enum('status', ['new','getting quote','needs approval','in preparation','in review','in progress','complete','canceled','published','failed'])->defaultValue('new'),
                     'requestedDueDate'  => $this->dateTime(),
                     'comments'          => $this->text(),
                     'activityLog'       => $this->text(),
