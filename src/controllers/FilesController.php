@@ -71,10 +71,10 @@ class FilesController extends Controller
         $orderAttributes = $order->getAttributes();
 
         //Filename Zip Folder
-        $zipName = $orderAttributes['id'].'_'.$orderAttributes['sourceSite'];
+        $zipName = $this->getZipName($orderAttributes);
         
         // Set destination zip
-        $zipDest = Craft::$app->path->getTempPath().'/'.$zipName.'_'.time().'.zip';
+        $zipDest = Craft::$app->path->getTempPath().'/'.$zipName.'.zip';
         
         // Create zip
         $zip = new ZipArchive();
@@ -414,6 +414,21 @@ class FilesController extends Controller
     	}
 
     	return $msg;
+    }
+
+    /**
+     * @param $order
+     * @return string
+     */
+    public function getZipName($order) {
+
+        $title = str_replace(' ', '_', $order['title']);
+        $title = preg_replace('/[^A-Za-z0-9\-_]/', '', $title);
+        $len = 50;
+        $title = (strlen($title) > $len) ? substr($title,0,$len) : $title;
+        $zip_name =  $title.'_'.$order['id'];
+
+        return $zip_name;
     }
 
 }
