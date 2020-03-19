@@ -346,12 +346,18 @@ Craft.Translations.OrderDetail = {
                 sourceSites.push($(this).val());
             });
 
+            var currentElementIds = [];
+            if (typeof $('#currentElementIds').val() !== 'undefined') {
+                currentElementIds = $('#currentElementIds').val().split(',');
+            }
+
             this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
                 storageKey: null,
                 sources: null,
                 elementIndex: null,
                 criteria: {siteId: this.elementSiteId},
                 multiSelect: 1,
+                disabledElementIds: currentElementIds,
                 onSelect: $.proxy(function(elements) {
 
                     $('#content').addClass('elements busy');
