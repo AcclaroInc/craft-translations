@@ -222,4 +222,37 @@ class SettingsController extends Controller
 
         return FileHelper::unlink($zipDest);
     }
+
+    public function actionSettings()
+    {
+        $this->requireLogin();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings:clear-orders')) {
+            return;
+        }
+
+        $projectConfig = Craft::$app->getProjectConfig();
+        $variables['chkDuplicateEntries'] = $projectConfig->get('chkDuplicateEntries');
+
+        $this->renderTemplate('translations/settings/setting', $variables);
+    }
+
+    public function actionSetSettings()
+    {
+        $this->requireLogin();
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings:clear-orders')) {
+            return;
+        }
+
+        $request = Craft::$app->getRequest();
+        $duplicateEntries = $request->getParam('chkDuplicateEntries');
+
+        try {
+            $projectConfig = Craft::$app->getProjectConfig();
+            $projectConfig->set('chkDuplicateEntries', $duplicateEntries, 'Update system settings.');
+
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Setting saved.'));
+        } catch (\Throwable $th) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
+        }
+    }
 }

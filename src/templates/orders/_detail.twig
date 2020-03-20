@@ -514,7 +514,7 @@
             <div class="translations-order-steps">
                 <div class="translations-order-step{% if orderId is empty %} active{% endif %}" id="step1">
                     <div class="translations-order-step-intro">
-                        {% if duplicateEntries %}
+                        {% if duplicateEntries and chkDuplicateEntries  %}
                             <div class="warning-box">
                                 <span class="warning" data-icon="alert"></span> &nbsp;
                                 {{ 'This order contains entries that exist in one or more open orders, select the warning icon beside the Entry for additional details. Remove duplicate entries below or click "Next" to continue.'|t }}
@@ -553,7 +553,7 @@
                         {% for element in elements %}
                             <tr data-word-count="{{ elementWordCounts[element.id] }}">
                                 <td>{% include "_elements/element" with {'element': element} only %}
-                                    {% if duplicateEntries[element.id] is defined %}
+                                    {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
                                         <span class="warning duplicate-warning">
                                             {{ 'This entry exists in ' }}
                                             {% for orderId in duplicateEntries[element.id] %}
