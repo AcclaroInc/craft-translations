@@ -328,7 +328,19 @@ Craft.Translations.OrderDetail = {
             $(window).off('beforeunload.windowReload');
             var site = $("#sourceSiteSelect").val();
             var url = document.URL;
-            url = url.replace(/(sourceSite=).*?(&)/,'$1' + site + '$2');
+            url = url.split('?');
+            url = url[0];
+
+            var currentElementIds = [];
+            if (typeof $('#currentElementIds').val() !== 'undefined') {
+                currentElementIds = $('#currentElementIds').val().split(',');
+            }
+            url += '?sourceSite='+site;
+            if (currentElementIds) {
+                currentElementIds.forEach(function (element) {
+                    url += '&elements[]='+element;
+                })
+            }
             if(url.indexOf('#step2') == -1) {
                 url += '#step2';
             }
@@ -348,6 +360,7 @@ Craft.Translations.OrderDetail = {
             elementIds = currentElementIds = [];
 
             var sourceSites = [];
+            var site = $("#sourceSiteSelect").val();
             $("input:hidden.sourceSites").each(function() {
                 sourceSites.push($(this).val());
             });
@@ -384,7 +397,7 @@ Craft.Translations.OrderDetail = {
                             }
                         }
                         if ($('#addNewEntries').val() == 1) {
-                            window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+elementUrl;
+                            window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+site+elementUrl;
                         } else {
                             addEntries();
 
