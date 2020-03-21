@@ -161,6 +161,12 @@ Craft.Translations.OrderDetail = {
                 $('[data-order-attribute=entriesCount]').text(entriesCount);
 
                 $('[data-order-attribute=wordCount]').text(wordCount);
+
+                var param = window.location.search;
+                param = param.replace("&elements[]="+$button.attr('data-element'), "");
+                param = 'admin/translations/orders/new'+param;
+
+                window.history.pushState("object or string", "Translations", "/"+param);
             }
         });
 

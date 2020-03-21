@@ -565,7 +565,7 @@
                                 <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                 <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                 {#<td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>#}
-                                <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
+                                <td><a class="icon delete translations-order-delete-entry" data-element="{{ element.id }}" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
                             </tr>
                             {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                         {% endfor %}
