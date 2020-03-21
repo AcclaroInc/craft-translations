@@ -1,0 +1,35 @@
+{% extends "translations/_layouts/settings" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'Settings'|t %}
+
+{% block actionButton %}
+<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+{% endblock %}
+
+{% block content %}
+<div class="readable">
+    <h2>{{ "Settings"|t('app') }}</h2>
+
+    <form id="" class="utility" method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ forms.hidden({
+            name: 'action',
+            value: 'translations/settings/set-settings',
+        }) }}
+
+        {{ forms.lightswitchField({
+            first: true,
+            label: "Show duplicate Entries warnings"|t('app'),
+            id: 'chkDuplicateEntries',
+            name: 'chkDuplicateEntries',
+            on: chkDuplicateEntries,
+        }) }}
+
+        <div class="buttons">
+            <input type="submit" class="btn submit" value="{{ "Save"|t('app') }}" />
+        </div>
+    </form>
+
+</div>
+{% endblock %}

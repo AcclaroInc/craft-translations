@@ -480,6 +480,9 @@ class BaseController extends Controller
 
         $variables['duplicateEntries'] = $this->checkOrderDuplicates($variables['elements']);
 
+        $projectConfig = Craft::$app->getProjectConfig();
+        $variables['chkDuplicateEntries'] = $projectConfig->get('chkDuplicateEntries');
+
         $variables['orderEntriesCount'] = count($variables['elements']);
 
         $variables['orderWordCount'] = 0;
