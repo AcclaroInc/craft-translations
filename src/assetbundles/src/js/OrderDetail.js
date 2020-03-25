@@ -161,6 +161,10 @@ Craft.Translations.OrderDetail = {
                 $('[data-order-attribute=entriesCount]').text(entriesCount);
 
                 $('[data-order-attribute=wordCount]').text(wordCount);
+
+                var currentElementIds = $('#currentElementIds').val();
+                currentElementIds = currentElementIds.replace($button.attr('data-element'), '').replace(',,', ',');
+                $('#currentElementIds').val(currentElementIds);
             }
         });
 
