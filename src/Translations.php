@@ -184,6 +184,11 @@ class Translations extends Plugin
             ),
             __METHOD__
         );
+
+        $projectConfig = Craft::$app->getProjectConfig();
+        if ($projectConfig->get('chkDuplicateEntries') === NULL){
+            $projectConfig->set('chkDuplicateEntries', 1, 'Update system settings.');
+        }
     }
 
     /**
