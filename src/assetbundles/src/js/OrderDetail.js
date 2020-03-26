@@ -167,6 +167,9 @@ Craft.Translations.OrderDetail = {
                 param = 'admin/translations/orders/new'+param;
 
                 window.history.pushState("object or string", "Translations", "/"+param);
+                var currentElementIds = $('#currentElementIds').val();
+                currentElementIds = currentElementIds.replace($button.attr('data-element'), '').replace(',,', ',');
+                $('#currentElementIds').val(currentElementIds);
             }
         });
 
