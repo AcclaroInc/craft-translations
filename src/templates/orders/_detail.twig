@@ -616,7 +616,7 @@
                     {{ forms.checkboxSelectField({
                         label: 'Target Site(s)'|t,
                         options: targetSiteCheckboxOptions,
-                        values: order.targetSites,
+                        values: order.targetSites|json_decode(),
                         name: 'targetSites',
                         id: 'targetSites'
                     }) }}
