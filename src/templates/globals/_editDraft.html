@@ -59,6 +59,19 @@
         {{ csrfInput() }}
 
         {% if draft.getFieldLayout().getFields() | length %}
+        <div>
+            {% for tab in draft.getFieldLayout().getTabs() %}
+                <div id="{{ tab.getHtmlId() }}"{% if not loop.first %} class="hidden"{% endif %}>
+                    {% include "_includes/fields" with {
+                        fields:  tab.getFields(),
+                        element: draft
+                    } only %}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {#{% if draft.getFieldLayout().getFields() | length %}
             <div>
                 {% include "_includes/fields" with {
                     fields:  draft.getFieldLayout().getFields(),
@@ -67,6 +80,6 @@
             </div>
         {% else %}
             {{ "This global set doesn’t have any fields assigned to it in its field layout."|t }}
-        {% endif %}
+            {% endif %}#}
     </form>
 {% endblock %}

@@ -18,6 +18,8 @@ use craft\validators\DateTimeValidator;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\records\GlobalSetDraftRecord;
+use craft\behaviors\FieldLayoutBehavior;
+use craft\behaviors\DraftBehavior;
 
 use Craft;
 use craft\base\Model;
@@ -143,5 +145,26 @@ class GlobalSetDraftModel extends GlobalSet
         $path = 'translations/globals/'.$globalSet->handle.'/drafts/'.$this->draftId;
         
         return Translations::$plugin->urlHelper->cpUrl($path);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        $behaviors = parent::behaviors();
+        $behaviors['fieldLayout'] = [
+            'class' => FieldLayoutBehavior::class,
+            'elementType' => GlobalSet::class,
+        ];
+        $behaviors['draft'] = [
+            'class' => DraftBehavior::class,
+            'sourceId' => $this->id,
+            'creatorId' => 1,
+            'draftName' => 'Global Draft',
+            'draftNotes' => '',
+            'trackChanges' => true,
+        ];
+        return $behaviors;
     }
 }
