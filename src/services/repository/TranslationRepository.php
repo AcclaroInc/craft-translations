@@ -145,22 +145,22 @@ class TranslationRepository
         $reflectionProperty->setAccessible(true);
         
         // Get i18n messages
-        $messages = $reflectionProperty->getValue(Craft::$app->getI18n()->getMessageSource('site'));
+        $messages = $reflectionProperty->getValue(Craft::$app->getI18n()->getMessageSource('translations'));
         
         // Set site i18n messages from stored translations
         foreach ($translations as $translation) {
             $sourceLanguage = Craft::$app->sites->getSiteById($translation->sourceSite)->language;
             $targetLanguage = Craft::$app->sites->getSiteById($translation->targetSite)->language;
-            $key = sprintf('%s/%s', $targetLanguage, 'site');
+            $key = sprintf('%s/%s', $targetLanguage, 'translations');
             $messages[$key][$translation->source] = $translation->target;
             
             if ($sourceLanguage !== $targetLanguage) {
-                Craft::$app->getI18n()->translate('site', $translation->source, [], $targetLanguage);
+                Craft::$app->getI18n()->translate('translations', $translation->source, [], $targetLanguage);
             }
 
         }
         
-        $reflectionProperty->setValue(Craft::$app->getI18n()->getMessageSource('site'), $messages);
+        $reflectionProperty->setValue(Craft::$app->getI18n()->getMessageSource('translations'), $messages);
         
         $reflectionProperty->setAccessible(false);
     }
