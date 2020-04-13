@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.6.0 - 2020-04-13
+
+### Added
+- Support links to About page
+- Setting to disable duplicate message warning
+- In Review status to API orders
+- User-friendly exported ZIP filenames
+- Support for Thai th-TH ISO code
+
+### Updated
+- Filenames for API orders to ensure they are unique
+- Logic for adding & removing entries from new order screen
+
+### Fixed
+- Namespacing issue with static translations
+- Craft 3.4+ incompatability with Globals translation drafts
+- Resolved issue with pre-selected target sites on previously saved orders
+- Redirect for failed orders due to unsupported ISO codes
+
 ## 1.5.1 - 2020-03-10
 
 ### Added
