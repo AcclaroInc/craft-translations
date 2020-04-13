@@ -23,6 +23,8 @@
                             <span class="status"></span>{{order.statusLabel}}
                         {% case "In progress" %}
                             <span class="status orange"></span>{{order.statusLabel}}
+                        {% case "In review" %}
+                            <span class="status yellow"></span>{{order.statusLabel}}
                         {% case "Ready to apply" %}
                             <span class="status blue"></span>{{order.statusLabel}}
                         {% case "Cancelled" %}

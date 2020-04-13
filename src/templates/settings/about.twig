@@ -13,8 +13,37 @@
         <h1 style="margin-bottom: 0px;">{{ 'Translations'|t }}</h1>
 
         <h4 style="margin-top: 0px;">{{ 'by Acclaro Inc.'|t }}</h4>
-        
+
+        {% set licenseStatus = craft.app.plugins.getPluginLicenseKeyStatus('translations') %}
+        {% set baseAssetsUrl = craft.app.assetManager.getPublishedUrl(
+            '@acclaro/translations/assetbundles/src', true ) %}
+
         <a href="{{cpUrl('utilities/updates')}}" class="btn submit">{{ 'Check for updates'|t }}</a><br><br>
+
+        <div style="text-align:left;">
+
+            <span style="">
+                <div class="link">
+                    <a href="https://www.surveymonkey.com/r/translationsplugin">
+                        <img src="{{ baseAssetsUrl ~ '/img/feedback-craft-blue.svg' }}" height="25px" style="vertical-align: middle"/> {{ 'Submit Feedback'|t('app') }}
+                    </a>
+
+                    {% set subject = 'Hello Acclaro' %}
+                    {% set body = 'I’m interested in learning more about your professional translation services and how you can help with the launch of global Craft sites.%0D%0A%0D%0AThank you,%0D%0AYour Name%0D%0AYour Company%0D%0AYour Phone Number' %}
+                    <a href="mailto:support@acclaro.com?subject={{subject}}&body={{body}}" style="">
+                        <img src="{{ baseAssetsUrl ~ '/img/translations-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/> {{ 'Get Translations'|t('app') }}
+                    </a>
+
+                    {% if licenseStatus == 'valid' %}
+                        <a href="https://info.acclaro.com/translation-plugin-for-craft3-support-info">
+                         <img src="{{ baseAssetsUrl ~ '/img/upgrade-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/>  {{ 'Purchase Premium Support'|t('app') }}  </a>
+                    {% else %}
+                        <a href="https://plugins.craftcms.com/translations">
+                        <img src="{{ baseAssetsUrl ~ '/img/upgrade-craft-blue.svg' }}" height="25px"  style="vertical-align: middle"/> {{ 'Upgrade to Paid'|t('app') }}  </a>
+                    {% endif %}
+                </div>
+            </span>
+        </div>
 
         <div>
             <h3>{{ 'General Information'|t }}</h3>

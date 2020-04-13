@@ -112,6 +112,7 @@ class SiteRepository
         'tam' => 'ta',               //Tamil
         'tel' => 'te',               //Telugu
         'tha' => 'th',               //Thai
+        'th-TH' => 'th',             //Thai
         'tur' => 'tr',               //Turkish
         'ukr' => 'uk',               //Ukrainian
         'urd' => 'ur',               //Urdu

@@ -24,6 +24,9 @@
             <li>
                 <a  href="{{ cpUrl('translations/settings/clear-orders') }}" {% if selectedSidebarItem == 'clear-orders' %}class="settings-sel"{% endif %}><div class="translations-icon">{{ svg('@app/icons/trash.svg') }}</div>{{"Clear Orders"|t('app')}}</a>
             </li>
+            <li>
+                <a  href="{{ cpUrl('translations/settings/configuration-options') }}" {% if selectedSidebarItem == 'setting' %}class="settings-sel"{% endif %}><div class="translations-icon" style="width: 18px; height: 17px; padding-right: 11px;"> <span class="icon icon-mask"> <span data-icon="settings"></span> </span> {#{{ svg('@app/icons/icon-mask.svg') }} #} </div> {{"Configuration Options"|t('app')}} </a>
+            </li>
         </ul>
     </nav>
 

@@ -1,0 +1,43 @@
+{% extends "translations/_layouts/settings" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'Configuration Options'|t %}
+
+{% block actionButton %}
+<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+{% endblock %}
+
+{% block content %}
+<div class="readable">
+    <h2>{{ "Configuration Options"|t('app') }}</h2>
+
+    <form id="" class="utility" method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ forms.hidden({
+            name: 'action',
+            value: 'translations/settings/save-configuration-options',
+        }) }}
+
+        {{ forms.lightswitchField({
+            first: true,
+            label: "Show duplicate Entries warnings"|t('app'),
+            id: 'chkDuplicateEntries',
+            name: 'chkDuplicateEntries',
+            on: chkDuplicateEntries,
+        }) }}
+
+        <div class="buttons">
+            <input type="submit" id="save-configuration" class="btn" value="{{ "Save"|t('app') }}" />
+        </div>
+    </form>
+
+</div>
+{% endblock %}
+
+{% js %}
+    $( document ).ready(function() {
+        $('#chkDuplicateEntries').change(function() {
+            $('#save-configuration').toggleClass('submit');
+        });
+    });
+{% endjs %}

@@ -480,6 +480,9 @@ class BaseController extends Controller
 
         $variables['duplicateEntries'] = $this->checkOrderDuplicates($variables['elements']);
 
+        $projectConfig = Craft::$app->getProjectConfig();
+        $variables['chkDuplicateEntries'] = $projectConfig->get('chkDuplicateEntries');
+
         $variables['orderEntriesCount'] = count($variables['elements']);
 
         $variables['orderWordCount'] = 0;
@@ -986,8 +989,7 @@ class BaseController extends Controller
                                     Craft::error('Couldn’t save the order', __METHOD__);
                                 }
                                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The following language pair(s) are not supported: '.implode(', ', array_column($unsupportedLangs, 'language')).' Contact Acclaro for assistance.'));
-                                // return; // @todo This might be a better idea than failing the order
-                                return $this->redirect('translations/orders', 302, true);
+                                return $this->redirect('translations/orders/detail/'. $order->id);
                             }
 
                         } else {

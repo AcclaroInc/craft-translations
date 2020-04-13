@@ -184,6 +184,11 @@ class Translations extends Plugin
             ),
             __METHOD__
         );
+
+        $projectConfig = Craft::$app->getProjectConfig();
+        if ($projectConfig->get('chkDuplicateEntries') === NULL){
+            $projectConfig->set('chkDuplicateEntries', 1, 'Update system settings.');
+        }
     }
 
     /**
@@ -337,6 +342,7 @@ class Translations extends Plugin
                     'translations/settings/settings-check' => 'translations/settings/settings-check',
                     'translations/settings/send-logs' => 'translations/settings/send-logs',
                     'translations/orders/get-file-diff/<fileId:\d+>' => 'translations/base/get-file-diff',
+                    'translations/settings/configuration-options' => 'translations/settings/configuration-options',
                 ]);
             }
         );

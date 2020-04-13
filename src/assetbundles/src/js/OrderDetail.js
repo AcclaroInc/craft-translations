@@ -161,6 +161,15 @@ Craft.Translations.OrderDetail = {
                 $('[data-order-attribute=entriesCount]').text(entriesCount);
 
                 $('[data-order-attribute=wordCount]').text(wordCount);
+
+                var param = window.location.search;
+                param = param.replace("&elements[]="+$button.attr('data-element'), "");
+                param = 'admin/translations/orders/new'+param;
+
+                window.history.pushState("object or string", "Translations", "/"+param);
+                var currentElementIds = $('#currentElementIds').val();
+                currentElementIds = currentElementIds.replace($button.attr('data-element'), '').replace(',,', ',');
+                $('#currentElementIds').val(currentElementIds);
             }
         });
 
@@ -322,7 +331,19 @@ Craft.Translations.OrderDetail = {
             $(window).off('beforeunload.windowReload');
             var site = $("#sourceSiteSelect").val();
             var url = document.URL;
-            url = url.replace(/(sourceSite=).*?(&)/,'$1' + site + '$2');
+            url = url.split('?');
+            url = url[0];
+
+            var currentElementIds = [];
+            if (typeof $('#currentElementIds').val() !== 'undefined') {
+                currentElementIds = $('#currentElementIds').val().split(',');
+            }
+            url += '?sourceSite='+site;
+            if (currentElementIds) {
+                currentElementIds.forEach(function (element) {
+                    url += '&elements[]='+element;
+                })
+            }
             if(url.indexOf('#step2') == -1) {
                 url += '#step2';
             }
@@ -342,9 +363,15 @@ Craft.Translations.OrderDetail = {
             elementIds = currentElementIds = [];
 
             var sourceSites = [];
+            var site = $("#sourceSiteSelect").val();
             $("input:hidden.sourceSites").each(function() {
                 sourceSites.push($(this).val());
             });
+
+            var currentElementIds = [];
+            if (typeof $('#currentElementIds').val() !== 'undefined') {
+                currentElementIds = $('#currentElementIds').val().split(',');
+            }
 
             this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
                 storageKey: null,
@@ -352,6 +379,7 @@ Craft.Translations.OrderDetail = {
                 elementIndex: null,
                 criteria: {siteId: this.elementSiteId},
                 multiSelect: 1,
+                disabledElementIds: currentElementIds,
                 onSelect: $.proxy(function(elements) {
 
                     $('#content').addClass('elements busy');
@@ -378,7 +406,7 @@ Craft.Translations.OrderDetail = {
                             }
                         }
                         if ($('#addNewEntries').val() == 1) {
-                            window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+elementUrl;
+                            window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+site+elementUrl;
                         } else {
                             addEntries();
 

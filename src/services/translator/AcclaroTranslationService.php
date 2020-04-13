@@ -242,7 +242,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $filename = $element->slug.'-'.$targetSite.'.xml';
             }
 
-            $path = $tempPath.'/'.$filename;
+            $path = $tempPath .'/'. $file->elementId .'-'. $filename;
 
             $stream = fopen($path, 'w+');
 

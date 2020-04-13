@@ -514,10 +514,11 @@
             <div class="translations-order-steps">
                 <div class="translations-order-step{% if orderId is empty %} active{% endif %}" id="step1">
                     <div class="translations-order-step-intro">
-                        {% if duplicateEntries %}
+                        {% if duplicateEntries and chkDuplicateEntries  %}
                             <div class="warning-box">
                                 <span class="warning" data-icon="alert"></span> &nbsp;
                                 {{ 'This order contains entries that exist in one or more open orders, select the warning icon beside the Entry for additional details. Remove duplicate entries below or click "Next" to continue.'|t }}
+                                <a href="{{ url('translations/settings/setting') }}"> {{ 'Disable these warnings'|t }} </a>
                             </div>
                         {% endif %}
 
@@ -553,7 +554,7 @@
                         {% for element in elements %}
                             <tr data-word-count="{{ elementWordCounts[element.id] }}">
                                 <td>{% include "_elements/element" with {'element': element} only %}
-                                    {% if duplicateEntries[element.id] is defined %}
+                                    {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
                                         <span class="warning duplicate-warning">
                                             {{ 'This entry exists in ' }}
                                             {% for orderId in duplicateEntries[element.id] %}
@@ -565,7 +566,7 @@
                                 <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
                                 <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                 {#<td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>#}
-                                <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
+                                <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}" data-element="{{element.id}}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
                             </tr>
                             {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                         {% endfor %}
@@ -616,7 +617,7 @@
                     {{ forms.checkboxSelectField({
                         label: 'Target Site(s)'|t,
                         options: targetSiteCheckboxOptions,
-                        values: order.targetSites,
+                        values: order.targetSites|json_decode(),
                         name: 'targetSites',
                         id: 'targetSites'
                     }) }}
