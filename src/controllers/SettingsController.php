@@ -223,7 +223,7 @@ class SettingsController extends Controller
         return FileHelper::unlink($zipDest);
     }
 
-    public function actionSettings()
+    public function actionConfigurationOptions()
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings:clear-orders')) {
@@ -233,10 +233,10 @@ class SettingsController extends Controller
         $projectConfig = Craft::$app->getProjectConfig();
         $variables['chkDuplicateEntries'] = $projectConfig->get('chkDuplicateEntries');
 
-        $this->renderTemplate('translations/settings/setting', $variables);
+        $this->renderTemplate('translations/settings/configuration-options', $variables);
     }
 
-    public function actionSetSettings()
+    public function actionSaveConfigurationOptions()
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings:clear-orders')) {
