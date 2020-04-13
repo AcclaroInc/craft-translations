@@ -116,6 +116,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
                       'type' => $blockType->id,
                       'fields' => $elementTranslator->toPostArrayFromTranslationTarget($elem, $sourceLanguage, $targetLanguage, $blockData, true),
                     );
+                    $n++;
                   }
               } else {
                 $blockData = isset($fieldData[$new]) ? $fieldData[$new] : array();
