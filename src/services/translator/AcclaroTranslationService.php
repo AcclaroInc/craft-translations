@@ -237,12 +237,12 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = $file->elementId. '-' .ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
             } else {
-                $filename = $file->elemendId. '-'.$element->slug.'-'.$targetSite.'.xml';
+                $filename = $element->slug.'-'.$targetSite.'.xml';
             }
 
-            $path = $tempPath.'/'.$filename;
+            $path = $tempPath .'/'. $file->elementId .'-'. $filename;
 
             $stream = fopen($path, 'w+');
 
