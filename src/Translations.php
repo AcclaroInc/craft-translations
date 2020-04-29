@@ -245,6 +245,12 @@ class Translations extends Plugin
                 'url' => 'translations/translators',
             ];
         }
+        if ($currentUser->can('translations:static-translations')) {
+            $subNavs['static-translations'] = [
+                'label' => 'Static Translations',
+                'url' => 'translations/static-translations',
+            ];
+        }
 
         if ($currentUser->can('translations:settings')) {
             $subNavs['settings'] = [
@@ -343,6 +349,7 @@ class Translations extends Plugin
                     'translations/settings/send-logs' => 'translations/settings/send-logs',
                     'translations/orders/get-file-diff/<fileId:\d+>' => 'translations/base/get-file-diff',
                     'translations/settings/configuration-options' => 'translations/settings/configuration-options',
+                    'translations/static-translations' => 'translations/static-translations',
                 ]);
             }
         );
@@ -580,6 +587,17 @@ class Translations extends Plugin
                     ],
                     'translations:translator:delete' => [
                         'label' => Craft::t('translations', 'Delete Translators'),
+                    ]
+                ]
+            ],
+            'translations:static-translations' => [
+                'label' => Craft::t('translations', 'Static Translations'),
+                'nested' => [
+                    'translations:static-translations:import' => [
+                        'label' => Craft::t('translations', 'Import'),
+                    ],
+                    'translations:static-translations:export' => [
+                        'label' => Craft::t('translations', 'Export'),
                     ]
                 ]
             ],
