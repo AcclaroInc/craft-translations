@@ -117,8 +117,6 @@ class StaticTranslations extends Element
             ],
         ];
 
-        // Get all template files
-        $templateSourceFiles = [];
         $options = [
             'recursive' => false,
             'only' => ['*.html','*.twig','*.js','*.json','*.atom','*.rss'],
@@ -126,16 +124,14 @@ class StaticTranslations extends Element
         ];
         $allFiles = FileHelper::findFiles(Craft::$app->path->getSiteTemplatesPath(), $options);
 
+        $sources[] = ['heading' =>  Craft::t('app','Templates')];
+
         foreach ($allFiles as $file) {
-            $fileName = basename($file);
-            $templateKey = str_replace('/', '*', $file);
-            $templateSourceFiles['templatessources:'.$fileName] = [
-                'label' => $fileName,
-                'key' => 'templates:'.$templateKey,
+            $sources[] = [
+                'label' => basename($file),
+                'key' => str_replace('/', '*', $file),
                 'criteria' => [
-                    'source' => [
-                        $file
-                    ],
+                    'source' => [ $file ],
                 ],
             ];
         }
@@ -145,32 +141,17 @@ class StaticTranslations extends Element
             'recursive' => false,
             'except' => ['vendor/', 'node_modules/']
         ];
+
         $allFiles = FileHelper::findDirectories(Craft::$app->path->getSiteTemplatesPath(), $options);
         foreach ($allFiles as $file) {
-            $fileName = basename($file);
-            $templateKey = str_replace('/', '*', $file);
-            $templateSourceFiles['templatessources:'.$fileName] = [
-                'label' => $fileName.'/',
-                'key' => 'templates:'.$templateKey,
+            $sources[] = [
+                'label' => basename($file).'/',
+                'key' => str_replace('/', '*', $file),
                 'criteria' => [
-                    'source' => [
-                        $file
-                    ],
+                    'source' => [ $file ],
                 ],
             ];
         }
-
-        $sources[] = ['heading' =>  Craft::t('app','Templates')];
-        $sources[] = [
-            'label'    => Craft::t('app', 'Templates'),
-            'key'      => 'all-templates:',
-            'criteria' => [
-                'source' => [
-                    Craft::$app->path->getSiteTemplatesPath()
-                ]
-            ],
-            'nested' => $templateSourceFiles
-        ];
 
         return $sources;
     }
@@ -232,13 +213,26 @@ class StaticTranslations extends Element
             $elementQuery->status = $elementQuery->translateStatus;
         }
 
+        $attributes = Craft::$app->getElementIndexes()->getTableAttributes(static::class, $sourceKey);
+        if (!empty($elementQuery->siteId)) {
+
+            $currentSite = Craft::$app->getSites()->getSiteById($elementQuery->siteId);
+            $lang = Craft::$app->getI18n()->getLocaleById($currentSite->language);
+            $trans = 'Target: '.ucfirst($lang->displayName).' ('.$currentSite->language.')';
+            array_walk_recursive($attributes, function(&$attributes) use($trans) {
+                if($attributes == 'Target: Translation') {
+                    $attributes= $trans;
+                }
+            });
+        }
+
         $elements = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
 
         $variables = [
             'viewMode' => $viewState['mode'],
             'context' => $context,
             'disabledElementIds' => $disabledElementIds,
-            'attributes' => Craft::$app->getElementIndexes()->getTableAttributes(static::class, $sourceKey),
+            'attributes' => $attributes,
             'elements' => $elements,
             'showCheckboxes' => $showCheckboxes
         ];

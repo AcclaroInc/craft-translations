@@ -350,6 +350,8 @@ class Translations extends Plugin
                     'translations/orders/get-file-diff/<fileId:\d+>' => 'translations/base/get-file-diff',
                     'translations/settings/configuration-options' => 'translations/settings/configuration-options',
                     'translations/static-translations' => 'translations/static-translations',
+                    'translations/static-translations/export-file' => 'translations/static-translations/export-file',
+                    'translations/static-translations/import' => 'translations/static-translations/import',
                 ]);
             }
         );

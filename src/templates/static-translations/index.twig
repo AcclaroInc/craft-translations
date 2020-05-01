@@ -12,8 +12,6 @@
 {% endif %}
 
 {% block actionButton %}
-
-    <button class="btn big submit import-static-translation">{{ 'Import'|t }}</button>
     <button class="btn big submit save-static-translation">{{ 'Save'|t }}</button>
 {% endblock %}
 
@@ -50,7 +48,16 @@
 
 {% block footer %}
     <div id="count-container" class="light flex-grow">&nbsp;</div>
-    <div id="export-btn" class="btn hidden">{{ 'Export'|t('app') }}</div>
+    <div id="translate-export" class="btn">{{ 'Export'|t('app') }}</div>
+
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" accept=".csv" name="trans-import" style="display: none" />
+        <input type="hidden" name="action" value="translations/static-translations/import">
+        <input type="hidden" name="siteId" value="{{ elementInstance.siteId }}" id="siteId" >
+        {{ csrfInput() }}
+    </form>
+    <div class="btn translate-import">{{ "Import"|t('app') }}</div>
+
 {% endblock %}
 
 {% js %}
