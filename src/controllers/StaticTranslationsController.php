@@ -70,16 +70,11 @@ class StaticTranslationsController extends Controller
 
         $siteId = Craft::$app->request->getRequiredBodyParam('siteId');
         $source = Craft::$app->request->getRequiredBodyParam('sourceKey');
+        $source = str_replace('*', '/', $source);
 
         $elementQuery = StaticTranslations::find();
-        $source = explode(':', $source);
-        if (is_array($source) && $source[0] == 'status') {
-            $elementQuery->status = $source[1];
-            $elementQuery->source = Craft::$app->path->getSiteTemplatesPath();
-        } else {
-            $elementQuery->status = null;
-            $elementQuery->source = [Craft::$app->request->getRequiredBodyParam('sourceKey')];
-        }
+        $elementQuery->status = null;
+        $elementQuery->source = [$source];
         $elementQuery->search = Craft::$app->request->getRequiredBodyParam('search', null);
         $elementQuery->siteId = $siteId;
 
