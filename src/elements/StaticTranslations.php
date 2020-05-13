@@ -35,7 +35,6 @@ class StaticTranslations extends Element
     public $translation;
     public $source;
     public $file;
-    public $locale = 'en_us';
     public $field;
     public $translateStatus;
 
@@ -65,14 +64,6 @@ class StaticTranslations extends Element
     }
 
     /**
-     * @inheritdoc
-     */
-    public static function hasStatuses(): bool
-    {
-        return true;
-    }
-
-    /**
      * @return string
      */
     public function getTranslateStatus()
@@ -91,31 +82,6 @@ class StaticTranslations extends Element
     protected static function defineSources(string $context = null): array
     {
         $sources = [];
-        $sources[] = ['heading' =>  Craft::t('app','Status')];
-
-        $sources[] = [
-            'status'   => 'orange',
-            'key'      => 'status:' . self::UNTRANSLATED,
-            'label'    =>  Craft::t('app','Untranslated'),
-            'criteria' => [
-                'source' => [
-                    Craft::$app->path->getSiteTemplatesPath()
-                ],
-                'translateStatus' => self::UNTRANSLATED
-            ],
-        ];
-
-        $sources[] = [
-            'status'   => 'green',
-            'key'      => 'status:' . self::TRANSLATED,
-            'label'    => Craft::t('app', 'Translated'),
-            'criteria' => [
-                'source' => [
-                    Craft::$app->path->getSiteTemplatesPath()
-                ],
-                'translateStatus' => self::TRANSLATED
-            ],
-        ];
 
         $options = [
             'recursive' => false,
@@ -166,7 +132,6 @@ class StaticTranslations extends Element
             'translation',
             'source',
             'file',
-            'status',
             'locale'
         ];
     }
@@ -209,10 +174,6 @@ class StaticTranslations extends Element
             $elementQuery->siteId = $primarySite->id;
         }
 
-        if ($elementQuery->translateStatus) {
-            $elementQuery->status = $elementQuery->translateStatus;
-        }
-
         $attributes = Craft::$app->getElementIndexes()->getTableAttributes(static::class, $sourceKey);
         if (!empty($elementQuery->siteId)) {
 
@@ -253,13 +214,5 @@ class StaticTranslations extends Element
         $site = Craft::$app->getSites()->getSiteById($this->siteId);
 
         return $site->language;
-    }
-
-    public static function statuses(): array
-    {
-        return [
-            self::TRANSLATED => ['label' => ucfirst(self::TRANSLATED), 'color' => 'green'],
-            self::UNTRANSLATED => ['label' => ucfirst(self::UNTRANSLATED), 'color' => 'orange'],
-        ];
     }
 }
