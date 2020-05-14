@@ -625,3 +625,7 @@
 .translations-about .link a {
     padding-right: 15px;
 }
+
+.static-trans-footer .pagination {
+    display: none;
+}
