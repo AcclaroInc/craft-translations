@@ -99,7 +99,12 @@ class App extends Component
      * @var repository\UserRepository
      */
     public $userRepository;
-    
+
+    /**
+     * @var repository\StaticTranslationsRepository
+     */
+    public $staticTranslationsRepository;
+
     /**
      * @var WordCounter
      */
@@ -148,6 +153,7 @@ class App extends Component
         $this->orderRepository = new repository\OrderRepository();
         $this->translatorRepository = new repository\TranslatorRepository();
         $this->userRepository = new repository\UserRepository();
+        $this->staticTranslationsRepository = new repository\StaticTranslationsRepository();
         $this->wordCounter = new WordCounter();
         $this->fieldTranslatorFactory = new fieldtranslator\Factory();
         $this->translatorFactory = new translator\Factory();
