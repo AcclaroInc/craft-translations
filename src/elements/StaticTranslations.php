@@ -90,16 +90,28 @@ class StaticTranslations extends Element
         ];
         $allFiles = FileHelper::findFiles(Craft::$app->path->getSiteTemplatesPath(), $options);
 
+        $sources[] = [
+            'key'      => str_replace('/', '*', Craft::$app->path->getSiteTemplatesPath()),
+            'label'    =>  Craft::t('app','All Translations'),
+            'criteria' => [
+                'source' => [
+                    Craft::$app->path->getSiteTemplatesPath()
+                ]
+            ],
+        ];
+
         $sources[] = ['heading' =>  Craft::t('app','Templates')];
 
         foreach ($allFiles as $file) {
-            $sources[] = [
-                'label' => basename($file),
-                'key' => str_replace('/', '*', $file),
-                'criteria' => [
-                    'source' => [ $file ],
-                ],
-            ];
+            if (self::countTranslation($file)) {
+                $sources[] = [
+                    'label' => basename($file),
+                    'key' => str_replace('/', '*', $file),
+                    'criteria' => [
+                        'source' => [ $file ],
+                    ],
+                ];
+            }
         }
 
         // Other Template folders & files
@@ -110,13 +122,15 @@ class StaticTranslations extends Element
 
         $allFiles = FileHelper::findDirectories(Craft::$app->path->getSiteTemplatesPath(), $options);
         foreach ($allFiles as $file) {
-            $sources[] = [
-                'label' => basename($file).'/',
-                'key' => str_replace('/', '*', $file),
-                'criteria' => [
-                    'source' => [ $file ],
-                ],
-            ];
+            if (self::countTranslation($file)) {
+                $sources[] = [
+                    'label' => basename($file).'/',
+                    'key' => str_replace('/', '*', $file),
+                    'criteria' => [
+                        'source' => [ $file ],
+                    ],
+                ];
+            }
         }
 
         return $sources;
@@ -214,5 +228,22 @@ class StaticTranslations extends Element
         $site = Craft::$app->getSites()->getSiteById($this->siteId);
 
         return $site->language;
+    }
+
+    /**
+     * @param $source
+     * @return int
+     * @throws \craft\errors\SiteNotFoundException
+     */
+    public static function countTranslation($source) {
+        $elementQuery = StaticTranslations::find();
+        $elementQuery->status = null;
+        $elementQuery->source = [$source];
+        $elementQuery->search = null;
+        $elementQuery->siteId = Craft::$app->getSites()->getPrimarySite()->id;
+
+        $translations = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
+
+        return count($translations);
     }
 }

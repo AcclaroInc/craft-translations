@@ -14,6 +14,7 @@ use Craft;
 use craft\helpers\Path;
 use craft\web\Controller;
 use yii\web\UploadedFile;
+use craft\helpers\StringHelper;
 use yii\web\NotFoundHttpException;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\StaticTranslations;
@@ -85,11 +86,12 @@ class StaticTranslationsController extends Controller
 
         $primary = Craft::$app->getSites()->getPrimarySite();
         $primaryLang = Craft::$app->getI18n()->getLocaleById($primary->language);
-        $attributes['original'] = ['label' => Translations::$plugin->translator->translate('app', "Source: $lang->displayName ($primary->language)")];
+        $langName = ucfirst(StringHelper::convertToUTF8($lang->displayName));
 
-        $data = '"' .Translations::$plugin->translator->translate('app', "Source: $primaryLang->displayName ($primary->language)") . '","' . Translations::$plugin->translator->translate('app', "Target: $lang->displayName ($site->language)") . "\"\r\n";
+        $data = '"' .Translations::$plugin->translator->translate('app', "Source: $primaryLang->displayName ($primary->language)") . '","' . Translations::$plugin->translator->translate('app', "Target: $langName ($site->language)") . "\"\r\n";
         foreach ($translations as $row) {
-            $data .= '"' . $row->original . '","' . $row->translation . "\"\r\n";
+            $trans = StringHelper::convertToUTF8($row->translation);
+            $data .= '"' . $row->original . '","' . $trans . "\"\r\n";
         }
 
         $file = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . 'StaticTranslations-'.$site->language.'-'.date('Ymdhis') . '.csv';
