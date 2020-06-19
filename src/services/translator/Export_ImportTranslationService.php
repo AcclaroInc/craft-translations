@@ -14,6 +14,7 @@ use Craft;
 use DateTime;
 use Exception;
 use craft\elements\Entry;
+use craft\elements\Category;
 use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
@@ -90,6 +91,12 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
             if ($element instanceof GlobalSet) {
                 $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+            } else if ($element instanceof Category) {
+                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
+
+                $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
+                $draft->groupId = $category->groupId;
+
             } else {
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
@@ -130,6 +137,8 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             }
         } elseif ($draft instanceof GlobalSet) {
             Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
+        } elseif ($draft instanceof Category) {
+            Translations::$plugin->categoryDraftRepository->saveDraft($draft);
         }
 
         return true;

@@ -194,6 +194,24 @@ class Install extends Migration
             );
         }
 
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_categorydrafts}}');
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                '{{%translations_categorydrafts}}',
+                [
+                    'id'            => $this->primaryKey(),
+                    'name'          => $this->string()->notNull(),
+                    'categoryId'   => $this->integer()->notNull(),
+                    'site'          => $this->integer()->notNull(),
+                    'data'          => $this->mediumText()->notNull(),
+                    'dateCreated'   => $this->dateTime()->notNull(),
+                    'dateUpdated'   => $this->dateTime()->notNull(),
+                    'uid'           => $this->uid()
+                ]
+            );
+        }
+
         return $tablesCreated;
     }
 
