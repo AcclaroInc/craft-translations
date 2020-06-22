@@ -34,6 +34,7 @@ use acclaro\translations\elements\Order;
 use acclaro\translations\base\PluginTrait;
 use craft\console\Application as ConsoleApplication;
 use acclaro\translations\assetbundles\EntryAssets;
+use acclaro\translations\assetbundles\CategoryAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
@@ -352,6 +353,7 @@ class Translations extends Plugin
                     'translations/static-translations' => 'translations/static-translations',
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
+                    'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/base/edit-category-draft',
                 ]);
             }
         );
@@ -370,6 +372,12 @@ class Translations extends Plugin
             }
         }
 
+        if (preg_match('#^categories/([^/]+)$#', $path, $match)) {
+            $this->_includeCategoryResources();
+        }
+        if (preg_match('#^categories/([^/]+)/([^/]+)/([^/]+)$#', $path, $match)) {
+            $this->_includeCategoryResources($match[2]);
+        }
         if (preg_match('#^globals/([^/]+)$#', $path, $match)) {
             $this->_includeGlobalSetResources($match[1]);
         }
@@ -423,6 +431,30 @@ class Translations extends Plugin
         self::$view->registerAssetBundle(EntryAssets::class);
         
         self::$view->registerJs("$(function(){ Craft.Translations.AddEntriesToTranslationOrder.init({$data}); });");
+    }
+
+    private function _includeCategoryResources($slug = null)
+    {
+        $orders = array();
+        $categoryId = 0;
+        if ($slug) {
+            $categoryId = explode('-', $slug);
+            $categoryId = (isset($categoryId[0])) ? $categoryId[0] : 0;
+        }
+
+        foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
+            $orders[] = array(
+                'id' => $order->id,
+                'title' => $order->title,
+            );
+        }
+
+        $orders = json_encode($orders);
+        $categoryId = json_encode($categoryId);
+
+        self::$view->registerAssetBundle(CategoryAssets::class);
+
+        self::$view->registerJs("$(function(){ Craft.Translations.CategoryTranslations.init({$orders}, {$categoryId}); });");
     }
     
     private function _includeGlobalSetResources($globalSetHandle, $site = null)

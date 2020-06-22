@@ -19,6 +19,7 @@ use craft\helpers\Assets;
 use craft\models\Section;
 use yii\web\HttpException;
 use craft\web\UploadedFile;
+use craft\elements\Category;
 use craft\helpers\FileHelper;
 use craft\elements\GlobalSet;
 use craft\base\VolumeInterface;
@@ -318,6 +319,19 @@ class FilesController extends Controller
 
             if ($draft) {
                 $response = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+                $message = 'Draft applied for '. '"'. $element->name .'"';
+            } else {
+                $response = false;
+            }
+
+            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+        } else if ($element instanceof Category) {
+            $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+
+            $draft->name = $element->title;
+
+            if ($draft) {
+                $response = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
                 $message = 'Draft applied for '. '"'. $element->name .'"';
             } else {
                 $response = false;

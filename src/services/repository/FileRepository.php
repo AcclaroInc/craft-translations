@@ -275,9 +275,12 @@ class FileRepository
      * @return false|int
      * @throws \Throwable
      */
-    public function delete($draftId)
+    public function delete($draftId, $elementId=null)
     {
         $attributes = ['draftId' => (int) $draftId];
+        if ($elementId) {
+            $attributes['elementId'] = $elementId;
+        }
 
         return FileRecord::findOne($attributes)->delete();
     }
