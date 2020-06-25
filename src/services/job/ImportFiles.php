@@ -123,7 +123,7 @@ class ImportFiles extends BaseJob
                 {
                     if ($draftId === $file->draftId)
                     {	//Get File
-                        $draft_file = Translations::$plugin->fileRepository->getFileByDraftId($draftId);
+                        $draft_file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $file->elementId);
                     }
                 }
 

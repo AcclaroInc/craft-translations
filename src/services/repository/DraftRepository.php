@@ -103,13 +103,16 @@ class DraftRepository
         return $response;
     }
 
-    public function isTranslationDraft($draftId)
+    public function isTranslationDraft($draftId, $elementId=null)
     {
         $data = [];
 
         $attributes = [
             'draftId' => (int) $draftId
         ];
+        if ($elementId) {
+            $attributes['elementId'] = $elementId;
+        }
 
         $record = FileRecord::findOne($attributes);
 
@@ -248,7 +251,7 @@ class DraftRepository
 
         try {
             // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId);
+            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->sourceId);
             if (!empty($isExistingFile)) {
                 return;
             }
