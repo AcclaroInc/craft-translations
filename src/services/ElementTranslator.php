@@ -33,7 +33,7 @@ class ElementTranslator
         $source = array();
         
         // if ($element instanceof Element || $element instanceof Tag || $element instanceof Category) {
-        if ($element instanceof Element) {
+        if ($element instanceof Element || $element instanceof Category) {
             $source['title'] = $element->title;
             $source['slug'] = $element->slug;
         }

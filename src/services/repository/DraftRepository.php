@@ -355,6 +355,7 @@ class DraftRepository
             $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
             $draft->name = sprintf('%s [%s]', $orderName, $site);
             $draft->id = $category->id;
+            $draft->title = $category->title;
             $draft->site = $site;
 
             $post = Translations::$plugin->elementTranslator->toPostArray($category);

@@ -202,7 +202,8 @@ class Install extends Migration
                 [
                     'id'            => $this->primaryKey(),
                     'name'          => $this->string()->notNull(),
-                    'categoryId'   => $this->integer()->notNull(),
+                    'title'         => $this->string()->notNull(),
+                    'categoryId'    => $this->integer()->notNull(),
                     'site'          => $this->integer()->notNull(),
                     'data'          => $this->mediumText()->notNull(),
                     'dateCreated'   => $this->dateTime()->notNull(),
