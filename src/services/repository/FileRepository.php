@@ -54,6 +54,7 @@ class FileRepository
     
     /**
      * @param  int|string $draftId
+     * @param  int|string $elementId
      * @return \acclaro\translations\models\FileModel
      */
     public function getFileByDraftId($draftId, $elementId = null)

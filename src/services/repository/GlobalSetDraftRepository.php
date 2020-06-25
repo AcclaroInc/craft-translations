@@ -134,10 +134,16 @@ class GlobalSetDraftRepository
         );
 
         $content = Translations::$plugin->elementTranslator->toPostArray($draft);
-        
+
+        $nestedFieldType = [
+            'craft\fields\Matrix',
+            'verbb\supertable\fields\SuperTableField',
+            'benf\neo\Field'
+        ];
+
         foreach ($draft->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-            if ($field->getIsTranslatable()) {
+            if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
                 $data['fields'][$field->id] = $content[$field->handle];
                 if (isset($content[$field->handle]) && $content[$field->handle] !== null) { 
                     $data['fields'][$field->id] = $content[$field->handle];
