@@ -372,7 +372,7 @@ class Translations extends Plugin
             }
         }
 
-        if (preg_match('#^categories/([^/]+)$#', $path, $match)) {
+        if (preg_match('#^categories/([^/]+)/([^/]+)$#', $path, $match)) {
             $this->_includeCategoryResources();
         }
         if (preg_match('#^categories/([^/]+)/([^/]+)/([^/]+)$#', $path, $match)) {
