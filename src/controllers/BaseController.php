@@ -1709,18 +1709,16 @@ class BaseController extends Controller
             // Load a new Diff class
             $differ = new Differ();
 
-            // Now we can get the element
-            if ($file->status == 'complete') {
-                $element = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-            } else {
-                $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
-            }
+            $element = Craft::$app->getElements()->getElementById($file->elementId);
 
-            if (empty($element)) {
-                $element = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
-            }
             $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
             if ($element instanceof Entry) {
+                // Now we can get the element
+                if ($file->status == 'complete') {
+                    $element = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+                } else {
+                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
+                }
                 $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
             } else if ($element instanceof GlobalSet) {
                 $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId);
