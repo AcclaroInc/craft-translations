@@ -16,6 +16,7 @@ use Exception;
 use craft\db\Query;
 use craft\elements\User;
 use craft\elements\Entry;
+use craft\elements\Category;
 use craft\elements\GlobalSet;
 use yii\web\NotFoundHttpException;
 use acclaro\translations\Translations;
@@ -102,13 +103,16 @@ class DraftRepository
         return $response;
     }
 
-    public function isTranslationDraft($draftId)
+    public function isTranslationDraft($draftId, $elementId=null)
     {
         $data = [];
 
         $attributes = [
             'draftId' => (int) $draftId
         ];
+        if ($elementId) {
+            $attributes['elementId'] = $elementId;
+        }
 
         $record = FileRecord::findOne($attributes);
 
@@ -224,13 +228,22 @@ class DraftRepository
             case GlobalSet::class:
                 $draft = $this->createGlobalSetDraft($element, $site, $order->title);
                 break;
+            case Category::class:
+                $draft = $this->createCategoryDraft($element, $site, $order->title);
+                break;
         }
 
         if (!($file instanceof FileModel)){
             $file = Translations::$plugin->fileRepository->makeNewFile();
         }
 
-        if ($draft instanceof GlobalSet) {
+
+        if (empty($draft)) {
+
+            Craft::error('Empty draft found: Order'.json_decode($order), __METHOD__);
+            return false;
+        }
+        if ($draft instanceof GlobalSet || $draft instanceof Category) {
             $targetSite = $draft->site;
         } else {
             $targetSite = $draft->siteId;
@@ -238,7 +251,7 @@ class DraftRepository
 
         try {
             // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId);
+            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->sourceId);
             if (!empty($isExistingFile)) {
                 return;
             }
@@ -336,6 +349,29 @@ class DraftRepository
 
     }
 
+    public function createCategoryDraft(Category $category, $site, $orderName)
+    {
+        try {
+            $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
+            $draft->name = sprintf('%s [%s]', $orderName, $site);
+            $draft->id = $category->id;
+            $draft->title = $category->title;
+            $draft->site = $site;
+
+            $post = Translations::$plugin->elementTranslator->toPostArray($category);
+
+            $draft->setFieldValues($post);
+            Translations::$plugin->categoryDraftRepository->saveDraft($draft);
+
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error('CreateCategoryDraft exception:: '.$e->getMessage());
+            return [];
+        }
+
+    }
+
     /**
      * @param $orderId
      * @param $elementIds
@@ -381,6 +417,19 @@ class DraftRepository
 
                 if ($draft) {
                     $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+                } else {
+                    $success = false;
+                }
+
+                $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+            } else if ($element instanceof Category) {
+                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+
+                // keep original category name
+                $draft->name = $element->title;
+
+                if ($draft) {
+                    $success = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
                 } else {
                     $success = false;
                 }

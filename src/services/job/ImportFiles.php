@@ -48,8 +48,11 @@ class ImportFiles extends BaseJob
      * Process each file entry per orden
      * Validates
      */
-    public function processFile( $xml, $path )
+    public function processFile( $xml, $path, $order = null )
     {
+        if (empty($this->order)) {
+            $this->order = $order;
+        }
         //Ignore __MAXOSX & ../ ./ Dir
         if ($xml->getFileName() !== '__MACOSX' && !$xml->isDot())
         {
@@ -123,7 +126,7 @@ class ImportFiles extends BaseJob
                 {
                     if ($draftId === $file->draftId)
                     {	//Get File
-                        $draft_file = Translations::$plugin->fileRepository->getFileByDraftId($draftId);
+                        $draft_file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $file->elementId);
                     }
                 }
 

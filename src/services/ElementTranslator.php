@@ -40,6 +40,7 @@ class ElementTranslator
             if ($element->slug) {
                 $source['slug'] = $element->slug;
             }
+
         }
         
         foreach ($element->getFieldLayout()->getFields() as $layoutField) {
