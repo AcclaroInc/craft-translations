@@ -11,45 +11,53 @@
 namespace acclaro\translations\services\fieldtranslator;
 
 use Craft;
+use Exception;
 use craft\base\Field;
 use craft\base\Element;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
-class AssetsFieldTranslator
+class AssetsFieldTranslator extends GenericFieldTranslator
 {
-    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field)
+    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite=null)
     {
         $source = array();
 
-        $blocks = $element->getFieldValue($field->handle)->all();
+        $blocks = $element->getFieldValue($field->handle)->siteId($sourceSite)->all();
 
         if ($blocks) 
         {
             foreach ($blocks as $block) 
             {
-                foreach ($block as $key => $value) 
-                {
+                /*$fields = Craft::$app->assets->getAssetById($block->id)->getFieldValues();
+                foreach ($fields as $key => $value) {
                     $k = sprintf('%s.%s.%s', $field->handle, $block->id, $key);
-                   
-                    if($key !== 'id')
-                    {
-                        continue;
-                    }
-
                     $source[$k] = $value;
+                }*/
+
+                $source = [];
+                $element = Craft::$app->assets->getAssetById($block->id, $sourceSite);
+                foreach ($element->getFieldLayout()->getFields() as $layoutField) {
+                    $assetField = Craft::$app->fields->getFieldById($layoutField->id);
+                    $fieldSource = $elementTranslator->fieldToTranslationSource($element, $assetField, $sourceSite);
+
+                    foreach ($fieldSource as $key => $value) {
+                        $k = sprintf('%s.%s.%s', $field->handle, $block->id, $key);
+                        $source[$k] = $value;
+                    }
                 }
             }
         }
         return $source;
     }
 
-    public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field)
+    public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite=null)
     {
         $fieldHandle = $field->handle;
 
-        $blocks = $element->getFieldValue($fieldHandle)->all();
+        $blocks = $element->getFieldValue($fieldHandle)->siteId($sourceSite)->all();
+
 
         $post[$fieldHandle] = [];
 
@@ -69,25 +77,62 @@ class AssetsFieldTranslator
     { 
         $fieldHandle = $field->handle;
 
-        $blocks = $element->getFieldValue($fieldHandle)->all();
+        $blocks = $element->getFieldValue($fieldHandle)->siteid($sourceSite)->all();
 
-        $post = array(
-            $fieldHandle => array(),
-        );
+        if (is_array($fieldData)) {
+            $fieldData = array_values($fieldData);
+        }
 
-        $fieldData = array_values($fieldData);
+        $title = '';
 
         foreach ($blocks as $i => $block)
         {
-            $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
-            
-            $post[$fieldHandle][$block->id] = $block->id;
+            try{
+                if (!empty($fieldData[0]['title'])) {
+                    $title = $fieldData[0]['title'];
+                }
+
+                $element = Craft::$app->assets->getAssetById($block->id, $targetSite);
+                $assetFields = $element->getFieldValues();
+
+                $post = [];
+                $element->siteId = $targetSite;
+                foreach ($assetFields as $assetField) {
+                    $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
+                    $post['fields'] = $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true);
+                }
+
+                if (!empty($post['fields'])) {
+                    $element->setFieldValues($post['fields']);
+                    if($title) {
+                        $element->title = $title;
+                    }
+                    Translations::$plugin->draftRepository->saveDraft($element);
+                }
+
+            } catch (Exception $e) {
+                continue;
+            }
         }
 
-        return $post;
+        return [];
     }
 
     public function getWordCount(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
+
+        $blocks = $this->getFieldValue($elementTranslator, $element, $field)->all();
+
+        if (!$blocks) {
+            return 0;
+        }
+
+        $wordCount = 0;
+
+        foreach ($blocks as $i => $block) {
+            $wordCount += $elementTranslator->getWordCount($block);
+        }
+
+        return $wordCount;
     }
 }
