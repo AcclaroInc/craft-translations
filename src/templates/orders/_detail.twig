@@ -243,7 +243,7 @@
                                     <input type="button" class="btn submit addEntries form-submit" value="{{ 'Add Entries'|t }}">
                                 {% endif %}
 
-                                {% if order.status == 'complete' or order.status == 'in progress' %}
+                                {% if order.status == 'complete' or order.status == 'in progress' or order.status == 'in preparation' %}
                                     <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to apply translation drafts to these entries?'|t }}" disabled="disabled" value="{{ 'Apply Translation Drafts'|t }}">
                                 {% endif %}
                             </div>
@@ -275,10 +275,10 @@
                                     <tbody>
                                     {% for element in elements %}
 
-                                        {% set allowUpdate = 1 %}
+                                        {% set allowUpdate = 0 %}
                                         {% for file in files[element.id] %}
-                                            {% if file.status != 'complete' and file.status != 'published' %}
-                                                {% set allowUpdate = 0 %}
+                                            {% if file.status == 'complete' %}
+                                                {% set allowUpdate = 1 %}
                                             {% endif %}
                                         {% endfor %}
 
