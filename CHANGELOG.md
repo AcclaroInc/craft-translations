@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.7.1 - 2020-07-14
+
+### Changed
+- Moved `chkDuplicateEntries` setting from projectConfig to Plugin Settings
+
 ## 1.7.0 - 2020-05-14
 
 ### Added
