@@ -103,8 +103,9 @@ Craft.Translations.CategoryTranslations = {
             'class': 'btn submit icon',
             'href': '#',
             'data-icon': "language",
-            'text': Craft.t('app', 'New Translation')
         });
+
+        this.$btn.html("<span>" + Craft.t('app', 'New Translation') + "</span>");
 
         this.$menubtn = $('<div>', {
             'class': 'btn submit menubtn'
