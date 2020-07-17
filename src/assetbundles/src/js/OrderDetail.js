@@ -248,6 +248,68 @@ Craft.Translations.OrderDetail = {
             );
         });
 
+        $('.tab-xml').on('click', function(e) {
+            console.log("  Xml clicked ");
+            $("#xml").show();
+            $("#tab-xml").addClass('sel');
+            $("#tab-visual").removeClass('sel');
+            $("#visual").hide();
+        });
+        $('.tab-visual').on('click', function(e) {
+            console.log("  Visual clicked ");
+            $("#xml").hide();
+            $("#visual").show();
+            $("#tab-visual").addClass('sel');
+            $("#tab-xml").removeClass('sel');
+
+            //let fileId = $('#diff-file-id').val();
+            //getFileDiffHtml(fileId);
+
+        });
+
+        function getFileDiffHtml(location) {
+            //let location = $('#file-diff-html-url').val() + '/' + fileId;
+            $.get(
+                location,
+                function (data) {
+                    if (!data.success) {
+                        alert(data.error);
+                    } else {
+                        data = data.data;
+
+                        // Diff HTML strings
+                        let output = htmldiff(data.original, data.new);
+
+                        output = output + "<style>ins {\n" +
+                            "    text-decoration: none;\n" +
+                            "    background-color: #d4fcbc;\n" +
+                            "}\n" +
+                            "\n" +
+                            "del {\n" +
+                            "    text-decoration: line-through;\n" +
+                            "    background-color: #fbb6c2;\n" +
+                            "    color: #555;\n" +
+                            "}</style>";
+
+                        document.getElementById('visual-diff').src = data.newUrl;
+
+                        let $iframe = $("#visual-diff");
+                        setTimeout( function() {
+                            let doc = $iframe[0].contentWindow.document;
+                            let $body = $('body',doc);
+                            $body.html(output);
+                        }, 10000 );
+
+                        $('#close-diff-modal-entry').on('click', function(e) {
+                            e.preventDefault();
+                            $modal.hide();
+                        });
+                    }
+                },
+                'json'
+            );
+        }
+
         $('.view-diff').on('click', function(e) {
             e.preventDefault();
             var $el = $(this);
@@ -296,6 +358,8 @@ Craft.Translations.OrderDetail = {
                             $('#apply-translation').addClass('disabled');
                         }
 
+                        $('#diff-file-id').val(data['fileId']);
+
                         // Add the diff html
                         document.getElementById("modal-body-entry").innerHTML = diffHtml;
 
@@ -308,6 +372,9 @@ Craft.Translations.OrderDetail = {
                 'json'
             );
 
+            //let fileId = location.substring(location.lastIndexOf('/') + 1);
+            location = location.replace("/get-file-diff/", "/get-file-diff-html/");
+            getFileDiffHtml(location);
         });
 
         $("#duplicate-continue").on("click", function (e) {

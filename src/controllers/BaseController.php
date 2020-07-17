@@ -1750,6 +1750,37 @@ class BaseController extends Controller
         ]);
     }
 
+    public function actionGetFileDiffHtml() {
+
+        $variables = Craft::$app->getRequest()->resolve()[1];
+        $fileId = isset($variables['fileId']) ? $variables['fileId'] : null;
+
+        $file = Translations::$plugin->fileRepository->getFileById($fileId);
+        $data = [];
+
+        if ($file && ($file->status == 'complete' || $file->status == 'published')) {
+
+            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+
+            $originalHtml = file_get_contents($element->url);
+            $newHtml = file_get_contents($file->previewUrl);
+
+            preg_match("/<body[^>]*>(.*?)<\/body>/is", $originalHtml, $matches);
+            $data['original'] = $matches[1];
+
+            preg_match("/<body[^>]*>(.*?)<\/body>/is", $newHtml, $matches);
+            $data['new'] = $matches[1];
+
+            $data['newUrl'] = $file->previewUrl;
+        }
+
+        return $this->asJson([
+            'success' => true,
+            'data' => $data,
+            'error' => null
+        ]);
+    }
+
     public function actionAddEntries()
     {
         $this->requireLogin();
