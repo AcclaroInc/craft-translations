@@ -143,4 +143,34 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         return $wordCount;
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field)
+    {
+        $fieldHandle = $field->handle;
+
+        $blocks = $element->getFieldValue($fieldHandle)->all();
+
+        if (!$blocks) {
+            return [];
+        }
+
+        $post = array(
+            $fieldHandle => array(),
+        );
+        $new = 0;
+        foreach ($blocks as $i => $block) {
+
+            $blockId = $block->id ?? 'new' . ++$new;
+            $post[$fieldHandle][$blockId] = array(
+                'type' => $block->getType()->handle,
+                'enabled' => $block->enabled,
+                'fields' => $block->getSerializedFieldValues(),
+            );
+        }
+
+        return $post;
+    }
 }

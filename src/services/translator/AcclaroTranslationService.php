@@ -14,11 +14,13 @@ use Craft;
 use DateTime;
 use Exception;
 use craft\elements\Entry;
+use craft\elements\Category;
 use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
+use acclaro\translations\models\CategoryDraftModel;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
 use acclaro\translations\services\job\acclaro\UdpateReviewFileUrls;
@@ -132,6 +134,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             if ($element instanceof GlobalSet) {
                 $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+            } else if ($element instanceof Category) {
+                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
             } else {
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
@@ -168,6 +172,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
             Translations::$plugin->draftRepository->saveDraft($draft);
         } elseif ($draft instanceof GlobalSetDraftModel) {
             Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
+        } elseif ($draft instanceof CategoryDraftModel) {
+            Translations::$plugin->categoryDraftRepository->saveDraft($draft);
         }
 
         Craft::info('UpdateDraftFromXml Execute Start Execute Ends');

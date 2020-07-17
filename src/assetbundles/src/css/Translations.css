@@ -556,6 +556,16 @@ del {
     box-shadow: 0 0 0 1px rgba(205, 216, 228, 0.25), 0 2px 12px rgba(205, 216, 228, 0.5);
 }
 
+@media only screen and (max-width: 1070px) and (min-width: 975px) {
+    #header .translations-dropdown a span {
+        display: none;
+    }
+}
+@media only screen and (max-width: 975px) {
+    #header .translations-dropdown {
+        margin: 5px 0px !important;
+    }
+}
 
 @media only screen and (max-width: 720px) {
     .translations-order-step-btngroup {
