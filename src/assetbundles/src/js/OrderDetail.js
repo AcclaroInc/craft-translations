@@ -291,20 +291,14 @@ Craft.Translations.OrderDetail = {
                             "    color: #555;\n" +
                             "}</style>";
 
-                        //document.getElementById('visual-diff').src = "http://localhost:8086/";
+                        document.getElementById('visual-diff').src = data.newUrl;
 
-                        var $iframe = $("#visual-diff");
-
+                        let $iframe = $("#visual-diff");
                         setTimeout( function() {
-                            var doc = $iframe[0].contentWindow.document;
-                            var $body = $('body',doc);
+                            let doc = $iframe[0].contentWindow.document;
+                            let $body = $('body',doc);
                             $body.html(output);
-
-                            console.log(' $body ');
-                            console.log($body);
-
                         }, 10000 );
-                        
 
                         $('#close-diff-modal-entry').on('click', function(e) {
                             e.preventDefault();

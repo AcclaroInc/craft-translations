@@ -1578,33 +1578,18 @@ class BaseController extends Controller
 
         if ($file && ($file->status == 'complete' || $file->status == 'published')) {
 
-            // Current entries XML
-            $currentXML = $file->target;
-            $currentXML = simplexml_load_string($currentXML);
+            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
-            $currentXMLHtml = '<div>';
-            $currentXMLHtml .= '<div> TItle Here </div>';
-            foreach ($currentXML->body->children() as $child) {
-                if (!empty($child[0])) {
-                    $currentXMLHtml .= "<p>" . $child[0] . "</p>";
-                }
-            }
-            $currentXMLHtml .= '</div>';
+            $originalHtml = file_get_contents($element->url);
+            $newHtml = file_get_contents($file->previewUrl);
 
-            // Translated file XML
-            $translatedXML = $file->source;
-            $translatedXMLObj = simplexml_load_string($translatedXML);
+            preg_match("/<body[^>]*>(.*?)<\/body>/is", $originalHtml, $matches);
+            $data['original'] = $matches[1];
 
-            $translatedHtml = '<div>';
-            foreach ($translatedXMLObj->body->children() as $child) {
-                if (!empty($child[0])) {
-                    $translatedHtml .= "<p>" . $child[0] . "</p>";
-                }
-            }
-            $translatedHtml .= '</div>';
+            preg_match("/<body[^>]*>(.*?)<\/body>/is", $newHtml, $matches);
+            $data['new'] = $matches[1];
 
-            $data['original'] = $currentXMLHtml;
-            $data['new'] = $translatedHtml;
+            $data['newUrl'] = $file->previewUrl;
         }
 
         return $this->asJson([
