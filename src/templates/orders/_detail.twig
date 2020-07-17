@@ -449,7 +449,30 @@
                                 <div class="instructions wordDifference"></div>
                             </div>
                         </div>
-                        <div id="modal-body-entry" class="modal-body-entry"></div>
+
+                        <input type="hidden" id="diff-file-id"/>
+                        <input type="hidden" id="file-diff-html-url" value="{{ url('translations/orders/get-file-diff-html') }}"/>
+
+                        <div id="content-container" >
+                            <nav id="acc-tabs">
+                                <ul>
+                                    <li data-id="xml">
+                                        <a id="tab-xml" class="tab sel tab-xml" href="javascript:void(0)" title="XML">XML</a>
+                                    </li>
+                                    <li data-id="visual">
+                                        <a id="tab-visual" class="tab tab-visual" href="javascript:void(0)" title="Visual">Visual</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                            <div id="content" class="content-pane square">
+                                <div id="xml" class="">
+                                    <div id="modal-body-entry" class="modal-body-entry"></div>
+                                </div>
+                                <div id="visual" style="display: none">
+                                    <iframe style="width: 100%" id="visual-diff" ></iframe>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

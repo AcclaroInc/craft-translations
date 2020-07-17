@@ -348,6 +348,7 @@ class Translations extends Plugin
                     'translations/settings/settings-check' => 'translations/settings/settings-check',
                     'translations/settings/send-logs' => 'translations/settings/send-logs',
                     'translations/orders/get-file-diff/<fileId:\d+>' => 'translations/base/get-file-diff',
+                    'translations/orders/get-file-diff-html/<fileId:\d+>' => 'translations/base/get-file-diff-html',
                     'translations/settings/configuration-options' => 'translations/settings/configuration-options',
                     'translations/static-translations' => 'translations/static-translations',
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',

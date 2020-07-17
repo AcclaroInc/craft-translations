@@ -1568,6 +1568,52 @@ class BaseController extends Controller
         ]);
     }
 
+    public function actionGetFileDiffHtml() {
+
+        $variables = Craft::$app->getRequest()->resolve()[1];
+        $fileId = isset($variables['fileId']) ? $variables['fileId'] : null;
+
+        $file = Translations::$plugin->fileRepository->getFileById($fileId);
+        $data = [];
+
+        if ($file && ($file->status == 'complete' || $file->status == 'published')) {
+
+            // Current entries XML
+            $currentXML = $file->target;
+            $currentXML = simplexml_load_string($currentXML);
+
+            $currentXMLHtml = '<div>';
+            $currentXMLHtml .= '<div> TItle Here </div>';
+            foreach ($currentXML->body->children() as $child) {
+                if (!empty($child[0])) {
+                    $currentXMLHtml .= "<p>" . $child[0] . "</p>";
+                }
+            }
+            $currentXMLHtml .= '</div>';
+
+            // Translated file XML
+            $translatedXML = $file->source;
+            $translatedXMLObj = simplexml_load_string($translatedXML);
+
+            $translatedHtml = '<div>';
+            foreach ($translatedXMLObj->body->children() as $child) {
+                if (!empty($child[0])) {
+                    $translatedHtml .= "<p>" . $child[0] . "</p>";
+                }
+            }
+            $translatedHtml .= '</div>';
+
+            $data['original'] = $currentXMLHtml;
+            $data['new'] = $translatedHtml;
+        }
+
+        return $this->asJson([
+            'success' => true,
+            'data' => $data,
+            'error' => null
+        ]);
+    }
+
     public function actionAddEntries()
     {
         $this->requireLogin();

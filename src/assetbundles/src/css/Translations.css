@@ -313,6 +313,17 @@
     z-index: 99999999;
 }
 
+ins {
+    text-decoration: none;
+    background-color: #d4fcbc;
+}
+
+del {
+    text-decoration: line-through;
+    background-color: #fbb6c2;
+    color: #555;
+}
+
 @media only screen and (max-width: 992px) {
     .translations-lock {
         margin-left: -31px;
@@ -506,6 +517,45 @@
 .bold {
     font-weight: bold;
 }
+
+#acc-tabs {
+    margin: -10px -12px 0;
+    padding: 10px 12px 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+#acc-tabs ul {
+    display: flex;
+    flex-direction: row;
+    max-width: calc(100% - 40px);
+
+}
+#acc-tabs ul li {
+    max-width: 100%;
+}
+#acc-tabs ul li a {
+    display: block;
+    position: relative;
+    border-radius:4px 4px 0 0;
+    padding: 12px 24px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+    line-height: 1.2;
+}
+#acc-tabs ul li a.sel {
+    background: #fff;
+    z-index: 1;
+    color: #3f4d5a;
+    cursor: default;
+    background-clip: padding-box;
+    box-shadow: 0 0 0 1px rgba(205, 216, 228, 0.25), 0 2px 12px rgba(205, 216, 228, 0.5);
+}
+
 
 @media only screen and (max-width: 720px) {
     .translations-order-step-btngroup {
