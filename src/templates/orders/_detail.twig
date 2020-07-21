@@ -243,7 +243,7 @@
                                     <input type="button" class="btn submit addEntries form-submit" value="{{ 'Add Entries'|t }}">
                                 {% endif %}
 
-                                {% if order.status == 'complete' or order.status == 'in progress' %}
+                                {% if order.status == 'complete' or order.status == 'in progress' or order.status == 'in preparation' %}
                                     <input type="submit" class="btn submit disabled translations-publish-selected-btn form-submit" data-confirm="{{ 'Are you sure you want to apply translation drafts to these entries?'|t }}" disabled="disabled" value="{{ 'Apply Translation Drafts'|t }}">
                                 {% endif %}
                             </div>
@@ -275,10 +275,10 @@
                                     <tbody>
                                     {% for element in elements %}
 
-                                        {% set allowUpdate = 1 %}
+                                        {% set allowUpdate = 0 %}
                                         {% for file in files[element.id] %}
-                                            {% if file.status != 'complete' and file.status != 'published' %}
-                                                {% set allowUpdate = 0 %}
+                                            {% if file.status == 'complete' %}
+                                                {% set allowUpdate = 1 %}
                                             {% endif %}
                                         {% endfor %}
 
@@ -304,7 +304,16 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
+                                            <td>
+                                                {% if element.className == 'craft\\elements\\GlobalSet' %}
+                                                    {{ 'Globals' }}
+                                                {% elseif element.className == 'craft\\elements\\Category' %}
+                                                    {{ 'Category' }}
+                                                {% else %}
+                                                    {{ element.section.name }}
+                                                {% endif %}
+
+                                            </td>
                                             <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
                                             <input type="hidden" value="1" name="sourceSites[]" value="{{ sourceSite.id }}">
                                             <td>
@@ -315,7 +324,7 @@
                                                                 <a href="{{ fileUrls[file.id] }}">
                                                                     {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
                                                                 </a>
-                                                                {% if element.className != 'craft\\elements\\GlobalSet' %}
+                                                                {% if element.className != 'craft\\elements\\GlobalSet' and element.className != 'craft\\elements\\Category' %}
                                                                     <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
                                                                 {% endif %}
                                                             </td>
@@ -588,7 +597,16 @@
                                         </span>
                                     {% endif %}
                                 </td>
-                                <td>{{ element.className == 'craft\\elements\\GlobalSet' ? 'Globals'|t : element.section.name }}</td>
+                                <td>
+                                    {% if element.className == 'craft\\elements\\GlobalSet' %}
+                                        {{ 'Globals' }}
+                                    {% elseif element.className == 'craft\\elements\\Category' %}
+                                        {{ 'Category' }}
+                                    {% else %}
+                                        {{ element.section.name }}
+                                    {% endif %}
+
+                                </td>
                                 <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                 {#<td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>#}
                                 <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}" data-element="{{element.id}}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>

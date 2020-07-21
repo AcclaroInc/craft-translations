@@ -39,7 +39,7 @@ use acclaro\translations\Translations;
 class Factory
 {
     private $nativeFieldTypes = array(
-        // Assets::class           => AssetsFieldTranslator::class,
+        Assets::class           => AssetsFieldTranslator::class,
         Categories::class       => CategoryFieldTranslator::class,
         Checkboxes::class       => MultiSelectFieldTranslator::class,
         Dropdown::class         => SingleOptionFieldTranslator::class,
