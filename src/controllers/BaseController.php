@@ -1580,15 +1580,7 @@ class BaseController extends Controller
 
             $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
-            $originalHtml = file_get_contents($element->url);
-            $newHtml = file_get_contents($file->previewUrl);
-
-            preg_match("/<body[^>]*>(.*?)<\/body>/is", $originalHtml, $matches);
-            $data['original'] = $matches[1];
-
-            preg_match("/<body[^>]*>(.*?)<\/body>/is", $newHtml, $matches);
-            $data['new'] = $matches[1];
-
+            $data['originalUrl'] = $element->url;
             $data['newUrl'] = $file->previewUrl;
         }
 

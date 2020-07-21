@@ -277,28 +277,8 @@ Craft.Translations.OrderDetail = {
                     } else {
                         data = data.data;
 
-                        // Diff HTML strings
-                        let output = htmldiff(data.original, data.new);
-
-                        output = output + "<style>ins {\n" +
-                            "    text-decoration: none;\n" +
-                            "    background-color: #d4fcbc;\n" +
-                            "}\n" +
-                            "\n" +
-                            "del {\n" +
-                            "    text-decoration: line-through;\n" +
-                            "    background-color: #fbb6c2;\n" +
-                            "    color: #555;\n" +
-                            "}</style>";
-
-                        document.getElementById('visual-diff').src = data.newUrl;
-
-                        let $iframe = $("#visual-diff");
-                        setTimeout( function() {
-                            let doc = $iframe[0].contentWindow.document;
-                            let $body = $('body',doc);
-                            $body.html(output);
-                        }, 10000 );
+                        document.getElementById('original-url').src = data.originalUrl;
+                        document.getElementById('new-url').src = data.newUrl;
 
                         $('#close-diff-modal-entry').on('click', function(e) {
                             e.preventDefault();
