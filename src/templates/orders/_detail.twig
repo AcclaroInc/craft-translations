@@ -477,8 +477,10 @@
                                 <div id="xml" class="">
                                     <div id="modal-body-entry" class="modal-body-entry"></div>
                                 </div>
-                                <div id="visual" style="display: none">
-                                    <iframe style="width: 100%" id="visual-diff" ></iframe>
+                                <div id="visual" style="display: none; position: relative;">
+                                    <span class="iframe-line"> </span>
+                                    <iframe class="original" id="original-url" ></iframe>
+                                    <iframe style="float: right" class="new" id="new-url" ></iframe>
                                 </div>
                             </div>
                         </div>
@@ -885,3 +887,4 @@
         </div>
     </div>
 {% endblock %}
+

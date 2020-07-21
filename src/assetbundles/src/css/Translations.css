@@ -566,6 +566,20 @@ del {
         margin: 5px 0px !important;
     }
 }
+.iframe-line {
+    background: #e3e5e8;
+    height: 100%;
+    width: 1px;
+    position: absolute;
+    transform: inherit;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#visual iframe {
+    width: calc(50% - 2px);
+    min-height: 1000px;
+}
 
 @media only screen and (max-width: 720px) {
     .translations-order-step-btngroup {
