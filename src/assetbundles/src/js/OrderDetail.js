@@ -81,6 +81,7 @@ Craft.Translations.OrderDetail = {
     init: function() {
         var self = this;
         var elementIds = [];
+        var modal;
 
         $('input, select').on('keypress', function(e) {
             if (e.which === 13) {
@@ -282,12 +283,18 @@ Craft.Translations.OrderDetail = {
 
                         $('#close-diff-modal-entry').on('click', function(e) {
                             e.preventDefault();
-                            $modal.hide();
+                            modal.hide();
                         });
                     }
                 },
                 'json'
             );
+        }
+
+        function createModal() {
+            return new Garnish.Modal($('#diff-modal-entry').removeClass('hidden'), {
+                autoShow: false,
+            });
         }
 
         $('.view-diff').on('click', function(e) {
@@ -296,9 +303,9 @@ Craft.Translations.OrderDetail = {
             //var file_id = $el.attr('data-file-id');
             var location = $el.attr('href');
 
-            $modal = new Garnish.Modal($('#diff-modal-entry').removeClass('hidden'), {
-                autoShow: false,
-            });
+            if (!modal) {
+                modal = createModal();
+            }
 
             $.get(
                 location,
@@ -322,8 +329,13 @@ Craft.Translations.OrderDetail = {
                             'wordDifference'
                         ];
 
+                        if (!modal) {
+                            modal = createModal();
+                        } else {
+                            $('.tab-xml').click();
+                        }
                         // Show the modal
-                        $modal.show();
+                        modal.show();
 
                         // Set modification details
                         for (let index = 0; index < classNames.length; index++) {
@@ -345,7 +357,7 @@ Craft.Translations.OrderDetail = {
 
                         $('#close-diff-modal-entry').on('click', function(e) {
                             e.preventDefault();
-                            $modal.hide();
+                            modal.hide();
                         });
                     }
                 },
