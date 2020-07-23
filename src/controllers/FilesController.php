@@ -217,32 +217,32 @@ class FilesController extends Controller
 
                             $filename = Assets::prepareAssetName($file);
 
-							$uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
+                            $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
 
-							$folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
+                            $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
 
-							$pathInfo = pathinfo($file);
+                            $pathInfo = pathinfo($file);
 
-							$compatibleFilename = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.txt';
+                            $compatibleFilename = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.txt';
 
-							rename($file, $compatibleFilename);
+                            rename($file, $compatibleFilename);
 
-							$asset = new Asset();
-							$asset->tempFilePath = $compatibleFilename;
-							$asset->filename = $compatibleFilename;
-							$asset->newFolderId = $folder->id;
-							$asset->volumeId = $folder->volumeId;
-							$asset->avoidFilenameConflicts = true;
-							$asset->uploaderId = Craft::$app->getUser()->getId();
-							$asset->setScenario(Asset::SCENARIO_CREATE);
+                            $asset = new Asset();
+                            $asset->tempFilePath = $compatibleFilename;
+                            $asset->filename = $compatibleFilename;
+                            $asset->newFolderId = $folder->id;
+                            $asset->volumeId = $folder->volumeId;
+                            $asset->avoidFilenameConflicts = true;
+                            $asset->uploaderId = Craft::$app->getUser()->getId();
+                            $asset->setScenario(Asset::SCENARIO_CREATE);
 
-							if (! Craft::$app->getElements()->saveElement($asset)) {
-							    $errors = $asset->getFirstErrors();
+                            if (! Craft::$app->getElements()->saveElement($asset)) {
+                                $errors = $asset->getFirstErrors();
 
-							    return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
-							}
+                                return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                            }
 
-							$assetIds[] = $asset->id;
+                            $assetIds[] = $asset->id;
                         }
 
                         FileHelper::removeDirectory($assetPath.$orderId.'/'.$fileName);
@@ -270,30 +270,30 @@ class FilesController extends Controller
                         $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
                     }
                 } elseif ($file->extension === 'xml') {
-                	$filename = Assets::prepareAssetName($file->name);
+                    $filename = Assets::prepareAssetName($file->name);
 
-					$uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
+                    $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
 
-					$folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
+                    $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
 
-					$compatibleFilename = $file->tempName . '.txt';
+                    $compatibleFilename = $file->tempName . '.txt';
 
-					rename($file->tempName, $compatibleFilename);
+                    rename($file->tempName, $compatibleFilename);
 
-					$asset = new Asset();
-					$asset->tempFilePath = $compatibleFilename;
-					$asset->filename = $compatibleFilename;
-					$asset->newFolderId = $folder->id;
-					$asset->volumeId = $folder->volumeId;
-					$asset->avoidFilenameConflicts = true;
-					$asset->uploaderId = Craft::$app->getUser()->getId();
-					$asset->setScenario(Asset::SCENARIO_CREATE);
+                    $asset = new Asset();
+                    $asset->tempFilePath = $compatibleFilename;
+                    $asset->filename = $compatibleFilename;
+                    $asset->newFolderId = $folder->id;
+                    $asset->volumeId = $folder->volumeId;
+                    $asset->avoidFilenameConflicts = true;
+                    $asset->uploaderId = Craft::$app->getUser()->getId();
+                    $asset->setScenario(Asset::SCENARIO_CREATE);
 
-					if (! Craft::$app->getElements()->saveElement($asset)) {
-					    $errors = $asset->getFirstErrors();
+                    if (! Craft::$app->getElements()->saveElement($asset)) {
+                        $errors = $asset->getFirstErrors();
 
-					    return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
-					}
+                        return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                    }
 
                     // This generally executes too fast for page to refresh
                     $job = Craft::$app->queue->push(new ImportFiles([
