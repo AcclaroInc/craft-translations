@@ -36,6 +36,8 @@ class ImportFiles extends BaseJob
             $this->setProgress($queue, $currentFile++ / $this->totalFiles);
             //Process XML Files
             $this->processFile($asset);
+
+            Craft::$app->getElements()->deleteElement($asset);
         }
     }
 
