@@ -26,6 +26,9 @@ class Settings extends Model
 {
     public $chkDuplicateEntries = true;
 
+    /** @var int The Volume ID where uploads will be saved */
+    public $uploadVolume;
+
     public function rules()
     {
         return [];

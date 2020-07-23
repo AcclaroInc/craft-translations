@@ -22,6 +22,7 @@ use yii\web\NotFoundHttpException;
 use craft\helpers\FileHelper;
 use acclaro\translations\models\Settings;
 use acclaro\translations\services\job\DeleteDrafts;
+use craft\base\VolumeInterface;
 
 /**
  * @author    Acclaro
@@ -232,6 +233,16 @@ class SettingsController extends Controller
         }
 
         $variables['chkDuplicateEntries'] = Translations::getInstance()->settings->chkDuplicateEntries;
+        $variables['uploadVolume'] = Translations::getInstance()->settings->uploadVolume;
+
+        $allVolumes = Craft::$app->getVolumes()->getAllVolumes();
+
+        $variables['volumeOptions'] = array_map(function (VolumeInterface $volume) {
+        	return [
+        		'label' => $volume->name,
+        		'value' => $volume->id,
+        	];
+        }, $allVolumes);
 
         $this->renderTemplate('translations/settings/configuration-options', $variables);
     }
@@ -245,12 +256,13 @@ class SettingsController extends Controller
 
         $request = Craft::$app->getRequest();
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
+        $selectedVolume = $request->getParam('uploadVolume');
 
         try {
 
             $pluginService = Craft::$app->getPlugins();
             $plugin  = $pluginService->getPlugin('translations');
-            if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries])) {
+            if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries, 'uploadVolume' => $selectedVolume])) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
             } else {
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Setting saved.'));
