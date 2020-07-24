@@ -244,6 +244,12 @@ class SettingsController extends Controller
         	];
         }, $allVolumes);
 
+        // Add default temp uploads option
+        array_unshift($variables['volumeOptions'], [
+            'label' => 'Temp Uploads',
+            'value' => 0,
+        ]);
+
         $this->renderTemplate('translations/settings/configuration-options', $variables);
     }
 
