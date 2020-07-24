@@ -1711,7 +1711,6 @@ class BaseController extends Controller
 
             $element = Craft::$app->getElements()->getElementById($file->elementId);
 
-            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
             if ($element instanceof Entry) {
                 // Now we can get the element
                 if ($file->status == 'complete') {
@@ -1727,6 +1726,8 @@ class BaseController extends Controller
                 $element = Translations::$plugin->categoryRepository->getCategoryById($file->elementId);
                 $data['entryName'] = $element->title;
             }
+
+            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
 
             // Create data array
             $data['entryId'] = $element->id;
