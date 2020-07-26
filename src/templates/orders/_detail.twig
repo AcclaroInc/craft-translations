@@ -305,12 +305,14 @@
                                                 </div>
                                             </td>
                                             <td>
+                                                {% set show_visual = 1 %}
                                                 {% if element.className == 'craft\\elements\\GlobalSet' %}
                                                     {{ 'Globals' }}
                                                 {% elseif element.className == 'craft\\elements\\Category' %}
                                                     {{ 'Category' }}
                                                 {% else %}
                                                     {{ element.section.name }}
+                                                    {% set show_visual = 0 %}
                                                 {% endif %}
 
                                             </td>
@@ -384,7 +386,7 @@
                                                         <tr>
                                                             <td>
                                                                 {% if file.status in ['complete', 'published'] %}
-                                                                    <a href="{{ url('translations/orders/get-file-diff') }}/{{ file.id }}" data-file-id="{{ file.id }}" class="view-diff" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
+                                                                    <a href="{{ url('translations/orders/get-file-diff') }}/{{ file.id }}" data-file-id="{{ file.id }}" data-show-visual="{{ show_visual }}"  class="view-diff" data-icon="view" title="{{ 'View diff'|t }}"> {{ 'View'|t }} </a>
                                                                 {% else %}
                                                                     --
                                                                 {% endif %}
@@ -465,11 +467,11 @@
                         <div id="content-container" >
                             <nav id="acc-tabs">
                                 <ul>
-                                    <li data-id="xml">
-                                        <a id="tab-xml" class="tab sel tab-xml" href="javascript:void(0)" title="XML">XML</a>
+                                    <li data-id="visual" id="visual-li">
+                                        <a id="tab-visual" class="tab sel tab-visual" href="javascript:void(0)" title="Visual">Visual</a>
                                     </li>
-                                    <li data-id="visual">
-                                        <a id="tab-visual" class="tab tab-visual" href="javascript:void(0)" title="Visual">Visual</a>
+                                    <li data-id="xml">
+                                        <a id="tab-xml" class="tab tab-xml" href="javascript:void(0)" title="XML">XML</a>
                                     </li>
                                 </ul>
                             </nav>
