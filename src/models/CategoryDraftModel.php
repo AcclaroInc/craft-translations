@@ -72,6 +72,20 @@ class CategoryDraftModel extends Category
         return parent::getFieldLayout();
     }
 
+    public function getFieldValue( $fieldHandle )
+    {
+        $category = $this->getCategory();
+        
+        return $category->getFieldValue($fieldHandle);
+    }
+
+    public function setFieldValues( $post )
+    {
+        $category = $this->getCategory();
+        
+        return $globacategorylSet->setFieldValue($post);
+    }
+
     public function getHandle()
     {
         return $this->getCategory()->handle;

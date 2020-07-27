@@ -80,6 +80,20 @@ class GlobalSetDraftModel extends GlobalSet
         return $globalSet->getFieldLayout();
     }
 
+    public function getFieldValue( $fieldHandle )
+    {
+        $globalSet = $this->getGlobalSet();
+        
+        return $globalSet->getFieldValue($fieldHandle);
+    }
+    
+    public function setFieldValues( $post )
+    {
+        $globalSet = $this->getGlobalSet();
+        
+        return $globalSet->setFieldValue($post);
+    }
+
     public function getHandle()
     {
         return $this->getGlobalSet()->handle;
