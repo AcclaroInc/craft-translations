@@ -93,7 +93,7 @@ class CategoryDraftModel extends Category
 
     public static function populateModel($attributes)
     {
-        if ($attributes instanceof CategoryDraftRecordß) {
+        if ($attributes instanceof CategoryDraftRecord) {
             $attributes = $attributes->getAttributes();
         }
 

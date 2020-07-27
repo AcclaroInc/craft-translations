@@ -303,6 +303,8 @@ Craft.Translations.OrderDetail = {
             //var file_id = $el.attr('data-file-id');
             var location = $el.attr('href');
 
+            var show_visual = $el.data("show-visual");
+
             if (!modal) {
                 modal = createModal();
             }
@@ -332,7 +334,13 @@ Craft.Translations.OrderDetail = {
                         if (!modal) {
                             modal = createModal();
                         } else {
-                            $('.tab-xml').click();
+                            if (!show_visual) {
+                                $('.tab-visual').click();
+                            } else {
+                                $('.tab-xml').click();
+                                $('#visual-li').addClass('disabled');
+                                $('#tab-visual').off('click');
+                            }
                         }
                         // Show the modal
                         modal.show();

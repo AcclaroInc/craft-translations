@@ -187,7 +187,7 @@ class CategoryDraftRepository
     public function publishDraft(Category $draft)
     {
         $category = Craft::$app->categories->getCategoryById($draft->categoryId, $draft->site);
-        
+        $category->title = $draft->title;
         $category->setFieldValues(Translations::$plugin->elementTranslator->toPostArray($draft));
         
         $success = Craft::$app->elements->saveElement($category);

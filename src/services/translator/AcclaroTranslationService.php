@@ -151,7 +151,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
 
-        if ($draft instanceof Entry) {
+        if ($draft instanceof Entry || $draft instanceof Category) {
             if (isset($targetData['title'])) {
                 $draft->title = $targetData['title'];
             }
