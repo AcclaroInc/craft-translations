@@ -91,7 +91,7 @@ class GlobalSetDraftModel extends GlobalSet
     {
         $globalSet = $this->getGlobalSet();
         
-        return $globalSet->setFieldValue($post);
+        return $globalSet->setFieldValues($post);
     }
 
     public function getHandle()

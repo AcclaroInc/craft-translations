@@ -83,7 +83,7 @@ class CategoryDraftModel extends Category
     {
         $category = $this->getCategory();
         
-        return $globacategorylSet->setFieldValue($post);
+        return $globacategorylSet->setFieldValues($post);
     }
 
     public function getHandle()
