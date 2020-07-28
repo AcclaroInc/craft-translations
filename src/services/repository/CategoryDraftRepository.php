@@ -152,7 +152,6 @@ class CategoryDraftRepository
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
-                $data['fields'][$field->id] = $content[$field->handle];
                 if (isset($content[$field->handle]) && $content[$field->handle] !== null) { 
                     $data['fields'][$field->id] = $content[$field->handle];
                 }
