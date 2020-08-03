@@ -30,7 +30,7 @@ class CategoryRepository
 
     public function getCategoryById($id, $site=null)
     {
-        return Craft::$app->getCategories()->getCategoryById($id, $site);;
+        return Craft::$app->getCategories()->getCategoryById($id, $site);
     }
 
     public function saveCategory(Category $category)

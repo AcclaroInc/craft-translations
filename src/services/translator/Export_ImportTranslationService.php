@@ -118,12 +118,23 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->slug = $targetData['slug'];
             }
         }
-
-        $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
-
-        $draft->setFieldValues($post);
-
         $draft->siteId = $targetSite;
+        
+        // echo '<pre>';
+        // echo "//======================================================================<br>// return targetData updateDraftFromXml()<br>//======================================================================<br>";
+        // var_dump($targetData);
+        // // var_dump($draft);
+        // echo '</pre>';
+        // die;
+        $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+        // $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
+        // echo '<pre>';
+        // echo "//======================================================================<br>// return post updateDraftFromXml()<br>//======================================================================<br>";
+        // var_dump($post);
+        // echo '</pre>';
+        // die;
+        
+        $draft->setFieldValues($post);
 
         // save the draft
         if ($draft instanceof Entry) {
@@ -138,7 +149,28 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         } elseif ($draft instanceof GlobalSet) {
             Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
         } elseif ($draft instanceof Category) {
-            Translations::$plugin->categoryDraftRepository->saveDraft($draft);
+            Translations::$plugin->categoryDraftRepository->saveDraft($draft, $post);
+            
+            // $behavior = $draft->getBehavior('draft');
+            // $behavior->mergingChanges = true;
+            // Craft::$app->getElements()->saveElement($draft, false, false);
+            // $behavior->mergingChanges = false;
+            // Craft::$app->getContent()->saveContent($draft);
+            // echo '<pre>';
+            // echo "//======================================================================<br>// return draft after saveDraft()<br>//======================================================================<br>";
+            // echo '<pre>';
+            // // var_dump($post);
+            // var_dump($draft->getBehavior('customFields'));
+            // echo '</pre>';
+            
+            // $content = Translations::$plugin->elementTranslator->toPostArray($draft);
+            // echo '<pre>';
+            // echo "//======================================================================<br>// return content after toPostArray()<br>//======================================================================<br>";
+            // echo '<pre>';
+            // var_dump($content);
+            // echo '</pre>';
+            
+            // die;
         }
 
         return true;

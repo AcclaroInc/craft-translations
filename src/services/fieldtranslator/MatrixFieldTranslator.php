@@ -29,11 +29,14 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         $blocks = $element->getFieldValue($field->handle)->all();
 
         if ($blocks) {
+            
+            $new = 0;
             foreach ($blocks as $block) {
+                $blockId = $block->id ?? 'new' . ++$new;
                 $blockSource = $elementTranslator->toTranslationSource($block);
 
                 foreach ($blockSource as $key => $value) {
-                    $key = sprintf('%s.%s.%s', $field->handle, $block->id, $key);
+                    $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
 
                     $source[$key] = $value;
                 }
@@ -64,9 +67,11 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         foreach ($blocks as $i => $block) {
             $blockId = $block->id ?? 'new' . ++$new;
             $post[$fieldHandle][$blockId] = array(
-                'type' => $block->getType()->handle,
-                'enabled' => $block->enabled,
-                'fields' => $elementTranslator->toPostArray($block),
+                'type'              => $block->getType()->handle,
+                'enabled'           => $block->enabled,
+                // 'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,
+                // 'siteId'            => $element->siteId,
+                'fields'            => $elementTranslator->toPostArray($block),
             );
         }
         return $post;
@@ -78,7 +83,10 @@ class MatrixFieldTranslator extends GenericFieldTranslator
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
     {
         $fieldHandle = $field->handle;
-
+        
+        // echo '<pre>';
+        // echo "//======================================================================<br>// matrix translator toPostArrayFromTranslationTarget()<br>//======================================================================<br>";
+        // var_dump($fieldData);
         $blocks = $element->getFieldValue($fieldHandle)->all();
         
         $post = array(
@@ -89,8 +97,22 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         
         $new = 0;
         foreach ($blocks as $i => $block) {
+            // echo '<pre>';
+            //     echo "//======================================================================<br>// blocks()<br>//======================================================================<br>";
+            // var_dump($block->id);
             $blockId = $block->id ?? 'new' . ++$new;
+            $block->id = $blockId;
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
+            
+            // echo '<pre>';
+            // echo "//======================================================================<br>// fieldHandle()<br>//======================================================================<br>";
+            // var_dump($block->id);
+            // var_dump($block->getType()->handle);
+            // var_dump($block->getAttributes()['enabled']);
+            // var_dump(isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null);
+            // var_dump($targetSite);
+            // var_dump($elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true));
+            
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
@@ -99,6 +121,9 @@ class MatrixFieldTranslator extends GenericFieldTranslator
                 'fields'            => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true),
             );
         }
+        // echo '<pre>';
+        // echo "//======================================================================<br>// post<br>//======================================================================<br>";
+        // var_dump($post);
         
         return $post;
     }

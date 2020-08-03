@@ -19,7 +19,8 @@ use craft\validators\DateTimeValidator;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use craft\behaviors\FieldLayoutBehavior;
-use acclaro\translations\records\CategoryDraftRecordß;
+use craft\behaviors\CustomFieldBehavior;
+use acclaro\translations\records\CategoryDraftRecord;
 
 use Craft;
 use craft\base\Model;
@@ -44,6 +45,8 @@ class CategoryDraftModel extends Category
     public $site;
 
     public $data;
+    
+    public $sourceSite;
 
     /**
      * @param array|null    $attributes
@@ -66,25 +69,53 @@ class CategoryDraftModel extends Category
         return $rules;
     }
 
-    public function getFieldLayout()
-    {
+    // public function getFieldLayout()
+    // {
         
-        return parent::getFieldLayout();
-    }
+    //     return parent::getFieldLayout();
+    // }
 
-    public function getFieldValue( string $fieldHandle )
-    {
-        $category = $this->getCategory();
+    // public function getFieldValue( string $fieldHandle )
+    // {
+    //     $category = $this->getCategory();
         
-        return $category->getFieldValue($fieldHandle);
-    }
+    //     return $category->getFieldValue($fieldHandle);
+    // }
+    // public function getFieldValue(string $fieldHandle)
+    // {
+    //     // Make sure the value has been normalized
+    //     // $this->normalizeFieldValue($fieldHandle);
 
-    public function setFieldValues( array $post )
-    {
-        $category = $this->getCategory();
+    //     return $this->getBehavior('customFields')->$fieldHandle;
+    // }
+
+    // public function setFieldValues( array $post )
+    // {
+    //     $category = $this->getCategory();
         
-        return $category->setFieldValues($post);
-    }
+    //     // return $category->setFieldValues($post);
+    //     return parent::setFieldValues($post);
+    // }
+    // public function setFieldValues(array $values)
+    // {
+    //     foreach ($values as $fieldHandle => $value) {
+    //         $this->setFieldValue($fieldHandle, $value);
+    //     }
+    // }
+
+    // public function setFieldValue(string $fieldHandle, $value)
+    // {
+    //     $behavior = $this->getBehavior('customFields');
+    //     $behavior->$fieldHandle = $value;
+
+    //     // Don't assume that $value has been normalized
+    //     // unset($this->_normalizedFieldValues[$fieldHandle]);
+
+    //     // If the element is fully initialized, mark the value as dirty
+    //     // if ($this->_initialized) {
+    //     //     $this->_dirtyFields[$fieldHandle] = true;
+    //     // }
+    // }
 
     public function getHandle()
     {
@@ -131,6 +162,11 @@ class CategoryDraftModel extends Category
         } else {
             $this->_category = Translations::$plugin->categoryRepository->getCategoryById($this->categoryId); // this works for edit draft
         }
+        
+        // echo '<pre>';
+        // echo "//======================================================================<br>// return getCategory()<br>//======================================================================<br>";
+        // var_dump($this->_category);
+        // echo '</pre>';
 
         return $this->_category;
     }
@@ -159,6 +195,10 @@ class CategoryDraftModel extends Category
     public function behaviors()
     {
         $behaviors = parent::behaviors();
+        $behaviors['customFields'] = [
+            'class' => CustomFieldBehavior::class,
+            'hasMethods' => true,
+        ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
             'elementType' => Category::class,

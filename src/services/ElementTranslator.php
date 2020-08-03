@@ -50,6 +50,11 @@ class ElementTranslator
             $source = array_merge($source, $fieldSource);
         }
 
+        // echo '</pre>';
+        // echo "//======================================================================<br>// return source toTranslationSource()<br>//======================================================================<br>";
+        // var_dump($source);
+        // echo '</pre>';
+
         return $source;
     }
 
@@ -94,36 +99,65 @@ class ElementTranslator
     public function toPostArrayFromTranslationTarget(Element $element, $sourceSite, $targetSite, $targetData, $includeNonTranslatable = false)
     {
         $post = array();
-        foreach($element->getFieldLayout()->getFields() as $layoutField) {
+        // echo '<pre>';
+        // echo "//======================================================================<br>// toPostArrayFromTranslationTarget()<br>//======================================================================<br>";
+        // var_dump($element->id);
+        // echo "//======================================================================<br>// sourceSite()<br>//======================================================================<br>";
+        // var_dump($sourceSite);
+        // echo "//======================================================================<br>// targetSite()<br>//======================================================================<br>";
+        // var_dump($targetSite);
+        // echo "//======================================================================<br>// field layout count()<br>//======================================================================<br>";
+        // var_dump(count($element->getFieldLayout()->getFields()));
+        
+        foreach($element->getFieldLayout()->getFields() as $key => $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-
+            // echo "//======================================================================<br>// field<br>//======================================================================<br>";
+            // var_dump($key);
+            // var_dump($field);
+            
             $fieldHandle = $field->handle;
             
             $fieldType = $field;
-
+            
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
-
+            
             if (!$translator) {
                 if ($includeNonTranslatable) {
                     $post[$fieldHandle] = $element->$fieldHandle;
                 }
-
+                
                 continue;
             }
-
+            
+            // echo '<pre>';
+            // echo "//======================================================================<br>// targetData<br>//======================================================================<br>";
+            // var_dump($targetData);
+            // echo "//======================================================================<br>// field handle<br>//======================================================================<br>";
+            // var_dump($fieldHandle);
+            // echo "//======================================================================<br>// translator<br>//======================================================================<br>";
+            // var_dump($translator);
             if (isset($targetData[$fieldHandle])) {
+                // echo 'BLAH1';
                 $fieldPost = $translator->toPostArrayFromTranslationTarget($this, $element, $field, $sourceSite, $targetSite, $targetData[$fieldHandle]);
             } else {
+                // echo 'BLAH12';
                 $fieldPost = $translator->toPostArray($this, $element, $field, $sourceSite);
             }
-
+            
+            
             if (!is_array($fieldPost)) {
                 $fieldPost = array($fieldHandle => $fieldPost);
             }
-
+            
             $post = array_merge($post, $fieldPost);
+            // var_dump($fieldPost);
+            // echo '</pre>';
         }
-
+        
+        // echo '<pre>';
+        // echo "//======================================================================<br>// post toPostArrayFromTranslationTarget()<br>//======================================================================<br>";
+        // var_dump($post);
+        // echo '</pre>';
         return $post;
     }
 

@@ -229,7 +229,7 @@ class DraftRepository
                 $draft = $this->createGlobalSetDraft($element, $site, $order->title);
                 break;
             case Category::class:
-                $draft = $this->createCategoryDraft($element, $site, $order->title);
+                $draft = $this->createCategoryDraft($element, $site, $order->title, $order->sourceSite);
                 break;
         }
 
@@ -272,15 +272,21 @@ class DraftRepository
                 $file->previewUrl
             );
             $file->wordCount = isset($wordCounts[$element->id]) ? $wordCounts[$element->id] : 0;
-
+            
             Translations::$plugin->fileRepository->saveFile($file);
-
+            // echo '<pre>';
+            // echo "//======================================================================<br>// return file createDrafts()<br>//======================================================================<br>";
+            // var_dump($file);
+            // echo '</pre>';
+            // die;
+            
+            
             // Delete draft elements that are automatically propagated for other sites
             // Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
-
+            
             return $file;
         } catch (Exception $e) {
-
+            
             $file->orderId = $order->id;
             $file->elementId = $draft->sourceId;
             $file->draftId = $draft->draftId;
@@ -288,9 +294,9 @@ class DraftRepository
             $file->targetSite = $targetSite;
             $file->status = 'failed';
             $file->wordCount = isset($wordCounts[$draft->id]) ? $wordCounts[$draft->id] : 0;
-
+            
             Translations::$plugin->fileRepository->saveFile($file);
-
+            
             return false;
         }
 
@@ -349,20 +355,36 @@ class DraftRepository
 
     }
 
-    public function createCategoryDraft(Category $category, $site, $orderName)
+    public function createCategoryDraft(Category $category, $site, $orderName, $sourceSite)
     {
         try {
+            
+            // $newAttributes = [
+            //     'siteId' => $site
+            // ];
             $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
+            
+            // $draft->setAttributes($newAttributes, false);
+            
             $draft->name = sprintf('%s [%s]', $orderName, $site);
             $draft->id = $category->id;
             $draft->title = $category->title;
             $draft->site = $site;
+            // $draft->siteId = $site;
+            $draft->sourceSite = $sourceSite;
 
             $post = Translations::$plugin->elementTranslator->toPostArray($category);
 
             $draft->setFieldValues($post);
+            
+            // echo '<pre>';
+            // echo "//======================================================================<br>// post createCategoryDraft()<br>//======================================================================<br>";
+            // var_dump($post);
+            // var_dump($draft);
+            // echo '</pre>';
+            // die;
+            
             Translations::$plugin->categoryDraftRepository->saveDraft($draft);
-
             return $draft;
         } catch (Exception $e) {
 
@@ -427,6 +449,11 @@ class DraftRepository
 
                 // keep original category name
                 $draft->name = $element->title;
+                $draft->site = $file->targetSite;
+                // echo '<pre>';
+                // echo "//======================================================================<br>// return draft during applyDrafts()<br>//======================================================================<br>";
+                // echo '<pre>';
+                // var_dump($draft);
 
                 if ($draft) {
                     $success = Translations::$plugin->categoryDraftRepository->publishDraft($draft);

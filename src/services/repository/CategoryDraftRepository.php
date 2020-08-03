@@ -12,6 +12,7 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\fields\Matrix;
+use craft\base\Element;
 use craft\elements\Category;
 use craft\base\ElementInterface;
 use acclaro\translations\Translations;
@@ -60,6 +61,12 @@ class CategoryDraftRepository
             $categoryDraft->setFieldValues($post);
         }
 
+        // echo '<pre>';
+        // echo "//======================================================================<br>// categoryDraft getDraftById()<br>//======================================================================<br>";
+        // var_dump($categoryDraft);
+        // echo '</pre>';
+        // die;
+
         return $categoryDraft;
     }
     
@@ -107,7 +114,7 @@ class CategoryDraftRepository
         return $record;
     }
 
-    public function saveDraft(Category $draft)
+    public function saveDraft(Category $draft, array $content = [])
     {
         $record = $this->getDraftRecord($draft);
 
@@ -140,7 +147,34 @@ class CategoryDraftRepository
             $category = Craft::$app->getCategories()->getCategoryById($draft->id, $draft->site);
             $draft->groupId = $category->groupId;
         }
-        $content = Translations::$plugin->elementTranslator->toPostArray($draft);
+
+        $draft->siteId = $draft->site;
+        
+        // echo '<pre>';
+        // echo "//======================================================================<br>// return draft saveDraft()<br>//======================================================================<br>";
+        // echo '<pre>';
+        // // var_dump($draft);
+        // var_dump($draft);
+        // // var_dump($draft instanceof Element);
+        // // var_dump($draft->getFieldLayout()->getFields());
+        // echo '</pre>';
+        // // die;
+        
+        $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
+
+        // echo '<pre>';
+        // echo "//======================================================================<br>// return content saveDraft()<br>//======================================================================<br>";
+        // var_dump($draft);
+        // var_dump($content);
+        // echo '</pre>';
+        // die;
+        
+        // $draft->id = null;
+        // $behavior = $draft->getBehavior('draft');
+        // $behavior->mergingChanges = true;
+        // $el = Craft::$app->getElements()->saveElement($draft, false, false);
+        // $behavior->mergingChanges = false;
+        // $draft->id = $draft->id;
 
         $nestedFieldType = [
             'craft\fields\Matrix',
@@ -159,7 +193,7 @@ class CategoryDraftRepository
         }
 
         $record->data = $data;
-        
+
         $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
 
         try {
@@ -185,10 +219,22 @@ class CategoryDraftRepository
 
     public function publishDraft(Category $draft)
     {
+        $post = [];
+
+        foreach ($draft->getDirtyFields() as $key => $fieldHandle) {
+            $post[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
+        }
+
         $category = Craft::$app->categories->getCategoryById($draft->categoryId, $draft->site);
         $category->title = $draft->title;
-        $category->setFieldValues(Translations::$plugin->elementTranslator->toPostArray($draft));
+        $category->setFieldValues($post);
         
+        // echo '<pre>';
+        // echo "//======================================================================<br>// return category after publishDraft()<br>//======================================================================<br>";
+        // echo '<pre>';
+        // var_dump($category);
+        // echo '</pre>';
+        // die;
         $success = Craft::$app->elements->saveElement($category);
         
         if (!$success) {
