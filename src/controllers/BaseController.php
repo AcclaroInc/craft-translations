@@ -1723,7 +1723,7 @@ class BaseController extends Controller
                 $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
             } else if ($element instanceof GlobalSet) {
                 $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId);
-                $countElement = Translations::$plugin->globalSetRepository->getSetById($file->targetSite);
+                $countElement = Translations::$plugin->globalSetRepository->getSetById($file->elementId, $file->targetSite);
                 $data['entryName'] = $element->name;
             } else if ($element instanceof Category) {
                 $element = Translations::$plugin->categoryRepository->getCategoryById($file->elementId);
