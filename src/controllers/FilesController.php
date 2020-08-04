@@ -343,7 +343,7 @@ class FilesController extends Controller
 
             if ($draft) {
                 $response = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
-                $message = 'Draft applied for '. '"'. $element->name .'"';
+                $message = 'Draft applied for '. '"'. $draft->name .'"';
             } else {
                 $response = false;
             }
@@ -356,7 +356,7 @@ class FilesController extends Controller
 
             if ($draft) {
                 $response = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
-                $message = 'Draft applied for '. '"'. $element->name .'"';
+                $message = 'Draft applied for '. '"'. $draft->name .'"';
             } else {
                 $response = false;
             }
