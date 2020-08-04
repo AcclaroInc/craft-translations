@@ -26,6 +26,16 @@
             on: chkDuplicateEntries,
         }) }}
 
+        {{ forms.selectField({
+            label: "Upload Volume"|t('app'),
+            instructions: "Specify an Asset Volume to use for uploads."|t('app'),
+            id: 'uploadVolume',
+            name: 'uploadVolume',
+            options: volumeOptions,
+            value: uploadVolume ?? 0,
+            toggle: true
+        }) }}
+
         <div class="buttons">
             <input type="submit" id="save-configuration" class="btn" value="{{ "Save"|t('app') }}" />
         </div>

@@ -29,6 +29,10 @@ use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\ImportFiles;
 use acclaro\translations\services\repository\SiteRepository;
+use craft\elements\Asset;
+use craft\errors\UploadFailedException;
+use craft\helpers\ArrayHelper;
+use yii\base\ErrorException;
 
 /**
  * @author    Acclaro
@@ -172,7 +176,6 @@ class FilesController extends Controller
         //Track error and success messages.
         $message = "";
 
-        // Upload the file and drop it in the temporary folder
         $file = UploadedFile::getInstanceByName('zip-upload');
 
         //Get Order Data
@@ -192,76 +195,67 @@ class FilesController extends Controller
                     $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
                 }
 
-                $fileName = Assets::prepareAssetName($file->name, true, true);
-                $folderPath = Craft::$app->path->getTempAssetUploadsPath().'/';
-                FileHelper::clearDirectory($folderPath);
-
                 //If is a Zip File
                 if ($file->extension === 'zip') {
                     //Unzip File ZipArchive
                     $zip = new \ZipArchive();
-                    if (move_uploaded_file($file->tempName, $folderPath.$fileName)) {
 
-                        if ($zip->open($folderPath.$fileName)) {
-                            $xmlPath = $folderPath.$orderId;
+                    $assetPath = $file->saveAsTempFile();
 
-                            $zip->extractTo($xmlPath);
+                    if ($zip->open($assetPath)) {
+                        $xmlPath = $assetPath.$orderId;
 
-                            $fileName = preg_replace('/\\.[^.\\s]{3,4}$/', '', $fileName);
+                        $zip->extractTo($xmlPath);
 
-                            $files = FileHelper::findFiles($folderPath.$orderId);
+                        $fileName = preg_replace('/\\.[^.\\s]{3,4}$/', '', Assets::prepareAssetName($file->name));
 
-                            foreach ($files as $key => $file) {
-                                rename($file, $folderPath.$orderId.'/'.pathinfo($file)['basename']);
+                        $files = FileHelper::findFiles($assetPath.$orderId);
+
+                        $assetIds = [];
+
+                        foreach ($files as $key => $file) {
+                            if (! is_bool(strpos($file, '__MACOSX'))) {
+                                unlink($file);
+
+                                continue;
                             }
 
-                            FileHelper::removeDirectory($folderPath.$orderId.'/'.$fileName);
+                            $filename = Assets::prepareAssetName($file);
 
-                            $zip->close();
-                            if ($totalWordCount > self::WORDCOUNT_LIMIT) {
-                                $job = Craft::$app->queue->push(new ImportFiles([
-                                    'description' => 'Updating translation drafts',
-                                    'orderId' => $orderId,
-                                    'totalFiles' => $total_files,
-                                    'xmlPath' => $xmlPath,
-                                ]));
+                            $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
 
-                                if ($job) {
-                                    $params = [
-                                        'id' => (int) $job,
-                                        'notice' => 'Done updating translation drafts',
-                                        'url' => 'translations/orders/detail/'. $orderId
-                                    ];
-                                    Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
-                                }
-                            } else {
-                                $fileSvc = new ImportFiles();
-                                $dir = new \DirectoryIterator($xmlPath);
-                                foreach ($dir as $xml)
-                                {
-                                    //Process XML Files
-                                    $fileSvc->processFile($xml, $xmlPath, $this->order);
-                                }
+                            $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
+
+                            $pathInfo = pathinfo($file);
+
+                            $compatibleFilename = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.txt';
+
+                            rename($file, $compatibleFilename);
+
+                            $asset = new Asset();
+                            $asset->tempFilePath = $compatibleFilename;
+                            $asset->filename = $compatibleFilename;
+                            $asset->newFolderId = $folder->id;
+                            $asset->volumeId = $folder->volumeId;
+                            $asset->avoidFilenameConflicts = true;
+                            $asset->uploaderId = Craft::$app->getUser()->getId();
+                            $asset->setScenario(Asset::SCENARIO_CREATE);
+
+                            if (! Craft::$app->getElements()->saveElement($asset)) {
+                                $errors = $asset->getFirstErrors();
+
+                                return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                             }
 
-                            // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
-                            $this->showUserMessages("File uploaded successfully: $fileName", true);
-                        } else {
-                            $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
+                            $assetIds[] = $asset->id;
                         }
-                    } else {
-                        $this->showUserMessages("Unable to upload file: $fileName");
-                    }
-                } elseif ($file->extension === 'xml') {
-                    $xmlPath = $folderPath.$orderId;
 
-                    mkdir($xmlPath, 0777, true);
+                        FileHelper::removeDirectory($assetPath.$orderId.'/'.$fileName);
 
-                    //Upload File
-                    if( move_uploaded_file($file->tempName, $xmlPath.'/'.$fileName)) {
+                        $zip->close();
 
+                        // Process files via job or directly based on order "size"
                         if ($totalWordCount > self::WORDCOUNT_LIMIT) {
-                            // This generally executes too fast for page to refresh
                             $job = Craft::$app->queue->push(new ImportFiles([
                                 'description' => 'Updating translation drafts',
                                 'orderId' => $orderId,
@@ -287,10 +281,65 @@ class FilesController extends Controller
                             }
                         }
 
+                        // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
                         $this->showUserMessages("File uploaded successfully: $fileName", true);
                     } else {
-                        $this->showUserMessages("Unable to upload file: $fileName");
+                        $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
                     }
+                } elseif ($file->extension === 'xml') {
+                    $filename = Assets::prepareAssetName($file->name);
+
+                    $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
+
+                    $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
+
+                    $compatibleFilename = $file->tempName . '.txt';
+
+                    rename($file->tempName, $compatibleFilename);
+
+                    $asset = new Asset();
+                    $asset->tempFilePath = $compatibleFilename;
+                    $asset->filename = $compatibleFilename;
+                    $asset->newFolderId = $folder->id;
+                    $asset->volumeId = $folder->volumeId;
+                    $asset->avoidFilenameConflicts = true;
+                    $asset->uploaderId = Craft::$app->getUser()->getId();
+                    $asset->setScenario(Asset::SCENARIO_CREATE);
+
+                    if (! Craft::$app->getElements()->saveElement($asset)) {
+                        $errors = $asset->getFirstErrors();
+
+                        return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                    }
+
+                    // Process files via job or directly based on order "size"
+                    if ($totalWordCount > self::WORDCOUNT_LIMIT) {
+                        $job = Craft::$app->queue->push(new ImportFiles([
+                            'description' => 'Updating translation drafts',
+                            'orderId' => $orderId,
+                            'totalFiles' => $total_files,
+                            'xmlPath' => $xmlPath,
+                        ]));
+
+                        if ($job) {
+                            $params = [
+                                'id' => (int) $job,
+                                'notice' => 'Done updating translation drafts',
+                                'url' => 'translations/orders/detail/'. $orderId
+                            ];
+                            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                        }
+                    } else {
+                        $fileSvc = new ImportFiles();
+                        $dir = new \DirectoryIterator($xmlPath);
+                        foreach ($dir as $xml)
+                        {
+                            //Process XML Files
+                            $fileSvc->processFile($xml, $xmlPath, $this->order);
+                        }
+                    }
+
+                    $this->showUserMessages("File uploaded successfully: {$file->name}", true);
                 } else {
                     $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
                 }
