@@ -61,12 +61,6 @@ class CategoryDraftRepository
             $categoryDraft->setFieldValues($post);
         }
 
-        // echo '<pre>';
-        // echo "//======================================================================<br>// categoryDraft getDraftById()<br>//======================================================================<br>";
-        // var_dump($categoryDraft);
-        // echo '</pre>';
-        // die;
-
         return $categoryDraft;
     }
     
@@ -150,34 +144,11 @@ class CategoryDraftRepository
 
         $draft->siteId = $draft->site;
         
-        // echo '<pre>';
-        // echo "//======================================================================<br>// return draft saveDraft()<br>//======================================================================<br>";
-        // echo '<pre>';
-        // // var_dump($draft);
-        // var_dump($draft);
-        // // var_dump($draft instanceof Element);
-        // // var_dump($draft->getFieldLayout()->getFields());
-        // echo '</pre>';
-        // // die;
-        
         $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
-
-        // echo '<pre>';
-        // echo "//======================================================================<br>// return content saveDraft()<br>//======================================================================<br>";
-        // var_dump($draft);
-        // var_dump($content);
-        // echo '</pre>';
-        // die;
-        
-        // $draft->id = null;
-        // $behavior = $draft->getBehavior('draft');
-        // $behavior->mergingChanges = true;
-        // $el = Craft::$app->getElements()->saveElement($draft, false, false);
-        // $behavior->mergingChanges = false;
-        // $draft->id = $draft->id;
 
         $nestedFieldType = [
             'craft\fields\Matrix',
+            'craft\fields\Assets',
             'verbb\supertable\fields\SuperTableField',
             'benf\neo\Field'
         ];
@@ -229,12 +200,6 @@ class CategoryDraftRepository
         $category->title = $draft->title;
         $category->setFieldValues($post);
         
-        // echo '<pre>';
-        // echo "//======================================================================<br>// return category after publishDraft()<br>//======================================================================<br>";
-        // echo '<pre>';
-        // var_dump($category);
-        // echo '</pre>';
-        // die;
         $success = Craft::$app->elements->saveElement($category);
         
         if (!$success) {

@@ -18,6 +18,7 @@ use craft\validators\DateTimeValidator;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\records\GlobalSetDraftRecord;
+use craft\behaviors\CustomFieldBehavior;
 use craft\behaviors\FieldLayoutBehavior;
 use craft\behaviors\DraftBehavior;
 
@@ -78,20 +79,6 @@ class GlobalSetDraftModel extends GlobalSet
         $globalSet = $this->getGlobalSet();
         
         return $globalSet->getFieldLayout();
-    }
-
-    public function getFieldValue( $fieldHandle )
-    {
-        $globalSet = $this->getGlobalSet();
-        
-        return $globalSet->getFieldValue($fieldHandle);
-    }
-    
-    public function setFieldValues( $post )
-    {
-        $globalSet = $this->getGlobalSet();
-        
-        return $globalSet->setFieldValues($post);
     }
 
     public function getHandle()
@@ -167,6 +154,10 @@ class GlobalSetDraftModel extends GlobalSet
     public function behaviors()
     {
         $behaviors = parent::behaviors();
+        $behaviors['customFields'] = [
+            'class' => CustomFieldBehavior::class,
+            'hasMethods' => false,
+        ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
             'elementType' => GlobalSet::class,

@@ -107,72 +107,74 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
     public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite, $order, $file_name)
     {
+        // Get the data from the XML files
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
 
-        if ($draft instanceof Entry || $draft instanceof Category) {
-            if (isset($targetData['title'])) {
-                $draft->title = $targetData['title'];
-            }
+        switch (true) {
+            // Update Entry Drafts
+            case $draft instanceof Entry:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
+                
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
+                
+                
+                $draft->setFieldValues($post);
+                
+                $draft->siteId = $targetSite;
+                
+                $res = Translations::$plugin->draftRepository->saveDraft($draft);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
 
-            if (isset($targetData['slug'])) {
-                $draft->slug = $targetData['slug'];
-            }
+                    return false;
+                }
+                break;
+            
+            // Update Category Drafts
+            case $draft instanceof Category:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
+                $draft->siteId = $targetSite;
+                
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+                $draft->setFieldValues($post);
+
+                $res = Translations::$plugin->categoryDraftRepository->saveDraft($draft, $post);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
+
+                    return false;
+                }
+                break;
+            
+            // Update GlobalSet Drafts
+            case $draft instanceof GlobalSet:
+                $draft->siteId = $targetSite;
+               
+                // $element->siteId = $targetSite;
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+                $draft->setFieldValues($post);
+
+                $res = Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $post);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
+
+                    return false;
+                }
+                break;
+            default:
+                break;
         }
-        $draft->siteId = $targetSite;
         
-        // echo '<pre>';
-        // echo "//======================================================================<br>// return targetData updateDraftFromXml()<br>//======================================================================<br>";
-        // var_dump($targetData);
-        // // var_dump($draft);
-        // echo '</pre>';
-        // die;
-        $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
-        // $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
-        // echo '<pre>';
-        // echo "//======================================================================<br>// return post updateDraftFromXml()<br>//======================================================================<br>";
-        // var_dump($post);
-        // echo '</pre>';
-        // die;
-        
-        $draft->setFieldValues($post);
-
-        // save the draft
-        if ($draft instanceof Entry) {
-            $res = Translations::$plugin->draftRepository->saveDraft($draft);
-            if (!$res) {
-                $order->logActivity(
-                    sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
-                );
-
-                return false;
-            }
-        } elseif ($draft instanceof GlobalSet) {
-            Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
-        } elseif ($draft instanceof Category) {
-            Translations::$plugin->categoryDraftRepository->saveDraft($draft, $post);
-            
-            // $behavior = $draft->getBehavior('draft');
-            // $behavior->mergingChanges = true;
-            // Craft::$app->getElements()->saveElement($draft, false, false);
-            // $behavior->mergingChanges = false;
-            // Craft::$app->getContent()->saveContent($draft);
-            // echo '<pre>';
-            // echo "//======================================================================<br>// return draft after saveDraft()<br>//======================================================================<br>";
-            // echo '<pre>';
-            // // var_dump($post);
-            // var_dump($draft->getBehavior('customFields'));
-            // echo '</pre>';
-            
-            // $content = Translations::$plugin->elementTranslator->toPostArray($draft);
-            // echo '<pre>';
-            // echo "//======================================================================<br>// return content after toPostArray()<br>//======================================================================<br>";
-            // echo '<pre>';
-            // var_dump($content);
-            // echo '</pre>';
-            
-            // die;
-        }
-
         return true;
     }
 

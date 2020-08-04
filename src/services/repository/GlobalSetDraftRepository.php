@@ -104,7 +104,7 @@ class GlobalSetDraftRepository
         return $record;
     }
 
-    public function saveDraft(GlobalSet $draft)
+    public function saveDraft(GlobalSet $draft, array $content = [])
     {
         $record = $this->getDraftRecord($draft);
 
@@ -133,18 +133,19 @@ class GlobalSetDraftRepository
             'fields' => array(),
         );
 
-        $content = Translations::$plugin->elementTranslator->toPostArray($draft);
+        $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
 
         $nestedFieldType = [
             'craft\fields\Matrix',
+            'craft\fields\Assets',
             'verbb\supertable\fields\SuperTableField',
             'benf\neo\Field'
         ];
 
         foreach ($draft->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
+
             if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
-                $data['fields'][$field->id] = $content[$field->handle];
                 if (isset($content[$field->handle]) && $content[$field->handle] !== null) { 
                     $data['fields'][$field->id] = $content[$field->handle];
                 }
@@ -152,7 +153,7 @@ class GlobalSetDraftRepository
         }
 
         $record->data = $data;
-        
+
         $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
 
         try {
@@ -178,9 +179,15 @@ class GlobalSetDraftRepository
 
     public function publishDraft(GlobalSet $draft)
     {
+        $post = [];
+
         $globalSet = Craft::$app->globals->getSetById($draft->globalSetId, $draft->site);
+
+        foreach ($draft->getDirtyFields() as $key => $fieldHandle) {
+            $post[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
+        }
         
-        $globalSet->setFieldValues(Translations::$plugin->elementTranslator->toPostArray($draft));
+        $globalSet->setFieldValues($post);
         
         $success = Craft::$app->elements->saveElement($globalSet);
         

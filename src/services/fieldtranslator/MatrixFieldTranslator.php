@@ -84,46 +84,26 @@ class MatrixFieldTranslator extends GenericFieldTranslator
     {
         $fieldHandle = $field->handle;
         
-        // echo '<pre>';
-        // echo "//======================================================================<br>// matrix translator toPostArrayFromTranslationTarget()<br>//======================================================================<br>";
-        // var_dump($fieldData);
         $blocks = $element->getFieldValue($fieldHandle)->all();
         
         $post = array(
             $fieldHandle => array(),
         );
         
-        $fieldData = array_values($fieldData);        
-        
         $new = 0;
         foreach ($blocks as $i => $block) {
-            // echo '<pre>';
-            //     echo "//======================================================================<br>// blocks()<br>//======================================================================<br>";
-            // var_dump($block->id);
             $blockId = $block->id ?? 'new' . ++$new;
-            $block->id = $blockId;
-            $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
-            
-            // echo '<pre>';
-            // echo "//======================================================================<br>// fieldHandle()<br>//======================================================================<br>";
-            // var_dump($block->id);
-            // var_dump($block->getType()->handle);
-            // var_dump($block->getAttributes()['enabled']);
-            // var_dump(isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null);
-            // var_dump($targetSite);
-            // var_dump($elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true));
+            $blockData = isset($fieldData[$blockId]) ? $fieldData[$blockId] : array();
+            // $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array(); // Removed in v1.8.0
             
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
-                'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,
+                // 'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,
                 'siteId'            => $targetSite,
                 'fields'            => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true),
             );
         }
-        // echo '<pre>';
-        // echo "//======================================================================<br>// post<br>//======================================================================<br>";
-        // var_dump($post);
         
         return $post;
     }

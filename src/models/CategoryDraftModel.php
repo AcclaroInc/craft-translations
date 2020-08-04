@@ -69,53 +69,11 @@ class CategoryDraftModel extends Category
         return $rules;
     }
 
-    // public function getFieldLayout()
-    // {
+    public function getFieldLayout()
+    {
         
-    //     return parent::getFieldLayout();
-    // }
-
-    // public function getFieldValue( string $fieldHandle )
-    // {
-    //     $category = $this->getCategory();
-        
-    //     return $category->getFieldValue($fieldHandle);
-    // }
-    // public function getFieldValue(string $fieldHandle)
-    // {
-    //     // Make sure the value has been normalized
-    //     // $this->normalizeFieldValue($fieldHandle);
-
-    //     return $this->getBehavior('customFields')->$fieldHandle;
-    // }
-
-    // public function setFieldValues( array $post )
-    // {
-    //     $category = $this->getCategory();
-        
-    //     // return $category->setFieldValues($post);
-    //     return parent::setFieldValues($post);
-    // }
-    // public function setFieldValues(array $values)
-    // {
-    //     foreach ($values as $fieldHandle => $value) {
-    //         $this->setFieldValue($fieldHandle, $value);
-    //     }
-    // }
-
-    // public function setFieldValue(string $fieldHandle, $value)
-    // {
-    //     $behavior = $this->getBehavior('customFields');
-    //     $behavior->$fieldHandle = $value;
-
-    //     // Don't assume that $value has been normalized
-    //     // unset($this->_normalizedFieldValues[$fieldHandle]);
-
-    //     // If the element is fully initialized, mark the value as dirty
-    //     // if ($this->_initialized) {
-    //     //     $this->_dirtyFields[$fieldHandle] = true;
-    //     // }
-    // }
+        return parent::getFieldLayout();
+    }
 
     public function getHandle()
     {
@@ -197,7 +155,7 @@ class CategoryDraftModel extends Category
         $behaviors = parent::behaviors();
         $behaviors['customFields'] = [
             'class' => CustomFieldBehavior::class,
-            'hasMethods' => true,
+            'hasMethods' => false,
         ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
