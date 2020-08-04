@@ -1722,16 +1722,23 @@ class BaseController extends Controller
                 $countElement = $element;
                 $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
             } else if ($element instanceof GlobalSet) {
-                $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId);
-                $countElement = Translations::$plugin->globalSetRepository->getSetById($file->elementId, $file->targetSite);
+                if ($file->status == 'complete') {
+                    $element = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+                } else {
+                    $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId, $file->targetSite);
+                }
+
                 $data['entryName'] = $element->name;
             } else if ($element instanceof Category) {
-                $element = Translations::$plugin->categoryRepository->getCategoryById($file->elementId);
-                $countElement = Translations::$plugin->categoryRepository->getCategoryById($file->elementId, $file->targetSite);
+                if ($file->status == 'complete') {
+                    $element = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+                } else {
+                    $element = Translations::$plugin->categoryRepository->getCategoryById($file->elementId, $file->targetSite);
+                }
                 $data['entryName'] = $element->title;
             }
 
-            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($countElement) - $file->wordCount);
+            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
 
 
             // Create data array
