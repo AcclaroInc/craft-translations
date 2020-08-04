@@ -1711,6 +1711,7 @@ class BaseController extends Controller
 
             $element = Craft::$app->getElements()->getElementById($file->elementId);
 
+            $countElement = $element;
             if ($element instanceof Entry) {
                 // Now we can get the element
                 if ($file->status == 'complete') {
@@ -1718,16 +1719,20 @@ class BaseController extends Controller
                 } else {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
                 }
+                $countElement = $element;
                 $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
             } else if ($element instanceof GlobalSet) {
                 $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId);
+                $countElement = Translations::$plugin->globalSetRepository->getSetById($file->targetSite);
                 $data['entryName'] = $element->name;
             } else if ($element instanceof Category) {
                 $element = Translations::$plugin->categoryRepository->getCategoryById($file->elementId);
+                $countElement = Translations::$plugin->categoryRepository->getCategoryById($file->elementId, $file->targetSite);
                 $data['entryName'] = $element->title;
             }
 
-            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
+            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($countElement) - $file->wordCount);
+
 
             // Create data array
             $data['entryId'] = $element->id;

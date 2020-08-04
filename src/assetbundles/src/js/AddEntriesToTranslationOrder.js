@@ -21,7 +21,12 @@ Craft.Translations.AddEntriesToTranslationOrder = {
     },
 
     getEditEntryId: function() {
-        return $('form#main-form input[type=hidden][name=entryId]').val();
+        var entryId = $('form#main-form input[type=hidden][name=entryId]').val();
+        if(!entryId) {
+            entryId = $('form#main-form input[type=hidden][name=sourceId]').val();
+        }
+
+        return entryId;
     },
     
     updateSelectedEntries: function() {
