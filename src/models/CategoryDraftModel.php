@@ -10,17 +10,17 @@
 
 namespace acclaro\translations\models;
 
-use craft\elements\GlobalSet;
+use craft\elements\Category;
+use craft\behaviors\DraftBehavior;
 use craft\validators\NumberValidator;
 use craft\validators\SiteIdValidator;
 use craft\validators\StringValidator;
 use craft\validators\DateTimeValidator;
 use acclaro\translations\services\App;
 use acclaro\translations\Translations;
-use acclaro\translations\records\GlobalSetDraftRecord;
-use craft\behaviors\CustomFieldBehavior;
 use craft\behaviors\FieldLayoutBehavior;
-use craft\behaviors\DraftBehavior;
+use craft\behaviors\CustomFieldBehavior;
+use acclaro\translations\records\CategoryDraftRecord;
 
 use Craft;
 use craft\base\Model;
@@ -30,9 +30,9 @@ use craft\base\Model;
  * @package   Translations
  * @since     1.0.0
  */
-class GlobalSetDraftModel extends GlobalSet
+class CategoryDraftModel extends Category
 {
-    protected $_globalSet = null;
+    protected $_category = null;
 
     public $id;
 
@@ -40,11 +40,13 @@ class GlobalSetDraftModel extends GlobalSet
 
     public $name;
 
-    public $globalSetId;
+    public $categoryId;
 
     public $site;
 
     public $data;
+    
+    public $sourceSite;
 
     /**
      * @param array|null    $attributes
@@ -61,45 +63,36 @@ class GlobalSetDraftModel extends GlobalSet
     public function rules()
     {
         $rules = parent::rules();
-        $rules[] = [['name', 'globalSetId', 'site', 'data'], 'required'];
+        $rules[] = [['name', 'categoryId', 'site', 'data'], 'required'];
         $rules[] = ['site', SiteIdValidator::class];
-        // $rules[] = ['wordCount', NumberValidator::class];
-        $rules[] = [['dateCreated', 'dateUpdated'], DateTimeValidator::class];
-        $rules[] = ['enabled', 'default', 'value' => true];
-        $rules[] = ['archived', 'default', 'value' => false];
-        // $rules[] = ['slug', 'default', StringValidator::class];
-        // $rules[] = ['uri', 'default', StringValidator::class];
-        $rules[] = ['enabledForSite', 'default', 'value' => true];
 
         return $rules;
     }
 
     public function getFieldLayout()
     {
-        $globalSet = $this->getGlobalSet();
         
-        return $globalSet->getFieldLayout();
+        return parent::getFieldLayout();
     }
 
     public function getHandle()
     {
-        return $this->getGlobalSet()->handle;
+        return $this->getCategory()->handle;
     }
 
     public static function populateModel($attributes)
     {
-        if ($attributes instanceof GlobalSetDraftRecord) {
+        if ($attributes instanceof CategoryDraftRecord) {
             $attributes = $attributes->getAttributes();
         }
 
-        $globalSetData = json_decode($attributes['data'], true);
-        $fieldContent = isset($globalSetData['fields']) ? $globalSetData['fields'] : null;
-        // $attributes['draftId'] = $attributes['id'];
-        $attributes['id'] = $attributes['globalSetId'];
+        $categoryData = json_decode($attributes['data'], true);
+        $fieldContent = isset($categoryData['fields']) ? $categoryData['fields'] : null;
+        $attributes['id'] = $attributes['categoryId'];
         
-        $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'globalSetId')));
+        $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'categoryId')));
         
-        $attributes = array_merge($attributes, $globalSetData);
+        $attributes = array_merge($attributes, $categoryData);
         
         $draft = parent::setAttributes($attributes);
 
@@ -120,15 +113,20 @@ class GlobalSetDraftModel extends GlobalSet
         return $draft;
     }
 
-    public function getGlobalSet()
+    public function getCategory()
     {
-        if (is_null($this->globalSetId)) {
-            $this->_globalSet = Translations::$plugin->globalSetRepository->getSetById($this->id); // this works for creating orders
+        if (is_null($this->categoryId)) {
+            $this->_category = Translations::$plugin->categoryRepository->getCategoryById($this->id); // this works for creating orders
         } else {
-            $this->_globalSet = Translations::$plugin->globalSetRepository->getSetById($this->globalSetId); // this works for edit draft
+            $this->_category = Translations::$plugin->categoryRepository->getCategoryById($this->categoryId); // this works for edit draft
         }
+        
+        // echo '<pre>';
+        // echo "//======================================================================<br>// return getCategory()<br>//======================================================================<br>";
+        // var_dump($this->_category);
+        // echo '</pre>';
 
-        return $this->_globalSet;
+        return $this->_category;
     }
 
     public function getUrl()
@@ -141,9 +139,10 @@ class GlobalSetDraftModel extends GlobalSet
      */
     public function getCpEditUrl()
     {
-        $globalSet = $this->getGlobalSet();
+        $category = $this->getCategory();
 
-        $path = 'translations/globals/'.$globalSet->handle.'/drafts/'.$this->draftId;
+        $catUrl = $category->id . ($category->slug ? '-' . $category->slug : '');
+        $path = 'translations/categories/'.$category->getGroup()->handle.'/'.$catUrl.'/drafts/'.$this->draftId;
         
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
@@ -160,13 +159,13 @@ class GlobalSetDraftModel extends GlobalSet
         ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
-            'elementType' => GlobalSet::class,
+            'elementType' => Category::class,
         ];
         $behaviors['draft'] = [
             'class' => DraftBehavior::class,
             'sourceId' => $this->id,
             'creatorId' => 1,
-            'draftName' => 'Global Draft',
+            'draftName' => 'Category Draft',
             'draftNotes' => '',
             'trackChanges' => true,
         ];

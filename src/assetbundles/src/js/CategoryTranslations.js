@@ -10,36 +10,34 @@ if (typeof Craft.Translations === 'undefined') {
     Craft.Translations = {};
 }
 
-Craft.Translations.AddEntriesToTranslationOrder = {
-    entries: [],
+Craft.Translations.CategoryTranslations = {
 
+    categories: [],
     $btn: null,
-    $createNewLink: null,
 
-    isEditEntryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="entries/save-entry"]').length > 0;
+    init: function(orders, categoryId) {
+        this.initAddToTranslationOrderButton(orders, categoryId);
     },
 
-    getEditEntryId: function() {
-        var entryId = $('form#main-form input[type=hidden][name=entryId]').val();
-        if(!entryId) {
-            entryId = $('form#main-form input[type=hidden][name=sourceId]').val();
-        }
-
-        return entryId;
+    isEditCategoryScreen: function() {
+        return $('form#main-form input[type=hidden][name=action][value="categories/save-category"]').length > 0;
     },
-    
-    updateSelectedEntries: function() {
+
+    getEditCategoryId: function() {
+        return $('form#main-form input[type=hidden][name=categoryId]').val();
+    },
+
+    updateSelectedCategories: function() {
         var entries = [];
 
         $('.elements table.data tbody tr.sel[data-id]').each(function() {
             entries.push($(this).data('id'));
         });
 
-        this.entries = unique(entries);
+        this.categories = unique(entries);
 
-        $(this.$btn[0]).toggleClass('disabled', this.entries.length === 0);
-        $(this.$menubtn[0]).toggleClass('disabled', this.entries.length === 0);
+        $(this.$btn[0]).toggleClass('disabled', this.categories.length === 0);
+        $(this.$menubtn[0]).toggleClass('disabled', this.categories.length === 0);
 
         this.updateCreateNewLink();
     },
@@ -49,15 +47,15 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         href += '?sourceSite='+this.getSourceSite();
 
-        for (var i = 0; i < this.entries.length; i++) {
-            href += '&elements[]=' + this.entries[i];
+        for (var i = 0; i < this.categories.length; i++) {
+            href += '&elements[]=' + this.categories[i];
         }
 
         this.$btn.attr('href', href);
     },
 
     getSourceSite: function() {
-        if (this.isEditEntryScreen()) {
+        if (this.isEditCategoryScreen()) {
             return $('[name=siteId]').val();
         }
 
@@ -66,45 +64,40 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         // Figure out the initial locale
         var $option = localeMenu.$options.filter('.sel:first');
 
-        
+
         if ($option.length === 0) {
             $option = localeMenu.$options.first();
         }
-        
+
         var siteId = $option.data('site-id').toString();
-        
+
         return siteId;
     },
 
-    init: function(data) {
-        if (this.isEditEntryScreen() && !this.getEditEntryId()) {
-            return;
-        }
-
+    initAddToTranslationOrderButton: function(orders, categoryId) {
         var self = this;
 
-        this.data = data;
+        //var sourceSite = $('form#main-form input[type=hidden][name=siteId]').val();
 
         var $btncontainer = document.createElement('div');
-            $btncontainer.id = "translations-field";
-            $btncontainer.className = "field";
+        $btncontainer.id = "translations-field";
+        $btncontainer.className = "field";
 
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
-        
-        if (this.isEditEntryScreen()) {
+
+        if (this.isEditCategoryScreen()) {
             $settings = document.getElementById('settings');
             $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
-            
+
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
         } else {
-            if (data.licenseStatus === 'valid') {
-                $btngroup.insertBefore('#header #action-button');
-            }
+            $btngroup.insertBefore('#header #action-button');
         }
+
 
         this.$btn = $('<a>', {
             'class': 'btn submit icon',
@@ -118,7 +111,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             'class': 'btn submit menubtn'
         });
 
-        if (!this.isEditEntryScreen()) {
+        if (!this.isEditCategoryScreen()) {
             this.$btn.addClass('disabled');
             this.$menubtn.addClass('disabled');
         }
@@ -139,21 +132,21 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         $dropdown.appendTo($menu);
 
-        if (data.orders.length == '0') {
+        if (orders.length == '0') {
             var $item = $('<li>');
 
             $item.appendTo($dropdown);
 
             var $link = $('<a>', {
                 'class': 'link-disabled',
-                'text': 'No saved orders available...'
+                'text': 'No saved orders available for this site...'
             });
 
             $link.appendTo($item);
         }
 
-        for (var i = 0; i < data.orders.length; i++) {
-            var order = data.orders[i];
+        for (var i = 0; i < orders.length; i++) {
+            var order = orders[i];
 
             var $item = $('<li>');
 
@@ -207,11 +200,11 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
                 $hiddenSourceSite.appendTo($form);
 
-                for (var j = 0; j < self.entries.length; j++) {
+                for (var j = 0; j < self.categories.length; j++) {
                     $('<input>', {
                         'type': 'hidden',
                         'name': 'elements[]',
-                        'value': self.entries[j]
+                        'value': self.categories[j]
                     }).appendTo($form);
                 }
 
@@ -225,27 +218,21 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             });
         }
 
-        var $item = $('<li>');
-
-        $item.prependTo($dropdown);
-
-        var $link = Craft.getUrl('translations/orders/new');
+        var $link = Craft.getUrl('translations/orders/new', {'elements[]': categoryId, 'sourceSite': self.getSourceSite()});
 
         this.$btn.attr('href', $link);
-
-        this.$createNewLink = $link;
 
         this.$menubtn.menubtn();
 
         var self = this;
 
         $(document).on('click', '.elements .checkbox, .elements .selectallcontainer .btn', function() {
-            setTimeout($.proxy(self.updateSelectedEntries, self), 100);
+            setTimeout($.proxy(self.updateSelectedCategories(), self), 100);
         });
 
         // on edit entry screen
-        if (this.isEditEntryScreen()) {
-            this.entries.push(this.getEditEntryId());
+        if (this.isEditCategoryScreen()) {
+            this.categories.push(this.getEditCategoryId());
             this.updateCreateNewLink();
         }
 
@@ -271,11 +258,11 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
             $hiddenSourceSite.appendTo($form);
 
-            for (var j = 0; j < self.entries.length; j++) {
+            for (var j = 0; j < self.categories.length; j++) {
                 $('<input>', {
                     'type': 'hidden',
                     'name': 'elements[]',
-                    'value': self.entries[j]
+                    'value': self.categories[j]
                 }).appendTo($form);
             }
 
@@ -287,6 +274,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
             $form.submit();
         });
+
     }
 };
 

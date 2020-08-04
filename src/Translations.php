@@ -34,6 +34,7 @@ use acclaro\translations\elements\Order;
 use acclaro\translations\base\PluginTrait;
 use craft\console\Application as ConsoleApplication;
 use acclaro\translations\assetbundles\EntryAssets;
+use acclaro\translations\assetbundles\CategoryAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
@@ -71,7 +72,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.2.3';
+    public $schemaVersion = '1.3.1';
 
     // Public Methods
     // =========================================================================
@@ -344,10 +345,12 @@ class Translations extends Plugin
                     'translations/settings/settings-check' => 'translations/settings/settings-check',
                     'translations/settings/send-logs' => 'translations/settings/send-logs',
                     'translations/orders/get-file-diff/<fileId:\d+>' => 'translations/base/get-file-diff',
+                    'translations/orders/get-file-diff-html/<fileId:\d+>' => 'translations/base/get-file-diff-html',
                     'translations/settings/configuration-options' => 'translations/settings/configuration-options',
                     'translations/static-translations' => 'translations/static-translations',
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
+                    'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/base/edit-category-draft',
                 ]);
             }
         );
@@ -364,6 +367,10 @@ class Translations extends Plugin
             if (isset(Craft::$app->getRequest()->getQueryParams()['draftId'])) {
                 $this->_includeEditDraftResource(Craft::$app->getRequest()->getQueryParams()['draftId']);
             }
+        }
+
+        if (preg_match('#^categories(/|$)#', $path, $match)) {
+            $this->_includeCategoryResources();
         }
 
         if (preg_match('#^globals/([^/]+)$#', $path, $match)) {
@@ -419,6 +426,30 @@ class Translations extends Plugin
         self::$view->registerAssetBundle(EntryAssets::class);
         
         self::$view->registerJs("$(function(){ Craft.Translations.AddEntriesToTranslationOrder.init({$data}); });");
+    }
+
+    private function _includeCategoryResources($slug = null)
+    {
+        $orders = array();
+        $categoryId = 0;
+        if ($slug) {
+            $categoryId = explode('-', $slug);
+            $categoryId = (isset($categoryId[0])) ? $categoryId[0] : 0;
+        }
+
+        foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
+            $orders[] = array(
+                'id' => $order->id,
+                'title' => $order->title,
+            );
+        }
+
+        $orders = json_encode($orders);
+        $categoryId = json_encode($categoryId);
+
+        self::$view->registerAssetBundle(CategoryAssets::class);
+
+        self::$view->registerJs("$(function(){ Craft.Translations.CategoryTranslations.init({$orders}, {$categoryId}); });");
     }
     
     private function _includeGlobalSetResources($globalSetHandle, $site = null)

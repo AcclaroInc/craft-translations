@@ -28,19 +28,24 @@ use acclaro\translations\Translations;
 
 class ElementTranslator
 {
-    public function toTranslationSource(Element $element)
+    public function toTranslationSource(Element $element, $sourceSite=null)
     {
         $source = array();
         
         // if ($element instanceof Element || $element instanceof Tag || $element instanceof Category) {
         if ($element instanceof Element) {
-            $source['title'] = $element->title;
-            $source['slug'] = $element->slug;
+            if ($element->title) {
+                $source['title'] = $element->title;
+            }
+            if ($element->slug) {
+                $source['slug'] = $element->slug;
+            }
+
         }
         
         foreach ($element->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-            $fieldSource = $this->fieldToTranslationSource($element, $field);
+            $fieldSource = $this->fieldToTranslationSource($element, $field, $sourceSite);
 
             $source = array_merge($source, $fieldSource);
         }
@@ -89,36 +94,43 @@ class ElementTranslator
     public function toPostArrayFromTranslationTarget(Element $element, $sourceSite, $targetSite, $targetData, $includeNonTranslatable = false)
     {
         $post = array();
-        foreach($element->getFieldLayout()->getFields() as $layoutField) {
+        
+        foreach($element->getFieldLayout()->getFields() as $key => $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-
+            
             $fieldHandle = $field->handle;
             
             $fieldType = $field;
-
+            
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
-
+            
             if (!$translator) {
                 if ($includeNonTranslatable) {
                     $post[$fieldHandle] = $element->$fieldHandle;
                 }
-
+                
                 continue;
             }
 
+            
             if (isset($targetData[$fieldHandle])) {
                 $fieldPost = $translator->toPostArrayFromTranslationTarget($this, $element, $field, $sourceSite, $targetSite, $targetData[$fieldHandle]);
             } else {
-                $fieldPost = $translator->toPostArray($this, $element, $field);
+                $fieldPost = $translator->toPostArray($this, $element, $field, $sourceSite);
             }
+            
             
             if (!is_array($fieldPost)) {
                 $fieldPost = array($fieldHandle => $fieldPost);
             }
-
+            
             $post = array_merge($post, $fieldPost);
         }
-
+        
+        // echo '<pre>';
+        // echo "//======================================================================<br>// post toPostArrayFromTranslationTarget()<br>//======================================================================<br>";
+        // var_dump($post);
+        // echo '</pre>';
         return $post;
     }
 
@@ -145,22 +157,22 @@ class ElementTranslator
             $wordCount += Translations::$plugin->wordCounter->getWordCount($element->title);
             $wordCount += Translations::$plugin->wordCounter->getWordCount($element->slug);
         }
-        
         foreach($element->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-            
+
             $wordCount += $this->getFieldWordCount($element, $field);
         }
 
         return $wordCount;
     }
 
-    public function fieldToTranslationSource(Element $element, Field $field)
+    public function fieldToTranslationSource(Element $element, Field $field, $sourceSite=null)
     {
         $fieldType = $field;
 
         $nestedFieldType = [
             'craft\fields\Matrix',
+            'craft\fields\Assets',
             'verbb\supertable\fields\SuperTableField',
             'benf\neo\Field'
         ];
@@ -171,7 +183,7 @@ class ElementTranslator
 
         // Check if field is translatable or is nested field
         if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), $nestedFieldType)) {
-            $fieldSource = $translator->toTranslationSource($this, $element, $field);
+            $fieldSource = $translator->toTranslationSource($this, $element, $field, $sourceSite);
 
             if (!is_array($fieldSource)) {
                 $fieldSource = array($field->handle => $fieldSource);
@@ -189,6 +201,7 @@ class ElementTranslator
 
         $nestedFieldType = [
             'craft\fields\Matrix',
+            'craft\fields\Assets',
             'verbb\supertable\fields\SuperTableField',
             'benf\neo\Field'
         ];
@@ -217,6 +230,7 @@ class ElementTranslator
 
         $nestedFieldType = [
             'craft\fields\Matrix',
+            'craft\fields\Assets',
             'verbb\supertable\fields\SuperTableField',
             'benf\neo\Field'
         ];

@@ -14,6 +14,7 @@ use Craft;
 use DateTime;
 use Exception;
 use craft\elements\Entry;
+use craft\elements\Category;
 use craft\elements\GlobalSet;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
@@ -90,6 +91,12 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
             if ($element instanceof GlobalSet) {
                 $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+            } else if ($element instanceof Category) {
+                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
+
+                $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
+                $draft->groupId = $category->groupId;
+
             } else {
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
@@ -100,38 +107,73 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
     public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite, $order, $file_name)
     {
+        // Get the data from the XML files
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
 
-        if ($draft instanceof Entry) {
-            if (isset($targetData['title'])) {
-                $draft->title = $targetData['title'];
-            }
+        switch (true) {
+            // Update Entry Drafts
+            case $draft instanceof Entry:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
+                
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
+                
+                $draft->setFieldValues($post);
+                
+                $draft->siteId = $targetSite;
+                
+                $res = Translations::$plugin->draftRepository->saveDraft($draft);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
 
-            if (isset($targetData['slug'])) {
-                $draft->slug = $targetData['slug'];
-            }
+                    return false;
+                }
+                break;
+            
+            // Update Category Drafts
+            case $draft instanceof Category:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
+                $draft->siteId = $targetSite;
+                
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+                $draft->setFieldValues($post);
+
+                $res = Translations::$plugin->categoryDraftRepository->saveDraft($draft, $post);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
+
+                    return false;
+                }
+                break;
+            
+            // Update GlobalSet Drafts
+            case $draft instanceof GlobalSet:
+                $draft->siteId = $targetSite;
+               
+                // $element->siteId = $targetSite;
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+                $draft->setFieldValues($post);
+
+                $res = Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $post);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
+
+                    return false;
+                }
+                break;
+            default:
+                break;
         }
-
-        $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
-
-        $draft->setFieldValues($post);
-
-        $draft->siteId = $targetSite;
-
-        // save the draft
-        if ($draft instanceof Entry) {
-            $res = Translations::$plugin->draftRepository->saveDraft($draft);
-            if (!$res) {
-                $order->logActivity(
-                    sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
-                );
-
-                return false;
-            }
-        } elseif ($draft instanceof GlobalSet) {
-            Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
-        }
-
+        
         return true;
     }
 

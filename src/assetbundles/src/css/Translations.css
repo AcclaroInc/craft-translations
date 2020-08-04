@@ -313,6 +313,17 @@
     z-index: 99999999;
 }
 
+ins {
+    text-decoration: none;
+    background-color: #d4fcbc;
+}
+
+del {
+    text-decoration: line-through;
+    background-color: #fbb6c2;
+    color: #555;
+}
+
 @media only screen and (max-width: 992px) {
     .translations-lock {
         margin-left: -31px;
@@ -505,6 +516,69 @@
 
 .bold {
     font-weight: bold;
+}
+
+#acc-tabs {
+    margin: -10px -12px 0;
+    padding: 10px 12px 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+#acc-tabs ul {
+    display: flex;
+    flex-direction: row;
+    max-width: calc(100% - 40px);
+
+}
+#acc-tabs ul li {
+    max-width: 100%;
+}
+#acc-tabs ul li a {
+    display: block;
+    position: relative;
+    border-radius:4px 4px 0 0;
+    padding: 12px 24px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+    line-height: 1.2;
+}
+#acc-tabs ul li a.sel {
+    background: #fff;
+    z-index: 1;
+    color: #3f4d5a;
+    cursor: default;
+    background-clip: padding-box;
+    box-shadow: 0 0 0 1px rgba(205, 216, 228, 0.25), 0 2px 12px rgba(205, 216, 228, 0.5);
+}
+
+@media only screen and (max-width: 1070px) and (min-width: 975px) {
+    #header .translations-dropdown a span {
+        display: none;
+    }
+}
+@media only screen and (max-width: 975px) {
+    #header .translations-dropdown {
+        margin: 5px 0px !important;
+    }
+}
+.iframe-line {
+    background: #e3e5e8;
+    height: 100%;
+    width: 1px;
+    position: absolute;
+    transform: inherit;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#visual iframe {
+    width: calc(50% - 2px);
+    min-height: 1000px;
 }
 
 @media only screen and (max-width: 720px) {

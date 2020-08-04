@@ -54,6 +54,7 @@ class FileRepository
     
     /**
      * @param  int|string $draftId
+     * @param  int|string $elementId
      * @return \acclaro\translations\models\FileModel
      */
     public function getFileByDraftId($draftId, $elementId = null)
@@ -275,9 +276,12 @@ class FileRepository
      * @return false|int
      * @throws \Throwable
      */
-    public function delete($draftId)
+    public function delete($draftId, $elementId=null)
     {
         $attributes = ['draftId' => (int) $draftId];
+        if ($elementId) {
+            $attributes['elementId'] = $elementId;
+        }
 
         return FileRecord::findOne($attributes)->delete();
     }

@@ -50,8 +50,12 @@ class ImportFiles extends BaseJob
      * Process each file entry per orden
      * Validates
      */
-    public function processFile( Asset $asset )
+    public function processFile( Asset $asset, $order = null )
     {
+        if (empty($this->order)) {
+            $this->order = $order;
+        }
+
         // DEV: Since some Asset Volumes could disallow XML files, we're
         // working with files using a 'txt' extension added when the files
         // were uploaded. Could alternatively just validate that the
@@ -124,7 +128,7 @@ class ImportFiles extends BaseJob
             {
                 if ($draftId === $file->draftId)
                 {   //Get File
-                    $draft_file = Translations::$plugin->fileRepository->getFileByDraftId($draftId);
+                    $draft_file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $file->elementId);
                 }
             }
 

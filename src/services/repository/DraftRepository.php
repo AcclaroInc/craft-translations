@@ -16,6 +16,7 @@ use Exception;
 use craft\db\Query;
 use craft\elements\User;
 use craft\elements\Entry;
+use craft\elements\Category;
 use craft\elements\GlobalSet;
 use yii\web\NotFoundHttpException;
 use acclaro\translations\Translations;
@@ -102,13 +103,16 @@ class DraftRepository
         return $response;
     }
 
-    public function isTranslationDraft($draftId)
+    public function isTranslationDraft($draftId, $elementId=null)
     {
         $data = [];
 
         $attributes = [
             'draftId' => (int) $draftId
         ];
+        if ($elementId) {
+            $attributes['elementId'] = $elementId;
+        }
 
         $record = FileRecord::findOne($attributes);
 
@@ -224,13 +228,22 @@ class DraftRepository
             case GlobalSet::class:
                 $draft = $this->createGlobalSetDraft($element, $site, $order->title);
                 break;
+            case Category::class:
+                $draft = $this->createCategoryDraft($element, $site, $order->title, $order->sourceSite);
+                break;
         }
 
         if (!($file instanceof FileModel)){
             $file = Translations::$plugin->fileRepository->makeNewFile();
         }
 
-        if ($draft instanceof GlobalSet) {
+
+        if (empty($draft)) {
+
+            Craft::error('Empty draft found: Order'.json_decode($order), __METHOD__);
+            return false;
+        }
+        if ($draft instanceof GlobalSet || $draft instanceof Category) {
             $targetSite = $draft->site;
         } else {
             $targetSite = $draft->siteId;
@@ -238,7 +251,7 @@ class DraftRepository
 
         try {
             // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId);
+            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->sourceId);
             if (!empty($isExistingFile)) {
                 return;
             }
@@ -252,22 +265,22 @@ class DraftRepository
             $file->targetSite = $targetSite;
             $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
             $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                $draft,
+                ($draft instanceof Entry) ? $draft : $element, // Send the element for custom drafts (GlobalSets, Categories)
                 $draft->draftId,
                 $order->sourceSite,
                 $targetSite,
                 $file->previewUrl
             );
             $file->wordCount = isset($wordCounts[$element->id]) ? $wordCounts[$element->id] : 0;
-
+            
             Translations::$plugin->fileRepository->saveFile($file);
-
+            
             // Delete draft elements that are automatically propagated for other sites
             // Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
-
+            
             return $file;
         } catch (Exception $e) {
-
+            
             $file->orderId = $order->id;
             $file->elementId = $draft->sourceId;
             $file->draftId = $draft->draftId;
@@ -275,9 +288,9 @@ class DraftRepository
             $file->targetSite = $targetSite;
             $file->status = 'failed';
             $file->wordCount = isset($wordCounts[$draft->id]) ? $wordCounts[$draft->id] : 0;
-
+            
             Translations::$plugin->fileRepository->saveFile($file);
-
+            
             return false;
         }
 
@@ -320,17 +333,45 @@ class DraftRepository
             $draft->name = sprintf('%s [%s]', $orderName, $site);
             $draft->id = $globalSet->id;
             $draft->site = $site;
+            $draft->siteId = $site;
 
             $post = Translations::$plugin->elementTranslator->toPostArray($globalSet);
 
             $draft->setFieldValues($post);
 
-            Translations::$plugin->globalSetDraftRepository->saveDraft($draft);
+            Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $post);
 
             return $draft;
         } catch (Exception $e) {
 
             Craft::error('CreateGlobalSetDraft exception:: '.$e->getMessage());
+            return [];
+        }
+
+    }
+
+    public function createCategoryDraft(Category $category, $site, $orderName, $sourceSite)
+    {
+        try {
+            $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
+            
+            $draft->name = sprintf('%s [%s]', $orderName, $site);
+            $draft->id = $category->id;
+            $draft->title = $category->title;
+            $draft->site = $site;
+            $draft->siteId = $site;
+            $draft->sourceSite = $sourceSite;
+
+            $post = Translations::$plugin->elementTranslator->toPostArray($category);
+
+            $draft->setFieldValues($post);
+            
+            
+            Translations::$plugin->categoryDraftRepository->saveDraft($draft, $post);
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error('CreateCategoryDraft exception:: '.$e->getMessage());
             return [];
         }
 
@@ -381,6 +422,20 @@ class DraftRepository
 
                 if ($draft) {
                     $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+                } else {
+                    $success = false;
+                }
+
+                $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+            } else if ($element instanceof Category) {
+                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+
+                // keep original category name
+                $draft->name = $element->title;
+                $draft->site = $file->targetSite;
+
+                if ($draft) {
+                    $success = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
                 } else {
                     $success = false;
                 }

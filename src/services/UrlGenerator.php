@@ -12,6 +12,7 @@ namespace acclaro\translations\services;
 
 use Craft;
 use craft\base\Element;
+use craft\elements\Category;
 use craft\models\EntryDraft;
 use craft\elements\GlobalSet;
 use craft\elements\Entry;
@@ -58,7 +59,7 @@ class UrlGenerator
     public function generateFileUrl(Element $element, FileModel $file)
     {
         if ($file->status === 'published') {
-            if ($element instanceof GlobalSet) {
+            if ($element instanceof GlobalSet OR $element instanceof Category) {
                 return preg_replace(
                     '/(\/'.Craft::$app->sites->getSiteById($element->siteId)->handle.')/',
                     '/'.Craft::$app->sites->getSiteById($file->targetSite)->handle,
@@ -75,6 +76,12 @@ class UrlGenerator
             return Translations::$plugin->urlHelper->cpUrl('translations/globals/'.$element->handle.'/drafts/'.$file->draftId);
         }
 
+        if ($element instanceof Category) {
+
+            $catUri = $element->id.'-'.$element->slug;
+            return Translations::$plugin->urlHelper->cpUrl('translations/categories/'.$element->getGroup()->handle.'/'.$catUri.'/drafts/'.$file->draftId);
+        }
+
         return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), [
             'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle,
             'draftId' => $file->draftId
@@ -84,7 +91,7 @@ class UrlGenerator
     public function generateFileWebUrl(Element $element, FileModel $file)
     {
         if ($file->status === 'published') {
-            if ($element instanceof GlobalSet) {
+            if ($element instanceof GlobalSet OR $element instanceof Category) {
                 return '';
             }
 
@@ -103,7 +110,7 @@ class UrlGenerator
     {
         $params = array();
         
-        if ($element instanceof GlobalSet) {
+        if ($element instanceof GlobalSet || $element instanceof Category ) {
             return '';
         }
         
