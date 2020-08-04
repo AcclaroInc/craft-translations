@@ -118,7 +118,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
                 
-                
                 $draft->setFieldValues($post);
                 
                 $draft->siteId = $targetSite;

@@ -99,52 +99,59 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateFile(Order $order, FileModel $file)
     {
-        $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
-
-        if (!is_array($fileInfoResponse)) {
-            return;
-        }
-        // find the matching file
-        foreach ($fileInfoResponse as $fileInfo) {
-            if ($fileInfo->fileid == $file->serviceFileId) {
-                break;
+        try {
+            $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
+            
+            if (!is_array($fileInfoResponse)) {
+                return;
             }
-
-            $fileInfo = null;
-        }
-
-        if (empty($fileInfo->targetfile)) {
-            return;
-        }
-
-        $targetFileId = $fileInfo->targetfile;
-
-        $fileStatusResponse = $this->acclaroApiClient->getFileStatus($order->serviceOrderId, $targetFileId);
-
-        $file->status = $fileStatusResponse->status;
-        $file->dateDelivered = new \DateTime();
-
-        // download the file
-        $target = $this->acclaroApiClient->getFile($order->serviceOrderId, $targetFileId);
-
-        if ($target) {
-            $file->target = $target;
-
-            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-
-            if ($element instanceof GlobalSet) {
-                $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
-            } else if ($element instanceof Category) {
-                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
-            } else {
-                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+            // find the matching file
+            foreach ($fileInfoResponse as $fileInfo) {
+                if ($fileInfo->fileid == $file->serviceFileId) {
+                    break;
+                }
+    
+                $fileInfo = null;
             }
-
-            $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite);
+    
+            if (empty($fileInfo->targetfile)) {
+                return;
+            }
+    
+            $targetFileId = $fileInfo->targetfile;
+    
+            $fileStatusResponse = $this->acclaroApiClient->getFileStatus($order->serviceOrderId, $targetFileId);
+    
+            $file->status = $fileStatusResponse->status;
+            $file->dateDelivered = new \DateTime();
+    
+            // download the file
+            $target = $this->acclaroApiClient->getFile($order->serviceOrderId, $targetFileId);
+    
+            if ($target) {
+                $file->target = $target;
+    
+                $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+    
+                if ($element instanceof GlobalSet) {
+                    $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+                } else if ($element instanceof Category) {
+                    $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
+    
+                    $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
+                    $draft->groupId = $category->groupId;
+                } else {
+                    $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+                }
+    
+                $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite, $order);
+            }
+        } catch (Exception $e) {
+            Craft::error('Couldn’t update file. Error: '.$e->getMessage(), __METHOD__);
         }
     }
 
-    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite)
+    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite, $order)
     {
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
 
@@ -155,7 +162,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
                 
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
-                
                 
                 $draft->setFieldValues($post);
                 
