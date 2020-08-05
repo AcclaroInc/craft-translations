@@ -260,7 +260,7 @@ class FilesController extends Controller
                                 'description' => 'Updating translation drafts',
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,
-                                'xmlPath' => $xmlPath,
+                                'assets' => $assetIds,
                             ]));
 
                             if ($job) {
@@ -273,11 +273,11 @@ class FilesController extends Controller
                             }
                         } else {
                             $fileSvc = new ImportFiles();
-                            $dir = new \DirectoryIterator($xmlPath);
-                            foreach ($dir as $xml)
+                            $dir = new \DirectoryIterator($assetPath.$orderId);
+                            foreach ($dir as $f)
                             {
                                 //Process XML Files
-                                $fileSvc->processFile($xml, $xmlPath, $this->order);
+                                $fileSvc->processFile($f, $this->order);
                             }
                         }
 
@@ -318,7 +318,7 @@ class FilesController extends Controller
                             'description' => 'Updating translation drafts',
                             'orderId' => $orderId,
                             'totalFiles' => $total_files,
-                            'xmlPath' => $xmlPath,
+                            'assets' => [$asset->id],
                         ]));
 
                         if ($job) {
@@ -331,11 +331,11 @@ class FilesController extends Controller
                         }
                     } else {
                         $fileSvc = new ImportFiles();
-                        $dir = new \DirectoryIterator($xmlPath);
-                        foreach ($dir as $xml)
+                        $dir = new \DirectoryIterator($assetPath.$orderId);
+                        foreach ($dir as $f)
                         {
                             //Process XML Files
-                            $fileSvc->processFile($xml, $xmlPath, $this->order);
+                            $fileSvc->processFile($f, $this->order);
                         }
                     }
 
