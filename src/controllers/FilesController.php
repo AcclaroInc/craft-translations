@@ -330,8 +330,9 @@ class FilesController extends Controller
                         }
                     } else {
                         $fileSvc = new ImportFiles();
-                        $fileSvc->processFile($asset, $this->order);
-                        Craft::$app->getElements()->deleteElement($asset);
+                        $a = Craft::$app->getAssets()->getAssetById($asset->id);
+                        $fileSvc->processFile($a, $this->order);
+                        Craft::$app->getElements()->deleteElement($a);
                     }
 
                     $this->showUserMessages("File uploaded successfully: {$file->name}", true);
