@@ -273,11 +273,10 @@ class FilesController extends Controller
                             }
                         } else {
                             $fileSvc = new ImportFiles();
-                            $dir = new \DirectoryIterator($assetPath.$orderId);
-                            foreach ($dir as $f)
-                            {
-                                //Process XML Files
-                                $fileSvc->processFile($f, $this->order);
+                            foreach ($assetIds as $key => $id) {
+                                $a = Craft::$app->getAssets()->getAssetById($id);
+                                $fileSvc->processFile($a, $this->order);
+                                Craft::$app->getElements()->deleteElement($a);
                             }
                         }
 
@@ -331,12 +330,8 @@ class FilesController extends Controller
                         }
                     } else {
                         $fileSvc = new ImportFiles();
-                        $dir = new \DirectoryIterator($assetPath.$orderId);
-                        foreach ($dir as $f)
-                        {
-                            //Process XML Files
-                            $fileSvc->processFile($f, $this->order);
-                        }
+                        $fileSvc->processFile($asset, $this->order);
+                        Craft::$app->getElements()->deleteElement($asset);
                     }
 
                     $this->showUserMessages("File uploaded successfully: {$file->name}", true);
