@@ -155,7 +155,7 @@ class DraftRepository
             }
 
             // Let's remove the auto-propagated drafts
-            Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+            // Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
 
             // Apply the draft to the entry
             $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
@@ -410,8 +410,6 @@ class DraftRepository
                 $applyDraft->updateProgress($queue, $currentElement++ / $totalElements);
             }
 
-            Craft::info('23fo2in2FJ: '. $currentElement .' | '. $totalElements);
-
             $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
             if ($element instanceof GlobalSet) {
@@ -489,7 +487,6 @@ class DraftRepository
             Translations::$plugin->fileRepository->saveFile($file);
         }
 
-        Craft::info('aas3i23jf: '. $publishedFilesCount .' | '. $filesCount);
         if ($publishedFilesCount === $filesCount) {
             $order->status = 'published';
 

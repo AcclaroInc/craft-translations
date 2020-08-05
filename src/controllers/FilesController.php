@@ -454,6 +454,23 @@ class FilesController extends Controller
 
         Translations::$plugin->fileRepository->saveFile($file);
 
+        $files = $order->getFiles();
+        $filesCount = count($files);
+        $publishedFilesCount = 0;
+
+        foreach ($files as $key => $f) {
+            if ($f->status !== 'complete') {
+                continue;
+            }
+            
+            $publishedFilesCount++;
+        }
+
+
+        if ($publishedFilesCount === $filesCount) {
+            $order->status = 'published';
+        }
+
         Translations::$plugin->orderRepository->saveOrder($order);
 
         if (
