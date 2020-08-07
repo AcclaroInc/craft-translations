@@ -369,7 +369,7 @@ class FilesController extends Controller
         }
 
         // Get the element
-        $element = Craft::$app->elements->getElementById($file->elementId);
+        $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
         if (!$element) {
             $this->showUserMessages("Entry not found for file.");
             return;
@@ -385,6 +385,7 @@ class FilesController extends Controller
             $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
             
             $draft->name = $element->name;
+            $draft->site = $file->targetSite;
 
             if ($draft) {
                 $response = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
@@ -398,6 +399,7 @@ class FilesController extends Controller
             $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
 
             $draft->name = $element->title;
+            $draft->site = $file->targetSite;
 
             if ($draft) {
                 $response = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
