@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.8.0 - 2020-08-06
+
+### Added
+- Support for [Category Entries](https://docs.craftcms.com/api/v3/craft-elements-category.html)
+- Support for [Asset](https://docs.craftcms.com/api/v3/craft-elements-asset.html) fields
+- Source v.s. translated content visual comparison
+- Support for "New Translation" action buttons for recent versions of Craft
+- Additional flexibility for bulk publishing actions
+
+### Updated
+- Matrix, SuperTable, and Neo fieldTranslator `toTranslationSource()` block indexing
+
+### Fixed
+- Minor bug fixes
+
 ## 1.7.2 - 2020-07-24
 
 ### Added
