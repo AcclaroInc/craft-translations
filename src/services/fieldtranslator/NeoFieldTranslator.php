@@ -31,8 +31,10 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         if ($blocks) {
             // foreach ($blocks->level(1) as $block) { // removed in 3.2
+            $new = 0;
             foreach ($blocks as $block) {
-                $keyPrefix = sprintf('%s.%s', $field->handle, $block->id);
+                $blockId = $block->id ?? 'new' . ++$new;
+                $keyPrefix = sprintf('%s.%s', $field->handle, $blockId);
 
                 $source = array_merge($source, $this->blockToTranslationSource($elementTranslator, $block, $keyPrefix));
             }
@@ -54,8 +56,10 @@ class NeoFieldTranslator extends GenericFieldTranslator
         }
 
         $block = $block->getChildren()->all();
+        $new = 0;
         foreach ($block as $childBlock) {
-            $key = sprintf('%s.%s', $keyPrefix, $childBlock->id);
+            $childBlockId = $childBlock->id ?? 'new' . ++$new;
+            $key = sprintf('%s.%s', $keyPrefix, $childBlockId);
 
             $childBlockSource = $this->blockToTranslationSource($elementTranslator, $childBlock, $key);
 
@@ -142,5 +146,35 @@ class NeoFieldTranslator extends GenericFieldTranslator
         }
 
         return $wordCount;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field)
+    {
+        $fieldHandle = $field->handle;
+
+        $blocks = $element->getFieldValue($fieldHandle)->all();
+
+        if (!$blocks) {
+            return [];
+        }
+
+        $post = array(
+            $fieldHandle => array(),
+        );
+        $new = 0;
+        foreach ($blocks as $i => $block) {
+
+            $blockId = $block->id ?? 'new' . ++$new;
+            $post[$fieldHandle][$blockId] = array(
+                'type' => $block->getType()->handle,
+                'enabled' => $block->enabled,
+                'fields' => $block->getSerializedFieldValues(),
+            );
+        }
+
+        return $post;
     }
 }

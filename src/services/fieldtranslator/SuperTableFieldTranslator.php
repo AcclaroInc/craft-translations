@@ -36,13 +36,15 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
         $blocks = $blocks ? array($fieldHandle => $blocks) : array();
         
         if ($blocks) {
+            $new = 0;
             foreach ($blocks as $block) {
                 if (!$block instanceof ElementQuery) {
                     if (is_array($block)) {
                         foreach ($block as $key => $elem) {
+                            $blockId = $elem->id ?? 'new' . ++$new;
                             $blockSource = $elementTranslator->toTranslationSource($elem);
                             foreach ($blockSource as $key => $value) {
-                                $key = sprintf('%s.%s.%s', $field->handle, $elem->id, $key);
+                                $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
                                 
                                 $source[$key] = $value;
                             }
@@ -50,7 +52,8 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
                     } else {
                         $blockSource = $elementTranslator->toTranslationSource($block);
                         foreach ($blockSource as $key => $value) {
-                            $key = sprintf('%s.%s.%s', $field->handle, $block->id, $key);
+                            $blockId = $elem->id ?? 'new' . ++$new;
+                            $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
                             
                             $source[$key] = $value;
                         }
@@ -58,9 +61,10 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
                 } else {
                     $blockElem = $element->getFieldValue($fieldHandle);
                     foreach ($blockElem as $key => $block) {
+                        $blockId = $elem->id ?? 'new' . ++$new;
                         $blockSource = $elementTranslator->toTranslationSource($block);
                         foreach ($blockSource as $key => $value) {
-                            $key = sprintf('%s.%s.%s', $field->handle, $block->id, $key);
+                            $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
                             
                             $source[$key] = $value;
                         }
@@ -78,10 +82,60 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
     public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
         $fieldHandle = $field->handle;
-
+        
         $fieldData = $element->getFieldValue($fieldHandle)->all();
+        
+        // return $fieldData ? array($fieldHandle => $fieldData) : array();
+        
+        $blocks = $element->getFieldValue($fieldHandle)->all();
+        
+        $blocks = $blocks ? array($fieldHandle => $blocks) : array();
+        
+        $post = array(
+            $fieldHandle => array(),
+        );
+        
+        $fieldData = array_values($fieldData);
+        
+        $blockTypes = SuperTable::$plugin->service->getBlockTypesByFieldId($field->id);
 
-        return $fieldData ? array($fieldHandle => $fieldData) : array();
+        $blockType = $blockTypes[0] ?? $blockTypes; // There will only ever be one SuperTable_BlockType
+
+        $new = 0;
+        foreach ($blocks as $i => $block) {
+          if (!$block instanceof ElementQuery) {
+              if (is_array($block)) {
+                  $n = 0;
+                  foreach ($block as $key => $elem) {
+                    $blockId = $elem->id ?? 'new' . ++$new;
+                    $blockData = isset($fieldData[$n]) ? $fieldData[$n] : array();
+                    $post[$fieldHandle][$blockId] = array(
+                      'type' => $blockType->id,
+                      'fields' => $elementTranslator->toPostArray($elem, $blockData),
+                    );
+                    $n++;
+                  }
+              } else {
+                $blockData = isset($fieldData[$new]) ? $fieldData[$new] : array();
+                $blockId = $block->id ?? 'new' . ++$new;
+                $post[$fieldHandle][$blockId] = array(
+                  'type' => $blockType->id,
+                  'fields' => $elementTranslator->toPostArray($block, $blockData),
+                );
+              }
+          } else {
+            $blockElem = $element->getFieldValue($fieldHandle);
+            foreach ($blockElem as $key => $block) {
+              $blockId = $block->id ?? 'new' . ++$new;
+              $blockData = isset($fieldData[$key]) ? $fieldData[$key] : array();
+              $post[$fieldHandle][$blockId] = array(
+                'type' => $blockType->id,
+                'fields' => $elementTranslator->toPostArray($block, $blockData),
+              );
+            }
+          }
+        }
+        return $post;
     }
 
     /**
@@ -90,20 +144,21 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceLanguage, $targetLanguage, $fieldData)
     {
         $fieldHandle = $field->handle;
-
+        
         $blocks = $element->getFieldValue($fieldHandle)->all();
-
+        
         $blocks = $blocks ? array($fieldHandle => $blocks) : array();
-
+        
         $post = array(
             $fieldHandle => array(),
         );
-
+        
         $fieldData = array_values($fieldData);
-
+        
         $blockTypes = SuperTable::$plugin->service->getBlockTypesByFieldId($field->id);
+        
         $blockType = $blockTypes[0]; // There will only ever be one SuperTable_BlockType
-
+        
         $new = 0;
         foreach ($blocks as $i => $block) {
           if (!$block instanceof ElementQuery) {

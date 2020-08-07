@@ -29,11 +29,14 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         $blocks = $element->getFieldValue($field->handle)->all();
 
         if ($blocks) {
+            
+            $new = 0;
             foreach ($blocks as $block) {
+                $blockId = $block->id ?? 'new' . ++$new;
                 $blockSource = $elementTranslator->toTranslationSource($block);
 
                 foreach ($blockSource as $key => $value) {
-                    $key = sprintf('%s.%s.%s', $field->handle, $block->id, $key);
+                    $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
 
                     $source[$key] = $value;
                 }
@@ -64,9 +67,11 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         foreach ($blocks as $i => $block) {
             $blockId = $block->id ?? 'new' . ++$new;
             $post[$fieldHandle][$blockId] = array(
-                'type' => $block->getType()->handle,
-                'enabled' => $block->enabled,
-                'fields' => $elementTranslator->toPostArray($block),
+                'type'              => $block->getType()->handle,
+                'enabled'           => $block->enabled,
+                // 'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,
+                // 'siteId'            => $element->siteId,
+                'fields'            => $elementTranslator->toPostArray($block),
             );
         }
         return $post;
@@ -78,19 +83,21 @@ class MatrixFieldTranslator extends GenericFieldTranslator
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
     {
         $fieldHandle = $field->handle;
-
+        
         $blocks = $element->getFieldValue($fieldHandle)->all();
         
         $post = array(
             $fieldHandle => array(),
         );
-        
-        $fieldData = array_values($fieldData);        
+
+        $fieldData = array_values($fieldData);
         
         $new = 0;
         foreach ($blocks as $i => $block) {
             $blockId = $block->id ?? 'new' . ++$new;
+            // $blockData = isset($fieldData[$blockId]) ? $fieldData[$blockId] : array();
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
+            
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],

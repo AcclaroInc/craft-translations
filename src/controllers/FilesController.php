@@ -19,6 +19,7 @@ use craft\helpers\Assets;
 use craft\models\Section;
 use yii\web\HttpException;
 use craft\web\UploadedFile;
+use craft\elements\Category;
 use craft\helpers\FileHelper;
 use craft\elements\GlobalSet;
 use craft\base\VolumeInterface;
@@ -53,6 +54,8 @@ class FilesController extends Controller
     protected $order;
 
     protected $variables;
+
+    const WORDCOUNT_LIMIT = 2000;
 
     /**
 	 * Allowed types of site images.
@@ -180,6 +183,8 @@ class FilesController extends Controller
 
         $this->order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
+        $totalWordCount = ($this->order->wordCount * count($this->order->getTargetSitesArray()));
+
         $total_files = (count($this->order->files) * count($this->order->getTargetSitesArray()));
 
         try
@@ -249,21 +254,32 @@ class FilesController extends Controller
 
                         $zip->close();
 
-                        $job = Craft::$app->queue->push(new ImportFiles([
-                            'description' => 'Updating translation drafts',
-                            'orderId' => $orderId,
-                            'totalFiles' => $total_files,
-                            'assets' => $assetIds,
-                        ]));
+                        // Process files via job or directly based on order "size"
+                        if ($totalWordCount > self::WORDCOUNT_LIMIT) {
+                            $job = Craft::$app->queue->push(new ImportFiles([
+                                'description' => 'Updating translation drafts',
+                                'orderId' => $orderId,
+                                'totalFiles' => $total_files,
+                                'assets' => $assetIds,
+                            ]));
 
-                        if ($job) {
-                            $params = [
-                                'id' => (int) $job,
-                                'notice' => 'Done updating translation drafts',
-                                'url' => 'translations/orders/detail/'. $orderId
-                            ];
-                            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                            if ($job) {
+                                $params = [
+                                    'id' => (int) $job,
+                                    'notice' => 'Done updating translation drafts',
+                                    'url' => 'translations/orders/detail/'. $orderId
+                                ];
+                                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                            }
+                        } else {
+                            $fileSvc = new ImportFiles();
+                            foreach ($assetIds as $key => $id) {
+                                $a = Craft::$app->getAssets()->getAssetById($id);
+                                $fileSvc->processFile($a, $this->order);
+                                Craft::$app->getElements()->deleteElement($a);
+                            }
                         }
+
                         // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
                         $this->showUserMessages("File uploaded successfully: $fileName", true);
                     } else {
@@ -295,21 +311,28 @@ class FilesController extends Controller
                         return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                     }
 
-                    // This generally executes too fast for page to refresh
-                    $job = Craft::$app->queue->push(new ImportFiles([
-                        'description' => 'Updating translation drafts',
-                        'orderId' => $orderId,
-                        'totalFiles' => $total_files,
-                        'assets' => [$asset->id],
-                    ]));
-                    
-                    if ($job) {
-                        $params = [
-                            'id' => (int) $job,
-                            'notice' => 'Done updating translation drafts',
-                            'url' => 'translations/orders/detail/'. $orderId
-                        ];
-                        Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                    // Process files via job or directly based on order "size"
+                    if ($totalWordCount > self::WORDCOUNT_LIMIT) {
+                        $job = Craft::$app->queue->push(new ImportFiles([
+                            'description' => 'Updating translation drafts',
+                            'orderId' => $orderId,
+                            'totalFiles' => $total_files,
+                            'assets' => [$asset->id],
+                        ]));
+
+                        if ($job) {
+                            $params = [
+                                'id' => (int) $job,
+                                'notice' => 'Done updating translation drafts',
+                                'url' => 'translations/orders/detail/'. $orderId
+                            ];
+                            Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                        }
+                    } else {
+                        $fileSvc = new ImportFiles();
+                        $a = Craft::$app->getAssets()->getAssetById($asset->id);
+                        $fileSvc->processFile($a, $this->order);
+                        Craft::$app->getElements()->deleteElement($a);
                     }
 
                     $this->showUserMessages("File uploaded successfully: {$file->name}", true);
@@ -346,7 +369,7 @@ class FilesController extends Controller
         }
 
         // Get the element
-        $element = Craft::$app->elements->getElementById($file->elementId);
+        $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
         if (!$element) {
             $this->showUserMessages("Entry not found for file.");
             return;
@@ -362,10 +385,25 @@ class FilesController extends Controller
             $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
             
             $draft->name = $element->name;
+            $draft->site = $file->targetSite;
 
             if ($draft) {
                 $response = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
-                $message = 'Draft applied for '. '"'. $element->name .'"';
+                $message = 'Draft applied for '. '"'. $draft->name .'"';
+            } else {
+                $response = false;
+            }
+
+            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+        } else if ($element instanceof Category) {
+            $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+
+            $draft->name = $element->title;
+            $draft->site = $file->targetSite;
+
+            if ($draft) {
+                $response = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
+                $message = 'Draft applied for '. '"'. $draft->name .'"';
             } else {
                 $response = false;
             }
@@ -417,6 +455,23 @@ class FilesController extends Controller
         $file->status = 'published';
 
         Translations::$plugin->fileRepository->saveFile($file);
+
+        $files = $order->getFiles();
+        $filesCount = count($files);
+        $publishedFilesCount = 0;
+
+        foreach ($files as $key => $f) {
+            if ($f->status !== 'complete') {
+                continue;
+            }
+            
+            $publishedFilesCount++;
+        }
+
+
+        if ($publishedFilesCount === $filesCount) {
+            $order->status = 'published';
+        }
 
         Translations::$plugin->orderRepository->saveOrder($order);
 

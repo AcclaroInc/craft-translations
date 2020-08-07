@@ -12,38 +12,40 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\fields\Matrix;
-use craft\elements\GlobalSet;
+use craft\base\Element;
+use craft\elements\Category;
 use craft\base\ElementInterface;
 use acclaro\translations\Translations;
-use acclaro\translations\models\GlobalSetDraftModel;
-use acclaro\translations\records\GlobalSetDraftRecord;
+use acclaro\translations\models\CategoryDraftModel;
+use acclaro\translations\records\CategoryDraftRecord;
 
-class GlobalSetDraftRepository
+class CategoryDraftRepository
 {
     public function makeNewDraft()
     {
-        $draft = new GlobalSetDraftModel();
-
-        return $draft;
+        return new CategoryDraftModel();
     }
 
     public function getDraftById($draftId)
     {
-        $record = GlobalSetDraftRecord::findOne($draftId);
+        $record = CategoryDraftRecord::findOne($draftId);
 
-        $globalSetDraft = new GlobalSetDraftModel($record->toArray([
+        $categoryDraft = new CategoryDraftModel($record->toArray([
             'id',
             'name',
-            'globalSetId',
+            'title',
+            'categoryId',
             'site',
             'data'
         ]));
 
+        $category = Craft::$app->categories->getCategoryById($categoryDraft->categoryId);
+        $categoryDraft->groupId = $category->groupId;
+
+        $categoryDraft->draftId = $categoryDraft->id;
         
-        $globalSetDraft->draftId = $globalSetDraft->id;
-        
-        $globalSetData = json_decode($record['data'], true);
-        $fieldContent = isset($globalSetData['fields']) ? $globalSetData['fields'] : null;
+        $categoryData = json_decode($record['data'], true);
+        $fieldContent = isset($categoryData['fields']) ? $categoryData['fields'] : null;
 
         if ($fieldContent) {
             $post = array();
@@ -56,83 +58,92 @@ class GlobalSetDraftRepository
                 }
             }
 
-            $globalSetDraft->setFieldValues($post);
+            $categoryDraft->setFieldValues($post);
         }
 
-        return $globalSetDraft;
+        return $categoryDraft;
     }
     
-    public function getDraftsByGlobalSetId($globalSetId, $site = null)
+    public function getDraftsByCategoryId($categoryId, $site = null)
     {
         $attributes = array(
-            'globalSetId' => $globalSetId,
+            'categoryId' => $categoryId,
             'site' => $site ?: Craft::$app->sites->getPrimarySite()->id
         );
 
-        $records = GlobalSetDraftRecord::find()->where($attributes)->all();
+        $records = CategoryDraftModel::find()->where($attributes)->all();
 
         foreach ($records as $key => $record) {
-            $globalSetDrafts[$key] = new GlobalSetDraftModel($record->toArray([
+            $categoryDrafts[$key] = new CategoryDraftModel($record->toArray([
                 'id',
                 'name',
-                'globalSetId',
+                'title',
+                'categoryId',
                 'site',
                 'data'
             ]));
 
-            $globalSetDrafts[$key]->draftId = $globalSetDrafts[$key]->id;
+            $categoryDrafts[$key]->draftId = $categoryDrafts[$key]->id;
         }
 
-        return $records ? $globalSetDrafts : array();
+        return $records ? $categoryDrafts : array();
     }
 
-    public function getDraftRecord(GlobalSet $draft)
+    public function getDraftRecord(Category $draft)
     {
         if (isset($draft->draftId)) {
-            $record = GlobalSetDraftRecord::findOne($draft->draftId);
+            $record = CategoryDraftRecord::findOne($draft->draftId);
 
             if (!$record) {
                 throw new Exception(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draft->draftId)));
             }
         } else {
-            $record = new GlobalSetDraftRecord();
-            $record->globalSetId = $draft->id;
+            $record = new CategoryDraftRecord();
+            $record->categoryId = $draft->id;
             $record->site = $draft->site;
             $record->name = $draft->name;
+            $record->title = $draft->title;
         }
 
         return $record;
     }
 
-    public function saveDraft(GlobalSet $draft, array $content = [])
+    public function saveDraft(Category $draft, array $content = [])
     {
         $record = $this->getDraftRecord($draft);
 
         if (!$draft->name && $draft->id) {
             $totalDrafts = Craft::$app->getDb()->createCommand()
-                ->from('translations_globalsetdrafts')
+                ->from('translations_categorydrafts')
                 ->where(
-                    array('and', 'globalSetId = :globalSetId', 'site = :site'),
-                    array(':globalSetId' => $draft->id, ':site' => $draft->site)
+                    array('and', 'categoryId = :categoryId', 'site = :site'),
+                    array(':categoryId' => $draft->id, ':site' => $draft->site)
                 )
                 ->count('id');
             
             $draft->name = Translations::$plugin->translator->translate('app', 'Draft {num}', array('num' => $totalDrafts + 1));
         }
 
-        if (is_null($draft->globalSetId)) {
-            $record->globalSetId = $draft->id; // This works for creating an order
+        if (is_null($draft->categoryId)) {
+            $record->categoryId = $draft->id; // This works for creating an order
         } else {
-            $record->globalSetId = $draft->globalSetId; // This works post-order
+            $record->categoryId = $draft->categoryId; // This works post-order
         }
-
         $record->site = $draft->site;
         $record->name = $draft->name;
+        $record->title = $draft->title;
 
         $data = array(
             'fields' => array(),
         );
 
+        if (empty($draft->groupId)) {
+            $category = Craft::$app->getCategories()->getCategoryById($draft->id, $draft->site);
+            $draft->groupId = $category->groupId;
+        }
+
+        $draft->siteId = $draft->site;
+        
         $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
 
         $nestedFieldType = [
@@ -177,19 +188,19 @@ class GlobalSetDraftRepository
         return false;
     }
 
-    public function publishDraft(GlobalSet $draft)
+    public function publishDraft(Category $draft)
     {
         $post = [];
-
-        $globalSet = Craft::$app->globals->getSetById($draft->globalSetId, $draft->site);
 
         foreach ($draft->getDirtyFields() as $key => $fieldHandle) {
             $post[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
         }
+
+        $category = Craft::$app->categories->getCategoryById($draft->categoryId, $draft->site);
+        $category->title = $draft->title;
+        $category->setFieldValues($post);
         
-        $globalSet->setFieldValues($post);
-        
-        $success = Craft::$app->elements->saveElement($globalSet);
+        $success = Craft::$app->elements->saveElement($category);
         
         if (!$success) {
             Craft::error('Couldn’t publish draft "'.$draft->title.'"', __METHOD__);
@@ -199,7 +210,7 @@ class GlobalSetDraftRepository
         return true;
     }
 
-    public function deleteDraft(GlobalSet $draft)
+    public function deleteDraft(Category $draft)
     {
         try {
             $record = $this->getDraftRecord($draft);

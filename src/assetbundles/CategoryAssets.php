@@ -13,7 +13,7 @@ namespace acclaro\translations\assetbundles;
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
 
-class OrderAssets extends AssetBundle
+class CategoryAssets extends AssetBundle
 {
     public function init()
     {
@@ -24,16 +24,10 @@ class OrderAssets extends AssetBundle
         ];
 
         $this->js = [
-            'js/OrderDetail.js',
-            'js/OrderEntries.js',
-            'js/OrderIndex.js',
-            'js/ExportFiles.js',
-            'js/ImportFiles.js',
-            'js/diff2html.min.js',
+            'js/CategoryTranslations.js',
         ];
 
         $this->css = [
-            'css/diff2html.min.css',
         ];
 
         parent::init();

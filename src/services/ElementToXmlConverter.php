@@ -49,7 +49,7 @@ class ElementToXmlConverter
 
         $body = $xml->appendChild($dom->createElement('body'));
 
-        foreach (Translations::$plugin->elementTranslator->toTranslationSource($element) as $key => $value) {
+        foreach (Translations::$plugin->elementTranslator->toTranslationSource($element, $sourceSite) as $key => $value) {
             $translation = $dom->createElement('content');
 
             $translation->setAttribute('resname', $key);

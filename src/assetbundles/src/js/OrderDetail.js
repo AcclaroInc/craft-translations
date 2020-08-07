@@ -81,6 +81,7 @@ Craft.Translations.OrderDetail = {
     init: function() {
         var self = this;
         var elementIds = [];
+        var modal;
 
         $('input, select').on('keypress', function(e) {
             if (e.which === 13) {
@@ -248,15 +249,65 @@ Craft.Translations.OrderDetail = {
             );
         });
 
+        $('.tab-xml').on('click', function(e) {
+            console.log("  Xml clicked ");
+            $("#xml").show();
+            $("#tab-xml").addClass('sel');
+            $("#tab-visual").removeClass('sel');
+            $("#visual").hide();
+        });
+        $('.tab-visual').on('click', function(e) {
+            console.log("  Visual clicked ");
+            $("#xml").hide();
+            $("#visual").show();
+            $("#tab-visual").addClass('sel');
+            $("#tab-xml").removeClass('sel');
+
+            //let fileId = $('#diff-file-id').val();
+            //getFileDiffHtml(fileId);
+
+        });
+
+        function getFileDiffHtml(location) {
+            //let location = $('#file-diff-html-url').val() + '/' + fileId;
+            $.get(
+                location,
+                function (data) {
+                    if (!data.success) {
+                        alert(data.error);
+                    } else {
+                        data = data.data;
+
+                        document.getElementById('original-url').src = data.originalUrl;
+                        document.getElementById('new-url').src = data.newUrl;
+
+                        $('#close-diff-modal-entry').on('click', function(e) {
+                            e.preventDefault();
+                            modal.hide();
+                        });
+                    }
+                },
+                'json'
+            );
+        }
+
+        function createModal() {
+            return new Garnish.Modal($('#diff-modal-entry').removeClass('hidden'), {
+                autoShow: false,
+            });
+        }
+
         $('.view-diff').on('click', function(e) {
             e.preventDefault();
             var $el = $(this);
             //var file_id = $el.attr('data-file-id');
             var location = $el.attr('href');
 
-            $modal = new Garnish.Modal($('#diff-modal-entry').removeClass('hidden'), {
-                autoShow: false,
-            });
+            var show_visual = $el.data("show-visual");
+
+            if (!modal) {
+                modal = createModal();
+            }
 
             $.get(
                 location,
@@ -280,8 +331,19 @@ Craft.Translations.OrderDetail = {
                             'wordDifference'
                         ];
 
+                        if (!modal) {
+                            modal = createModal();
+                        } else {
+                            if (!show_visual) {
+                                $('.tab-visual').click();
+                            } else {
+                                $('.tab-xml').click();
+                                $('#visual-li').addClass('disabled');
+                                $('#tab-visual').off('click');
+                            }
+                        }
                         // Show the modal
-                        $modal.show();
+                        modal.show();
 
                         // Set modification details
                         for (let index = 0; index < classNames.length; index++) {
@@ -296,18 +358,23 @@ Craft.Translations.OrderDetail = {
                             $('#apply-translation').addClass('disabled');
                         }
 
+                        $('#diff-file-id').val(data['fileId']);
+
                         // Add the diff html
                         document.getElementById("modal-body-entry").innerHTML = diffHtml;
 
                         $('#close-diff-modal-entry').on('click', function(e) {
                             e.preventDefault();
-                            $modal.hide();
+                            modal.hide();
                         });
                     }
                 },
                 'json'
             );
 
+            //let fileId = location.substring(location.lastIndexOf('/') + 1);
+            location = location.replace("/get-file-diff/", "/get-file-diff-html/");
+            getFileDiffHtml(location);
         });
 
         $("#duplicate-continue").on("click", function (e) {
