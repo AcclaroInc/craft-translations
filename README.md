@@ -2,13 +2,6 @@
 
 ![repo-img](./resources/img/image.jpg)
 
-## Important Notes for Craft 3.2 and up
-- Due to the fundamental changes in [Crafts Draft service in 3.2+](https://github.com/craftcms/cms/blob/master/CHANGELOG-v3.md#320---2019-07-09), we are unable to retain previous translation drafts that were created through the plugin.
-- If you are are upgrading from Craft <= 3.1 to 3.2+, please read through our [Upgrade Workflow](https://github.com/AcclaroInc/craft-translations/wiki/Translations-Upgrade-Workflow-(Craft-3.1-to-3.2-)) prior to upgrading.
-
-<!-- ## Used By -->
-<!-- [Clients go here] -->
-
 ## System Requirements
 - Craft CMS 3.4.0 or later.
 - PHP 7.1+
