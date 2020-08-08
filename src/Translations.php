@@ -473,7 +473,7 @@ class Translations extends Plugin
 
         $drafts = array();
 
-        foreach (self::$plugin->globalSetDraftRepository->getDraftsByGlobalSetId($globalSet->id, $site) as $draft) {
+        foreach (self::$plugin->globalSetDraftRepository->getDraftsByGlobalSetId($globalSet->id, Craft::$app->sites->getSiteByHandle($site)->id) as $draft) {
             $drafts[] = array(
                 'url' => $draft->getCpEditUrl(),
                 'name' => $draft->name,
