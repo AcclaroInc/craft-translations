@@ -471,7 +471,7 @@ class BaseController extends Controller
 
         if ($variables['inputElements']) {
             foreach ($variables['inputElements'] as $elementId) {
-                $element = Craft::$app->getElements()->getElementById($elementId, null, $variables['order']->sourceSite);
+                $element = Craft::$app->getElements()->getElementById((int) $elementId, null, $variables['order']->sourceSite);
 
                 if ($element) {
                     $variables['elements'][] = $element;
@@ -609,7 +609,7 @@ class BaseController extends Controller
             $site = Craft::$app->getSites()->getSiteById($site);
             $variables['targetSiteCheckboxOptions'][] = array(
                 'value' => $site->id,
-                'label' => $site->name. '<span class="light"> ('. $site->language. ')</span>'
+                'label' => $site->name.' ('. $site->language. ')'
             );
         }
 
