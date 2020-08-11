@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.8.1 - 2020-08-11
+
+### Added
+- Option to select all sites in target sites selection
+
+### Fixed
+- Unrendered HTML display issue in Craft 3.5+
+- Typecast `$elementId` as an integer for `getElementById()` in `actionOrderDetail()`
+
+### Updated
+- Use the site ID instead of the site handle in `getDraftsByGlobalSetId()`
+
 ## 1.8.0 - 2020-08-06
 
 ### Added
