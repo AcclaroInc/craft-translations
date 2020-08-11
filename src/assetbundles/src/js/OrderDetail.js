@@ -116,7 +116,7 @@ Craft.Translations.OrderDetail = {
                 targetSitesLabels.push(label);
             });
 
-            $('[data-order-attribute=targetSites]').text(targetSitesLabels.join(', '));
+            $('[data-order-attribute=targetSites]').html(targetSitesLabels.join(', '));
         });
 
         $('.translations-order-step-next').on('click', function(e) {
