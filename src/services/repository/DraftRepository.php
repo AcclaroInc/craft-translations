@@ -59,6 +59,11 @@ class DraftRepository
 
     public function saveDraft($element)
     {
+        $element->validate();
+        if($element->getErrors()){
+            return $element->getErrors();
+        }
+
         return Craft::$app->elements->saveElement($element);
     }
     
