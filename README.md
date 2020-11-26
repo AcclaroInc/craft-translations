@@ -3,7 +3,7 @@
 ![repo-img](./resources/img/image.jpg)
 
 ## System Requirements
-- Craft CMS 3.4.0 or later.
+- Craft CMS 3.5.9 or later.
 - PHP 7.1+
 - PHP [DOM](https://docs.craftcms.com/v3/requirements.html#optional-php-extensions) Extension
 
