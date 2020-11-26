@@ -143,6 +143,8 @@ class ImportFiles extends BaseJob
             if($this->checkResname($dom, $draft_file)){
                 $this->order->logActivity(Translations::$plugin->translator->translate('app', "File failed to import due to the resname mismatches in the XML."));
                 Translations::$plugin->orderRepository->saveOrder($this->order);
+                $draft_file->status = 'failed';
+                Translations::$plugin->fileRepository->saveFile($draft_file);
                 return;
             }
 
