@@ -397,9 +397,7 @@ Craft.Translations.OrderDetail = {
         $("#sourceSiteSelect").change(function (e) {
             $(window).off('beforeunload.windowReload');
             var site = $("#sourceSiteSelect").val();
-            var url = document.URL;
-            url = url.split('?');
-            url = url[0];
+            var url = $("#newOrderUrl").val();
 
             var currentElementIds = [];
             if (typeof $('#currentElementIds').val() !== 'undefined') {
@@ -414,7 +412,7 @@ Craft.Translations.OrderDetail = {
             if(url.indexOf('#step2') == -1) {
                 url += '#step2';
             }
-            window.location.href = url;
+            window.location = url;
 
         });
         var hash = window.location.hash;

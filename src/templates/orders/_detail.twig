@@ -637,6 +637,8 @@
                     <div class="translations-order-step-intro">
                         <h2>{{ 'Select Sites'|t }}</h2>
 
+                        <input type="hidden" value="{{ url('translations/orders/new') }}" id="newOrderUrl">
+
                         <p>
                             <i>{{ 'Select your source and target sites. Only one source site may be selected per order.'|t }}</i><br>
                             <a href="{{ url('settings/sites') }}" target="_blank">{{ 'Add more sites from the Craft Sites settings page.'|t }} &raquo;</a>
