@@ -84,18 +84,28 @@ class Translations extends Plugin
     {
         parent::init();
 
-        $this->setComponents([
-            'app' => App::class
-        ]);
+        Event::on(
+            Plugins::class,
+            Plugins::EVENT_AFTER_LOAD_PLUGINS,
+            function () {
+                Craft::debug(
+                    'Plugins::EVENT_AFTER_LOAD_PLUGINS',
+                    __METHOD__
+                );
+                $this->setComponents([
+                    'app' => App::class
+                ]);
 
-        self::$plugin = $this->get('app');
-        self::$view = Craft::$app->getView();
+                self::$plugin = $this->get('app');
+                self::$view = Craft::$app->getView();
 
-        $this->installEventListeners();
+                $this->installEventListeners();
 
-        if (Craft::$app instanceof ConsoleApplication) {
-            $this->controllerNamespace = 'acclaro\translations\console\controllers';
-        }
+                if (Craft::$app instanceof ConsoleApplication) {
+                    $this->controllerNamespace = 'acclaro\translations\console\controllers';
+                }
+            }
+        );
 
         Event::on(
             Drafts::class,
