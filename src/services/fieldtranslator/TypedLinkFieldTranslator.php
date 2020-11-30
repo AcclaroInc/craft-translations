@@ -34,9 +34,11 @@ class TypedLinkFieldTranslator extends GenericFieldTranslator
         if($fieldData){
             
             foreach($fieldData as $key => $value)
-            { 
-                $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
-                $source[$k] = $value;
+            {
+                if ($key=='customText') {
+                    $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
+                    $source[$k] = $value;
+                }
             }
         }
 
@@ -58,9 +60,8 @@ class TypedLinkFieldTranslator extends GenericFieldTranslator
         {
             foreach($fieldData as $key => $value)
             {
-                if ($key=='customText') {
-                    $source[$fieldHandle][$key] = $value;
-                }
+                $source[$fieldHandle]['type'] = $fieldData->type;
+                $source[$fieldHandle][$key] = $value;
             }
         }
 
