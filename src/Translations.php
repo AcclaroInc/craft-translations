@@ -74,6 +74,10 @@ class Translations extends Plugin
      */
     public $schemaVersion = '1.3.1';
 
+    const ACCLARO = 'acclaro';
+
+    const EXPORT_IMPORT = 'export_import';
+
     // Public Methods
     // =========================================================================
 

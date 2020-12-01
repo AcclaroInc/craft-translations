@@ -148,8 +148,13 @@ class ImportFiles extends BaseJob
                 return;
             }
 
+            $translation_service = $this->order->translator->service;
+            if ($translation_service === Translations::ACCLARO) {
+                $translation_service = Translations::EXPORT_IMPORT;
+            }
+
             //Translation Service
-            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
+            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translation_service, $this->order->translator->getSettings());
 
             $fileUpdated = $isDraftSave = true;
 
