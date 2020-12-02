@@ -26,7 +26,8 @@ use craft\fields\MultiSelect;
 use craft\fields\RadioButtons;
 
 use benf\neo\Field as NeoField;
-use typedlinkfield\fields\LinkField;
+use typedlinkfield\fields\LinkField as LinkField;
+use lenz\linkfield\fields\LinkField as TypedLinkField;
 use craft\redactor\Field as RedactorField;
 use fruitstudios\linkit\fields\LinkitField;
 use luwes\codemirror\fields\CodeMirrorField;
@@ -47,6 +48,7 @@ class Factory
         Matrix::class           => MatrixFieldTranslator::class,
         MultiSelect::class      => MultiSelectFieldTranslator::class,
         LinkField::class        => LinkFieldTranslator::class,
+        TypedLinkField::class   => TypedLinkFieldTranslator::class,
         LinkitField::class      => LinkitFieldTranslator::class,
         NeoField::class         => NeoFieldTranslator::class,
         Number::class           => GenericFieldTranslator::class,
