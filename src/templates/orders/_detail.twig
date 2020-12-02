@@ -75,6 +75,7 @@
                 {% else %}
                     {# {% if order.status != 'complete' and order.status != 'published' %} #}
                     {% if order.status != 'published' %}
+
                         <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
                             {{ csrfInput() }}
                             {{ forms.hidden({
@@ -92,6 +93,21 @@
                                 <div class="sync-status"></div>
                             </div>
                         </form>
+
+                        <div class="buttons translations-order-detail-button-wrapper margin-right-10">
+                            <a class="btn right" id="import-tool">{{ 'Import'|t('app') }}</a>
+                            <div class="utility-status"></div>
+                        </div>
+                        <div class="hud-wrapper hidden">
+                            <div id="translations-import-form" class="form meta">
+                                {{ forms.hidden({
+                                    name: 'orderId',
+                                    id: 'order_id',
+                                    value: orderId,
+                                }) }}
+                            </div>
+                        </div>
+
                     {% endif %}
                 {% endif %}
 

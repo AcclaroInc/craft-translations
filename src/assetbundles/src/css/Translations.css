@@ -215,6 +215,10 @@
     margin-left: 10px;
 }
 
+.margin-right-10{
+    margin-right: 10px;
+}
+
 .translations-order-detail-button-wrapper .utility-status {
     display: flex;
     align-self: center;
