@@ -57,6 +57,8 @@ class FileModel extends Model
     public $dateUpdated;
 
     public $dateDelivered;
+    
+    public $dateDeleted;
 
     public function init()
     {
@@ -73,7 +75,7 @@ class FileModel extends Model
             [['orderId', 'elementId', 'draftId', 'sourceSite', 'targetSite'], 'required'],
             [['sourceSite', 'targetSite'], SiteIdValidator::class],
             ['wordCount', NumberValidator::class],
-            [['dateCreated', 'dateUpdated', 'dateDelivered'], DateTimeValidator::class],
+            [['dateCreated', 'dateUpdated', 'dateDelivered', 'dateDeleted'], DateTimeValidator::class],
         ];
     }
 
