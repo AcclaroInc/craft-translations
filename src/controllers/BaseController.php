@@ -459,7 +459,7 @@ class BaseController extends Controller
         if ($variables['order']->targetSites) {
             $variables['orderTargetSitesObject'] = array();
             foreach (json_decode($variables['order']->targetSites) as $key => $site) {
-                $variables['orderTargetSitesObject'][] = Craft::$app->getSites()->getSiteById($site);
+                $variables['orderTargetSitesObject'][] = (Craft::$app->getSites()->getSiteById($site) ? Craft::$app->getSites()->getSiteById($site) : [ 'language' => 'Deleted']);
             }
         }
 
@@ -548,8 +548,11 @@ class BaseController extends Controller
                         }
                     }
 
-                    $variables['fileTargetSites'][$file->targetSite] = Craft::$app->getSites()->getSiteById($file->targetSite);
-                    $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                    $variables['fileTargetSites'][$file->targetSite] = (Craft::$app->getSites()->getSiteById($file->targetSite) ? Craft::$app->getSites()->getSiteById($file->targetSite) : [ 'language' => 'Deleted' ]);
+
+                    if (Craft::$app->getSites()->getSiteById($file->targetSite)) {
+                        $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                    }
                 }
                 
                 $variables['isElementPublished'][$element->id] = $isElementPublished;
