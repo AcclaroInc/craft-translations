@@ -204,9 +204,17 @@ class Order extends Element
                 $length = count($targetSites);
                 foreach ($targetSites as $key => $site) {
                     if (($key+1) === $length) {
-                        $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>';
+                        if (Craft::$app->getSites()->getSiteById($site)) {
+                            $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>';
+                        } else {
+                            $languages .= '<s class="light">Deleted</s>';
+                        }
                     } else {
-                        $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>'. ', ';
+                        if (Craft::$app->getSites()->getSiteById($site)) {
+                            $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>'. ', ';
+                        } else {
+                            $languages .= '<s class="light">Deleted</s>'. ', ';
+                        }
                     }
                 }
 
