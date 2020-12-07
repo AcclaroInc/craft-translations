@@ -328,14 +328,20 @@ class FilesController extends Controller
                             ];
                             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                         }
+                        $this->showUserMessages("File uploaded successfully: {$file->name}", true);
                     } else {
                         $fileSvc = new ImportFiles();
                         $a = Craft::$app->getAssets()->getAssetById($asset->id);
-                        $fileSvc->processFile($a, $this->order);
+                        $res = $fileSvc->processFile($a, $this->order);
                         Craft::$app->getElements()->deleteElement($a);
+                        if($res){
+                            $this->showUserMessages("File uploaded successfully: {$file->name}", true);
+                        } else {
+                            $this->showUserMessages("File import error. Please check the order activity log for details.");
+                        }
                     }
 
-                    $this->showUserMessages("File uploaded successfully: {$file->name}", true);
+
                 } else {
                     $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
                 }
