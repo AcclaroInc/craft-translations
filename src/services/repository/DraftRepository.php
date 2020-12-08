@@ -291,7 +291,7 @@ class DraftRepository
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
-            $file->status = 'failed';
+            $file->status = 'canceled';
             $file->wordCount = isset($wordCounts[$draft->id]) ? $wordCounts[$draft->id] : 0;
             
             Translations::$plugin->fileRepository->saveFile($file);
