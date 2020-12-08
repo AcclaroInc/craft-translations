@@ -334,7 +334,8 @@ class FilesController extends Controller
                         $a = Craft::$app->getAssets()->getAssetById($asset->id);
                         $res = $fileSvc->processFile($a, $this->order);
                         Craft::$app->getElements()->deleteElement($a);
-                        if($res){
+
+                        if($res !== false){
                             $this->showUserMessages("File uploaded successfully: {$file->name}", true);
                         } else {
                             $this->showUserMessages("File import error. Please check the order activity log for details.");
