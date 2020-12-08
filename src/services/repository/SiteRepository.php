@@ -3,6 +3,7 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
+use acclaro\translations\Translations;
 
 use ReflectionClass;
 
@@ -176,7 +177,11 @@ class SiteRepository
     {
         $language = $this->getSiteLanguage($siteId);
 
-        $displayName = Craft::$app->i18n->getLocaleById($language)->getDisplayName();
+        if ($language) {
+            $displayName = Craft::$app->i18n->getLocaleById($language)->getDisplayName();
+        } else {
+            $displayName = '<s class="light">Deleted</s>';
+        }
 
         return $displayName;
     }

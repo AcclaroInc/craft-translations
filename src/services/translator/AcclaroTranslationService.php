@@ -168,10 +168,20 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $draft->siteId = $targetSite;
                 
                 $res = Translations::$plugin->draftRepository->saveDraft($draft);
-                if (!$res) {
-                    $order->logActivity(
-                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
-                    );
+                if ($res !== true) {
+                    if(is_array($res)){
+                        $errorMessage = '';
+                        foreach ($res as $r){
+                            $errorMessage .= implode('; ', $r);
+                        }
+                        $order->logActivity(
+                            sprintf(Translations::$plugin->translator->translate('app', 'Error: '.$errorMessage))
+                        );
+                    } else {
+                        $order->logActivity(
+                            sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft.'))
+                        );
+                    }
 
                     return false;
                 }

@@ -47,6 +47,7 @@ class FileRepository
             'serviceFileId',
             'dateUpdated',
             'dateDelivered',
+            'dateDeleted',
         ]));
 
         return $file;
@@ -85,6 +86,7 @@ class FileRepository
             'previewUrl',
             'serviceFileId',
             'dateDelivered',
+            'dateDeleted',
         ]));
 
         return $file;
@@ -96,7 +98,10 @@ class FileRepository
      */
     public function getFilesByOrderId(int $orderId, $elementId = null, $site=null)
     {
-        $attributes = array('orderId' => $orderId);
+        $attributes = array(
+            'orderId' => $orderId,
+            'dateDeleted' => null
+        );
 
         if ($elementId) {
             $attributes['elementId'] = $elementId;
@@ -125,6 +130,7 @@ class FileRepository
                 'serviceFileId',
                 'dateUpdated',
                 'dateDelivered',
+                'dateDeleted',
             ]));
         }
 
@@ -137,7 +143,10 @@ class FileRepository
      */
     public function getFilesByTargetSite(int $siteId, $elementId = null)
     {
-        $attributes = array('targetSite' => $siteId);
+        $attributes = array(
+            'targetSite' => $siteId,
+            'dateDeleted' => null
+        );
 
         if ($elementId) {
             $attributes['elementId'] = $elementId;
@@ -162,6 +171,7 @@ class FileRepository
                 'previewUrl',
                 'serviceFileId',
                 'dateDelivered',
+                'dateDeleted',
             ]));
         }
 
@@ -174,7 +184,9 @@ class FileRepository
      */
     public function getFiles()
     {
-        $records = FileRecord::find()->all();
+        $records = FileRecord::find()
+            ->all()
+            ->where(['dateDeleted' => null]);
 
         $files = array();
 
@@ -194,6 +206,7 @@ class FileRepository
                 'serviceFileId',
                 'dateUpdated',
                 'dateDelivered',
+                'dateDeleted',
             ]));
         }
 
@@ -351,6 +364,7 @@ class FileRepository
             ->innerJoin('{{%translations_files}} files', '[[files.orderId]] = [[translations_orders.id]]')
             ->where(['files.elementId' => $elementId,])
             ->andWhere(['translations_orders.status' => ['new','getting quote','needs approval','in preparation','in progress']])
+            ->andWhere(['dateDeleted' => null])
             ->groupBy('orderId')
             ->all();
 

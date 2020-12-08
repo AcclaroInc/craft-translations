@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.9.0 - 2020-12-08
+### Added
+- Support for Typed Link Field [2.0-beta](https://github.com/sebastian-lenz/craft-linkfield/tree/2.0.0-beta.10)
+- Manual file import for Acclaro orders
+- XML check to fail file imports with mismatched resnames
+- Initial support for translation file soft-deletes
+
+### Updated
+- Required Craft version to `3.5.9` to resolve Yii2 security issue
+- Improved activity log messaging for failed imports and applied draft
+
+### Fixed
+- Resolve medium security issues
+- Minor bugs
+
 ## 1.8.3 - 2020-09-11
 
 ### Fixed

@@ -121,17 +121,27 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->setFieldValues($post);
                 
                 $draft->siteId = $targetSite;
-                
+
                 $res = Translations::$plugin->draftRepository->saveDraft($draft);
-                if (!$res) {
-                    $order->logActivity(
-                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
-                    );
+                if ($res !== true) {
+                    if(is_array($res)){
+                        $errorMessage = '';
+                        foreach ($res as $r){
+                            $errorMessage .= implode('; ', $r);
+                        }
+                        $order->logActivity(
+                            sprintf(Translations::$plugin->translator->translate('app', 'Error: '.$errorMessage), $file_name)
+                        );
+                    } else {
+                        $order->logActivity(
+                            sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                        );
+                    }
 
                     return false;
                 }
                 break;
-            
+
             // Update Category Drafts
             case $draft instanceof Category:
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;

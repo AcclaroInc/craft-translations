@@ -140,6 +140,14 @@ class ImportFiles extends BaseJob
                 return;
             }
 
+            if($this->checkResname($dom, $draft_file)){
+                $this->order->logActivity(Translations::$plugin->translator->translate('app', "File failed to import due to the resname mismatches in the XML."));
+                Translations::$plugin->orderRepository->saveOrder($this->order);
+                $draft_file->status = 'failed';
+                Translations::$plugin->fileRepository->saveFile($draft_file);
+                return;
+            }
+
             // Don't process published files
             if ($draft_file->status === 'published')
             {
@@ -148,8 +156,13 @@ class ImportFiles extends BaseJob
                 return;
             }
 
+            $translation_service = $this->order->translator->service;
+            if ($translation_service === Translations::ACCLARO) {
+                $translation_service = Translations::EXPORT_IMPORT;
+            }
+
             //Translation Service
-            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($this->order->translator->service, $this->order->translator->getSettings());
+            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translation_service, $this->order->translator->getSettings());
 
             $fileUpdated = $isDraftSave = true;
 
@@ -188,6 +201,10 @@ class ImportFiles extends BaseJob
                 }
 
                 Translations::$plugin->orderRepository->saveOrder($this->order);
+
+                return $isDraftSave;
+            } else {
+                return false;
             }
         }
         else
@@ -196,6 +213,50 @@ class ImportFiles extends BaseJob
             $this->order->logActivity(Translations::$plugin->translator->translate('app', "File {$asset->getFilename()} is invalid, please try again with a valid xml file."));
             Translations::$plugin->orderRepository->saveOrder($this->order);
         }
+    }
+
+    /**
+     * @param $dom
+     * @param $draft_file
+     * @return array|void
+     * @throws Exception
+     */
+    public function checkResname($dom, $draft_file) {
+
+        $targetFields = [];
+        $fileContents = $dom->getElementsByTagName('content');
+        foreach ($fileContents as $node)
+        {
+            $targetFields[$node->getAttribute('resname')] = $node->getAttribute('resname');
+        }
+
+        try
+        {
+            if (!$dom->loadXML( $draft_file->source ))
+            {
+                $errors = $this->reportXmlErrors();
+                if($errors)
+                {
+                    $this->order->logActivity(Translations::$plugin->translator->translate('app', "We found errors on source xml : "  . $errors));
+                    Translations::$plugin->orderRepository->saveOrder($this->order);
+                    return;
+                }
+            }
+        }
+        catch(Exception $e)
+        {
+            $this->order->logActivity(Translations::$plugin->translator->translate('app', $e->getMessage()));
+            Translations::$plugin->orderRepository->saveOrder($this->order);
+        }
+
+        $sourceFields = [];
+        $sourceContents = $dom->getElementsByTagName('content');
+        foreach ($sourceContents as $node)
+        {
+            $sourceFields[$node->getAttribute('resname')] = $node->getAttribute('resname');
+        }
+
+        return array_diff($targetFields, $sourceFields);
     }
 
     /**
