@@ -69,7 +69,8 @@ class SettingsController extends Controller
             'fruitstudios\linkit\fields\LinkitField',
             'luwes\codemirror\fields\CodeMirrorField',
             'verbb\supertable\fields\SuperTableField',
-            'nystudio107\seomatic\fields\SeoSettings'
+            'nystudio107\seomatic\fields\SeoSettings',
+            'lenz\linkfield\fields\LinkField'
         ];
 
         $unrelatedFieldTypes = [
