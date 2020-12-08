@@ -201,6 +201,8 @@ class ImportFiles extends BaseJob
                 }
 
                 Translations::$plugin->orderRepository->saveOrder($this->order);
+
+                return $isDraftSave;
             } else {
                 return false;
             }
