@@ -185,8 +185,8 @@ class FileRepository
     public function getFiles()
     {
         $records = FileRecord::find()
-            ->all()
-            ->where(['dateDeleted' => null]);
+            ->where(['dateDeleted' => null])
+            ->all();
 
         $files = array();
 

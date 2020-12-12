@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.9.2 - 2020-12-11
+
+### Fixed
+- `getFiles()` FileRecord query typo in `FileRepository.php`
+
 ## 1.9.1 - 2020-12-11
 
 ### Fixed
