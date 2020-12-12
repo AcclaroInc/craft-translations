@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.9.1 - 2020-12-11
+
+### Fixed
+- `dateDeleted` bug in installation script
+
 ## 1.9.0 - 2020-12-08
 ### Added
 - Support for Typed Link Field [2.0-beta](https://github.com/sebastian-lenz/craft-linkfield/tree/2.0.0-beta.10)
