@@ -93,8 +93,8 @@ class Translations extends Plugin
             Plugins::EVENT_AFTER_LOAD_PLUGINS,
             function () {
                 Craft::debug(
-                    'Plugins::EVENT_AFTER_LOAD_PLUGINS',
-                    __METHOD__
+                    '['. __METHOD__ .'] Plugins::EVENT_AFTER_LOAD_PLUGINS',
+                    'translations'
                 );
                 $this->setComponents([
                     'app' => App::class
@@ -125,7 +125,7 @@ class Translations extends Plugin
                         '{name} Drafts::EVENT_BEFORE_APPLY_DRAFT',
                         ['name' => $this->name]
                     ),
-                    __METHOD__
+                    'translations'
                 );
 
                 $this->_onSaveEntry($event);
@@ -137,8 +137,8 @@ class Translations extends Plugin
             Drafts::EVENT_AFTER_APPLY_DRAFT,
             function (DraftEvent $event) {
                 Craft::debug(
-                    'Drafts::EVENT_AFTER_APPLY_DRAFT',
-                    __METHOD__
+                    '['. __METHOD__ .'] Drafts::EVENT_AFTER_APPLY_DRAFT',
+                    'translations'
                 );
                 if ($event->draft) {
                     $this->_onApplyDraft($event);
@@ -151,8 +151,8 @@ class Translations extends Plugin
             Entry::EVENT_AFTER_SAVE,
             function (ModelEvent $event) {
                 Craft::debug(
-                    'Elements::EVENT_AFTER_SAVE_ELEMENT',
-                    __METHOD__
+                    '['. __METHOD__ .'] Elements::EVENT_AFTER_SAVE_ELEMENT',
+                    'translations'
                 );
                 
                 $this->_onSaveEntry($event);
@@ -164,8 +164,8 @@ class Translations extends Plugin
             Elements::EVENT_BEFORE_DELETE_ELEMENT,
             function (DeleteElementEvent $event) {
                 Craft::debug(
-                    'Elements::EVENT_BEFORE_DELETE_ELEMENT',
-                    __METHOD__
+                    '['. __METHOD__ .'] Elements::EVENT_BEFORE_DELETE_ELEMENT',
+                    'translations'
                 );
 
                 $this->_onDeleteElement($event);
@@ -177,8 +177,8 @@ class Translations extends Plugin
             Plugins::EVENT_AFTER_INSTALL_PLUGIN,
             function (PluginEvent $event) {
                 Craft::debug(
-                    'Plugins::EVENT_AFTER_INSTALL_PLUGIN',
-                    __METHOD__
+                    '['. __METHOD__ .'] Plugins::EVENT_AFTER_INSTALL_PLUGIN',
+                    'translations'
                 );
                 if ($event->plugin === $this) {
                     $request = Craft::$app->getRequest();
@@ -197,7 +197,7 @@ class Translations extends Plugin
                 '{name} plugin loaded',
                 ['name' => $this->name]
             ),
-            __METHOD__
+            'translations'
         );
 
     }
@@ -598,8 +598,8 @@ class Translations extends Plugin
             UserPermissions::EVENT_REGISTER_PERMISSIONS,
             function (RegisterUserPermissionsEvent $event) {
                 Craft::debug(
-                    'UserPermissions::EVENT_REGISTER_PERMISSIONS',
-                    __METHOD__
+                    '['. __METHOD__ .'] UserPermissions::EVENT_REGISTER_PERMISSIONS',
+                    'translations'
                 );
                 // Register our custom permissions
                 $event->permissions[Craft::t('translations', 'Translations')] = $this->customAdminCpPermissions();

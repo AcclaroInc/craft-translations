@@ -149,6 +149,14 @@ class TranslationRepository
         
         // Set site i18n messages from stored translations
         foreach ($translations as $translation) {
+            $sourceSite = Craft::$app->sites->getSiteById($translation->sourceSite);
+            $targetSite = Craft::$app->sites->getSiteById($translation->targetSite);
+            
+            if (! Craft::$app->sites->getSiteById($translation->targetSite)) {
+                Craft::warning( '['. __METHOD__ .'] Target Site with ID: '. $translation->targetSite .' does not exist', 'translations' );
+                continue;
+            }
+
             $sourceLanguage = Craft::$app->sites->getSiteById($translation->sourceSite)->language;
             $targetLanguage = Craft::$app->sites->getSiteById($translation->targetSite)->language;
             $key = sprintf('%s/%s', $targetLanguage, 'translations');

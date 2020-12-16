@@ -40,7 +40,7 @@ class GlobalSetRepository
     {
         $success = Craft::$app->elements->saveElement($globalSet);
         if (!$success) {
-            Craft::error('Couldn’t save the Global Set "'.$globalSet->title.'"', __METHOD__);
+            Craft::error( '['. __METHOD__ .'] Couldn’t save the Global Set "'.$globalSet->title.'"', 'translations' );
         }
     }
 }
