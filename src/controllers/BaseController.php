@@ -348,7 +348,7 @@ class BaseController extends Controller
 
         $success = Craft::$app->getElements()->saveElement($order);
         if (!$success) {
-            Craft::error('Couldn’t save the order', __METHOD__);
+            Craft::error( '['. __METHOD__ .'] Couldn’t save the order', 'translations' );
         }
 
         Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Added to order.'));
@@ -950,7 +950,7 @@ class BaseController extends Controller
             $success = Craft::$app->getElements()->saveElement($order);
             $job = '';
             if (!$success) {
-                Craft::error('Couldn’t save the order', __METHOD__);
+                Craft::error( '['. __METHOD__ .'] Couldn’t save the order', 'translations' );
             } else {
                 if (Craft::$app->getRequest()->getParam('submit')) {
 
@@ -991,7 +991,7 @@ class BaseController extends Controller
                                 $order->status = 'failed';
                                 $success = Craft::$app->getElements()->saveElement($order);
                                 if (!$success) {
-                                    Craft::error('Couldn’t save the order', __METHOD__);
+                                    Craft::error( '['. __METHOD__ .'] Couldn’t save the order', 'translations' );
                                 }
                                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The following language pair(s) are not supported: '.implode(', ', array_column($unsupportedLangs, 'language')).' Contact Acclaro for assistance.'));
                                 return $this->redirect('translations/orders/detail/'. $order->id);
@@ -1029,7 +1029,7 @@ class BaseController extends Controller
             }
 
         } catch (Exception $e) {
-            Craft::error('Couldn’t save the order. Error: '.$e->getMessage(), __METHOD__);
+            Craft::error( '['. __METHOD__ .'] Couldn’t save the order. Error: '.$e->getMessage(), 'translations' );
             $order->status = 'failed';
             Craft::$app->getElements()->saveElement($order);
         }
@@ -1933,7 +1933,7 @@ class BaseController extends Controller
         } catch (Exception $e) {
 
             $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Add Entries Failed '.$e->getMessage())));
-            Craft::error('Add Entries Failed. Error: '.$e->getMessage(), __METHOD__);
+            Craft::error( '['. __METHOD__ .'] Add Entries Failed. Error: '.$e->getMessage(), 'translations' );
         }
 
         Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Entries added.'));

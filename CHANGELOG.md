@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.9.3 - 2020-12-16
+
+### Fixed
+- `loadTranslations()` issue for unavailable `targetSites`
+
+## Added
+- Improved plugin logging
+
 ## 1.9.2 - 2020-12-11
 
 ### Fixed

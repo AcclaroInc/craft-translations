@@ -147,7 +147,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite, $order);
             }
         } catch (Exception $e) {
-            Craft::error('Couldn’t update file. Error: '.$e->getMessage(), __METHOD__);
+            Craft::error(  '['. __METHOD__ .'] Couldn’t update file. Error: '.$e->getMessage(), 'translations' );
         }
     }
 

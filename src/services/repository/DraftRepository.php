@@ -217,8 +217,7 @@ class DraftRepository
 
             $success = Craft::$app->getElements()->saveElement($order);
             if (!$success) {
-                Craft::info('Couldn’t save the order :: '.$orderId);
-                Craft::error('Couldn’t save the order', __METHOD__);
+                Craft::warning( '['. __METHOD__ .'] Couldn’t save the order :: '.$orderId, 'translations' );
             }
         }
     }
@@ -245,7 +244,7 @@ class DraftRepository
 
         if (empty($draft)) {
 
-            Craft::error('Empty draft found: Order'.json_decode($order), __METHOD__);
+            Craft::error(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), 'translations' );
             return false;
         }
         if ($draft instanceof GlobalSet || $draft instanceof Category) {
@@ -325,7 +324,7 @@ class DraftRepository
             return $draft;
         } catch (Exception $e) {
 
-            Craft::error('CreateEntryDraft exception:: '.$e->getMessage());
+            Craft::error( '['. __METHOD__ .'] CreateEntryDraft exception:: '.$e->getMessage(), 'translations' );
             return [];
         }
 
@@ -349,7 +348,7 @@ class DraftRepository
             return $draft;
         } catch (Exception $e) {
 
-            Craft::error('CreateGlobalSetDraft exception:: '.$e->getMessage());
+            Craft::error( '['. __METHOD__ .'] CreateGlobalSetDraft exception:: '.$e->getMessage(), 'translations' );
             return [];
         }
 
@@ -376,7 +375,7 @@ class DraftRepository
             return $draft;
         } catch (Exception $e) {
 
-            Craft::error('CreateCategoryDraft exception:: '.$e->getMessage());
+            Craft::error( '['. __METHOD__ .'] CreateCategoryDraft exception:: '.$e->getMessage(), 'translations');
             return [];
         }
 

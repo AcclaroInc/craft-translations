@@ -203,7 +203,7 @@ class CategoryDraftRepository
         $success = Craft::$app->elements->saveElement($category);
         
         if (!$success) {
-            Craft::error('Couldn’t publish draft "'.$draft->title.'"', __METHOD__);
+            Craft::error( '['. __METHOD__ .'] Couldn’t publish draft "'.$draft->title.'"', 'translations' );
             return false;
         }
 

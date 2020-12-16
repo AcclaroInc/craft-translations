@@ -48,7 +48,7 @@ class EntryRepository
     {
         $success = Craft::$app->elements->saveElement($entry);
         if (!$success) {
-            Craft::error('Couldn’t save the entry "'.$entry->title.'"', __METHOD__);
+            Craft::error( '['. __METHOD__ .'] Couldn’t save the entry "'.$entry->title.'"', 'translations' );
         }
     }
 
