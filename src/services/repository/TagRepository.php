@@ -31,7 +31,7 @@ class TagRepository
     {
         $success = Craft::$app->elements->saveElement($tag, true, false);
         if (!$success) {
-            Craft::error('Couldn’t save the tag "'.$tag->title.'"', __METHOD__);
+            Craft::error( '['. __METHOD__ .'] Couldn’t save the tag "'.$tag->title.'"', 'translations' );
         }
     }
 }

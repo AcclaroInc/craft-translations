@@ -191,7 +191,7 @@ class SettingsController extends Controller
         if ($zip->open($zipDest, $zip::CREATE) !== true)
         {
             $errors[] = 'Unable to create zip file: '.$zipDest;
-            Craft::log('Unable to create zip file: '.$zipDest, LogLevel::Error);
+            Craft::log( '['. __METHOD__ .'] Unable to create zip file: '.$zipDest, LogLevel::Error, 'translations' );
             return false;
         }
 
@@ -203,7 +203,7 @@ class SettingsController extends Controller
             if (!$zip->addFromString($file, $file_contents))
             {
                 $errors[] = 'There was an error adding the file '.$file.' to the zip: '.$zipName;
-                Craft::log('There was an error adding the file '.$file.' to the zip: '.$zipName, LogLevel::Error);
+                Craft::log( '['. __METHOD__ .'] There was an error adding the file '.$file.' to the zip: '.$zipName, LogLevel::Error, 'translations' );
             }
         }
 

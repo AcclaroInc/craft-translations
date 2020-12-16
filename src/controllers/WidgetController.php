@@ -586,7 +586,7 @@ class WidgetController extends Controller
             return false;
         }
         if ($runValidation && !$widget->validate()) {
-            Craft::info('Widget not saved due to validation error.', __METHOD__);
+            Craft::info( '['. __METHOD__ .'] Widget not saved due to validation error.', 'translations' );
             return false;
         }
         $transaction = Craft::$app->getDb()->beginTransaction();
@@ -875,11 +875,11 @@ class WidgetController extends Controller
             return $this->_getDefaultWidgetIconSvg($widget);
         }
         if (!is_file($iconPath)) {
-            Craft::warning("Widget icon file doesn't exist: {$iconPath}", __METHOD__);
+            Craft::warning( '['. __METHOD__ .'] Widget icon file doesn\'t exist: {$iconPath}', 'translations' );
             return $this->_getDefaultWidgetIconSvg($widget);
         }
         if (!FileHelper::isSvg($iconPath)) {
-            Craft::warning("Widget icon file is not an SVG: {$iconPath}", __METHOD__);
+            Craft::warning( '['. __METHOD__ .'] Widget icon file is not an SVG: {$iconPath}', 'translations' );
             return $this->_getDefaultWidgetIconSvg($widget);
         }
         return file_get_contents($iconPath);

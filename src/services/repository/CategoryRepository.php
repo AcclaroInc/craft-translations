@@ -37,7 +37,7 @@ class CategoryRepository
     {
         $success = Craft::$app->elements->saveElement($category);
         if (!$success) {
-            Craft::error('Couldn’t save the category "'.$category->title.'"', __METHOD__);
+            Craft::error( '['. __METHOD__ .'] Couldn’t save the category "'.$category->title.'"', 'translations' );
         }
     }
 }
