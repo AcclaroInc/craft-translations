@@ -468,13 +468,10 @@ class FilesController extends Controller
         $publishedFilesCount = 0;
 
         foreach ($files as $key => $f) {
-            if ($f->status !== 'complete') {
-                continue;
+            if ($f->status === 'published') {
+                $publishedFilesCount++;
             }
-            
-            $publishedFilesCount++;
         }
-
 
         if ($publishedFilesCount === $filesCount) {
             $order->status = 'published';
