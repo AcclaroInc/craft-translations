@@ -106,7 +106,7 @@ class UrlGenerator
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
     
-    public function generateElementPreviewUrl(Element $element, $targetSite)
+    public function generateElementPreviewUrl(Element $element, $siteId)
     {
         $params = array();
         
@@ -123,7 +123,7 @@ class UrlGenerator
                 'preview/preview', [
                     'elementType' => $className,
                     'sourceId' => $element->sourceId,
-                    'siteId' => $element->siteId,
+                    'siteId' => $siteId ? $siteId : $element->siteId,
                     'draftId' => $element->draftId,
                     'revisionId' => $element->revisionId
                 ]
