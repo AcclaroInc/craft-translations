@@ -8,8 +8,8 @@ Craft.Translations.ApplyTranslations = {
     init: function(draftId, file) {
         // Disable default Craft updating
         window.draftEditor.settings.canUpdateSource = false;
-        $("#main-form input[type='submit']").disable();
-        $("#main-form input[type='submit']").attr('disabled', true);
+        $("#publish-changes-btn-container :input[type='button']").disable();
+        $("#publish-changes-btn-container :input[type='button']").attr('disabled', true);
         
         // Create the Apply Translations button
         var $applyTranslationsContainer = document.createElement('div');
