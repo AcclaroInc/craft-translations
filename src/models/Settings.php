@@ -26,6 +26,10 @@ class Settings extends Model
 {
     public $chkDuplicateEntries = true;
 
+    public $twigSearchFilterSingleQuote = "";
+
+    public $twigSearchFilterDoubleQuote = "";
+
     /** @var int The Volume ID where uploads will be saved */
     public $uploadVolume = 0;
 

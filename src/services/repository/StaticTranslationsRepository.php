@@ -14,6 +14,7 @@ use Craft;
 use Exception;
 use craft\helpers\FileHelper;
 use craft\helpers\ElementHelper;
+use acclaro\translations\Translations;
 use craft\elements\db\ElementQueryInterface;
 use acclaro\translations\elements\StaticTranslations;
 
@@ -137,7 +138,8 @@ class StaticTranslationsRepository
      * @return array
      */
     public function getExpressions($ext) {
-
+        $twigSearchFilterSingleQuote = !empty(Translations::getInstance()->settings->twigSearchFilterSingleQuote) ? Translations::getInstance()->settings->twigSearchFilterSingleQuote : '/\'((?:[^\']|\\\\\')*)\'\s*\|\s*t(?:ranslate)?\b/';
+        $twigSearchFilterDoubleQuote = !empty(Translations::getInstance()->settings->twigSearchFilterDoubleQuote) ? Translations::getInstance()->settings->twigSearchFilterDoubleQuote : '/"((?:[^"]|\\\\")*)"\s*\|\s*t(?:ranslate)?\b/';
         $exp = [];
         switch ($ext) {
             case 'php':
@@ -156,8 +158,7 @@ class StaticTranslationsRepository
                 $exp = [
                     'position' => '1',
                     'regex' => [
-                        '/\'((?:[^\']|\\\\\')*)\'\s*\|\s*t(?:ranslate)?\b/',
-                        '/"((?:[^"]|\\\\")*)"\s*\|\s*t(?:ranslate)?\b/',
+                        $twigSearchFilterSingleQuote, $twigSearchFilterDoubleQuote
                     ]
                 ];
                 break;

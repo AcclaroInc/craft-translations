@@ -235,6 +235,8 @@ class SettingsController extends Controller
 
         $variables['chkDuplicateEntries'] = Translations::getInstance()->settings->chkDuplicateEntries;
         $variables['uploadVolume'] = Translations::getInstance()->settings->uploadVolume;
+        $variables['twigSearchFilterSingleQuote'] = !empty(Translations::getInstance()->settings->twigSearchFilterSingleQuote) ? Translations::getInstance()->settings->twigSearchFilterSingleQuote : "";
+        $variables['twigSearchFilterDoubleQuote'] = !empty(Translations::getInstance()->settings->twigSearchFilterDoubleQuote) ? Translations::getInstance()->settings->twigSearchFilterDoubleQuote : "";
 
         $allVolumes = Craft::$app->getVolumes()->getAllVolumes();
 
@@ -264,12 +266,14 @@ class SettingsController extends Controller
         $request = Craft::$app->getRequest();
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
         $selectedVolume = $request->getParam('uploadVolume');
+        $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
+        $twigSearchFilterDoubleQuote = $request->getParam('twigSearchFilterDoubleQuote');
 
         try {
 
             $pluginService = Craft::$app->getPlugins();
             $plugin  = $pluginService->getPlugin('translations');
-            if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries, 'uploadVolume' => $selectedVolume])) {
+            if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries, 'uploadVolume' => $selectedVolume, 'twigSearchFilterSingleQuote' => $twigSearchFilterSingleQuote, 'twigSearchFilterDoubleQuote' => $twigSearchFilterDoubleQuote])) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
             } else {
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Setting saved.'));
