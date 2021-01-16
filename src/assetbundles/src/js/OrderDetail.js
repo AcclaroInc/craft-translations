@@ -363,6 +363,14 @@ Craft.Translations.OrderDetail = {
                         // Add the diff html
                         document.getElementById("modal-body-entry").innerHTML = diffHtml;
 
+                        $('#apply-translation').one('click', function(e) {
+                            $(".apply-translation").addClass("disabled");
+                            $(".apply-translation").prop("value", "");
+                            $(".apply-translation").css('margin-right', 4);
+                            $(".apply-translation").width(110);
+                            $(".apply-translation").toggleClass("spinner");
+                        });
+
                         $('#close-diff-modal-entry').on('click', function(e) {
                             e.preventDefault();
                             modal.hide();

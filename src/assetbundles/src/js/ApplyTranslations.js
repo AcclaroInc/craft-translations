@@ -46,13 +46,18 @@ Craft.Translations.ApplyTranslations = {
             // reactivate the button
             $(this.$btn).enable();
             $(this.$btn).attr('disabled', false);
-            $(this.$btn).on("click", function (e) {
+
+            $(this.$btn).one("click", function (e) {
                 e.preventDefault();
+                $(".apply-translations > a").addClass("disabled");
+                $(".apply-translations > a").html("");
+                $(".apply-translations .submit").width(122);
+                $(".apply-translations > a").toggleClass("spinner");
                 
                 var fileData = {
                     fileId: file.id,
                 };
-
+                
                 Craft.postActionRequest('translations/files/apply-translation-draft', fileData, function(response, textStatus) {
                     if (textStatus === 'success' && response.success) {
                         console.log(response.data);
