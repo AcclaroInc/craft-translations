@@ -30,6 +30,8 @@ class Settings extends Model
 
     public $twigSearchFilterDoubleQuote = "";
 
+    public $targetStringPosition = "";
+
     /** @var int The Volume ID where uploads will be saved */
     public $uploadVolume = 0;
 

@@ -138,8 +138,17 @@ class StaticTranslationsRepository
      * @return array
      */
     public function getExpressions($ext) {
-        $twigSearchFilterSingleQuote = !empty(Translations::getInstance()->settings->twigSearchFilterSingleQuote) ? Translations::getInstance()->settings->twigSearchFilterSingleQuote : '/\'((?:[^\']|\\\\\')*)\'\s*\|\s*t(?:ranslate)?\b/';
-        $twigSearchFilterDoubleQuote = !empty(Translations::getInstance()->settings->twigSearchFilterDoubleQuote) ? Translations::getInstance()->settings->twigSearchFilterDoubleQuote : '/"((?:[^"]|\\\\")*)"\s*\|\s*t(?:ranslate)?\b/';
+        $settings = Translations::getInstance()->settings;
+        if(!empty($settings->twigSearchFilterSingleQuote)) {
+            $twigSearchFilterSingleQuote = $settings->twigSearchFilterSingleQuote;
+            $twigSearchFilterDoubleQuote = $settings->twigSearchFilterDoubleQuote;
+            $targetStringPosition = $settings->targetStringPosition;
+        } else {
+            $twigSearchFilterSingleQuote = '/\'((?:[^\']|\\\\\')*)\'\s*\|\s*t(?:ranslate)?\b/';
+            $twigSearchFilterDoubleQuote = '/"((?:[^"]|\\\\")*)"\s*\|\s*t(?:ranslate)?\b/';
+            $targetStringPosition = 1;
+        }
+
         $exp = [];
         switch ($ext) {
             case 'php':
@@ -156,7 +165,7 @@ class StaticTranslationsRepository
             case 'atom':
             case 'rss':
                 $exp = [
-                    'position' => '1',
+                    'position' => $targetStringPosition,
                     'regex' => [
                         $twigSearchFilterSingleQuote, $twigSearchFilterDoubleQuote
                     ]
