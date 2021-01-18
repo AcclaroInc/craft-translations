@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.9.4 - 2021-01-18
+
+## Added
+- Custom Twig RegEx Filters for Static Translations https://github.com/AcclaroInc/craft-translations/pull/130
+- Spinner icon to individual "Apply Translation" buttons https://github.com/AcclaroInc/craft-translations/pull/131
+- `zh-Hans-CN` mapping to `SiteRepository.php` https://github.com/AcclaroInc/craft-translations/commit/acfc84dde21318bfb04a4e8970680aed12021699
+
+### Fixed
+- [BUG] - Target Site draft preview URI structures https://github.com/AcclaroInc/craft-translations/commit/be7bbe219730e5586477729996c1c5ecad84055d
+- [BUG] - Disable the "Publish Changes" button within Entry detail screen https://github.com/AcclaroInc/craft-translations/pull/129
+- [BUG] - Order status not updating to "Applied" https://github.com/AcclaroInc/craft-translations/pull/128
+
 ## 1.9.3 - 2020-12-16
 
 ### Fixed
