@@ -14,6 +14,7 @@ use Craft;
 use Exception;
 use craft\helpers\FileHelper;
 use craft\helpers\ElementHelper;
+use acclaro\translations\Translations;
 use craft\elements\db\ElementQueryInterface;
 use acclaro\translations\elements\StaticTranslations;
 
@@ -137,6 +138,16 @@ class StaticTranslationsRepository
      * @return array
      */
     public function getExpressions($ext) {
+        $settings = Translations::getInstance()->settings;
+        if(!empty($settings->twigSearchFilterSingleQuote)) {
+            $twigSearchFilterSingleQuote = $settings->twigSearchFilterSingleQuote;
+            $twigSearchFilterDoubleQuote = $settings->twigSearchFilterDoubleQuote;
+            $targetStringPosition = $settings->targetStringPosition;
+        } else {
+            $twigSearchFilterSingleQuote = '/\'((?:[^\']|\\\\\')*)\'\s*\|\s*t(?:ranslate)?\b/';
+            $twigSearchFilterDoubleQuote = '/"((?:[^"]|\\\\")*)"\s*\|\s*t(?:ranslate)?\b/';
+            $targetStringPosition = 1;
+        }
 
         $exp = [];
         switch ($ext) {
@@ -154,10 +165,9 @@ class StaticTranslationsRepository
             case 'atom':
             case 'rss':
                 $exp = [
-                    'position' => '1',
+                    'position' => $targetStringPosition,
                     'regex' => [
-                        '/\'((?:[^\']|\\\\\')*)\'\s*\|\s*t(?:ranslate)?\b/',
-                        '/"((?:[^"]|\\\\")*)"\s*\|\s*t(?:ranslate)?\b/',
+                        $twigSearchFilterSingleQuote, $twigSearchFilterDoubleQuote
                     ]
                 ];
                 break;

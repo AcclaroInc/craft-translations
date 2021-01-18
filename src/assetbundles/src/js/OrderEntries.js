@@ -46,6 +46,12 @@ Craft.Translations.OrderEntries = {
             Craft.Translations.OrderEntries.togglePublishButton();
             Craft.Translations.OrderEntries.toggleSelectAllCheckbox();
         });
+        this.$publishSelectedBtn.one('click', function (e) {
+            $(".translations-publish-selected-btn").addClass("disabled");
+            $(".translations-publish-selected-btn").prop("value", "");
+            $(".translations-publish-selected-btn").width(160);
+            $(".translations-publish-selected-btn").toggleClass("spinner");
+        });
     }
 };
 

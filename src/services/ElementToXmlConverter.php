@@ -36,7 +36,7 @@ class ElementToXmlConverter
         $sites->setAttribute('target-site', $targetSite);
         $langs->setAttribute('source-language', Craft::$app->sites->getSiteById($sourceSite)->language);
         $langs->setAttribute('target-language', (Craft::$app->sites->getSiteById($targetSite)) ? Craft::$app->sites->getSiteById($targetSite)->language : 'deleted');
-        $original->setAttribute('url', Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $targetSite));
+        $original->setAttribute('url', Translations::$plugin->urlGenerator->generateElementPreviewUrl($element));
         $preview->setAttribute('url', $previewUrl);
 
         $elementIdMeta = $head->appendChild($dom->createElement('meta'));

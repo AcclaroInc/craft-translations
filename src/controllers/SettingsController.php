@@ -233,8 +233,12 @@ class SettingsController extends Controller
             return;
         }
 
-        $variables['chkDuplicateEntries'] = Translations::getInstance()->settings->chkDuplicateEntries;
-        $variables['uploadVolume'] = Translations::getInstance()->settings->uploadVolume;
+        $settings = Translations::getInstance()->settings;
+        $variables['chkDuplicateEntries'] = $settings->chkDuplicateEntries;
+        $variables['uploadVolume'] = $settings->uploadVolume;
+        $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
+        $variables['twigSearchFilterDoubleQuote'] = !empty($settings->twigSearchFilterDoubleQuote) ? $settings->twigSearchFilterDoubleQuote : "";
+        $variables['targetStringPosition'] = !empty($settings->targetStringPosition) ? $settings->targetStringPosition : "";
 
         $allVolumes = Craft::$app->getVolumes()->getAllVolumes();
 
@@ -264,12 +268,15 @@ class SettingsController extends Controller
         $request = Craft::$app->getRequest();
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
         $selectedVolume = $request->getParam('uploadVolume');
+        $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
+        $twigSearchFilterDoubleQuote = $request->getParam('twigSearchFilterDoubleQuote');
+        $targetStringPosition = $request->getParam('targetStringPosition');
 
         try {
 
             $pluginService = Craft::$app->getPlugins();
             $plugin  = $pluginService->getPlugin('translations');
-            if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries, 'uploadVolume' => $selectedVolume])) {
+            if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries, 'uploadVolume' => $selectedVolume, 'twigSearchFilterSingleQuote' => $twigSearchFilterSingleQuote, 'twigSearchFilterDoubleQuote' => $twigSearchFilterDoubleQuote, 'targetStringPosition' => $targetStringPosition])) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
             } else {
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Setting saved.'));

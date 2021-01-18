@@ -563,9 +563,6 @@ class Translations extends Plugin
 
                     $currentFile->status = 'canceled';
 
-                    $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->targetSite);
-                    $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
-
                     $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->sourceSite);
                     $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
                     $currentFile->source = Translations::$plugin->elementToXmlConverter->toXml(

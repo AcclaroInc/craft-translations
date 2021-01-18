@@ -106,7 +106,7 @@ class UrlGenerator
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
     
-    public function generateElementPreviewUrl(Element $element, $targetSite)
+    public function generateElementPreviewUrl(Element $element, $siteId = null)
     {
         $params = array();
         
@@ -119,11 +119,13 @@ class UrlGenerator
         if ($className === Entry::class && !$element->getIsDraft()) {
             $previewUrl = $element->getUrl();
         } else {
+            $element = Craft::$app->getElements()->getElementById($element->sourceId, null, $siteId);
+
             $route = [
                 'preview/preview', [
                     'elementType' => $className,
                     'sourceId' => $element->sourceId,
-                    'siteId' => $element->siteId,
+                    'siteId' => $siteId ? $siteId : $element->siteId,
                     'draftId' => $element->draftId,
                     'revisionId' => $element->revisionId
                 ]
@@ -142,7 +144,7 @@ class UrlGenerator
                 $previewUrl = '';
             }
         }
-        
+
         return $previewUrl;
     }
 }

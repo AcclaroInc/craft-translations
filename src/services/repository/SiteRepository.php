@@ -127,6 +127,7 @@ class SiteRepository
         'zh-tw' => 'zh-TW',          //Chinese (Traditional)
         'zh-hans' => 'zh-CN',        //Chinese (Simplified)
         'zh-hant' => 'zh-TW',        //Chinese (Traditional)
+        'zh-hans-cn' => 'zh-CN',     //Chinese (Simplified)
         'nl-nl' => 'nl',             //Dutch (Netherlands)
         'da-dk' => 'da',             //Danish (Denmark)
         'en' => 'en-us',             //English

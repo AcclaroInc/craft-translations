@@ -36,6 +36,35 @@
             toggle: true
         }) }}
 
+        <h3>{{ "Static Translations"|t('app') }}</h3>
+
+        {{ forms.textField({
+            label: "Twig search filter (single quote)"|t('app'),
+            placeholder: "Twig search filter (single quote)"|t('app'),
+            id: 'twigSearchFilterSingleQuote',
+            name: 'twigSearchFilterSingleQuote',
+            value: twigSearchFilterSingleQuote ?? '',
+            size: '40',
+        }) }}
+        
+        {{ forms.textField({
+            label: "Twig search filter (double quote)"|t('app'),
+            placeholder: "Twig search filter (double quote)"|t('app'),
+            id: 'twigSearchFilterDoubleQuote',
+            name: 'twigSearchFilterDoubleQuote',
+            value: twigSearchFilterDoubleQuote ?? '',
+            size: '40',
+        }) }}
+
+        {{ forms.textField({
+            label: "Target String Position"|t('app'),
+            placeholder: "Target String Position"|t('app'),
+            id: 'targetStringPosition',
+            name: 'targetStringPosition',
+            value: targetStringPosition ?? '',
+            size: '40',
+        }) }}
+
         <div class="buttons">
             <input type="submit" id="save-configuration" class="btn" value="{{ "Save"|t('app') }}" />
         </div>
