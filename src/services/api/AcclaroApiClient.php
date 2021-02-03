@@ -174,7 +174,7 @@ class AcclaroApiClient
             'comments' => $comments,
             'duedate' => $dueDate,
             // 'clientref' => $craftOrderId,
-            'delivery' => 'none',
+            'delivery' => 'craft',
             'estwordcount' => $wordCount,
         ));
     }
@@ -315,6 +315,7 @@ class AcclaroApiClient
         return $this->post('EditOrder', array(
             'OrderID' => $orderId,
             'Name' => $name,
+            'delivery' => 'craft',
         ));
     }
 }
