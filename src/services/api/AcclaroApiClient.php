@@ -17,6 +17,8 @@ class AcclaroApiClient
 
     const SANDBOX_URL = 'https://apisandbox.acclaro.com/api2/';
 
+    const DELIVERY = 'craftcms';
+
     protected $loggingEnabled = false;
 
     public function __construct(
@@ -174,7 +176,7 @@ class AcclaroApiClient
             'comments' => $comments,
             'duedate' => $dueDate,
             // 'clientref' => $craftOrderId,
-            'delivery' => 'none',
+            'delivery' => self::DELIVERY,
             'estwordcount' => $wordCount,
         ));
     }
@@ -315,6 +317,7 @@ class AcclaroApiClient
         return $this->post('EditOrder', array(
             'OrderID' => $orderId,
             'Name' => $name,
+            'delivery' => self::DELIVERY,
         ));
     }
 }
