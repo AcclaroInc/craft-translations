@@ -132,9 +132,7 @@
                     <tr>
                         <th>{{ 'Name'|t }}</th>
                         <td> <span class="order_label"> <span id="order_name"> {{ order.title }} </span> &nbsp;
-                                {% if order.translator.service is defined and order.translator.service == 'export_import' %}
                                     <a class="icon edit editOrder" title="Edit Order Name"></a>
-                                {% endif %}
                             </span>
                             <span id="order_name_input" style="display: none">
                                 <input type="hidden" id="order_id" value="{{ order.id }}">

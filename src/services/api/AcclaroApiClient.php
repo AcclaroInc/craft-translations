@@ -313,10 +313,9 @@ class AcclaroApiClient
 
     public function editOrderName($orderId, $name)
     {
-
         return $this->post('EditOrder', array(
-            'OrderID' => $orderId,
-            'Name' => $name,
+            'orderid' => $orderId,
+            'name' => $name,
             'delivery' => self::DELIVERY,
         ));
     }
