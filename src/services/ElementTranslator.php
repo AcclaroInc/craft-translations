@@ -42,7 +42,7 @@ class ElementTranslator
             }
 
         }
-        
+
         foreach ($element->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
             $fieldSource = $this->fieldToTranslationSource($element, $field, $sourceSite);
@@ -94,16 +94,16 @@ class ElementTranslator
     public function toPostArrayFromTranslationTarget(Element $element, $sourceSite, $targetSite, $targetData, $includeNonTranslatable = false)
     {
         $post = array();
-        
+
         foreach($element->getFieldLayout()->getFields() as $key => $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-            
+
             $fieldHandle = $field->handle;
             
             $fieldType = $field;
             
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
-            
+
             if (!$translator) {
                 if ($includeNonTranslatable) {
                     $post[$fieldHandle] = $element->$fieldHandle;
@@ -112,13 +112,14 @@ class ElementTranslator
                 continue;
             }
 
-            
+
+            $fieldPost = [];
             if (isset($targetData[$fieldHandle])) {
-                $fieldPost = $translator->toPostArrayFromTranslationTarget($this, $element, $field, $sourceSite, $targetSite, $targetData[$fieldHandle]);
+                    $fieldPost = $translator->toPostArrayFromTranslationTarget($this, $element, $field, $sourceSite, $targetSite, $targetData[$fieldHandle]);
             } else {
                 $fieldPost = $translator->toPostArray($this, $element, $field, $sourceSite);
             }
-            
+
             
             if (!is_array($fieldPost)) {
                 $fieldPost = array($fieldHandle => $fieldPost);
@@ -126,7 +127,7 @@ class ElementTranslator
             
             $post = array_merge($post, $fieldPost);
         }
-        
+
         // echo '<pre>';
         // echo "//======================================================================<br>// post toPostArrayFromTranslationTarget()<br>//======================================================================<br>";
         // var_dump($post);
