@@ -26,6 +26,7 @@ use craft\fields\MultiSelect;
 use craft\fields\RadioButtons;
 
 use benf\neo\Field as NeoField;
+use ether\seo\fields\SeoField;
 use typedlinkfield\fields\LinkField as LinkField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
 use craft\redactor\Field as RedactorField;
@@ -56,6 +57,7 @@ class Factory
         RadioButtons::class     => SingleOptionFieldTranslator::class,
         RedactorField::class    => GenericFieldTranslator::class,
         SeoSettings::class      => SeomaticMetaFieldTranslator::class,
+        SeoField::class      => SeoFieldTranslator::class,
         SuperTableField::class  => SuperTableFieldTranslator::class,
         Table::class            => TableFieldTranslator::class,
         Tags::class             => TagFieldTranslator::class,
