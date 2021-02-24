@@ -25,7 +25,6 @@ use craft\fields\Checkboxes;
 use craft\fields\MultiSelect;
 use craft\fields\RadioButtons;
 
-use benf\neo\Field as NeoField;
 use newism\fields\fields\Address;
 use newism\fields\fields\Email;
 use newism\fields\fields\Embed;
@@ -33,6 +32,8 @@ use newism\fields\fields\Gender;
 use newism\fields\fields\PersonName;
 use newism\fields\fields\Telephone;
 use newism\fields\NsmFields;
+
+use benf\neo\Field as NeoField;
 use typedlinkfield\fields\LinkField as LinkField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
 use craft\redactor\Field as RedactorField;
@@ -67,8 +68,7 @@ class Factory
         Table::class            => TableFieldTranslator::class,
         Tags::class             => TagFieldTranslator::class,
         CodeMirrorField::class  => GenericFieldTranslator::class,
-
-        PersonName::class       => NsmFieldPersonNameTranslator::class,
+        PersonName::class       => NsmFieldsTranslator::class,
         Address::class          => NsmFieldsTranslator::class,
         Email::class            => NsmFieldsTranslator::class,
         Telephone::class        => NsmFieldsTranslator::class,

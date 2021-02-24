@@ -49,7 +49,7 @@ class ElementTranslator
 
             $source = array_merge($source, $fieldSource);
         }
-
+        
         return $source;
     }
 
@@ -112,7 +112,6 @@ class ElementTranslator
                 continue;
             }
 
-
             $fieldPost = [];
             if (isset($targetData[$fieldHandle])) {
                     $fieldPost = $translator->toPostArrayFromTranslationTarget($this, $element, $field, $sourceSite, $targetSite, $targetData[$fieldHandle]);
@@ -129,9 +128,11 @@ class ElementTranslator
         }
 
         // echo '<pre>';
-        // echo "//======================================================================<br>// post toPostArrayFromTranslationTarget()<br>//======================================================================<br>";
+        // echo "//======================================================================<br>// post ElementTranslator<br>//======================================================================<br>";
         // var_dump($post);
         // echo '</pre>';
+        // die;
+
         return $post;
     }
 
