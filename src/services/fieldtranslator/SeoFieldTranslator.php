@@ -21,7 +21,7 @@ use acclaro\translations\services\ElementTranslator;
 
 class SeoFieldTranslator extends GenericFieldTranslator
 {
-    private $translatableAttributes = ['titleRaw', 'descriptionRaw', 'keywords'];
+    private $translatableAttributes = ['titleRaw', 'descriptionRaw', 'keywords', 'social'];
 
     /**
      * {@inheritdoc}
@@ -36,9 +36,25 @@ class SeoFieldTranslator extends GenericFieldTranslator
             foreach ($this->translatableAttributes as $attribute) {
 
                 if (is_array($meta->$attribute)) {
+                    
                     foreach ($meta->$attribute as $key => $val){
-                        $key = sprintf('%s.%s.%s', $field->handle, $key, $attribute);
-                        $source[$key] = is_array($val) ? $val['keyword'] : $val;
+                        if($attribute == 'social')
+                        {
+                            $new_key = sprintf('%s.%s.%s.%s', $field->handle, $attribute, $key, 'title');
+                            $source[$new_key] = $val->title;
+
+                            $new_key = sprintf('%s.%s.%s.%s', $field->handle, $attribute, $key, 'description');
+                            $source[$new_key] = $val->description;
+                        } else if($attribute == 'keywords') {
+                            $new_key = sprintf('%s.%s.%s.%s', $field->handle, $attribute, $key,'keyword');
+                            $source[$new_key] = $val['keyword'];
+
+                            $new_key = sprintf('%s.%s.%s.%s', $field->handle, $attribute, $key,'rating');
+                            $source[$new_key] = $val['rating'];
+                        } else {
+                            $key = sprintf('%s.%s.%s', $field->handle, $attribute, $key);
+                            $source[$key] = $val;
+                        }
                     }
 
                 } else {
@@ -72,7 +88,7 @@ class SeoFieldTranslator extends GenericFieldTranslator
                 $source[$fieldHandle][$key] = $value;
             }
         }
-        
+
         return $source;
     }
 
@@ -109,8 +125,14 @@ class SeoFieldTranslator extends GenericFieldTranslator
 
                 if (is_array($value)) {
                     foreach ($value as $key => $val){
-                        $val = is_array($val) ? $val['keyword'] : $val;
-                        $wordCount += Translations::$plugin->wordCounter->getWordCount($val);
+                        if($attribute == 'social')
+                        {
+                            $wordCount += Translations::$plugin->wordCounter->getWordCount($val->title);
+                            $wordCount += Translations::$plugin->wordCounter->getWordCount($val->description);
+                        } else {
+                            $val = is_array($val) ? $val['keyword'] : $val;
+                            $wordCount += Translations::$plugin->wordCounter->getWordCount($val);
+                        }
                     }
                 } else {
                     $wordCount += Translations::$plugin->wordCounter->getWordCount($value);
