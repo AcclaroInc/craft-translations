@@ -28,7 +28,7 @@ use newism\fields\fields\Email;
 class NsmFieldsTranslator extends GenericFieldTranslator
 {
 
-    private $addressFields = ['locality', 'dependentLocality', 'postalCode', 'addressLine1', 'addressLine2', 'organization', 'recipient', 'givenName', 'additionalName', 'familyName'];
+    private $addressFields = ['countryCode', 'locality', 'dependentLocality', 'postalCode', 'addressLine1', 'addressLine2', 'organization', 'recipient', 'givenName', 'additionalName', 'familyName'];
     private $nameFields = ['honorificPrefix', 'givenNames', 'additionalNames', 'familyNames', 'honorificSuffix'];
 
     private $fieldData;
