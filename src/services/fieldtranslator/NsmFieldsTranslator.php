@@ -50,7 +50,7 @@ class NsmFieldsTranslator extends GenericFieldTranslator
                 case get_class($field) == Address::class:
                     foreach($fieldData as $key => $value)
                     {
-                        $k = sprintf('%s.%s', $fieldHandle, $key);
+                        $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
                         if (in_array($key, $this->addressFields)) {
                             $source[$k] = $value;
                         }
@@ -60,7 +60,7 @@ class NsmFieldsTranslator extends GenericFieldTranslator
                     foreach($fieldData as $key => $value)
                     {
                         if (!empty($value) && in_array($key, $this->nameFields)) {
-                            $k = sprintf('%s.%s', $fieldHandle, $key);
+                            $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
                             $source[$k] = $value;
                         }
                     }
@@ -69,7 +69,7 @@ class NsmFieldsTranslator extends GenericFieldTranslator
                     foreach($fieldData as $key => $value)
                     {
                         if(!empty($fieldData['rawInput']) && in_array($key, ['countryCode', 'rawInput'])) {
-                            $k = sprintf('%s.%s', $fieldHandle, $key);
+                            $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
                             $source[$k] = $value;
                         }
                     }
@@ -78,7 +78,7 @@ class NsmFieldsTranslator extends GenericFieldTranslator
                     foreach($fieldData as $key => $value)
                     {
                         if(!empty($fieldData['identity'])) {
-                            $k = sprintf('%s.%s', $fieldHandle, $key);
+                            $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
                             $source[$k] = $value;
                         }
                     }
@@ -87,7 +87,7 @@ class NsmFieldsTranslator extends GenericFieldTranslator
                     foreach($fieldData as $key => $value)
                     {
                         if(!empty($fieldData['rawInput']) && $key === 'rawInput') {
-                            $k = sprintf('%s.%s', $fieldHandle, $key);
+                            $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
                             $source[$k] = $value;
                         }
                     }
@@ -101,7 +101,7 @@ class NsmFieldsTranslator extends GenericFieldTranslator
                 default:
                     foreach($fieldData as $key => $value)
                     { 
-                        $k = sprintf('%s.%s', $fieldHandle, $key);
+                        $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
                         $source[$k] = $value;
                     }
                     break;
@@ -126,9 +126,6 @@ class NsmFieldsTranslator extends GenericFieldTranslator
         {
             switch (true)
             {
-                case get_class($field) == Embed::class:
-                    $source[$fieldHandle]['rawInput'] = $fieldData['rawInput'];
-                    break;
                 case get_class($field) == Email::class:
                     $source[$fieldHandle] = $fieldData;
                     break;
@@ -168,11 +165,17 @@ class NsmFieldsTranslator extends GenericFieldTranslator
                     break;
                 
                 default:
-                    foreach ($post[$fieldHandle] as $key => $value)
-                    { 
-                        if (isset($fieldData[$key]))
+                    foreach ($fieldData as $i => $row)
+                    {
+                        if ( $field->id == $i)
                         {
-                            $post[$fieldHandle][$key] = $fieldData[$key];
+                            foreach ($post[$fieldHandle] as $key => $value)
+                            { 
+                                if (isset($row[$key]))
+                                {
+                                    $post[$fieldHandle][$key] = $row[$key];
+                                }
+                            }
                         }
                     }
                     break;
