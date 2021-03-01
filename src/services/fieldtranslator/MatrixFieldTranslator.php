@@ -89,15 +89,16 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         $post = array(
             $fieldHandle => array(),
         );
-
-        $fieldData = array_values($fieldData);
         
         $new = 0;
         foreach ($blocks as $i => $block) {
-            $blockId = $block->id ?? 'new' . ++$new;
+            if(!isset($fieldData[$block->id])) {
+                continue;
+            }
+            $blockId = $i = $block->id ?? 'new' . ++$new;
             // $blockData = isset($fieldData[$blockId]) ? $fieldData[$blockId] : array();
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
-            
+
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],

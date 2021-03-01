@@ -124,12 +124,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
 
-                echo '<pre>';
-                echo "//======================================================================<br>// post updateDraftFromXml()<br>//======================================================================<br>";
-                var_dump($post);
-                echo '</pre>';
-                die;
-
                 $draft->setFieldValues($post);
                 
                 $draft->siteId = $targetSite;
