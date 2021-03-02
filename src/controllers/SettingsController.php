@@ -76,7 +76,8 @@ class SettingsController extends Controller
             'newism\fields\fields\Email',
             'newism\fields\fields\Embed',
             'newism\fields\fields\PersonName',
-            'newism\fields\fields\Gender'
+            'newism\fields\fields\Gender',
+            'ether\seo\fields\SeoField'
         ];
 
         $unrelatedFieldTypes = [
