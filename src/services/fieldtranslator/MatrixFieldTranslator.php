@@ -92,9 +92,6 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         
         $new = 0;
         foreach ($blocks as $i => $block) {
-            if(!isset($fieldData[$block->id])) {
-                continue;
-            }
             $blockId = $i = $block->id ?? 'new' . ++$new;
             // $blockData = isset($fieldData[$blockId]) ? $fieldData[$blockId] : array();
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();

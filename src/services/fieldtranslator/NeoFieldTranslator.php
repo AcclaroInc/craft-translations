@@ -117,9 +117,6 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         $new = 0;
         foreach ($blocks as $i => $block) {
-            if(!isset($allBlockData[$block->id])){
-                continue;
-            }
             $blockId = $i = $block->id ?? 'new' . ++$new;
             $blockData = isset($allBlockData[$i]) ? $allBlockData[$i] : array();
 
