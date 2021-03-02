@@ -110,12 +110,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         // Get the data from the XML files
         $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
 
-        // echo '<pre>';
-        // echo "//======================================================================<br>// targetData updateDraftFromXml()<br>//======================================================================<br>";
-        // var_dump($targetData);
-        // echo '</pre>';
-        // die;
-
         switch (true) {
             // Update Entry Drafts
             case $draft instanceof Entry:
