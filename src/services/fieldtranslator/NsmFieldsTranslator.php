@@ -197,11 +197,20 @@ class NsmFieldsTranslator extends GenericFieldTranslator
             return 0;
         }
 
-        if (!is_array($data)) {
-            return Translations::$plugin->wordCounter->getWordCount(strip_tags($data));
-        }
-
         $wordCount = 0;
+
+        if (!is_array($data)) {
+            switch (true) {
+                case get_class($field) == Gender::class:
+                    break;
+                
+                default:
+                    $wordCount = Translations::$plugin->wordCounter->getWordCount(strip_tags($data));
+                    break;
+            }
+            
+            return $wordCount;
+        }
 
         foreach ($data as $key => $value) 
         {
