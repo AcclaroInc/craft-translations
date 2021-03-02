@@ -70,7 +70,14 @@ class SettingsController extends Controller
             'luwes\codemirror\fields\CodeMirrorField',
             'verbb\supertable\fields\SuperTableField',
             'nystudio107\seomatic\fields\SeoSettings',
-            'lenz\linkfield\fields\LinkField'
+            'lenz\linkfield\fields\LinkField',
+            'newism\fields\fields\Telephone',
+            'newism\fields\fields\Address',
+            'newism\fields\fields\Email',
+            'newism\fields\fields\Embed',
+            'newism\fields\fields\PersonName',
+            'newism\fields\fields\Gender',
+            'ether\seo\fields\SeoField'
         ];
 
         $unrelatedFieldTypes = [

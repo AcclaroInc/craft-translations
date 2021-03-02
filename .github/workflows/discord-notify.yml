@@ -1,0 +1,22 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Discord Notification
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the main branch
+on:
+  push:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  notify:
+    name: Discord Notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: binotaliu/action-discord-notifier@v1
+        with:
+          message-title: New Deploy for Craft Translations
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}

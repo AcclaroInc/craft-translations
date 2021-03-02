@@ -343,5 +343,20 @@ class OrderRepository
             Translations::$plugin->fileRepository->saveFile($file);
         }
     }
+    
+    /**
+     * saveOrderName
+     *
+     * @param  mixed $orderId
+     * @param  mixed $name
+     * @return void
+     */
+    public function saveOrderName($orderId, $name) {
+        
+        $order = $this->getOrderById($orderId);
+        $order->title = $name;
+        Craft::$app->getElements()->saveElement($order);
 
+        return true;
+    }
 }
