@@ -48,9 +48,6 @@ class SeoFieldTranslator extends GenericFieldTranslator
                         } else if($attribute == 'keywords') {
                             $new_key = sprintf('%s.%s.%s.%s', $field->handle, $attribute, $key,'keyword');
                             $source[$new_key] = $val['keyword'];
-
-                            $new_key = sprintf('%s.%s.%s.%s', $field->handle, $attribute, $key,'rating');
-                            $source[$new_key] = $val['rating'];
                         } else {
                             $key = sprintf('%s.%s.%s', $field->handle, $attribute, $key);
                             $source[$key] = $val;

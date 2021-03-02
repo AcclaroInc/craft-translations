@@ -65,7 +65,7 @@ class Factory
         RadioButtons::class     => SingleOptionFieldTranslator::class,
         RedactorField::class    => GenericFieldTranslator::class,
         SeoSettings::class      => SeomaticMetaFieldTranslator::class,
-        SeoField::class      => SeoFieldTranslator::class,
+        SeoField::class         => SeoFieldTranslator::class,
         SuperTableField::class  => SuperTableFieldTranslator::class,
         Table::class            => TableFieldTranslator::class,
         Tags::class             => TagFieldTranslator::class,
