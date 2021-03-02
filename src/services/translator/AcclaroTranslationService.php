@@ -90,7 +90,11 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderResponse->status)
             );
         }
-
+        
+        if ($order->title !== $orderResponse->name) {
+            Translations::$plugin->orderRepository->saveOrderName($order->id, $orderResponse->name);
+        }
+        
         $order->status = $orderResponse->status;
     }
 
