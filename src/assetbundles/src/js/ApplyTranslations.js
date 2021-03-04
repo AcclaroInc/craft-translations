@@ -10,6 +10,9 @@ Craft.Translations.ApplyTranslations = {
         window.draftEditor.settings.canUpdateSource = false;
         $("#publish-changes-btn-container :input[type='button']").disable();
         $("#publish-changes-btn-container :input[type='button']").attr('disabled', true);
+
+        $("#publish-draft-btn-container :input[type='button']").disable();
+        $("#publish-draft-btn-container :input[type='button']").attr('disabled', true);
         
         // Create the Apply Translations button
         var $applyTranslationsContainer = document.createElement('div');

@@ -113,16 +113,16 @@ class Translations extends Plugin
 
         Event::on(
             Drafts::class,
-            Drafts::EVENT_BEFORE_APPLY_DRAFT,
+            Drafts::EVENT_BEFORE_PUBLISH_DRAFT,
             function (DraftEvent $event) {
                 // Craft::debug(
-                //     'Drafts::EVENT_BEFORE_APPLY_DRAFT',
+                //     'Drafts::EVENT_BEFORE_PUBLISH_DRAFT',
                 //     __METHOD__
                 // );
                 Craft::info(
                     Craft::t(
                         'translations',
-                        '{name} Drafts::EVENT_BEFORE_APPLY_DRAFT',
+                        '{name} Drafts::EVENT_BEFORE_PUBLISH_DRAFT',
                         ['name' => $this->name]
                     ),
                     'translations'
@@ -134,10 +134,10 @@ class Translations extends Plugin
         
         Event::on(
             Drafts::class,
-            Drafts::EVENT_AFTER_APPLY_DRAFT,
+            Drafts::EVENT_AFTER_PUBLISH_DRAFT,
             function (DraftEvent $event) {
                 Craft::debug(
-                    '['. __METHOD__ .'] Drafts::EVENT_AFTER_APPLY_DRAFT',
+                    '['. __METHOD__ .'] Drafts::EVENT_AFTER_PUBLISH_DRAFT',
                     'translations'
                 );
                 if ($event->draft) {
