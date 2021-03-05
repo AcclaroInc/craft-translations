@@ -205,13 +205,13 @@ class Order extends Element
                 foreach ($targetSites as $key => $site) {
                     if (($key+1) === $length) {
                         if (Craft::$app->getSites()->getSiteById($site)) {
-                            $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site));
+                            $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>';
                         } else {
                             $languages .= '<s class="light">Deleted</s>';
                         }
                     } else {
                         if (Craft::$app->getSites()->getSiteById($site)) {
-                            $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). ', ';
+                            $languages .= ucfirst(Translations::$plugin->siteRepository->getSiteLanguageDisplayName($site)). '<span class="light"> ('.Craft::$app->getSites()->getSiteById($site)->language.')</span>'. ', ';
                         } else {
                             $languages .= '<s class="light">Deleted</s>'. ', ';
                         }

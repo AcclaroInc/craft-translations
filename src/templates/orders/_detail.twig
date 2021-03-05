@@ -149,17 +149,14 @@
                     <tr>
                         <th>{{ 'Source Site'|t }}</th>
                         <td>
-                            {{sourceSite.name}}
-{#                            <span class="light">({{ sourceSite.language }})</span>#}
-                            <br>
+                            {{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span><br>
                         </td>
                     </tr>
                     <tr>
                         <th>{{ 'Target Sites'|t }}</th>
                         <td>
                             {% for targetSite in orderTargetSitesObject %}
-                                {{targetSite.name}}
-{#                                <span class="light">({{ targetSite.language }})</span>#}
+                                {{targetSite.name}} <span class="light">({{ targetSite.language }})</span>
                                 {% if not loop.last %}<br>{% endif %}
                             {% endfor %}
                         </td>
@@ -333,9 +330,7 @@
                                                 {% endif %}
 
                                             </td>
-                                            <td>{{sourceSite.name}}
-{#                                                <span class="light">({{ sourceSite.language }})</span> #}
-                                            </td>
+                                            <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
                                             <input type="hidden" value="1" name="sourceSites[]" value="{{ sourceSite.id }}">
                                             <td>
                                                 <table>
@@ -343,8 +338,7 @@
                                                         <tr>
                                                             <td>
                                                                 <a href="{{ fileUrls[file.id] }}">
-                                                                    {{fileTargetSites[file.targetSite].name}}
-{#                                                                    ({{ fileTargetSites[file.targetSite].language }})#}
+                                                                    {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
                                                                 </a>
                                                                 {% if element.className != 'craft\\elements\\GlobalSet' and element.className != 'craft\\elements\\Category' %}
                                                                     <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
