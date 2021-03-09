@@ -24,9 +24,9 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^3.5.9",
+        "craftcms/cms": "^3.6.0",
         "guzzlehttp/guzzle": "^6.3",
-        "php": ">=7.1.0",
+        "php": ">=7.2.0",
         "sebastian/diff": "^3.0"
     },
     "autoload": {
