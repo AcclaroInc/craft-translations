@@ -187,12 +187,12 @@ class DraftRepository
         $totalElements = (count($elements) * count($order->getTargetSitesArray()));
         $currentElement = 0;
 
-        $creatDrafts = new CreateDrafts();
+        $createDrafts = new CreateDrafts();
         foreach ($order->getTargetSitesArray() as $key => $site) {
             foreach ($elements as $element) {
 
                 if ($queue) {
-                    $creatDrafts->updateProgress($queue, $currentElement++/$totalElements);
+                    $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
                 }
 
                 $this->createDrafts($element, $order, $site, $wordCounts);
@@ -308,19 +308,21 @@ class DraftRepository
                 ->admin()
                 ->orderBy(['elements.id' => SORT_ASC])
                 ->one();
+            
             $creatorId = $creator->id;
-
             $name = sprintf('%s [%s]', $orderName, Craft::$app->getSites()->getSiteById($site)->handle);
-
             $notes = '';
+            $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
             //$supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
+
             $newAttributes = [
                 // 'enabledForSite' => in_array($site, $supportedSites),
                 'siteId' => $site,
+                'uri' => $elementURI,
             ];
 
             $draft = Translations::$plugin->draftRepository->makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes);
-
+            
             return $draft;
         } catch (Exception $e) {
 
