@@ -128,7 +128,7 @@ class Translations extends Plugin
                     'translations'
                 );
 
-                $this->_onSaveEntry($event);
+                $this->_onBeforePublishDraft($event);
             }
         );
         
@@ -510,6 +510,20 @@ class Translations extends Plugin
     {
         // @TODO check if entry is part of an in-progress translation order
         // and send notification to acclaro
+    }
+
+    private function _onBeforePublishDraft(Event $event)
+    {
+        $craft = Craft::$app;
+        $request = $craft->getRequest();
+
+        if( $request->getParam('action') !== 'translations/base/apply-drafts') {
+
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
+            $path = $craft->request->getFullPath();
+            $craft->response->redirect(UrlHelper::siteUrl($path))->send();
+            $craft->end();
+        }
     }
 
     private function _onApplyDraft(Event $event)
