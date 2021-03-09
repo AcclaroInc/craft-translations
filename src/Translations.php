@@ -113,31 +113,31 @@ class Translations extends Plugin
 
         Event::on(
             Drafts::class,
-            Drafts::EVENT_BEFORE_APPLY_DRAFT,
+            Drafts::EVENT_BEFORE_PUBLISH_DRAFT,
             function (DraftEvent $event) {
                 // Craft::debug(
-                //     'Drafts::EVENT_BEFORE_APPLY_DRAFT',
+                //     'Drafts::EVENT_BEFORE_PUBLISH_DRAFT',
                 //     __METHOD__
                 // );
                 Craft::info(
                     Craft::t(
                         'translations',
-                        '{name} Drafts::EVENT_BEFORE_APPLY_DRAFT',
+                        '{name} Drafts::EVENT_BEFORE_PUBLISH_DRAFT',
                         ['name' => $this->name]
                     ),
                     'translations'
                 );
 
-                $this->_onSaveEntry($event);
+                $this->_onBeforePublishDraft($event);
             }
         );
         
         Event::on(
             Drafts::class,
-            Drafts::EVENT_AFTER_APPLY_DRAFT,
+            Drafts::EVENT_AFTER_PUBLISH_DRAFT,
             function (DraftEvent $event) {
                 Craft::debug(
-                    '['. __METHOD__ .'] Drafts::EVENT_AFTER_APPLY_DRAFT',
+                    '['. __METHOD__ .'] Drafts::EVENT_AFTER_PUBLISH_DRAFT',
                     'translations'
                 );
                 if ($event->draft) {
@@ -510,6 +510,27 @@ class Translations extends Plugin
     {
         // @TODO check if entry is part of an in-progress translation order
         // and send notification to acclaro
+    }
+
+    private function _onBeforePublishDraft(Event $event)
+    {
+        $craft = Craft::$app;
+        $request = $craft->getRequest();
+
+        $draft = $event->draft;
+
+        $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
+
+        $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
+
+        if(!empty($response) && $request->getParam('action') !== 'translations/base/apply-drafts') {
+
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
+            $path = $craft->request->getFullPath();
+            $params = $craft->request->getQueryParams();
+            $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
+            $craft->end();
+        }
     }
 
     private function _onApplyDraft(Event $event)

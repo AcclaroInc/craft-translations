@@ -298,7 +298,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
             } else {
                 $filename = $element->slug.'-'.$targetSite.'.xml';
             }

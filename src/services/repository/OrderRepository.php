@@ -25,6 +25,7 @@ use acclaro\translations\records\OrderRecord;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
+use craft\helpers\App;
 
 class OrderRepository
 {
@@ -257,7 +258,7 @@ class OrderRepository
 
         $totalElements = count($order->files);
         $currentElement = 0;
-        $orderUrl = UrlHelper::siteUrl() .'admin/translations/orders/detail/'.$order->id;
+        $orderUrl = App::env('SITE_URL') .'admin/translations/orders/detail/'.$order->id;
         $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
 
@@ -291,7 +292,7 @@ class OrderRepository
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
             } else {
                 $filename = $element->slug.'-'.$targetSite.'.xml';
             }

@@ -69,10 +69,10 @@ class DraftRepository
     
     public function publishDraft(Entry $draft)
     {
-        // Let's save the draft before we pass it to applyDraft()
+        // Let's save the draft before we pass it to publishDraft()
         Craft::$app->elements->saveElement($draft);
 
-        return Craft::$app->getDrafts()->applyDraft($draft);
+        return Craft::$app->getDrafts()->publishDraft($draft);
     }
 
     public function deleteAutoPropagatedDrafts($draftId, $targetSite)
@@ -145,7 +145,7 @@ class DraftRepository
     public function applyTranslationDraft($fileId)
     {
         $file = Translations::$plugin->fileRepository->getFileById($fileId);
-
+        
         // Get file's draft
         $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
 
@@ -163,7 +163,7 @@ class DraftRepository
             Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
 
             // Apply the draft to the entry
-            $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
+            $newEntry = Craft::$app->getDrafts()->publishDraft($draft);
 
 
         } catch (InvalidElementException $e) {
