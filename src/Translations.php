@@ -523,7 +523,13 @@ class Translations extends Plugin
 
         $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
 
-        if(!empty($response) && $request->getParam('action') !== 'translations/base/apply-drafts') {
+        $action = $request->getParam('action');
+        $applyDraftActions = [
+            'translations/base/apply-drafts',
+            'translations/files/apply-translation-draft',
+        ];
+
+        if(!empty($response) && !in_array($action, $applyDraftActions)) {
 
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
             $path = $craft->request->getFullPath();
