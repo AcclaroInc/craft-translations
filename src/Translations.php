@@ -523,10 +523,12 @@ class Translations extends Plugin
 
         $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
 
-        $action = $request->getParam('action');
+        $action = $request->getActionSegments();
+        $action = end($action);
+
         $applyDraftActions = [
-            'translations/base/apply-drafts',
-            'translations/files/apply-translation-draft',
+            'apply-drafts',
+            'apply-translation-draft',
         ];
 
         if(!empty($response) && !in_array($action, $applyDraftActions)) {
