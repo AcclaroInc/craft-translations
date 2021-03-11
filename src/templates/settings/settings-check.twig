@@ -15,23 +15,23 @@
         <tbody>
             <tr>
                 <td class="thin centeralign">
-                    {% if settings.craftVersion < '3.2.0' %}
+                    {% if settings.craftVersion < '3.6.0' %}
                         <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
                     {% endif %}
                 </td>
-                <td>Craft CMS 3.2+ <span class="info">{{ 'Craft 3.2 or higher is required.' }}</span></td>
+                <td>Craft CMS 3.6+ <span class="info">{{ 'Craft 3.6 or higher is required.' }}</span></td>
             </tr>
             <tr>
                 <td class="thin centeralign">
-                    {% if settings.phpVersion < '7.1.0' %}
+                    {% if settings.phpVersion < '7.2.0' %}
                         <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
                     {% endif %}
                 </td>
-                <td>PHP 7.1+ <span class="info">{{ 'PHP 7.1 or higher is required.' }}</span></td>
+                <td>PHP 7.2+ <span class="info">{{ 'PHP 7.2 or higher is required.' }}</span></td>
             </tr>
             <tr>
                 <td class="thin centeralign">
