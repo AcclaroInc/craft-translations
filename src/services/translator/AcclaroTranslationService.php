@@ -90,7 +90,11 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderResponse->status)
             );
         }
-
+        
+        if ($order->title !== $orderResponse->name) {
+            Translations::$plugin->orderRepository->saveOrderName($order->id, $orderResponse->name);
+        }
+        
         $order->status = $orderResponse->status;
     }
 
@@ -294,7 +298,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
             } else {
                 $filename = $element->slug.'-'.$targetSite.'.xml';
             }

@@ -109,7 +109,7 @@ class FilesController extends Controller
 
                 if ($element instanceof GlobalSet)
                 {
-                    $filename = $file->elementId . '-' . ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+                    $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
                 } else
                 {
                     $filename = $file->elementId . '-' . $element->slug.'-'.$targetSite.'.xml';

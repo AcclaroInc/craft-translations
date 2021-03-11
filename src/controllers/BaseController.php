@@ -443,7 +443,14 @@ class BaseController extends Controller
             if (!$variables['order']) {
                 throw new HttpException(404);
             }
-           
+
+            $orders = Translations::$plugin->orderRepository->getAllOrderIds();
+            $key = array_search($variables['orderId'], $orders);
+            if($key !== false) {
+                $variables['previous_order'] = ($key > 0) ? Translations::$plugin->urlGenerator->generateCpUrl('admin/translations/orders/detail/'.$orders[$key-1]) : '';
+                $variables['next_order'] = ($key < count($orders)-1) ? Translations::$plugin->urlGenerator->generateCpUrl('admin/translations/orders/detail/'.$orders[$key+1]) : '';
+            }
+
         } else {
             $variables['order'] = Translations::$plugin->orderRepository->makeNewOrder($variables['inputSourceSite']);
 
@@ -865,6 +872,12 @@ class BaseController extends Controller
 
             if ($targetSites === '*') {
                 $targetSites = Craft::$app->getSites()->getAllSiteIds();
+                
+                $source_site = Craft::$app->getRequest()->getParam('sourceSite');
+                if (($key = array_search($source_site, $targetSites)) !== false) {
+                    unset($targetSites[$key]);
+                    $targetSites = array_values($targetSites);
+                }
             }
 
             $requestedDueDate = Craft::$app->getRequest()->getParam('requestedDueDate');
@@ -1245,10 +1258,11 @@ class BaseController extends Controller
             ]);
         }
 
-        /*if ($order->getTranslator()->service == 'acclaro') {
+        if ($order->getTranslator()->service == 'acclaro') {
             $translationService = Translations::$plugin->translatorFactory->makeTranslationService($order->getTranslator()->service, $order->getTranslator()->getSettings());
             $res = $translationService->editOrderName($order->serviceOrderId, $name);
-        }*/
+            
+        }
 
         $translationService = Translations::$plugin->translatorFactory->makeTranslationService('export_import', $order->getTranslator()->getSettings());
         $res = $translationService->editOrderName($order, $name);

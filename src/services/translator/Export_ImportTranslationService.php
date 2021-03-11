@@ -115,9 +115,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             case $draft instanceof Entry:
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
-                
+
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
-                
+
                 $draft->setFieldValues($post);
                 
                 $draft->siteId = $targetSite;

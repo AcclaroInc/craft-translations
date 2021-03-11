@@ -83,48 +83,50 @@ class StaticTranslationsRepository
         foreach ($fileOptions['regex'] as $regex) {
             if (preg_match_all($regex, $contents, $matches)) {
                 $position = $fileOptions['position'];
-                foreach ($matches[$position] as $original) {
-                    $translateId = ElementHelper::createSlug($original);
-                    $view = Craft::$app->getView();
-                    $site = Craft::$app->getSites()->getSiteById($query->siteId);
-                    $translation = Craft::t($category, $original, null, $site->language);
+                if(isset($matches[$position])){
+                    foreach ($matches[$position] as $original) {
+                        $translateId = ElementHelper::normalizeSlug($original);
+                        $view = Craft::$app->getView();
+                        $site = Craft::$app->getSites()->getSiteById($query->siteId);
+                        $translation = Craft::t($category, $original, null, $site->language);
 
-                    $field = $view->renderTemplate('_includes/forms/text', [
-                        'id' => $translateId,
-                        'name' => 'translation['.$original.']',
-                        'value' => $translation,
-                        'placeholder' => $translation,
-                    ]);
+                        $field = $view->renderTemplate('_includes/forms/text', [
+                            'id' => $translateId,
+                            'name' => 'translation['.$original.']',
+                            'value' => $translation,
+                            'placeholder' => $translation,
+                        ]);
 
-                    $element = new StaticTranslations([
-                        'id' => $elementId,
-                        'translateId' => ElementHelper::createSlug($original),
-                        'original' => $original,
-                        'translation' => $translation,
-                        'source' => $path,
-                        'file' => $file,
-                        'siteId' => $query->siteId,
-                        'field' => $field,
-                    ]);
+                        $element = new StaticTranslations([
+                            'id' => $elementId,
+                            'translateId' => ElementHelper::normalizeSlug($original),
+                            'original' => $original,
+                            'translation' => $translation,
+                            'source' => $path,
+                            'file' => $file,
+                            'siteId' => $query->siteId,
+                            'field' => $field,
+                        ]);
 
-                    $elementId++;
-                    if ($query->status && $query->status != $element->getTranslateStatus()) {
-                        continue;
-                    }
-                    if ($query->search && !stristr($element->original, $query->search) && !stristr($element->translation, $query->search)) {
-                        continue;
-                    }
+                        $elementId++;
+                        if ($query->status && $query->status != $element->getTranslateStatus()) {
+                            continue;
+                        }
+                        if ($query->search && !stristr($element->original, $query->search) && !stristr($element->translation, $query->search)) {
+                            continue;
+                        }
 
-                    if ($query->id)
-                    {
-                        foreach ($query->id as $id) {
-                            if ($element->id == $id) {
-                                $translations[$element->original] = $element;
+                        if ($query->id)
+                        {
+                            foreach ($query->id as $id) {
+                                if ($element->id == $id) {
+                                    $translations[$element->original] = $element;
+                                }
                             }
                         }
-                    }
-                    else{
-                        $translations[$element->original] = $element;
+                        else{
+                            $translations[$element->original] = $element;
+                        }
                     }
                 }
             }
