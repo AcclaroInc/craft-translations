@@ -71,25 +71,30 @@ class NeoFieldTranslator extends GenericFieldTranslator
         return $source;
     }
 
-    protected function parseBlockData(&$allBlockData, $blockData)
+    protected function parseBlockData(&$allBlockData, $blockData, $blockId=null)
     {
         $newBlockData = array();
         $newToParse = array();
 
         foreach ($blockData as $key => $value) {
             if (is_numeric($key)) {
-                $newToParse[] = $value;
+                $newToParse[$key] = $value;
             } else {
                 $newBlockData[$key] = $value;
             }
         }
 
         if ($newBlockData) {
-            $allBlockData[] = $newBlockData;
+            if($blockId)
+            {
+                $allBlockData[$blockId] = $newBlockData;
+            } else {
+                $allBlockData[] = $newBlockData;
+            }
         }
 
-        foreach ($newToParse as $blockData) {
-            $this->parseBlockData($allBlockData, $blockData);
+        foreach ($newToParse as $blockId => $blockData) {
+            $this->parseBlockData($allBlockData, $blockData, $blockId);
         }
     }
 
@@ -112,7 +117,8 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         $new = 0;
         foreach ($blocks as $i => $block) {
-            $blockId = $block->id ?? 'new' . ++$new;
+            
+            $blockId = $i = $block->id ?? 'new' . ++$new;
             $blockData = isset($allBlockData[$i]) ? $allBlockData[$i] : array();
 
             $post[$fieldHandle][$blockId] = array(

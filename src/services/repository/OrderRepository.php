@@ -25,6 +25,7 @@ use acclaro\translations\records\OrderRecord;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
+use craft\helpers\App;
 
 class OrderRepository
 {
@@ -62,6 +63,24 @@ class OrderRepository
     {
         $orderCount = Order::find()->count();
         return $orderCount;
+    }
+
+    /**
+     * @return \craft\elements\db\ElementQuery
+     */
+    public function getAllOrderIds()
+    {
+        $orders = Order::find()
+            ->andWhere(Db::parseParam('translations_orders.status', array(
+                'published', 'complete', 'in preparation', 'in progress'
+            )))
+            ->all();
+        $orderIds = [];
+        foreach ($orders as $order){
+            $orderIds[] = $order->id;
+        }
+
+        return $orderIds;
     }
 
     /**
@@ -257,7 +276,7 @@ class OrderRepository
 
         $totalElements = count($order->files);
         $currentElement = 0;
-        $orderUrl = UrlHelper::siteUrl() .'admin/translations/orders/detail/'.$order->id;
+        $orderUrl = App::env('SITE_URL') .'admin/translations/orders/detail/'.$order->id;
         $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
 
@@ -291,7 +310,7 @@ class OrderRepository
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::createSlug($element->name).'-'.$targetSite.'.xml';
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
             } else {
                 $filename = $element->slug.'-'.$targetSite.'.xml';
             }
@@ -343,5 +362,20 @@ class OrderRepository
             Translations::$plugin->fileRepository->saveFile($file);
         }
     }
+    
+    /**
+     * saveOrderName
+     *
+     * @param  mixed $orderId
+     * @param  mixed $name
+     * @return void
+     */
+    public function saveOrderName($orderId, $name) {
+        
+        $order = $this->getOrderById($orderId);
+        $order->title = $name;
+        Craft::$app->getElements()->saveElement($order);
 
+        return true;
+    }
 }

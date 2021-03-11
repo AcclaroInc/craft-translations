@@ -119,8 +119,6 @@ class UrlGenerator
         if ($className === Entry::class && !$element->getIsDraft()) {
             $previewUrl = $element->getUrl();
         } else {
-            $element = Craft::$app->getElements()->getElementById($element->sourceId, null, $siteId);
-
             $route = [
                 'preview/preview', [
                     'elementType' => $className,

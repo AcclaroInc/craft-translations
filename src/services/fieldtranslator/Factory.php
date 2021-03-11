@@ -25,7 +25,16 @@ use craft\fields\Checkboxes;
 use craft\fields\MultiSelect;
 use craft\fields\RadioButtons;
 
+use newism\fields\fields\Address;
+use newism\fields\fields\Email;
+use newism\fields\fields\Embed;
+use newism\fields\fields\Gender;
+use newism\fields\fields\PersonName;
+use newism\fields\fields\Telephone;
+use newism\fields\NsmFields;
+
 use benf\neo\Field as NeoField;
+use ether\seo\fields\SeoField;
 use typedlinkfield\fields\LinkField as LinkField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
 use craft\redactor\Field as RedactorField;
@@ -56,10 +65,17 @@ class Factory
         RadioButtons::class     => SingleOptionFieldTranslator::class,
         RedactorField::class    => GenericFieldTranslator::class,
         SeoSettings::class      => SeomaticMetaFieldTranslator::class,
+        SeoField::class         => SeoFieldTranslator::class,
         SuperTableField::class  => SuperTableFieldTranslator::class,
         Table::class            => TableFieldTranslator::class,
         Tags::class             => TagFieldTranslator::class,
         CodeMirrorField::class  => GenericFieldTranslator::class,
+        PersonName::class       => NsmFieldsTranslator::class,
+        Address::class          => NsmFieldsTranslator::class,
+        Email::class            => NsmFieldsTranslator::class,
+        Telephone::class        => NsmFieldsTranslator::class,
+        Gender::class           => NsmFieldsTranslator::class,
+        Embed::class            => NsmFieldsTranslator::class,
     );
 
     public function makeTranslator(Field $field)
@@ -67,9 +83,9 @@ class Factory
         if ($field instanceof TranslatableFieldInterface) {
             return $field;
         }
-        
+
         $class = get_class($field);
-        
+
         if (array_key_exists($class, $this->nativeFieldTypes)) {
             $translatorClass = $this->nativeFieldTypes[$class];
 
