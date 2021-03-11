@@ -4,14 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.10.2 - 2021-03-11
+
+### Fixed
+- Resolved issue with CHANGELOG.md
+- Disabled default Craft publishing on Translation drafts
+
 ## 1.10.1 - 2021-03-11
 
-## Updated
+### Updated
 - Translation Setting requirements
 
 ## 1.10.0 - 2021-03-11
 
-## Added
+### Added
 - NSM Email field support [`newism\fields\fields\Email`](https://github.com/newism/craft3-fields/blob/master/src/fields/Email.php) (#139)
 - NSM Telephone field support [`newism\fields\fields\Telephone`](https://github.com/newism/craft3-fields/blob/master/src/fields/Telephone.php) (#139)
 - NSM Address field support [`newism\fields\fields\Address`](https://github.com/newism/craft3-fields/blob/master/src/fields/Address.php) (#139)
@@ -21,7 +27,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - Support for [Craft 3.6](https://github.com/craftcms/cms/blob/3.6.0/CHANGELOG.md#360---2021-01-26) (#144)
 - Improved Order navigation (#149)
 
-## Fixed
+### Fixed
 - Non-localized field interference within localized 'nested' blocks (#140)
 - Source lang is included as target lang when selecting 'All' target languages   (#134)
 - Adding Entries to a 'Saved' Order triggers new Order (#137)
@@ -30,7 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## 1.9.4 - 2021-01-18
 
-## Added
+### Added
 - Custom Twig RegEx Filters for Static Translations https://github.com/AcclaroInc/craft-translations/pull/130
 - Spinner icon to individual "Apply Translation" buttons https://github.com/AcclaroInc/craft-translations/pull/131
 - `zh-Hans-CN` mapping to `SiteRepository.php` https://github.com/AcclaroInc/craft-translations/commit/acfc84dde21318bfb04a4e8970680aed12021699
@@ -45,7 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Fixed
 - `loadTranslations()` issue for unavailable `targetSites`
 
-## Added
+### Added
 - Improved plugin logging
 
 ## 1.9.2 - 2020-12-11
