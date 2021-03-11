@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.10.0 - 2021-03-11
+
+## Added
+- NSM Email field support [`newism\fields\fields\Email`](https://github.com/newism/craft3-fields/blob/master/src/fields/Email.php) (#139)
+- NSM Telephone field support [`newism\fields\fields\Telephone`](https://github.com/newism/craft3-fields/blob/master/src/fields/Telephone.php) (#139)
+- NSM Address field support [`newism\fields\fields\Address`](https://github.com/newism/craft3-fields/blob/master/src/fields/Address.php) (#139)
+- NSM Embed field support [`newism\fields\fields\Embed`](https://github.com/newism/craft3-fields/blob/master/src/fields/Embed.php) (#139)
+- Ether, SEO field support [`ether\seo\fields\SeoField`](https://github.com/ethercreative/seo/blob/v3/src/fields/SeoField.php#L24) (#136)
+- Bi-direction Sync for Acclaro Order name updates (#134)
+- Support for [Craft 3.6](https://github.com/craftcms/cms/blob/3.6.0/CHANGELOG.md#360---2021-01-26) (#144)
+- Improved Order navigation (#149)
+
+## Fixed
+- Non-localized field interference within localized 'nested' blocks (#140)
+- Source lang is included as target lang when selecting 'All' target languages   (#134)
+- Adding Entries to a 'Saved' Order triggers new Order (#137)
+- Prevent translation drafts from getting published via Craft (fd0bc80)
+- Translation Draft URI structures (#145)
+
 ## 1.9.4 - 2021-01-18
 
 ## Added
