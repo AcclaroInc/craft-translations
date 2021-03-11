@@ -33,6 +33,20 @@
 {% block content %}
     {% if isSubmitted %}
 
+        <div class="top-order-navigation">
+            {% if previous_order %}
+                <a href="{{ previous_order }}"> < Previous Order </a>
+            {% else %}
+                < Previous Order
+            {% endif %}
+            <span> | </span>
+            {% if next_order %}
+                <a href="{{ next_order }}"> Next Order ></a>
+            {% else %}
+                Next Order >
+            {% endif %}
+        </div>
+
         <div style="display: flex">
             <div class="translations-order-detail-summary">
 
@@ -503,6 +517,20 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="footer-order-navigation">
+            {% if previous_order %}
+                <a href="{{ previous_order }}"> < Previous Order </a>
+            {% else %}
+                < Previous Order
+            {% endif %}
+            <span> | </span>
+            {% if next_order %}
+                <a href="{{ next_order }}"> Next Order ></a>
+            {% else %}
+                Next Order >
+            {% endif %}
         </div>
 
     {% elseif orderSubmitted %}

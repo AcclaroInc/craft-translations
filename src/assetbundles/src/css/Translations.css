@@ -707,3 +707,25 @@ del {
 .static-trans-footer .pagination {
     display: none;
 }
+
+.footer-order-navigation{
+    padding: 10px 24px;
+    background-color: #f3f7fc;
+    margin: 0px -24px -24px -24px;
+    border-radius: 0 0 5px 5px;
+}
+
+.footer-order-navigation span{
+    margin: 0px 10px;
+}
+
+.top-order-navigation{
+    padding: 10px 24px;
+    background-color: #f3f7fc;
+    margin: -24px -24px 20px -24px;
+    border-radius: 5px 5px 0 0;
+}
+
+.top-order-navigation span{
+    margin: 0px 10px;
+}

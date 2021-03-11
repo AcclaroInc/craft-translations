@@ -443,7 +443,14 @@ class BaseController extends Controller
             if (!$variables['order']) {
                 throw new HttpException(404);
             }
-           
+
+            $orders = Translations::$plugin->orderRepository->getAllOrderIds();
+            $key = array_search($variables['orderId'], $orders);
+            if($key !== false) {
+                $variables['previous_order'] = ($key > 0) ? Translations::$plugin->urlGenerator->generateCpUrl('admin/translations/orders/detail/'.$orders[$key-1]) : '';
+                $variables['next_order'] = ($key < count($orders)-1) ? Translations::$plugin->urlGenerator->generateCpUrl('admin/translations/orders/detail/'.$orders[$key+1]) : '';
+            }
+
         } else {
             $variables['order'] = Translations::$plugin->orderRepository->makeNewOrder($variables['inputSourceSite']);
 
