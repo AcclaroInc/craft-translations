@@ -68,6 +68,24 @@ class OrderRepository
     /**
      * @return \craft\elements\db\ElementQuery
      */
+    public function getAllOrderIds()
+    {
+        $orders = Order::find()
+            ->andWhere(Db::parseParam('translations_orders.status', array(
+                'published', 'complete', 'in preparation', 'in progress'
+            )))
+            ->all();
+        $orderIds = [];
+        foreach ($orders as $order){
+            $orderIds[] = $order->id;
+        }
+
+        return $orderIds;
+    }
+
+    /**
+     * @return \craft\elements\db\ElementQuery
+     */
     public function getInProgressOrders()
     {
         $inProgressOrders = Order::find()

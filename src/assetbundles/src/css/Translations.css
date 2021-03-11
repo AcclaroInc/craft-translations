@@ -707,3 +707,37 @@ del {
 .static-trans-footer .pagination {
     display: none;
 }
+
+.footer-order-navigation{
+    background-color: #f3f7fc;
+    border-radius: 0 0 5px 5px;
+    display: flex;
+    justify-content: space-between;
+    margin: 0px -24px -24px -24px;
+    padding: 10px 24px;
+}
+
+.top-order-navigation{
+    background-color: #f3f7fc;
+    border-radius: 5px 5px 0 0;
+    display: flex;
+    justify-content: space-between;
+    margin: -24px -24px 20px -24px;
+    padding: 10px 24px;
+}
+
+.top-order-navigation span,
+.footer-order-navigation span{
+    margin: 0px 10px;
+}
+
+.footer-order-navigation a,
+.top-order-navigation a{
+    color: #606d7b;
+    transition: color linear 100ms;
+}
+
+.footer-order-navigation a:hover,
+.top-order-navigation a:hover{
+    color: #0B69A3;
+}
