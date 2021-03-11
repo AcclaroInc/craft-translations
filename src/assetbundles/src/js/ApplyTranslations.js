@@ -6,13 +6,16 @@ if (typeof Craft.Translations === 'undefined') {
 
 Craft.Translations.ApplyTranslations = {
     init: function(draftId, file) {
-        // Disable default Craft updating
+        // Disable default Craft publishing on Translation drafts
         window.draftEditor.settings.canUpdateSource = false;
         $("#publish-changes-btn-container :input[type='button']").disable();
         $("#publish-changes-btn-container :input[type='button']").attr('disabled', true);
 
         $("#publish-draft-btn-container :input[type='button']").disable();
         $("#publish-draft-btn-container :input[type='button']").attr('disabled', true);
+
+        $("a[data-action='entry-revisions/publish-draft']").addClass("disabled");
+        $("a[data-action='entry-revisions/publish-draft']").attr("disabled", true);
         
         // Create the Apply Translations button
         var $applyTranslationsContainer = document.createElement('div');
