@@ -529,6 +529,7 @@ class Translations extends Plugin
         $applyDraftActions = [
             'apply-drafts',
             'apply-translation-draft',
+            'run',
         ];
 
         if(!empty($response) && !in_array($action, $applyDraftActions)) {

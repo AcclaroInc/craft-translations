@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.10.3 - 2021-04-06
+
+### Updated
+- Use `UrlHelper::baseSiteUrl()` instead of deprecated `App::env('SITE_URL')` for generating Order URLs
+
+### Fixed
+- Issue when applying drafts via Queue Manager
+
 ## 1.10.2 - 2021-03-11
 
 ### Fixed

@@ -276,7 +276,7 @@ class OrderRepository
 
         $totalElements = count($order->files);
         $currentElement = 0;
-        $orderUrl = App::env('SITE_URL') .'admin/translations/orders/detail/'.$order->id;
+        $orderUrl = UrlHelper::baseSiteUrl() .'admin/translations/orders/detail/'.$order->id;
         $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
 
