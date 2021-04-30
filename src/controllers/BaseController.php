@@ -961,7 +961,7 @@ class BaseController extends Controller
 
             // Manual Translation will make orders 'in progress' status after creation
 
-            $success = Craft::$app->getElements()->saveElement($order);
+            $success = Craft::$app->getElements()->saveElement($order, true, true, false);
 
             if (!$success) {
                 Craft::error( '['. __METHOD__ .'] Couldn’t save the order', 'translations' );

@@ -68,13 +68,13 @@ class DraftRepository
             return $element->getErrors();
         }
 
-        return Craft::$app->elements->saveElement($element);
+        return Craft::$app->elements->saveElement($element, true, true, false);
     }
     
     public function publishDraft(Entry $draft)
     {
         // Let's save the draft before we pass it to publishDraft()
-        Craft::$app->elements->saveElement($draft);
+        Craft::$app->elements->saveElement($draft, true, true, false);
 
         return Craft::$app->getDrafts()->publishDraft($draft);
     }
