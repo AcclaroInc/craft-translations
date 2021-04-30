@@ -174,7 +174,7 @@ class DraftRepository
 
         try {
             // Let's try saving the element prior to applying draft
-            if (!Craft::$app->getElements()->saveElement($draft)) {
+            if (!Craft::$app->getElements()->saveElement($draft, true, true, false)) {
                 throw new InvalidElementException($draft);
             }
 
@@ -243,7 +243,7 @@ class DraftRepository
             $order->dateOrdered = new DateTime();
             //echo ' status '.$order->status; die;
 
-            $success = Craft::$app->getElements()->saveElement($order);
+            $success = Craft::$app->getElements()->saveElement($order, true, true, false);
             if (!$success) {
                 Craft::warning( '['. __METHOD__ .'] Couldn’t save the order :: '.$orderId, 'translations' );
             }
