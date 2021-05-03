@@ -28,6 +28,10 @@ use acclaro\translations\services\job\CreateDrafts;
 
 class DraftRepository
 {
+    private $creatorId;
+
+    private $allSitesHandle = [];
+
     /**
      * @return \craft\elements\Entry|null
      */
@@ -64,13 +68,13 @@ class DraftRepository
             return $element->getErrors();
         }
 
-        return Craft::$app->elements->saveElement($element);
+        return Craft::$app->elements->saveElement($element, true, true, false);
     }
     
     public function publishDraft(Entry $draft)
     {
         // Let's save the draft before we pass it to publishDraft()
-        Craft::$app->elements->saveElement($draft);
+        Craft::$app->elements->saveElement($draft, true, true, false);
 
         return Craft::$app->getDrafts()->publishDraft($draft);
     }
@@ -142,12 +146,27 @@ class DraftRepository
         return $data;
     }
 
-    public function applyTranslationDraft($fileId)
+    /**
+     * @param $fileId
+     * @param  string  $file
+     * @param  string  $draft
+     * @return \craft\base\ElementInterface|null
+     * @throws NotFoundHttpException
+     * @throws \Throwable
+     * @throws \craft\errors\ElementNotFoundException
+     * @throws \craft\errors\MissingComponentException
+     * @throws \yii\base\Exception
+     */
+    public function applyTranslationDraft($fileId, $file='', $draft='')
     {
-        $file = Translations::$plugin->fileRepository->getFileById($fileId);
-        
+        if(!$file){
+            $file = Translations::$plugin->fileRepository->getFileById($fileId);
+        }
+
         // Get file's draft
-        $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+        if(!$draft){
+            $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+        }
 
         if (!$draft) {
             throw new NotFoundHttpException('Draft not found');
@@ -155,7 +174,7 @@ class DraftRepository
 
         try {
             // Let's try saving the element prior to applying draft
-            if (!Craft::$app->getElements()->saveElement($draft)) {
+            if (!Craft::$app->getElements()->saveElement($draft, true, true, false)) {
                 throw new InvalidElementException($draft);
             }
 
@@ -188,6 +207,15 @@ class DraftRepository
         $currentElement = 0;
 
         $createDrafts = new CreateDrafts();
+        $creator = User::find()
+                ->admin()
+                ->orderBy(['elements.id' => SORT_ASC])
+                ->one();
+            
+        $this->creatorId = $creator->id;
+
+        $this->allSitesHandle = $this->getAllSitesHandle();
+
         foreach ($order->getTargetSitesArray() as $key => $site) {
             foreach ($elements as $element) {
 
@@ -215,7 +243,7 @@ class DraftRepository
             $order->dateOrdered = new DateTime();
             //echo ' status '.$order->status; die;
 
-            $success = Craft::$app->getElements()->saveElement($order);
+            $success = Craft::$app->getElements()->saveElement($order, true, true, false);
             if (!$success) {
                 Craft::warning( '['. __METHOD__ .'] Couldn’t save the order :: '.$orderId, 'translations' );
             }
@@ -304,13 +332,8 @@ class DraftRepository
     {
 
         try{
-            $creator = User::find()
-                ->admin()
-                ->orderBy(['elements.id' => SORT_ASC])
-                ->one();
-            
-            $creatorId = $creator->id;
-            $name = sprintf('%s [%s]', $orderName, Craft::$app->getSites()->getSiteById($site)->handle);
+            $handle = isset($this->allSitesHandle[$site]) ? $this->allSitesHandle[$site] : "";
+            $name = sprintf('%s [%s]', $orderName, $handle);
             $notes = '';
             $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
             //$supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
@@ -321,7 +344,7 @@ class DraftRepository
                 'uri' => $elementURI,
             ];
 
-            $draft = Translations::$plugin->draftRepository->makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes);
+            $draft = Translations::$plugin->draftRepository->makeNewDraft($entry, $this->creatorId, $name, $notes, $newAttributes);
             
             return $draft;
         } catch (Exception $e) {
@@ -449,7 +472,7 @@ class DraftRepository
                 $draft = $this->getDraftById($file->draftId, $file->targetSite);
 
                 if ($draft) {
-                    $success = $this->applyTranslationDraft($file->id);
+                    $success = $this->applyTranslationDraft($file->id, $file, $draft);
                 } else {
                     $success = false;
                 }
@@ -501,5 +524,23 @@ class DraftRepository
             Translations::$plugin->orderRepository->saveOrder($order);
         }
 
+    }
+    
+    /**
+     * getAllSitesHandle
+     *
+     * @return void
+     */
+    public function getAllSitesHandle()
+    {
+        $allSitesHandle = [];
+        $allSites = Craft::$app->getSites()->getAllSites();
+        
+        foreach($allSites as $site)
+        {
+            $allSitesHandle[$site->id] = $site->handle;
+        }
+
+        return $allSitesHandle;
     }
 }

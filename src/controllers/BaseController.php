@@ -865,7 +865,8 @@ class BaseController extends Controller
 
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
         }
-
+        $job = '';
+        
         try {
 
             $targetSites = Craft::$app->getRequest()->getParam('targetSites');
@@ -960,8 +961,8 @@ class BaseController extends Controller
 
             // Manual Translation will make orders 'in progress' status after creation
 
-            $success = Craft::$app->getElements()->saveElement($order);
-            $job = '';
+            $success = Craft::$app->getElements()->saveElement($order, true, true, false);
+
             if (!$success) {
                 Craft::error( '['. __METHOD__ .'] Couldn’t save the order', 'translations' );
             } else {

@@ -420,7 +420,7 @@ class FilesController extends Controller
             $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
 
             if ($draft) {
-                $response = Translations::$plugin->draftRepository->applyTranslationDraft($file->id);
+                $response = Translations::$plugin->draftRepository->applyTranslationDraft($file->id, $file, $draft);
                 $message = 'Draft applied for '. '"'. $element->title .'"';
             } else {
                 $response = false;
