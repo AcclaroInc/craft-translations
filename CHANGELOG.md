@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.10.4 - 2021-05-03
+
+### Added
+- Queue manager performance enhancements
+
+### Updated
+- Require Composer `^2.0.13` due to [potential security vulnerability](https://github.com/advisories/GHSA-h5h8-pc6h-jvvx)
+
 ## 1.10.3 - 2021-04-06
 
 ### Updated
