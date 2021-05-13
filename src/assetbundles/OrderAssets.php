@@ -30,6 +30,7 @@ class OrderAssets extends AssetBundle
             'js/ExportFiles.js',
             'js/ImportFiles.js',
             'js/diff2html.min.js',
+            'js/CustomExporters.js',
         ];
 
         $this->css = [
