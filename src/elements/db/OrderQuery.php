@@ -26,6 +26,7 @@ class OrderQuery extends ElementQuery
             'translations_orders.targetSites',
             'translations_orders.status',
             'translations_orders.requestedDueDate',
+            'translations_orders.orderDueDate',
             'translations_orders.comments',
             'translations_orders.activityLog',
             'translations_orders.dateOrdered',

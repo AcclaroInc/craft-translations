@@ -194,6 +194,14 @@
                         <th>{{ 'Requested Due Date'|t }}</th>
                         <td>{{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }}</td>
                     </tr>
+
+                    {% if order.orderDueDate and (order.orderDueDate|date('n/j/Y') != order.requestedDueDate|date('n/j/Y')) %}
+                        <tr>
+                            <th>{{ 'Order Due Date'|t }}</th>
+                            <td>{{ order.orderDueDate ? order.orderDueDate|date('n/j/Y') : 'N/A' }}</td>
+                        </tr>
+                    {% endif %}
+
                     </tbody>
                 </table>
 
