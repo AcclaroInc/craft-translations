@@ -1,0 +1,307 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
+
+{% set sourceSite = sourceSiteObject %}
+
+{% set title = 'Translations'|t %}
+{% block actionButton %}
+    <small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+    <div class="item" data-position="left" data-colspan="1">
+        <div class="buttons">
+            {% if licenseStatus == 'valid' %}
+                <div class="btngroup submit">
+                    <button type="submit" class="translations-order-save-btn btn big">{{ 'Save as draft'|t }}</button>
+                </div>
+            {% endif %}
+            <div class="btngroup submit">
+                <button type="submit" name="submit" value="submit" class="translations-submit-order btn big submit{% if orderEntriesCount == 0 %} disabled{% endif %}"{% if orderEntriesCount == 0 %} disabled="disabled"{% endif %}>{{ 'Submit order'|t }}</button>
+            </div>
+            <div class="translations-loader hidden">
+                <div class="spinner"></div>
+                <p class="translations-loader-msg hidden">{{ 'Please wait and do not close this window until the page finishes loading.'|t }}</p>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations') },
+    { label: 'Orders'|t, url: url('translations/orders') },
+] %}
+
+{% if isSubmitted %}
+    {% set crumbs = crumbs|merge([
+        { label: order.title, url: 'javascript:void(0)' },
+    ]) %}
+{% elseif orderId %}
+    {% set crumbs = crumbs|merge([
+        { label: 'Edit Order'|t, url: 'javascript:void(0)' },
+    ]) %}
+{% else %}
+    {% set crumbs = crumbs|merge([
+        { label: 'Create New Order'|t, url: 'javascript:void(0)' },
+    ]) %}
+{% endif %}
+
+{% set tabs = {
+    "order": {label: "Order Details"|t, url: "#order"},
+    "files": {label: "Order Files"|t, url: "#files"},
+} %}
+
+{% block content %}
+
+    <div id="order">
+
+        {{ forms.textField({
+            label: 'Order name'|t,
+            value: order.title,
+            placeholder: 'Translation Order Name',
+            name: 'title',
+            id: 'title',
+            size: 80,
+            maxlength: 255,
+        }) }}
+
+        {{ forms.selectField({
+            fieldClass: 'hidden',
+            label: 'Order Owner'|t,
+            value: null,
+            options: owners,
+            name: 'ownerId',
+            id: 'ownerId',
+            size: 20
+        }) }}
+        <hr>
+
+        Source Entries
+        <table class="data" dir="ltr">
+            <thead>
+            <tr>
+                <th>{{ 'Title'|t }}</th>
+                <th>{{ 'Version'|t }}</th>
+                <th>{{ 'Section'|t }}</th>
+                <th>{{ 'Date Updated'|t }}</th>
+                {#<th>{{ 'Source Site'|t }}</th>#}
+                <th>&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for element in elements %}
+                <tr data-word-count="{{ elementWordCounts[element.id] }}">
+                    <td>{% include "_elements/element" with {'element': element} only %}
+                        {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
+                            <span class="warning duplicate-warning">
+                                            {{ 'This entry exists in ' }}
+                                {% for orderId in duplicateEntries[element.id] %}
+                                    <a href="{{ url('translations/orders/detail/'~orderId) }}" target="_blank">#{{ orderId }}{{ (orderId != duplicateEntries[element.id]|last) ? ', ' : '' }}</a>
+                                {% endfor %}
+                                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+
+                    </td>
+                    <td>
+                        {% if element.className == 'craft\\elements\\GlobalSet' %}
+                            {{ 'Globals' }}
+                        {% elseif element.className == 'craft\\elements\\Category' %}
+                            {{ 'Category' }}
+                        {% else %}
+                            {{ element.section.name }}
+                        {% endif %}
+
+                    </td>
+                    <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
+                    {#<td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>#}
+                    <td><a class="icon delete translations-order-delete-entry" title="{{ 'Delete entry'|t }}" data-element="{{element.id}}"><input type="hidden" name="elements[]" value="{{ element.id }}"></a></td>
+                </tr>
+                {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="field" data-position="left" data-colspan="1">
+            <div class="buttons flex">
+                <div class="submit">
+                    <input type="hidden" id="addNewEntries" value="1">
+                    <input type="hidden" id="currentElementIds" value="{{ elementIds|join(',') }}">
+                    <button type="button" class="btn add icon dashed addEntries">{{ 'Add an entry'|t }}</button>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="field">
+            <div class="heading">
+                <label>{{ 'Source Site'|t }}</label>
+            </div>
+            <div class="input {{ orientation }}">
+
+                {{ forms.selectField({
+                    value: sourceSite.id,
+                    options: {'':'Choose'|t ~ '...'}|merge(sourceSites),
+                    name: 'sourceSiteSelect',
+                    id: 'sourceSiteSelect'
+                }) }}
+                {#{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span>#}
+            </div>
+        </div>
+
+        {{ forms.checkboxSelectField({
+            label: 'Target Site(s)'|t,
+            options: targetSiteCheckboxOptions,
+            values: order.targetSites|json_decode(),
+            showAllOption: true,
+            name: 'targetSites',
+            id: 'targetSites'
+        }) }}
+
+        <hr>
+
+        {{ forms.selectField({
+            label: 'Translation Service'|t,
+            value: order.translatorId,
+            options: translatorOptions,
+            name: 'translatorId',
+            id: 'translatorId',
+            size: 20
+        }) }}
+
+        <hr>
+
+        {{ forms.lightswitchField({
+            status: element.getAttributeStatus('enabled'),
+            label: 'Track Changes'|t
+            (canEditMultipleSites ? tag('button', {
+                type: 'button',
+                id: 'expand-status-btn',
+                class: ['btn'],
+                data: {
+                    icon: 'ellipsis',
+                },
+            })),
+            id: "trackChanges",
+            name: "trackChanges",
+            on: element.enabled and element.trackChanges
+        }) }}
+
+        {{ forms.lightswitchField({
+            status: element.getAttributeStatus('enabled'),
+            label: 'Asynchronous publishing'|t
+                (canEditMultipleSites ? tag('button', {
+                    type: 'button',
+                    id: 'expand-status-btn',
+                    class: ['btn'],
+                    data: {
+                        icon: 'ellipsis',
+                    },
+                })),
+            id: "trackChanges",
+            name: "trackChanges",
+            on: element.enabled and element.trackChanges
+        }) }}
+
+        <hr>
+
+        {{ forms.dateField({
+            label: 'Requested due date'|t,
+            value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
+            name: 'requestedDueDate',
+            id: 'requestedDueDate',
+            size: 20,
+            placeholder: 'Optional'
+        }) }}
+
+        {{ forms.textareaField({
+            label: 'Order notes'|t,
+            value: order.comments,
+            name: 'comments',
+            placeholder: 'Additional comments and instructions',
+            id: 'comments',
+            maxlength: 2000,
+            size: 20
+        }) }}
+
+    </div>
+    <div id="files" class="hidden">
+        No files
+    </div>
+
+{% endblock %}
+
+{% block details %}
+
+    <div id="settings" class="meta">
+        <div id="order-id-field" class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Order ID</label>
+            </div>
+
+            <div class="input ltr">
+                <a href="javascript:void(0);"> #4537 </a>
+            </div>
+        </div>
+
+       <div id="order-id-field" class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Author</label>
+            </div>
+            <div class="input ltr">
+                <label> Sid Edward </label>
+            </div>
+        </div>
+       <div id="order-id-field" class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Submitted</label>
+            </div>
+            <div class="input ltr">
+                <label> 23/05/2021 </label>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="meta-details" class="meta read-only">
+        {% block meta %}
+            {% if element.hasStatuses() %}
+                {% if isUnpublishedDraft %}
+                    {% set statusColor = 'white' %}
+                    {% set statusLabel = 'Draft'|t('app') %}
+                {% else %}
+                    {% set status = element.getStatus() %}
+                    {% set statusDef = element.statuses()[status] ?? null %}
+                    {% set statusColor = statusDef.color ?? status %}
+                    {% set statusLabel = statusDef.label ?? statusDef ?? status|ucfirst %}
+                {% endif %}
+                <div class="data">
+                    <h5 class="heading">{{ 'Status'|t('app') }}</h5>
+                    <div id="status-value" class="value"><span class="status {{ statusColor }}"></span> Pending Submission</div>
+                </div>
+            {% endif %}
+            <div class="data">
+                <h5 class="heading">{{ "Status"|t('app') }}</h5>
+                <div id="date-created-value" class="value">Pending Submission</div>
+            </div>
+            <div class="data">
+                <h5 class="heading">{{ "Created at"|t('app') }}</h5>
+                <div id="date-created-value" class="value">{{ element.dateCreated|datetime('short') }}</div>
+            </div>
+            <div class="data">
+                <h5 class="heading">{{ "Updated at"|t('app') }}</h5>
+                <div id="date-updated-value" class="value">{{ element.dateUpdated|datetime('short') }}</div>
+            </div>
+
+        {% endblock %}
+    </div>
+
+    <div class="data">
+        <h5 class="heading"><b>{{ "Activity Log"|t('app') }}</b></h5>
+    </div>
+
+
+{% endblock %}
+

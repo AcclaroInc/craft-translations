@@ -365,6 +365,8 @@ class Translations extends Plugin
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
                     'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/base/edit-category-draft',
+
+                    'translations/orders/create' => 'translations/order/order-detail',
                 ]);
             }
         );
