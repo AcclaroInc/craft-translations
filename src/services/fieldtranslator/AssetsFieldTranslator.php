@@ -37,6 +37,8 @@ class AssetsFieldTranslator extends GenericFieldTranslator
                 }*/
 
                 $source = [];
+                $source[sprintf('%s.%s.%s', $field->handle, $block->id, 'title')] = $block->title;
+
                 $element = Craft::$app->assets->getAssetById($block->id, $sourceSite);
                 foreach ($element->getFieldLayout()->getFields() as $layoutField) {
                     $assetField = Craft::$app->fields->getFieldById($layoutField->id);
