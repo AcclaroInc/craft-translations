@@ -61,6 +61,10 @@ class Order extends Element
     
     public $requestedDueDate;
     
+    public $trackChanges;
+    
+    public $asynchronousPublishing;
+    
     public $comments;
     
     public $activityLog;
@@ -473,6 +477,8 @@ class Order extends Element
         $record->targetSites =  $this->targetSites;
         $record->status =  $this->status;
         $record->requestedDueDate =  $this->requestedDueDate;
+        $record->trackChanges =  $this->trackChanges;
+        $record->asynchronousPublishing =  $this->asynchronousPublishing;
         $record->comments =  $this->comments;
         $record->activityLog =  $this->activityLog;
         $record->dateOrdered =  $this->dateOrdered;

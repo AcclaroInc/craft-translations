@@ -34,7 +34,9 @@ Craft.Translations.OrderEntries = {
         }
     },
     init: function() {
-        this.$publishSelectedBtn = $('.translations-publish-selected-btn');
+        this.$publishSelectedBtn = $('#draft-publish');
+        this.$formId = 'publish-form';
+        this.$form = $('#' + this.$formId);
         this.$selectAllCheckbox = $('thead .translations-checkbox-cell :checkbox');
         this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
 
@@ -46,12 +48,55 @@ Craft.Translations.OrderEntries = {
             Craft.Translations.OrderEntries.togglePublishButton();
             Craft.Translations.OrderEntries.toggleSelectAllCheckbox();
         });
-        this.$publishSelectedBtn.one('click', function (e) {
-            $(".translations-publish-selected-btn").addClass("disabled");
-            $(".translations-publish-selected-btn").prop("value", "");
-            $(".translations-publish-selected-btn").width(160);
-            $(".translations-publish-selected-btn").toggleClass("spinner");
+
+        var form = this._buildExportHud();
+        
+        this.$publishSelectedBtn.on('click', function (e) {
+            $(this).addClass("disabled");
+            $(this).width(130);
+            $(this).toggleClass("spinner");
+
+            var hud = new Garnish.HUD($(this), form);
+
+            hud.on('hide', $.proxy(function() {
+                $(this).removeClass("disabled");
+                $(this).toggleClass("spinner");
+            }, this));
         });
+
+        this.$form.on('submit', function (e) {
+            // alert('worked');
+        });
+    },
+
+    _buildExportHud: function() {
+        var $form = $('<div/>', {
+            'class' : 'export-form',
+        });
+
+        var $draft = $('<button/>', {
+            type: 'submit',
+            name : 'submit',
+            form: this.$formId,
+            class : 'btn submit fullwidth mb-1 p-0',
+            value : 'draft',
+            text: Craft.t('app', 'Create drafts')
+        });
+
+        $draft.appendTo($form);
+
+        var $publish = $('<button/>', {
+            type: 'submit',
+            name : 'submit',
+            form: this.$formId,
+            class : 'btn submit fullwidth p-0',
+            value : 'publish',
+            text: Craft.t('app', 'Create drafts and publish')
+        });
+
+        $publish.appendTo($form);
+
+        return $form;
     }
 };
 

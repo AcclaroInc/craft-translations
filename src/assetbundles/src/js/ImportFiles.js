@@ -29,11 +29,11 @@
 
         buildImportFilesForm: function()
         {
-            var $form = $('<form>', {
+            var $form = $('<form/>', {
                 'method': 'POST',
                 'enctype' : 'multipart/form-data',
                 'accept-charset' : 'UTF-8',
-                'class' : 'form last',
+                'class' : 'form last export-form',
                 'action' : '',
                 'id' : 'translations-form-import'
             });
@@ -41,20 +41,24 @@
 
             $form.append(Craft.getCsrfInput());
 
-            var $label = $('<label>Select ZIP or XML File to Import</label>');
+            var $label = $('<div class="mb-1"><label>Supported file formats<br>[ ZIP, XML, JSON, CSV ]</label></div>');
 
+            $label.appendTo($form);
+            
+            $label = $('<label for="import-formId"><strong>Select File to Import</strong></label>');
             $label.appendTo($form);
 
             var $divFile = $('<div class="input-file"></div>');
-            var $file = $('<input>', {    
+            var $file = $('<input/>', {   
                 'type': 'file',
                 'name': 'zip-upload',
+                'id': 'import-formId'
             });
 
             $file.appendTo($divFile);
             $divFile.appendTo($form);
 
-            var $hiddenAction = $('<input>', {
+            var $hiddenAction = $('<input/>', {
                 'type': 'hidden',
                 'name': 'action',
                 'value': 'translations/files/import-file'
@@ -62,7 +66,7 @@
 
             $hiddenAction.appendTo($form);
 
-            var $hiddenOrderId = $('<input>', {
+            var $hiddenOrderId = $('<input/>', {
                 'type': 'hidden',
                 'name': 'orderId',
                 'value': $('#order_id').val()
@@ -73,8 +77,8 @@
             var $submit = $('<input>', {
                 'type': 'submit',
                 'id' : 'submit',
-                'class' : 'btn submit',
-                'value' : 'Go!'
+                'class' : 'btn submit fullwidth',
+                'value' : 'Upload'
             });
 
             $submit.appendTo($div);

@@ -22,11 +22,18 @@ class CreateDrafts extends BaseJob
     public $orderId;
     public $wordCounts;
     public $defaultCreator;
+    public $publish;
+    public $elementIds;
 
     public function execute($queue)
     {
-
-        Translations::$plugin->draftRepository->createOrderDrafts($this->orderId, $this->wordCounts, $queue);
+        if ($this->publish && $this->elementIds) {
+            Translations::$plugin->draftRepository->createOrderDrafts(
+                $this->orderId, $this->wordCounts, $queue, $this->publish, $this->elementIds
+            );
+        } else {
+            Translations::$plugin->draftRepository->createOrderDrafts($this->orderId, $this->wordCounts, $queue);
+        }
     }
 
     public function updateProgress($queue, $progress) {

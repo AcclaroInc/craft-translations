@@ -245,6 +245,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
             'sandboxMode' => $this->sandboxMode,
             'settings' => $this->settings
         ]));
+
+        return $job;
     }
     
     /**
