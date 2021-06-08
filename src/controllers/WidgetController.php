@@ -46,6 +46,7 @@ use acclaro\translations\assetbundles\DashboardAssets;
 use acclaro\translations\services\repository\FileRepository;
 use acclaro\translations\services\repository\SiteRepository;
 use acclaro\translations\assetbundles\RecentlyModifiedAssets;
+use craft\models\Updates as UpdatesModel;
 
 // Widget Classes
 use acclaro\translations\widgets\News;
@@ -116,6 +117,8 @@ class WidgetController extends Controller
             }
         }
 
+        $pluginHandle = "translations";
+
         $view = $this->getView();
         $namespace = $view->getNamespace();
 
@@ -182,6 +185,9 @@ class WidgetController extends Controller
                 $allWidgetJs .= $widgetJs . "\n";
             }
         }
+
+        // Check For Plugin Updates
+        $variables['updates'] = $this->hasUpdate($pluginHandle);
 
         // Register Dashboard Assets
         $view->registerAssetBundle(DashboardAssets::class);
@@ -474,6 +480,25 @@ class WidgetController extends Controller
     // Public Methods
     // =========================================================================
 
+    /**
+     * Check for Latest Updates
+     *
+     * @return bool
+     */
+    public function hasUpdate($pluginHandle): bool
+    {
+        $hasUpdate = false;
+        try {
+            $pluginInfo = Craft::$app->getPlugins()->getPluginInfo($pluginHandle);
+    
+            $hasUpdate = $pluginInfo['upgradeAvailable'];
+        } catch (\Throwable $th) {
+            Craft::warning("Error getting plugin updates", $pluginHandle);
+            return $hasUpdate;
+        }
+
+        return $hasUpdate;
+    }
     /**
      * Returns all available widget type classes.
      *
