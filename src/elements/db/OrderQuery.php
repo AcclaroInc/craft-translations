@@ -3,6 +3,7 @@
 namespace acclaro\translations\elements\db;
 
 use craft\elements\db\ElementQuery;
+use craft\helpers\Db;
 
 class OrderQuery extends ElementQuery
 {
@@ -10,6 +11,15 @@ class OrderQuery extends ElementQuery
      * @inheritdoc
      */
     protected $defaultOrderBy = ['translations_orders.dateCreated' => SORT_DESC];
+
+    public $elementIds;
+
+    public function elementIds($value)
+    {
+        $this->elementIds = $value;
+
+        return $this;
+    }
 
     /**
      * @inheritdoc
@@ -34,6 +44,8 @@ class OrderQuery extends ElementQuery
             'translations_orders.wordCount',
             'translations_orders.elementIds'
         ]);
+
+        // $this->subQuery->andWhere(Db::parseParam("translations_orders.elementIds", '"122"', "like"));
 
         return parent::beforePrepare();
     }

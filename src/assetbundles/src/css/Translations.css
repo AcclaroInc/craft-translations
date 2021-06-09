@@ -741,3 +741,12 @@ del {
 .top-order-navigation a:hover{
     color: #0B69A3;
 }
+
+.p-5 {
+    padding: 5px !important;
+    padding-top: 5px !important;
+}
+
+.meta .warning {
+    margin-bottom: 0px !important;
+}
