@@ -62,11 +62,11 @@
             <div class="front" style="position: relative;">
                 <div class="pane notice-pane">
 
-                    <a class="right icon delete close-notice" title="Close" style="margin-top: -1%; padding-left: 1%; font-size: 1.2rem"></a>
+                    <a class="right icon delete close-notice" data-id="trial-notice" data-key="PaidNotification" title="Close" style="margin-top: -1%; padding-left: 1%; font-size: 1.2rem"></a>
 
                     {% set plugin = craft.app.plugins.getPlugin('translations', false) %}
 
-                    <div class="body" style="width:100%; text-align: center">
+                    <div class="body" style="width:100%; text-align: center; display: flex; align-items: center; flex-direction: column;">
                         <td style="text-align:center;">
                             <span>
                                 {% if licenseStatus == 'valid' %}
@@ -77,7 +77,7 @@
 
                             </span>
 
-                            <span style="padding: 0 2%"> | </span>
+                            <span style="padding: 0 2%">  </span>
                             <span style="">
                                 <div class="link">
                                     <a href="https://www.surveymonkey.com/r/translationsplugin">
@@ -109,6 +109,25 @@
             </div>
         </div>
     </div>
+    {% if updates %}
+        <div class="item" id="update-notice" style="padding-bottom: 10px; display: none; width: calc(100% - 0px)">
+            <div data-title="Notice" style="">
+                <div class="front" style="position: relative;">
+                    <div class="pane notice-pane">
+                        <a class="right icon delete close-notice" data-id="update-notice" data-key="UpdateNotification" title="Close" style="margin-top: -1%; padding-left: 1%; font-size: 1.2rem"></a>
+                        <div class="body" style="width:100%; text-align: center; display: flex; align-items: center; flex-direction: column;">
+                            <td style="text-align:center;">
+                                <span>There is an update available for Translations.
+                                    <a class="go" href="utilities/updates"> View details
+                                    </a>
+                                </span>
+                            </td>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     <div id="translations-dashboard" style="visibility:hidden;">
         {% for widget in widgets %}
