@@ -494,39 +494,4 @@ class Order extends Element
     public function afterDelete()
     {
     }
-
-    public function performAction(ElementActionInterface $query)
-    {
-        $query->addSelect('translations_orders.*');
-
-        $query->join('translations_orders translations_orders', 'translations_orders.id = elements.id');
-
-        if ($this->status) {
-            if (is_array($this->status)) {
-                $query->andWhere(array('in', 'translations_orders.status', $this->status));
-            } else if ($this->status !== '*') {
-                $query->andWhere('translations_orders.status = :status', array(':status' => $this->status));
-            }
-        }
-
-        if ($this->getAttribute('translatorId')) {
-            $query->andWhere('translations_orders.translatorId = :translatorId', array(':translatorId' => $this->translatorId));
-        }
-
-        if ($this->getAttribute('sourceSite')) {
-            $query->andWhere('translations_orders.sourceSite = :sourceSite', array(':sourceSite' => $this->sourceSite));
-        }
-
-        if ($this->getAttribute('targetSites')) {
-            $query->andWhere('translations_orders.targetSites LIKE :targetSites', array(':targetSites' => '%"'.$this->targetSites.'"%'));
-        }
-
-        if ($this->getAttribute('startDate')) {
-            $query->andWhere('translations_orders.dateOrdered >= :dateOrdered', array(':dateOrdered' => DateTime::createFromFormat('n/j/Y', $this->startDate)->format('Y-m-d H:i:s')));
-        }
-
-        if ($this->getAttribute('endDate')) {
-            $query->andWhere('translations_orders.dateOrdered <= :dateOrdered', array(':dateOrdered' => DateTime::createFromFormat('n/j/Y', $this->endDate)->format('Y-m-d H:i:s')));
-        }
-    }
 }
