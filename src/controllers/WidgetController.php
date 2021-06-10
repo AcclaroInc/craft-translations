@@ -208,7 +208,7 @@ class WidgetController extends Controller
 
     /**
      * Check for Latest Updates
-     * @param $pluginHandle
+     *
      * @return bool
      */
     public function checkForUpdate($pluginHandle): bool
