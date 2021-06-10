@@ -80,13 +80,16 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         if ($orders.length == 0) {
             return callback(false);
         }
+        var $sourceSiteId = $('[name=siteId]').val();
+
         $orders.forEach(function($order) {
-            $order.elements.forEach(function($orderElement) {
-                if ($orderElement == $element) {
-                    console.log($orderElement + " => " + $element);
-                    return callback(true);
-                }
-            });
+            if ($order.sourceSite == $sourceSiteId) {
+                $order.elements.forEach(function($orderElement) {
+                    if ($orderElement == $element) {
+                        return callback(true);
+                    }
+                });
+            }
         });
     },
 
@@ -112,26 +115,26 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             $showWarning = $result;
         });
 
-        var $warningContainer = document.createElement('div');
+        if ($showWarning) {
+            var $warningContainer = document.createElement('div');
             $warningContainer.id = 'edit-source-warning';
             $warningContainer.className = 'meta p-5';
-        
+            $url = Craft.getUrl("translations/orders") + "?elementIds[]=" + $element;
+            $details = document.getElementById('details');
+            $('#details > div:last').before($warningContainer);
+            var $warningMessage = $('<div>', {'class': 'meta warning'}).html('<label>This entry is in an open Translation order.</label>');
+            $warningMessage.append($('<div>').html('<label>Updates may not reflect on translated content.</label>'));
+            $warningMessage.append($('<div>').html('<a class=btn href='+$url+'>View translation order</a>'));
+            $warningMessage.appendTo($warningContainer);
+        }
+
         if (this.isEditEntryScreen()) {
             $settings = document.getElementById('settings');
             $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
 
-            if ($showWarning) {
-                $url = Craft.getUrl("translations/orders") + "?elementId=" + $element;
-                $details = document.getElementById('details');
-                $('#details > div:last').before($warningContainer);
-                var $warningMessage = $('<div>', {'class': 'meta warning'}).html('<label>This entry is in an open Translation order.</label>');
-                $warningMessage.append($('<div>').html('<label>Updates may not reflect on translated content.</label>'));
-                $warningMessage.append($('<div>').html('<a class=btn href='+$url+'>View translation order</a>'));
-                $warningMessage.appendTo($warningContainer);
-            }
-
+            
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);

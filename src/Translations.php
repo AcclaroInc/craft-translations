@@ -434,6 +434,7 @@ class Translations extends Plugin
         foreach (self::$plugin->orderRepository->getInProgressOrders() as $order) {
             $openOrders[] = array(
                 'id' => $order->id,
+                'sourceSite' => $order->sourceSite,
                 'elements' => json_decode($order->elementIds, true),
             );
         }
