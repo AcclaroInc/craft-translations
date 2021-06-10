@@ -18,22 +18,7 @@ class OrderQuery extends ElementQuery
     {
         $this->joinElementTable('translations_orders');
 
-        $this->query->select([
-            'translations_orders.id',
-            'translations_orders.translatorId',
-            'translations_orders.ownerId',
-            'translations_orders.sourceSite',
-            'translations_orders.targetSites',
-            'translations_orders.status',
-            'translations_orders.requestedDueDate',
-            'translations_orders.comments',
-            'translations_orders.activityLog',
-            'translations_orders.dateOrdered',
-            'translations_orders.serviceOrderId',
-            'translations_orders.entriesCount',
-            'translations_orders.wordCount',
-            'translations_orders.elementIds'
-        ]);
+        $this->query->select(['translations_orders.*']);
 
         return parent::beforePrepare();
     }

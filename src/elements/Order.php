@@ -60,7 +60,9 @@ class Order extends Element
     public $status;
     
     public $requestedDueDate;
-    
+
+    public $orderDueDate;
+
     public $comments;
     
     public $activityLog;
@@ -265,6 +267,7 @@ class Order extends Element
                     return '<span class="status green"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
             }
 
+            case 'orderDueDate':
             case 'requestedDueDate':
             case 'dateOrdered':
                 return $value ? date('n/j/y', strtotime($value)) : '--';
@@ -473,6 +476,7 @@ class Order extends Element
         $record->targetSites =  $this->targetSites;
         $record->status =  $this->status;
         $record->requestedDueDate =  $this->requestedDueDate;
+        $record->orderDueDate =  $this->orderDueDate;
         $record->comments =  $this->comments;
         $record->activityLog =  $this->activityLog;
         $record->dateOrdered =  $this->dateOrdered;

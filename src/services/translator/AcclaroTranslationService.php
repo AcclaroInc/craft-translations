@@ -96,6 +96,11 @@ class AcclaroTranslationService implements TranslationServiceInterface
         }
         
         $order->status = $orderResponse->status;
+        // check if due date set then update it
+        if($orderResponse->duedate){
+            $dueDate = new DateTime($orderResponse->duedate);
+            $order->orderDueDate = $dueDate->format('Y-m-d H:i:s');
+        }
     }
 
     /**
