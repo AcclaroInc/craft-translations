@@ -119,7 +119,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             var $warningContainer = document.createElement('div');
             $warningContainer.id = 'edit-source-warning';
             $warningContainer.className = 'meta p-5';
-            $url = Craft.getUrl("translations/orders") + "?elementIds[]=" + $element;
+            $url = Craft.getUrl("translations/orders") + "?status[]=in+progress&status[]=in+review&status[]=in+preparation&status[]=getting+quote&status[]=needs+approval&status[]=complete&[]&elementIds[]=" + $element;
             $details = document.getElementById('details');
             $('#details > div:last').before($warningContainer);
             var $warningMessage = $('<div>', {'class': 'meta warning'}).html('<label>This entry is in an open Translation order.</label>');
