@@ -73,6 +73,9 @@
 
                             this.$body.html(widgetHtml);
                         }
+
+                        window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                        window.translationsdashboard.grid.refreshCols(true, true);
                     }
                 }, this));
             },
