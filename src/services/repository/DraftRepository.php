@@ -15,6 +15,7 @@ use DateTime;
 use Exception;
 use craft\db\Query;
 use craft\elements\User;
+use craft\models\Section;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
@@ -172,6 +173,9 @@ class DraftRepository
             throw new NotFoundHttpException('Draft not found');
         }
 
+        // this will add and enable any site missing in enabled sites of element only if section propagation
+        $this->enableForAllSupportedSites($file);
+
         try {
             // Let's try saving the element prior to applying draft
             if (!Craft::$app->getElements()->saveElement($draft, true, true, false)) {
@@ -195,6 +199,33 @@ class DraftRepository
         }
 
         return $newEntry;
+    }
+
+    public function enableForAllSupportedSites($file)
+    {
+        $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+
+        $supportedSites = array_column($element->getSupportedSites(), 'siteId');
+
+        $enabledSites = (new Query())
+                ->select('siteId')
+                ->from('{{%elements_sites}}')
+                ->where([
+                                'enabled' => true,
+                                'elementId' => $element->id
+                        ])
+                ->column();
+
+        if ($element->getSection()->propagationMethod === Section::PROPAGATION_METHOD_CUSTOM && array_diff($supportedSites, $enabledSites)) {
+            $missingSites = [];
+            foreach ($supportedSites as $supportedSiteId) {
+                $missingSites[$supportedSiteId] = true;
+            }
+
+            $element->setEnabledForSite($missingSites);
+
+            Craft::$app->getElements()->saveElement($element);
+        }
     }
 
     public function createOrderDrafts($orderId, $wordCounts, $queue=null)

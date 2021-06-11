@@ -82,7 +82,6 @@
     {#<div id="export-btn" class="btn hidden">{{ 'Export…'|t('app') }}</div>#}
 {% endblock %}
 
-
 {% block initJs %}
     Craft.elementIndex = Craft.createElementIndex('{{ elementType|e("js") }}', $('#page-container'), {
     elementTypeName: '{{ elementInstance.displayName()|e("js") }}',
@@ -90,6 +89,7 @@
     context: '{{ context }}',
     storageKey: 'elementindex.{{ elementType|e("js") }}',
     criteria: Craft.defaultIndexCriteria,
+    criteria: {{ (searchParams|raw) }},
     toolbarSelector: '#toolbar'
     });
 {% endblock %}

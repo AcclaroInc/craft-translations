@@ -91,6 +91,9 @@
                             {% case 'all' %}
                                 {{'Save entries to all sites enabled for this section'|t('app')}}
                                 <span class="info">With this propagation method, translation drafts can be created for all enabled sites. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                            {% case 'custom' %}
+                                {{'Let each entry choose which sites it should be saved to'|t('app')}}
+                                <span class="info">With this propagation method, translation drafts can be created for specifically enabled sites. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
                         {% endswitch %}
                     </td>
                 </tr>

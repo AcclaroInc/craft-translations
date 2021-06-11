@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.10.5 - 2021-06-11
+
+### Added
+- Due date sync and display feature https://github.com/AcclaroInc/pm-craft-translations/issues/120
+- Support for section propagation method "custom" https://github.com/AcclaroInc/craft-translations/issues/167
+- Source Entry 'Edit' warning message https://github.com/AcclaroInc/pm-craft-translations/issues/287
+- New release dashboard notification https://github.com/AcclaroInc/pm-craft-translations/issues/282
+
+### Updated
+- Discord notification action
+
+### Fixed
+- Asset titles bug https://github.com/AcclaroInc/craft-translations/issues/170
+- Dashboard widget layout bug (Firefox) https://github.com/AcclaroInc/pm-craft-translations/issues/307
+
 ## 1.10.4 - 2021-05-03
 
 ### Added

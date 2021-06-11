@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - uses: binotaliu/action-discord-notifier@v1
+      - uses: fateyan/action-discord-notifier@v1.2.0
         with:
           message-title: New Deploy for Craft Translations
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
