@@ -118,13 +118,12 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         if ($showWarning) {
             var $warningContainer = document.createElement('div');
             $warningContainer.id = 'edit-source-warning';
-            $warningContainer.className = 'meta p-5';
+            $warningContainer.className = 'meta read-only warning';
             $url = Craft.getUrl("translations/orders") + "?status[]=in+progress&status[]=in+review&status[]=in+preparation&status[]=getting+quote&status[]=needs+approval&status[]=complete&[]&elementIds[]=" + $element;
             $details = document.getElementById('details');
             $('#details > div:last').before($warningContainer);
-            var $warningMessage = $('<div>', {'class': 'meta warning'}).html('<label>This entry is in an open Translation order.</label>');
-            $warningMessage.append($('<div>').html('<label>Updates may not reflect on translated content.</label>'));
-            $warningMessage.append($('<div>').html('<a class=btn href='+$url+'>View translation order</a>'));
+            var $warningMessage = $('<div>').html('<label>Updates to source content may not reflect in delivered translations.</label>');
+            $warningMessage.append($('<div style="margin-top: 10px;">').html('<a class=btn href='+$url+' target="_blank">View translation orders</a>'));
             $warningMessage.appendTo($warningContainer);
         }
 
