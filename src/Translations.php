@@ -422,6 +422,7 @@ class Translations extends Plugin
     private function _includeEntryResources()
     {
         $orders = array();
+        $openOrders = array();
 
         foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
             $orders[] = array(
@@ -430,8 +431,17 @@ class Translations extends Plugin
             );
         }
 
+        foreach (self::$plugin->orderRepository->getOpenOrders() as $order) {
+            $openOrders[] = array(
+                'id' => $order->id,
+                'sourceSite' => $order->sourceSite,
+                'elements' => json_decode($order->elementIds, true),
+            );
+        }
+
         $data = [
             'orders' => $orders,
+            'openOrders' => $openOrders,
             'sites' => Craft::$app->sites->getAllSiteIds(),
             'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus('translations')
         ];
