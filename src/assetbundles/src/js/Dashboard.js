@@ -259,6 +259,12 @@
                 }
 
                 this.addListener(this.$settingsBtn, 'click', 'showSettings');
+
+                let timeoutID;
+                window.addEventListener('resize', $.proxy(function() {
+                    clearTimeout(timeoutID);
+                    timeoutID = setTimeout(window.translationsdashboard.grid.refreshCols(false, true), 500)
+                }, this));
             },
 
             initBackUi: function() {

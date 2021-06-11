@@ -78,6 +78,9 @@
                         }
                     }
 
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
+
                     $('.new-entry-check .checkbox').on('click', function(e) {
                         $(e.target).closest('tr[id^=item-entry-]').toggleClass('sel');
                         Craft.Translations.RecentEntries.prototype.updateSelected();
