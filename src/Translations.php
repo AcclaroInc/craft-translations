@@ -347,8 +347,9 @@ class Translations extends Plugin
                 $event->rules = array_merge($event->rules, [
                     'translations' => 'translations/widget/index',
                     'translations/orders' => 'translations/base/order-index',
+                    // 'translations/orders/new' => 'translations/order/order-detail',
                     'translations/orders/new' => 'translations/base/order-detail',
-                    'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
+                    // 'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
                     'translations/translators' => 'translations/base/translator-index',
                     'translations/translators/new' => 'translations/base/translator-detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
@@ -365,6 +366,9 @@ class Translations extends Plugin
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
                     'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/base/edit-category-draft',
+
+                    'translations/orders/create' => 'translations/order/order-detail',
+                    'translations/orders/detail/<orderId:\d+>' => 'translations/order/order-detail',
                 ]);
             }
         );
@@ -529,6 +533,7 @@ class Translations extends Plugin
         $applyDraftActions = [
             'apply-drafts',
             'apply-translation-draft',
+            'save-draft-and-publish',
             'run',
         ];
 

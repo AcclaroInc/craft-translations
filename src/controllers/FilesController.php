@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use Craft;
 use DateTime;
 use ZipArchive;
@@ -62,11 +63,13 @@ class FilesController extends Controller
 	 *
 	 * @var array
 	 */
-	private $_allowedTypes = array('zip', 'xml');
+	private $_allowedTypes = array('zip', 'xml', 'json', 'csv');
 
     public function actionCreateExportZip()
     {
         $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
+        
+        $fileFormat = $params['format'] ?? Constants::DEFAULT_FILE_EXPORT_FORMAT;
 
         $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
         $files = Translations::$plugin->fileRepository->getFilesByOrderId($params['orderId'], null);
@@ -81,11 +84,10 @@ class FilesController extends Controller
         $zipName = $this->getZipName($orderAttributes);
         
         // Set destination zip
-        $zipDest = Craft::$app->path->getTempPath().'/'.$zipName.'.zip';
+        $zipDest = Craft::$app->path->getTempPath() . '/' . $zipName . '.zip';
         
         // Create zip
         $zip = new ZipArchive();
-
 
         // Open zip
         if ($zip->open($zipDest, $zip::CREATE) !== true)
@@ -107,22 +109,25 @@ class FilesController extends Controller
 
                 $targetSite = $file->targetSite;
 
-                if ($element instanceof GlobalSet)
-                {
-                    $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
-                } else
-                {
-                    $filename = $file->elementId . '-' . $element->slug.'-'.$targetSite.'.xml';
+                if ($element instanceof GlobalSet) {
+                    $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
+                        '-' . $targetSite . '.' . $fileFormat;
+                } else {
+                    $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
                 }
 
-                $path = $tempPath.$filename;
-
+                $path = $tempPath . $filename;
                 
-                // $fileContent = new \SimpleXMLElement($file->source);
+                $fileContent = $fileFormat === Constants::DEFAULT_FILE_EXPORT_FORMAT ? $file->source :
+                    Translations::$plugin->elementToFileConverter->convert($element, $fileFormat,
+                    [
+                        'sourceSite'    => $file->sourceSite,
+                        'targetSite'    => $file->targetSite,
+                        'wordCount'     => $file->wordCount,
+                    ]
+                );
 
-                
-                if (!$zip->addFromString($filename, $file->source))
-                {
+                if (!$zip->addFromString($filename, $fileContent)) {
                     $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
                     Craft::log( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, LogLevel::Error, 'translations' );
                 }
@@ -143,10 +148,10 @@ class FilesController extends Controller
         ]);
     }
 
-     /**
-    * Export Functionlity
-	* Sends the zip file created to the user
-    */
+    /**
+     * Export Functionlity
+	 * Sends the zip file created to the user
+     */
     public function actionExportFile()
     {
         $filename = Craft::$app->getRequest()->getRequiredQueryParam('filename');
@@ -160,7 +165,6 @@ class FilesController extends Controller
 
         return FileHelper::unlink($filename);
     }
-
 
     public function actionImportFile()
     {
@@ -192,11 +196,11 @@ class FilesController extends Controller
             // Make sure a file was uploaded
             if ($file && $file->size > 0) {
                 if (!in_array($file->extension, $this->_allowedTypes)) {
-                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
+                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML, JSON, CSV] files.");
                 }
 
                 //If is a Zip File
-                if ($file->extension === 'zip') {
+                if ($file->extension === Constants::FILE_FORMAT_ZIP) {
                     //Unzip File ZipArchive
                     $zip = new \ZipArchive();
 
@@ -212,6 +216,7 @@ class FilesController extends Controller
                         $files = FileHelper::findFiles($assetPath.$orderId);
 
                         $assetIds = [];
+                        $fileInfo = null;
 
                         foreach ($files as $key => $file) {
                             if (! is_bool(strpos($file, '__MACOSX'))) {
@@ -221,6 +226,10 @@ class FilesController extends Controller
                             }
 
                             $filename = Assets::prepareAssetName($file);
+
+                            if (! $fileInfo) {
+                                $fileInfo = pathinfo($filename);
+                            }
 
                             $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
 
@@ -261,13 +270,14 @@ class FilesController extends Controller
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,
                                 'assets' => $assetIds,
+                                'fileFormat' => $fileInfo['extension']
                             ]));
 
                             if ($job) {
                                 $params = [
                                     'id' => (int) $job,
                                     'notice' => 'Done updating translation drafts',
-                                    'url' => 'translations/orders/detail/'. $orderId
+                                    'url' => Constants::URL_ORDER_DETAIL . $orderId
                                 ];
                                 Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                             }
@@ -275,17 +285,21 @@ class FilesController extends Controller
                             $fileSvc = new ImportFiles();
                             foreach ($assetIds as $key => $id) {
                                 $a = Craft::$app->getAssets()->getAssetById($id);
-                                $fileSvc->processFile($a, $this->order);
+                                $fileSvc->processFile($a, $this->order, $fileInfo['extension']);
                                 Craft::$app->getElements()->deleteElement($a);
                             }
                         }
 
-                        // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
+                        // $this->redirect(Constants::URL_ORDER_DETAIL . $orderId, 302, true);
                         $this->showUserMessages("File uploaded successfully: $fileName", true);
                     } else {
                         $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
                     }
-                } elseif ($file->extension === 'xml') {
+                } elseif (
+                    $file->extension === Constants::FILE_FORMAT_XML ||
+                    $file->extension === Constants::DEFAULT_FILE_EXPORT_FORMAT ||
+                    $file->extension === Constants::FILE_FORMAT_CSV
+                ) {
                     $filename = Assets::prepareAssetName($file->name);
 
                     $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
@@ -318,13 +332,14 @@ class FilesController extends Controller
                             'orderId' => $orderId,
                             'totalFiles' => $total_files,
                             'assets' => [$asset->id],
+                            'fileFormat' => $file->extension
                         ]));
 
                         if ($job) {
                             $params = [
                                 'id' => (int) $job,
                                 'notice' => 'Done updating translation drafts',
-                                'url' => 'translations/orders/detail/'. $orderId
+                                'url' => Constants::URL_ORDER_DETAIL . $orderId
                             ];
                             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                         }
@@ -332,7 +347,7 @@ class FilesController extends Controller
                     } else {
                         $fileSvc = new ImportFiles();
                         $a = Craft::$app->getAssets()->getAssetById($asset->id);
-                        $res = $fileSvc->processFile($a, $this->order);
+                        $res = $fileSvc->processFile($a, $this->order, $file->extension);
                         Craft::$app->getElements()->deleteElement($a);
 
                         if($res !== false){
@@ -341,10 +356,8 @@ class FilesController extends Controller
                             $this->showUserMessages("File import error. Please check the order activity log for details.");
                         }
                     }
-
-
                 } else {
-                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
+                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML, JSON, CSV] files.");
                 }
             } else {
                 $this->showUserMessages("The file you are trying to import is empty.");

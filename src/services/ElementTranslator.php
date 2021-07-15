@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services;
 
+use acclaro\translations\Constants;
 use Craft;
 use Exception;
 use DOMDocument;
@@ -51,6 +52,45 @@ class ElementTranslator
         }
         
         return $source;
+    }
+
+    private function getDataFormat($data) {
+        if (strpos($data, "<xml>") !== false) {
+            return Constants::FILE_FORMAT_XML;
+        }
+        return Constants::DEFAULT_FILE_EXPORT_FORMAT;
+    }
+
+    public function getTargetData($content) {
+        if ($this->getDataFormat($content) === Constants::FILE_FORMAT_XML) {
+            return $this->getTargetDataFromXml($content);
+        } else {
+            $targetData = [];
+            $content = json_decode($content, true);
+
+            foreach ($content['content'] as $name => $value) {
+                if (strpos($name, '.') !== false) {
+                    $parts = explode('.', $name);
+                    $container =& $targetData;
+
+                    while ($parts) {
+                        $key = array_shift($parts);
+    
+                        if (!isset($container[$key])) {
+                            $container[$key] = array();
+                        }
+    
+                        $container =& $container[$key];
+                    }
+    
+                    $container = $value;
+                } else {
+                    $targetData[$name] = $value;
+                }
+            }
+
+            return $targetData;
+        }
     }
 
     public function getTargetDataFromXml($xml)
@@ -97,18 +137,17 @@ class ElementTranslator
 
         foreach($element->getFieldLayout()->getFields() as $key => $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-
             $fieldHandle = $field->handle;
             
             $fieldType = $field;
-            
+
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             if (!$translator) {
                 if ($includeNonTranslatable) {
                     $post[$fieldHandle] = $element->$fieldHandle;
                 }
-                
+
                 continue;
             }
 
@@ -119,11 +158,10 @@ class ElementTranslator
                 $fieldPost = $translator->toPostArray($this, $element, $field, $sourceSite);
             }
 
-            
             if (!is_array($fieldPost)) {
                 $fieldPost = array($fieldHandle => $fieldPost);
             }
-            
+
             $post = array_merge($post, $fieldPost);
         }
 

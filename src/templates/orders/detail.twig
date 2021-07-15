@@ -1,0 +1,699 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAsset") %}
+
+{% set sourceSite = sourceSiteObject %}
+
+{% set title = 'Translations'|t %}
+{% block actionButton %}
+    <div class="translations-loader hidden">
+        <div class="spinner"></div>
+        <p class="translations-loader-msg hidden">
+            {{ 'Please wait and do not close this window until the page finishes loading.'|t }}</p>
+    </div>
+    <small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+    <div class="item" data-position="left" data-colspan="1">
+        <div class="buttons">
+            <input type="hidden" id="order-attr" data-submitted="{{ isSubmitted }}" data-changed="{{ isChanged }}"/>
+            {% if isSubmitted  or orderId %}
+                {% if licenseStatus == constant('acclaro\\translations\\Constants::LICENSE_STATUS_VALID') %}
+                    <div class="btngroup submit">
+                        {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
+                            order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                            <button type="submit" name="submit" value=""
+                                class="btn big disabled" disabled="disabled">
+                                {{ 'Save as draft'|t }}
+                            </button>
+                        {% else %}
+                            <button type="submit" form="publish-form" name="submit" value="draft-all"
+                                class="btn big">{{ 'Save as draft'|t }}</button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                <div class="btngroup submit">
+                    <button type="submit" id="createNewOrder" name="create" value="create" class="btn big">
+                    {{ 'Create new order'|t }}</button>
+                </div>
+                <div class="btngroup submit">
+                    <button type="submit" id="updateOrder" form="order-form" name="submit" value="update"
+                        class="translations-submit-order btn big submit
+                        disabled" disabled="disabled">{{ isChanged ? 'Submit new order' : 'Update order'|t }}</button>
+                </div>
+            {% else %}
+                <div class="btngroup submit">
+                    <button type="submit" form="order-form" name="submit" value="submit"
+                        class="translations-submit-order btn big submit disabled"
+                        disabled="disabled">{{ 'Submit order'|t }}</button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations') },
+    { label: 'Orders'|t, url: url('translations/orders') },
+] %}
+
+{% if isSubmitted %}
+    {% set crumbs = crumbs|merge([
+        { label: order.title, url: 'javascript:void(0)' },
+    ]) %}
+    {% set tabs = {
+        "order": {label: "Order Details"|t, url: "#order"},
+        "files": {label: "Order Files"|t, url: "#files"},
+    } %}
+{% elseif orderId %}
+    {% set crumbs = crumbs|merge([
+        { label: 'Edit Order'|t, url: 'javascript:void(0)' },
+    ]) %}
+    {% set tabs = {
+        "order": {label: "Order Details"|t, url: "#order"},
+        "files": {label: "Order Files"|t, url: "#files"},
+    } %}
+{% else %}
+    {% set crumbs = crumbs|merge([
+        { label: 'Create New Order'|t, url: 'javascript:void(0)' },
+    ]) %}
+    {% set tabs = {
+        "order": {label: "Order Details"|t, url: "#order"},
+        "files": {label: "Order Files"|t, url: "#files", class: "noClick"},
+    } %}
+{% endif %}
+
+
+{% block content %}
+    <form method="post" id="order-form" class="translations-order-form" accept-charset="UTF-8">
+        {{ csrfInput() }}
+
+        {{ forms.hidden({
+            name: 'action',
+            value: 'translations/order/save-order',
+        }) }}
+
+        {{ forms.hidden({
+            name: 'id',
+            value: orderId,
+        }) }}
+
+        {{ forms.hidden({
+            name: 'sourceSite',
+            value: order.sourceSite,
+        }) }}
+        
+        {{ forms.hidden({
+            name: 'elementIdVersions',
+            id: 'elementIdVersions',
+            value: '',
+        }) }}
+
+        <div id="order">
+            {{ forms.textField({
+                label: 'Order name <span class="required"/>'|t,
+                value: order.title,
+                placeholder: 'Translation Order Name',
+                name: 'title',
+                id: 'title',
+                size: 70,
+                maxlength: 255,
+            }) }}
+
+            {{ forms.selectField({
+                fieldClass: 'hidden',
+                label: 'Order Owner'|t,
+                value: null,
+                options: owners,
+                name: 'ownerId',
+                id: 'ownerId',
+                size: 20
+            }) }}
+            <hr>
+
+            {% set elementIds = {} %}
+            <div id="text-field" class="field">
+                <div class="heading">
+                    <label id="entries-label" for="entries">
+                        Source entries
+                        <span class="required"></span>
+                    </label>
+                </div>
+                {% if elements %}
+                    <div class="input ltr">
+                        <table class="data w-100" dir="ltr">
+                            <thead>
+                            <tr>
+                                <th>{{ 'Title'|t }}</th>
+                                <th>{{ 'Version'|t }}</th>
+                                <th>{{ 'Section'|t }}</th>
+                                <th>{{ 'Date Updated'|t }}</th>
+                                <th>&nbsp;</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for element in elements %}
+                                <tr data-word-count="{{ elementWordCounts[element.id] }}">
+                                    <td>{% include "_elements/element" with {'element': element} only %}
+                                        {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
+                                            <span class="warning duplicate-warning">
+                                                            {{ 'This entry exists in ' }}
+                                                {% for orderId in duplicateEntries[element.id] %}
+                                                    <a href="{{ url('translations/orders/detail/'~orderId) }}"
+                                                        target="_blank">#{{ orderId }}
+                                                        {{ (orderId != duplicateEntries[element.id]|last)
+                                                        ? ', ' : '' }}</a>
+                                                {% endfor %}
+                                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set versionId = "version_" ~ element.id %}
+                                        {% set versionOptions = {'current':'Current'|t ~ '...'} %}
+                                        {% if versionsByElementId[element.id] is defined %}
+                                            {% set versionOptions = {'current':'Current'|t ~ '...'}|merge(versionsByElementId[element.id]) %}
+                                        {% endif %}
+                                        {{ forms.selectField({
+                                            value: "current",
+                                            options: versionOptions,
+                                            name: 'version',
+                                            id: versionId,
+                                        }) }}
+                                    </td>
+                                    <td>
+                                        {% if element.className == constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') %}
+                                            {{ 'Globals' }}
+                                        {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
+                                            {{ 'Category' }}
+                                        {% else %}
+                                            {{ element.section.name }}
+                                        {% endif %}
+
+                                    </td>
+                                    <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
+                                    <td>
+                                        <a class="icon delete translations-order-delete-entry" 
+                                            title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
+                                            <input type="hidden" name="elements[]" value="{{ element.id }}">
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="field" data-position="left" data-colspan="1">
+                <div class="buttons flex">
+                    <div class="submit">
+                        <input type="hidden" id="originalElementIds" value="{{ originalElementIds }}">
+                        <input type="hidden" id="currentElementIds" value="{{ elementIds|join(',') }}">
+                        <button type="button" class="btn add icon dashed addEntries">{{ 'Add an entry'|t }}</button>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="field">
+                <div class="heading">
+                    <label class="required">{{ 'Source site'|t }}</label>
+                </div>
+                <div class="input {{ orientation }}">
+
+                    {{ forms.selectField({
+                        value: sourceSite.id,
+                        options: {'':'Choose'|t ~ '...'}|merge(sourceSites),
+                        name: 'sourceSiteSelect',
+                        id: 'sourceSiteSelect'
+                    }) }}
+                    <input type="hidden" id="originalSourceSiteId" value="{{ sourceSite.id }}">
+                </div>
+            </div>
+
+            {{ forms.checkboxSelectField({
+                label: 'Target site(s) <span class="required"/>'|t,
+                options: targetSiteCheckboxOptions,
+                values: order.targetSites|json_decode(),
+                showAllOption: true,
+                name: 'targetSites',
+                id: 'targetSites'
+            }) }}
+
+            <input type="hidden" id="originalTargetSiteIds" value="{{ order.targetSites }}">
+
+            <hr>
+
+            {{ forms.selectField({
+                label: 'Translation service <span class="required"/>'|t,
+                value: order.translatorId,
+                options: translatorOptions,
+                name: 'translatorId',
+                id: 'translatorId',
+                size: 20
+            }) }}
+
+            <hr>
+            
+            {# {{ forms.lightswitchField({
+                label: 'Track changes<p class="fw-400">Track source content updates. \
+                    Recomended for continuous translation workflows.</p>'|t
+                (tag('button', {
+                    type: 'button',
+                    id: 'expand-status-btn',
+                    class: ['btn'],
+                    data: {
+                        icon: 'ellipsis',
+                    },
+                })),
+                id: "trackChanges",
+                name: "trackChanges",
+                on: order.trackChanges
+            }) }}
+
+            {{ forms.lightswitchField({
+                label: 'Asynchronous publishing<p class="fw-400">Creates a seprate translation draft \
+                    for each target language that can be published independently.</p>'|t
+                    (tag('button', {
+                        type: 'button',
+                        id: 'expand-status-btn',
+                        class: ['btn'],
+                        data: {
+                            icon: 'ellipsis',
+                        },
+                    })),
+                id: "asynchronousPublishing",
+                name: "asynchronousPublishing",
+                on: order.asynchronousPublishing
+            }) }} #}
+
+            <hr>
+
+            {{ forms.dateField({
+                label: 'Requested due date'|t,
+                value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
+                name: 'requestedDueDate',
+                id: 'requestedDueDate',
+                size: 20,
+                placeholder: 'Optional'
+            }) }}
+
+            {{ forms.textareaField({
+                label: 'Order notes'|t,
+                value: order.comments,
+                name: 'comments',
+                placeholder: 'Additional comments and instructions',
+                id: 'comments',
+                maxlength: 2000,
+                size: 20
+            }) }}
+
+        </div>
+    </form>
+
+    <div id="files" class="hidden">
+        <form method="post" id="publish-form" accept-charset="UTF-8">
+            {{ csrfInput() }}
+
+            {{ forms.hidden({
+                name: 'action',
+                value: 'translations/order/save-draft-and-publish',
+            }) }}
+
+            {{ forms.hidden({
+                name: 'orderId',
+                value: order.id,
+            }) }}
+            <div id="text-field" class="field">
+                <div class="heading">
+                    <label id="files-label">
+                        Files
+                    </label>
+                    <div class="btngroup submit ml-auto">
+                        <input type="button" id="draft-publish" class="btn submit disabled form-submit"
+                            disabled="disabled" value="{{ 'Review and publish'|t }}">
+                    </div>
+                </div>
+            </div>
+            <div class="input ltr">
+                {% if files ?? false %}
+                    <table class="data w-100" dir="ltr">
+                        <thead>
+                        <tr>
+                            {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') or
+                                order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PROGRESS') %}
+                                <td class="thin checkbox-cell translations-checkbox-cell">
+                                    <input class="checkbox" id="element-0" type="checkbox">
+                                    <label class="checkbox" for="element-0"></label>
+                                </td>
+                            {% else %}
+                                <td> &nbsp; </td>
+                            {% endif %}
+                            <th>{{ 'Title'|t }}</th>
+                            <th>{{ 'Source'|t }}</th>
+                            <th>{{ 'Target'|t }}</th>
+                            <th>{{ 'Section'|t }}</th>
+                            <th>{{ 'Last Delivery'|t }}</th>
+                            <th>{{ 'Status'|t }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for element in elements %}
+                            {% set setCheckbox = true %}
+                            {% set tempElementId = element.id %}
+                            {% for file in files[element.id] %}
+                                <tr data-word-count="{{ elementWordCounts[element.id] }}">
+                                    {% if setCheckbox %}
+                                        {% set setCheckbox = false %}
+                                        {% if file.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') %}
+                                            <td rowspan={{ fileCountByElementId[tempElementId] }} class="thin checkbox-cell translations-checkbox-cell">
+                                                <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"{% if isElementPublished[element.id] %} disabled="disabled"{% endif %}>
+                                                <label class="checkbox" for="element-{{ element.id }}"></label>
+                                            </td>
+                                        {% else %}
+                                            <td rowspan={{ fileCountByElementId[tempElementId] }} class="thin checkbox-cell translations-checkbox-cell">
+                                                <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="" disabled="disabled">
+                                                <label class="checkbox" for="element-{{ element.id }}"></label>
+                                            </td>
+                                        {% endif %}
+                                    {% endif %}
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ fileUrls[file.id] }}">
+                                                        {{ element.title }}
+                                                    </a>
+                                                    {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
+                                                        <span class="warning duplicate-warning"></span>
+                                                    {% endif %}
+                                                    {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
+                                                        element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
+                                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+
+                                    <td>
+                                        {{sourceSite.name}}
+                                        <span class="light">
+                                            ({{ sourceSite.language }})
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+
+                                    <td>
+                                        {% if element.className == constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') %}
+                                            {{ 'Globals' }}
+                                        {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
+                                            {{ 'Category' }}
+                                        {% else %}
+                                            {{ element.section.name }}
+                                        {% endif %}
+
+                                    </td>
+                                    
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    No files
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    {# Additional Forms for order export/import and sync #}
+    {% if order.translator.service is defined and
+        order.translator.service == constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+        <form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ forms.hidden({
+                    name: 'action',
+                    value: 'translations/files/create-export-zip',
+                }) }}
+
+            {{ forms.hidden({
+                name: 'orderId',
+                value: order.id
+            }) }}
+            <div class="utility-status"></div>
+        </form>
+    {% else %}
+        {% if order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+            <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
+                {{ csrfInput() }}
+                {{ forms.hidden({
+                    name: 'action',
+                    value: 'translations/order/sync-order',
+                }) }}
+
+                {{ forms.hidden({
+                    name: 'orderId',
+                    value: order.id
+                }) }}
+            </form>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block details %}
+
+    <div id="settings" class="meta">
+        <div id="order-id-field" class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Order id</label>
+            </div>
+
+            <div class="input ltr">
+                {% if order.translator.service is defined and
+                    order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+                    {% if order.serviceOrderId %}
+                        <a class="right" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
+                    {% else %}
+                        <label class="right">{{ 'N/A' }} </label>
+                    {% endif %}
+                {% else %}
+                    <label class="right">{{ order.id ? "##{order.id}" : 'N/A' }} </label>
+                {% endif %}
+
+            </div>
+        </div>
+        <div id="order-id-field" class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Author</label>
+            </div>
+            <div class="input ltr">
+                <div class="float-right">
+                    <span class="status active"></span>
+                    <label class="right"> {{ author ?: "N/A" }} </label>
+                </div>
+            </div>
+        </div>
+        <div id="order-id-field" class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Submitted</label>
+            </div>
+            <div class="input ltr">
+                <div class="float-right">
+                    <label>{{ order.dateOrdered ? order.dateOrdered|date('n/j/Y') : 'N/A' }}</label>
+                    <label class="pl-10">{{ order.dateOrdered ? order.dateOrdered|date('H:i A') : '' }}</label>
+                </div>
+            </div>
+        </div>
+        <div id="order-id-field" class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Due Date</label>
+            </div>
+            <div class="input ltr">
+                <div class="float-right">
+                    <label> {{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }} </label>
+                    <label class="pl-10"> {{ order.requestedDueDate ? order.requestedDueDate|date('H:i A') : '' }} </label>
+                </div>
+            </div>
+        </div>
+        <div id="order-id-field" class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Est. word count</label>
+            </div>
+            <div class="input ltr">
+                <label class='float-right'> {{ orderWordCount ?? 0 }} </label>
+            </div>
+        </div>
+
+        {# Export/Import Or Sync Buttons #}
+        {% if order.translator.service is defined and
+            order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+            <div id="order-id-field" class="field h-6">
+                <table>
+                    <tr>
+                        <label id="slug-label" for="slug">Translations by acclaro &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>
+                    </tr>
+                    <tr>
+                        <div class="buttons translations-order-detail-button-wrapper">
+                            {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
+                                order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
+                                order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                                <input type="submit" form="sync-order" class="btn submit w-300 disabled"
+                                    disabled="disabled" value="{{ "Sync with Acclaro"|t('app') }}" />
+                            {% else %}
+                                <input type="submit" form="sync-order" class="btn submit w-300 right"
+                                    value="{{ "Sync with Acclaro"|t('app') }}" />
+                            {% endif %}
+                            <div class="sync-status"></div>
+                        </div>
+                    </tr>
+                </table>
+            </div>
+        {% else %}
+            <div id="order-id-field" class="field h-10">
+                <table>
+                    <tr>
+                        <label id="slug-label" for="slug" class="pr-10">Translations by acclaro</label>
+                    </tr>
+                    <div class="buttons translations-order-detail-button-wrapper">
+                        {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                            <tr>
+                                <input type="button" form="export-zip" class="btn submit w-300 right disabled"
+                                    disabled="disabled" value="{{ "Download Source Files"|t('app') }}" />
+                            </tr>
+                            <tr>
+                                <input type="button" form="export-zip" class="btn submit w-300 right disabled"
+                                    disabled="disabled" value="{{ "Upload Translated Files"|t('app') }}" />
+                            </tr>
+                        {% else %}
+                            {% if isSubmitted or orderId %}
+                                <tr>
+                                    <input type="button" id="export-btn" form="export-zip" class="btn submit w-300 right"
+                                        value="{{ "Download Source Files"|t('app') }}" />
+                                    <div class="utility-status"></div>
+                                </tr>
+                                <tr>
+                                    <input type="submit" form="export-zip" class="btn submit w-300 right"
+                                        value="{{ "Upload Translated Files"|t('app') }}" id="import-tool"/>
+                                    <div class="utility-status"></div>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <input type="button" id="export-btn" form="export-zip" class="disabled btn submit w-300 right"
+                                        disabled="disabled" value="{{ "Download Source Files"|t('app') }}" />
+                                    <div class="utility-status"></div>
+                                </tr>
+                                <tr>
+                                    <input type="submit" form="export-zip" class="btn submit w-300 right disabled"
+                                        disabled="disabled" value="{{ "Upload Translated Files"|t('app') }}" id="import-tool"/>
+                                    <div class="utility-status"></div>
+                                </tr>
+                            {% endif %}
+                            <div class="hud-wrapper hidden">
+                            <div id="translations-import-form" class="form meta">
+                                {{ forms.hidden({
+                                    name: 'orderId',
+                                    id: 'order_id',
+                                    value: orderId,
+                                }) }}
+                            </div>
+                            {% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
+                        {% endif %}
+                    </div>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="meta-details" class="meta read-only">
+        <div class="data">
+            <div class="heading">
+                <label id="slug-label" for="slug">Status</label>
+            </div>
+            <div id="status-value" class="value">
+                {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
+                    <span class="status"></span> {{ 'Pending submission'|t }}
+                {% endif %}
+                {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PROGRESS') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_GETTING_QUOTE') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEEDS_APPROVAL') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PREPARATION') %}
+                    <span class="status orange"></span>{{ 'In progress'|t }}
+                {% endif %}
+                {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') %}
+                    <span class="status blue"></span> {{ 'Ready to Apply'|t }}
+                {% endif %}
+                {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                    <span class="status live"></span> {{ 'Applied'|t }}
+                {% endif %}
+                {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') %}
+                    <span class="status red"></span> {{ 'Order Failed'|t }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="data">
+            <div class="heading">
+                <span id="slug-label" for="slug">Created At</span>
+            </div>
+            <div id="status-value" class="value">
+                <span> {{ order.dateOrdered ? order.dateOrdered|date('n/j/Y, H:i A') : 'N/A' }} </span>
+            </div>
+        </div>
+        <div class="data">
+            <div class="heading">
+                <span id="slug-label" for="slug">Updated At</span>
+            </div>
+            <div id="status-value" class="value">
+                <span> {{ order.dateUpdated ? order.dateUpdated|date('n/j/Y, H:i A') : 'N/A' }} </span>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="data">
+        <h3 class="heading"><b>{{ "Activity Log"|t('app') }}</b></h3>
+        <ul class="bullets">
+            {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
+                <li> {{ 'Pending submission'|t }} </li>
+            {% else %}
+                {% for log in order.activityLogArray %}
+                    <li>{{ log.date }} &ndash; {{ log.message }}</li>
+                {% endfor %}
+            {% endif %}
+        </ul>
+    </div>
+{% endblock %}
+

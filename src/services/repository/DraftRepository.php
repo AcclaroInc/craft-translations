@@ -197,12 +197,12 @@ class DraftRepository
         return $newEntry;
     }
 
-    public function createOrderDrafts($orderId, $wordCounts, $queue=null)
+    public function createOrderDrafts($orderId, $wordCounts, $queue=null, $publish = false, $elementIds = null)
     {
-
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
-        $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
+        $elements = $elementIds;
+
         $totalElements = (count($elements) * count($order->getTargetSitesArray()));
         $currentElement = 0;
 
@@ -211,48 +211,56 @@ class DraftRepository
                 ->admin()
                 ->orderBy(['elements.id' => SORT_ASC])
                 ->one();
-            
+
         $this->creatorId = $creator->id;
 
         $this->allSitesHandle = $this->getAllSitesHandle();
 
-        foreach ($order->getTargetSitesArray() as $key => $site) {
-            foreach ($elements as $element) {
+        $orderFiles = Translations::$plugin->fileRepository->getFilesByOrderId(
+            $order->id
+        );
 
+        foreach ($order->getTargetSitesArray() as $key => $site) {
+            foreach ($elements as $elementId) {
+                $element = Craft::$app->getElements()->getElementById($elementId, null, $order->siteId);
                 if ($queue) {
                     $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
                 }
 
-                $this->createDrafts($element, $order, $site, $wordCounts);
-            }
-        }
+                $file = null;
 
-        // Only send order to translation service when not Manual
-        if ($order->translator->service !== 'export_import') {
-            $translator = $order->getTranslator();
+                foreach ($orderFiles as $fileModel) {
+                    if ($fileModel->elementId == $element->id && $fileModel->targetSite == $site) {
+                        $file = $fileModel;
+                    }
+                }
 
-            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+                $this->createDrafts($element, $order, $site, $wordCounts, $file);
 
-            if ($queue) {
-                $translationService->sendOrder($order);
-            } else {
-                Translations::$plugin->orderRepository->sendAcclaroOrder($order, $translator->getSettings());
-            }
-        } else {
-            $order->status = 'in progress';
-            $order->dateOrdered = new DateTime();
-            //echo ' status '.$order->status; die;
+                try {
+                    $translation_service = $order->translator->service;
+                    if ($translation_service === Translations::ACCLARO) {
+                        $translation_service = Translations::EXPORT_IMPORT;
+                    }
 
-            $success = Craft::$app->getElements()->saveElement($order, true, true, false);
-            if (!$success) {
-                Craft::warning( '['. __METHOD__ .'] Couldn’t save the order :: '.$orderId, 'translations' );
+                    //Translation Service
+                    $translationService = Translations::$plugin->translatorFactory
+                        ->makeTranslationService($translation_service, $order->translator->getSettings());
+
+                    $isDraftSave = $translationService->updateIOFile($order, $file);
+                } catch(Exception $e) {
+                    $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not update draft Error: ' .$e->getMessage()));
+                }
+
+                if ($publish && $elementIds) {
+                    $this->applyDrafts($order->id, $elementIds);
+                }
             }
         }
     }
 
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
     {
-
         switch (get_class($element)) {
             case Entry::class:
                 $draft = $this->createEntryDraft($element, $site, $order->title);
@@ -265,16 +273,15 @@ class DraftRepository
                 break;
         }
 
-        if (!($file instanceof FileModel)){
+        if (!($file instanceof FileModel)) {
             $file = Translations::$plugin->fileRepository->makeNewFile();
         }
 
-
         if (empty($draft)) {
-
             Craft::error(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), 'translations' );
             return false;
         }
+
         if ($draft instanceof GlobalSet || $draft instanceof Category) {
             $targetSite = $draft->site;
         } else {
@@ -290,20 +297,23 @@ class DraftRepository
 
             $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
 
+            $wordCount = $wordCounts[$element->id] ?? 0;
+
             $file->orderId = $order->id;
             $file->elementId = $draft->sourceId;
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
             $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
-            $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                ($draft instanceof Entry) ? $draft : $element, // Send the element for custom drafts (GlobalSets, Categories)
-                $draft->draftId,
-                $order->sourceSite,
-                $targetSite,
-                $file->previewUrl
-            );
-            $file->wordCount = isset($wordCounts[$element->id]) ? $wordCounts[$element->id] : 0;
+            if (! $file->source) {
+                $file->source = Translations::$plugin->elementToFileConverter->toJson(
+                    ($draft instanceof Entry) ? $draft : $element, // Send the element for custom drafts (GlobalSets, Categories)
+                    $order->sourceSite,
+                    $targetSite,
+                    $wordCount
+                );
+            }
+            $file->wordCount = $wordCount;
             
             Translations::$plugin->fileRepository->saveFile($file);
             
@@ -325,7 +335,6 @@ class DraftRepository
             
             return false;
         }
-
     }
 
     public function createEntryDraft(Entry $entry, $site, $orderName)
