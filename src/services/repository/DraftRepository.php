@@ -314,15 +314,15 @@ class DraftRepository
 
         try {
             // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->sourceId);
+            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->getCanonicalId());
             if (!empty($isExistingFile)) {
                 return;
             }
 
-            $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
+            $element = Craft::$app->getElements()->getElementById($draft->getCanonicalId(), null, $order->sourceSite);
 
             $file->orderId = $order->id;
-            $file->elementId = $draft->sourceId;
+            $file->elementId = $draft->getCanonicalId();
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
@@ -345,7 +345,7 @@ class DraftRepository
         } catch (Exception $e) {
             
             $file->orderId = $order->id;
-            $file->elementId = $draft->sourceId;
+            $file->elementId = $draft->getCanonicalId();
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
