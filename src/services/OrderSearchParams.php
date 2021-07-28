@@ -24,38 +24,33 @@ class OrderSearchParams
             return Translations::$plugin->translator->translate($category, $status);
         }, Translations::$plugin->orderRepository->getOrderStatuses());
         
-        $query = Craft::$app->request->getParam('criteria') ? Craft::$app->request->getParam('criteria') : Craft::$app->request->getParam('');
+        $query = parse_str(Craft::$app->request->getQueryStringWithoutPath(), $params);
+        
+        $results = [];
 
-
-        $sourceSite = isset($query['sourceSite']) ? $query['sourceSite'] : null;
-        $targetSite = isset($query['targetSite']) ? $query['targetSite'] : null;
-        $targetSite = isset($query['targetSite']) ? $query['targetSite'] : null;
-        $startDate = isset($query['startDate']) ? $query['startDate'] : null;
-        $endDate = isset($query['endDate']) ? $query['endDate'] : null;
-        $status = isset($query['status']) ? $query['status'] : null;
-
-        $params = array();
-
-        if ($sourceSite && array_key_exists($sourceSite, $sites)) {
-            $params['sourceSite'] = $sourceSite;
+        foreach ($params as $key => $value) {
+            switch ($key) {
+                case 'status':
+                    if (is_array($params[$key])) {
+                        foreach ($params[$key] as $status) {
+                            $results[$key][] = $status;
+                        }
+                    } else {
+                        $results[$key] = $value;
+                    }
+                    break;
+                case 'elementIds':
+                    foreach ($params[$key] as $id) {
+                        $results[$key][] = $id;
+                    }
+                    break;
+                
+                default:
+                    # code...
+                    break;
+            }
         }
 
-        if ($targetSite && array_key_exists($targetSite, $sites)) {
-            $params['targetSite'] = $targetSite;
-        }
-
-        if ($startDate && isset($startDate['date']) && preg_match('#^\d{1,2}/\d{1,2}/\d{4}$#', $startDate['date'])) {
-            $params['startDate'] = $startDate['date'];
-        }
-
-        if ($endDate && isset($endDate['date']) && preg_match('#^\d{1,2}/\d{1,2}/\d{4}$#', $endDate['date'])) {
-            $params['endDate'] = $endDate['date'];
-        }
-
-        if ($status && array_key_exists($status, $statuses)) {
-            $params['status'] = $status;
-        }
-
-        return $params;
+        return json_encode($results);
     }
 }

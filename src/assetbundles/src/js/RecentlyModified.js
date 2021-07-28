@@ -82,6 +82,9 @@
                             this.$body.html(widgetHtml);
                         }
                     }
+                    
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
 
                     $('.entry-check .checkbox').on('click', function(e) {
                         $(e.target).closest('tr[id^=item-]').toggleClass('sel');

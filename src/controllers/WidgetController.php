@@ -46,6 +46,7 @@ use acclaro\translations\assetbundles\DashboardAssets;
 use acclaro\translations\services\repository\FileRepository;
 use acclaro\translations\services\repository\SiteRepository;
 use acclaro\translations\assetbundles\RecentlyModifiedAssets;
+use craft\models\Updates as UpdatesModel;
 
 // Widget Classes
 use acclaro\translations\widgets\News;
@@ -116,6 +117,8 @@ class WidgetController extends Controller
             }
         }
 
+        $pluginHandle = "translations";
+
         $view = $this->getView();
         $namespace = $view->getNamespace();
 
@@ -183,6 +186,9 @@ class WidgetController extends Controller
             }
         }
 
+        // Check For Plugin Updates
+        $variables['updates'] = $this->checkForUpdate('translations');
+
         // Register Dashboard Assets
         $view->registerAssetBundle(DashboardAssets::class);
         $view->registerJs('window.translationsdashboard = new Craft.Translations.Dashboard(' . Json::encode($widgetTypeInfo) . ');');
@@ -198,6 +204,28 @@ class WidgetController extends Controller
         $variables['isSelectableWidget'] = $isSelectableWidget;
         
         return $this->renderTemplate('translations/_index', $variables);
+    }
+
+    /**
+     * Check for Latest Updates
+     *
+     * @return bool
+     */
+    public function checkForUpdate($pluginHandle): bool
+    {
+        $hasUpdate = false;
+
+        $updateData = Craft::$app->getApi()->getUpdates([]);
+
+        $updates = new UpdatesModel($updateData);
+
+        foreach ($updates->plugins as $key => $pluginUpdate) {
+            if ($key === $pluginHandle && $pluginUpdate->getHasReleases()) {
+                $hasUpdate = true;
+            }
+        }
+
+        return $hasUpdate;
     }
 
     /**
