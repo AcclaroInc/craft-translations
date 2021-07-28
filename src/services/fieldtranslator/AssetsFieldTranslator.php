@@ -110,6 +110,12 @@ class AssetsFieldTranslator extends GenericFieldTranslator
                         $element->title = $title;
                     }
                     Translations::$plugin->draftRepository->saveDraft($element);
+                } else {
+                    // Added to translate when asset is translated with only title
+                    if ($title) {
+                        $element->title = $title;
+                        Translations::$plugin->draftRepository->saveDraft($element);
+                    }
                 }
 
             } catch (Exception $e) {
