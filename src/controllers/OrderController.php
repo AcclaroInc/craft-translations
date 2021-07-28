@@ -511,8 +511,7 @@ class OrderController extends Controller
 
             $order->ownerId = Craft::$app->getRequest()->getParam('ownerId');
             
-            $order->trackChanges = Craft::$app->getRequest()->getParam('trackChanges');
-            $order->asynchronousPublishing = Craft::$app->getRequest()->getParam('asynchronousPublishing');
+
             $order->title = $title;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
