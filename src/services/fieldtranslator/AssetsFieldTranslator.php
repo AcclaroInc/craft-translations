@@ -104,18 +104,10 @@ class AssetsFieldTranslator extends GenericFieldTranslator
                     $post['fields'] = $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true);
                 }
 
-                if (!empty($post['fields'])) {
-                    $element->setFieldValues($post['fields']);
-                    if($title) {
-                        $element->title = $title;
-                    }
+                if ($title || !empty($post['fields'])) {
+                    $element->title = ($title) ? $title : $element->title;
+                    !empty($post['fields']) ? $element->setFieldValues($post['fields']) : '';
                     Translations::$plugin->draftRepository->saveDraft($element);
-                } else {
-                    // Added to translate when asset is translated with only title
-                    if ($title) {
-                        $element->title = $title;
-                        Translations::$plugin->draftRepository->saveDraft($element);
-                    }
                 }
 
             } catch (Exception $e) {
