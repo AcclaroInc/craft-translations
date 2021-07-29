@@ -345,6 +345,8 @@
                                                     {{ 'Globals' }}
                                                 {% elseif element.className == 'craft\\elements\\Category' %}
                                                     {{ 'Category' }}
+                                                {% elseif element.className == 'craft\\elements\\Asset' %}
+                                                    {{ 'Asset' }}
                                                 {% else %}
                                                     {{ element.section.name }}
                                                     {% set show_visual = 0 %}
@@ -361,7 +363,7 @@
                                                                 <a href="{{ fileUrls[file.id] }}">
                                                                     {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
                                                                 </a>
-                                                                {% if element.className != 'craft\\elements\\GlobalSet' and element.className != 'craft\\elements\\Category' %}
+                                                                {% if element.className != 'craft\\elements\\GlobalSet' and element.className != 'craft\\elements\\Category' and element.className != 'craft\\elements\\Asset' %}
                                                                     <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
                                                                 {% endif %}
                                                             </td>
@@ -652,6 +654,8 @@
                                         {{ 'Globals' }}
                                     {% elseif element.className == 'craft\\elements\\Category' %}
                                         {{ 'Category' }}
+                                    {% elseif element.className == 'craft\\elements\\Asset' %}
+                                        {{ 'Asset' }}
                                     {% else %}
                                         {{ element.section.name }}
                                     {% endif %}

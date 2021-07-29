@@ -416,6 +416,20 @@ class FilesController extends Controller
             }
 
             $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+        } else if ($element instanceof Asset) {
+            $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+
+            $draft->name = $element->title;
+            $draft->site = $file->targetSite;
+
+            if ($draft) {
+                $response = Translations::$plugin->assetDraftRepository->publishDraft($draft);
+                $message = 'Draft applied for '. '"'. $draft->name .'"';
+            } else {
+                $response = false;
+            }
+
+            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
         } else {
             $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
 

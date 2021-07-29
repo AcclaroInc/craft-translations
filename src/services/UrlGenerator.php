@@ -21,7 +21,7 @@ use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\models\GlobalSetDraftModel;
-
+use craft\elements\Asset;
 use DOMDocument;
 use DateTime;
 
@@ -59,7 +59,7 @@ class UrlGenerator
     public function generateFileUrl(Element $element, FileModel $file)
     {
         if ($file->status === 'published') {
-            if ($element instanceof GlobalSet OR $element instanceof Category) {
+            if ($element instanceof GlobalSet OR $element instanceof Category OR $element instanceof Asset) {
                 return preg_replace(
                     '/(\/'.Craft::$app->sites->getSiteById($element->siteId)->handle.')/',
                     '/'.Craft::$app->sites->getSiteById($file->targetSite)->handle,
@@ -80,6 +80,10 @@ class UrlGenerator
 
             $catUri = $element->id.'-'.$element->slug;
             return Translations::$plugin->urlHelper->cpUrl('translations/categories/'.$element->getGroup()->handle.'/'.$catUri.'/drafts/'.$file->draftId);
+        }
+
+        if ($element instanceof Asset) {
+            return Translations::$plugin->urlHelper->cpUrl('translations/assets/'.$element->id.'/drafts/'.$file->draftId);
         }
 
         return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), [

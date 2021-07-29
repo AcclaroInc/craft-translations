@@ -29,6 +29,7 @@ use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
 use acclaro\translations\services\translator\AcclaroTranslationService;
+use craft\elements\Asset;
 
 /**
  * @author    Acclaro
@@ -512,6 +513,8 @@ class BaseController extends Controller
                 $sectionName = 'Globals';
             } else if ($element instanceof Category) {
                 $sectionName = 'Category';
+            } else if ($element instanceof Asset) {
+                $sectionName = 'Asset';
             } else {
                 $sectionName = $element->section->name;
             }
@@ -549,7 +552,7 @@ class BaseController extends Controller
                         if($file->status === 'complete' || $file->status === 'published') {
                             $variables['entriesCountByElementCompleted']++;
                         }
-                    } elseif ($element instanceof GlobalSet OR $element instanceof Category) {
+                    } elseif ($element instanceof GlobalSet OR $element instanceof Category OR $element instanceof Asset) {
                         if($file->status === 'complete' || $file->status === 'published') {
                             $variables['entriesCountByElementCompleted']++;
                         }

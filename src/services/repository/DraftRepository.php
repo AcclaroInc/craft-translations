@@ -26,6 +26,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\CreateDrafts;
+use craft\elements\Asset;
 
 class DraftRepository
 {
@@ -294,6 +295,9 @@ class DraftRepository
             case Category::class:
                 $draft = $this->createCategoryDraft($element, $site, $order->title, $order->sourceSite);
                 break;
+            case Asset::class:
+                $draft = $this->createAssetDraft($element, $site, $order->title, $order->sourceSite);
+                break;
         }
 
         if (!($file instanceof FileModel)){
@@ -306,7 +310,7 @@ class DraftRepository
             Craft::error(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), 'translations' );
             return false;
         }
-        if ($draft instanceof GlobalSet || $draft instanceof Category) {
+        if ($draft instanceof GlobalSet || $draft instanceof Category || $draft instanceof Asset) {
             $targetSite = $draft->site;
         } else {
             $targetSite = $draft->siteId;
@@ -437,6 +441,33 @@ class DraftRepository
 
     }
 
+    public function createAssetDraft(Asset $asset, $site, $orderName, $sourceSite)
+    {
+        try {
+            $draft = Translations::$plugin->assetDraftRepository->makeNewDraft();
+            
+            $draft->name = sprintf('%s [%s]', $orderName, $site);
+            $draft->id = $asset->id;
+            $draft->title = $asset->title;
+            $draft->site = $site;
+            $draft->siteId = $site;
+            $draft->sourceSite = $sourceSite;
+
+            $post = Translations::$plugin->elementTranslator->toPostArray($asset);
+
+            $draft->setFieldValues($post);
+            
+            
+            Translations::$plugin->assetDraftRepository->saveDraft($draft, $post);
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error( '['. __METHOD__ .'] CreateAssetDraft exception:: '.$e->getMessage(), 'translations');
+            return [];
+        }
+
+    }
+
     /**
      * @param $orderId
      * @param $elementIds
@@ -494,6 +525,20 @@ class DraftRepository
 
                 if ($draft) {
                     $success = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
+                } else {
+                    $success = false;
+                }
+
+                $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+            } else if ($element instanceof Asset) {
+                $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+
+                // keep original category name
+                $draft->name = $element->title;
+                $draft->site = $file->targetSite;
+
+                if ($draft) {
+                    $success = Translations::$plugin->assetDraftRepository->publishDraft($draft);
                 } else {
                     $success = false;
                 }
