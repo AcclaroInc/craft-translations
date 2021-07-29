@@ -445,7 +445,6 @@ class DraftRepository
      */
     public function applyDrafts($orderId, $elementIds, $queue=null)
     {
-
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
         $files = $order->getFiles();
 
@@ -459,6 +458,9 @@ class DraftRepository
 
         foreach ($files as $file) {
             if (!in_array($file->elementId, $elementIds)) {
+                if ($file->status === 'published') {
+                    $publishedFilesCount++;
+                }
                 continue;
             }
 
