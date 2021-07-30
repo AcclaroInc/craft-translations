@@ -36,7 +36,6 @@ class AssetsFieldTranslator extends GenericFieldTranslator
                     $source[$k] = $value;
                 }*/
 
-                $source = [];
                 $source[sprintf('%s.%s.%s', $field->handle, $block->id, 'title')] = $block->title;
 
                 $element = Craft::$app->assets->getAssetById($block->id, $sourceSite);
@@ -81,17 +80,13 @@ class AssetsFieldTranslator extends GenericFieldTranslator
 
         $blocks = $element->getFieldValue($fieldHandle)->siteid($sourceSite)->all();
 
-        if (is_array($fieldData)) {
-            $fieldData = array_values($fieldData);
-        }
-
         $title = '';
 
         foreach ($blocks as $i => $block)
         {
             try{
-                if (!empty($fieldData[0]['title'])) {
-                    $title = $fieldData[0]['title'];
+                if (isset($fieldData[$block->id]['title'])) {
+                    $title = $fieldData[$block->id]['title'];
                 }
 
                 $element = Craft::$app->assets->getAssetById($block->id, $targetSite);
