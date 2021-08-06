@@ -4,7 +4,7 @@
 {% set title = 'Translators'|t %}
 {% block actionButton %}
 <a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New Translator'|t }}</a>
-<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}" style="margin-left:5px;">{{ 'Create New Order'|t }}</a>
+<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/create') }}" style="margin-left:5px;">{{ 'Create New Order'|t }}</a>
 {% endblock %}
 
 {% set crumbs = [

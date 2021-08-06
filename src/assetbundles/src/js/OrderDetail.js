@@ -165,7 +165,7 @@ Craft.Translations.OrderDetail = {
 
                 // var param = window.location.search;
                 // param = param.replace("&elements[]="+$button.attr('data-element'), "");
-                // param = 'admin/translations/orders/new'+param;
+                // param = 'admin/translations/orders/create'+param;
 
                 // window.history.pushState("object or string", "Translations", "/"+param);
                 var currentElementIds = $('#currentElementIds').val();
@@ -489,7 +489,7 @@ Craft.Translations.OrderDetail = {
                         }
                         
                         if ($('#addNewEntries').val() == 1) {
-                            window.location.href=Craft.getUrl('translations/orders/new')+'?sourceSite='+site+elementUrl;
+                            window.location.href=Craft.getUrl('translations/orders/create')+'?sourceSite='+site+elementUrl;
                         } else {
                             if($('#addNewEntries').val() == 0) {
                                 var orderId = current_url.split('/admin/translations/orders/detail/')[1];

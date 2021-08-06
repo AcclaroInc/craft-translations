@@ -199,7 +199,7 @@ Craft.Translations.GlobalSetEdit = {
             });
         }
 
-        var $link = Craft.getUrl('translations/orders/new', {'elements[]': globalSetId, 'sourceSite': sourceSite});
+        var $link = Craft.getUrl('translations/orders/create', {'elements[]': globalSetId, 'sourceSite': sourceSite});
 
         $btn.attr('href', $link);
 

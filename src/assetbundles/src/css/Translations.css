@@ -794,6 +794,10 @@ del {
     height: 10em;
 }
 
+.h-8 {
+    height: 8em;
+}
+
 .pr-10 {
     padding-right: 10em;
 }
@@ -831,4 +835,24 @@ del {
 
 select[name="version"] {
     width: 120px;
+}
+
+.diff-tl {
+    font-size: 10px;
+}
+
+.target {
+    width: 50%;
+    border-bottom: 1px solid lightgray;
+}
+
+.source {
+    width: 50%;
+    border-bottom: 1px solid lightgray;
+    border-right: 3px solid lightgray;
+}
+
+#diffTable {
+    width: 100%;
+    border: 1px solid lightgray;
 }

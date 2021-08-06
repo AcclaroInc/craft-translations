@@ -72,7 +72,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.3.2';
+    public $schemaVersion = '1.3.3';
 
     const ACCLARO = 'acclaro';
 
@@ -347,9 +347,6 @@ class Translations extends Plugin
                 $event->rules = array_merge($event->rules, [
                     'translations' => 'translations/widget/index',
                     'translations/orders' => 'translations/base/order-index',
-                    // 'translations/orders/new' => 'translations/order/order-detail',
-                    'translations/orders/new' => 'translations/base/order-detail',
-                    // 'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
                     'translations/translators' => 'translations/base/translator-index',
                     'translations/translators/new' => 'translations/base/translator-detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
@@ -426,6 +423,7 @@ class Translations extends Plugin
     private function _includeEntryResources()
     {
         $orders = array();
+        $openOrders = array();
 
         foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
             $orders[] = array(
@@ -434,8 +432,17 @@ class Translations extends Plugin
             );
         }
 
+        foreach (self::$plugin->orderRepository->getOpenOrders() as $order) {
+            $openOrders[] = array(
+                'id' => $order->id,
+                'sourceSite' => $order->sourceSite,
+                'elements' => json_decode($order->elementIds, true),
+            );
+        }
+
         $data = [
             'orders' => $orders,
+            'openOrders' => $openOrders,
             'sites' => Craft::$app->sites->getAllSiteIds(),
             'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus('translations')
         ];

@@ -61,12 +61,16 @@ class ElementTranslator
         return Constants::DEFAULT_FILE_EXPORT_FORMAT;
     }
 
-    public function getTargetData($content) {
+    public function getTargetData($content, $nonNested = false) {
         if ($this->getDataFormat($content) === Constants::FILE_FORMAT_XML) {
-            return $this->getTargetDataFromXml($content);
+            return $this->getTargetDataFromXml($content, $nonNested);
         } else {
             $targetData = [];
             $content = json_decode($content, true);
+
+            if ($nonNested) {
+                return $content['content'];
+            }
 
             foreach ($content['content'] as $name => $value) {
                 if (strpos($name, '.') !== false) {
@@ -93,7 +97,7 @@ class ElementTranslator
         }
     }
 
-    public function getTargetDataFromXml($xml)
+    public function getTargetDataFromXml($xml, $nonNested = false)
     {
         $dom = new DOMDocument('1.0', 'utf-8');
 
@@ -107,6 +111,11 @@ class ElementTranslator
         foreach ($contents as $content) {
             $name = (string) $content->getAttribute('resname');
             $value = (string) $content->nodeValue;
+
+            if ($nonNested) {
+                $targetData[$name] = $value;
+                continue;
+            }
             
             if (strpos($name, '.') !== false) {
                 $parts = explode('.', $name);

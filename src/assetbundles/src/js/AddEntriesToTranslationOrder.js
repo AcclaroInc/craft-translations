@@ -76,6 +76,23 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         return siteId;
     },
 
+    showWarning: function($orders, $element, callback) {
+        if ($orders.length == 0) {
+            return callback(false);
+        }
+        var $sourceSiteId = $('[name=siteId]').val();
+
+        $orders.forEach(function($order) {
+            if ($order.sourceSite == $sourceSiteId) {
+                $order.elements.forEach(function($orderElement) {
+                    if ($orderElement == $element) {
+                        return callback(true);
+                    }
+                });
+            }
+        });
+    },
+
     init: function(data) {
         if (this.isEditEntryScreen() && !this.getEditEntryId()) {
             return;
@@ -90,12 +107,32 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             $btncontainer.className = "field";
 
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
-        
+
+        var $element = $('form#main-form input[type=hidden][name=sourceId]').val();
+
+        var $showWarning = false;
+        this.showWarning(data.openOrders, $element, function($result) {
+            $showWarning = $result;
+        });
+
+        if ($showWarning) {
+            var $warningContainer = document.createElement('div');
+            $warningContainer.id = 'edit-source-warning';
+            $warningContainer.className = 'meta read-only warning';
+            $url = Craft.getUrl("translations/orders") + "?status[]=in+progress&status[]=in+review&status[]=in+preparation&status[]=getting+quote&status[]=needs+approval&status[]=complete&[]&elementIds[]=" + $element;
+            $details = document.getElementById('details');
+            $('#details > div:last').before($warningContainer);
+            var $warningMessage = $('<div>').html('<label>Updates to source content may not reflect in delivered translations.</label>');
+            $warningMessage.append($('<div style="margin-top: 10px;">').html('<a class=btn href='+$url+' target="_blank">View translation orders</a>'));
+            $warningMessage.appendTo($warningContainer);
+        }
+
         if (this.isEditEntryScreen()) {
             $settings = document.getElementById('settings');
             $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
+
             
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
@@ -229,7 +266,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         $item.prependTo($dropdown);
 
-        var $link = Craft.getUrl('translations/orders/new');
+        var $link = Craft.getUrl('translations/orders/create');
 
         this.$btn.attr('href', $link);
 
@@ -254,7 +291,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
             var $form = $('<form>', {
                 'method': 'POST',
-                'action': Craft.getUrl('translations/orders/new')
+                'action': Craft.getUrl('translations/orders/create')
             });
 
             $form.hide();

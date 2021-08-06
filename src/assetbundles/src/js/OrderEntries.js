@@ -11,6 +11,7 @@ Craft.Translations.OrderEntries = {
     $checkboxes: null,
     $selectAllCheckbox: null,
     $publishSelectedBtn: null,
+    $selectedFileIds: null,
 
     hasSelections: function() {
         return this.$checkboxes.filter(':checked').length > 0;
@@ -35,6 +36,76 @@ Craft.Translations.OrderEntries = {
         } else {
             this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
         }
+    },
+    toggleApprovePublishButton: function(state) {
+        if (state) {
+            $(".apply-translation").prop('disabled', false).removeClass('disabled');
+        } else {
+            $(".apply-translation").prop('disabled', true).addClass('disabled');
+        }
+    },
+    createRowClone: function(that, $cloneId) {
+        $clone = $(that).clone();
+        $clone.find("td[rowspan]").remove();
+
+        $clone.find("td").addClass("diff-clone-row");
+        $icon = $clone.find("td .icon");
+        $icon.removeClass("hidden");
+
+        $checkBoxCell = $('<td>', {
+            class: "thin checkbox-cell translations-checkbox-cell"
+        });
+        $fileId = $(that).data("file-id");
+        if (this.$selectedFileIds) {
+            this.$selectedFileIds = this.$selectedFileIds +","+ $fileId;
+        } else {
+            this.$selectedFileIds = $fileId;
+        }
+
+        $checkbox = $('<input>', {
+            "type": "checkbox",
+            "id": $fileId,
+            "class": "checkbox clone",
+            "name": "elements[]",
+            "value": $cloneId,
+        });
+        // ! NOTE: Keep check boxes unchecked as file and element ids are added when checked.
+        // $checkbox.prop("checked", true); 
+        $checkbox.appendTo($checkBoxCell);
+
+        $('<label>', {
+            "for": $fileId,
+            "class": "checkbox"
+        }).appendTo($checkBoxCell);
+
+        $clone.find('td:first').before($checkBoxCell);
+        $elementId = $cloneId.split("-")[1];
+        $clone.attr('data-element-id', $elementId);
+        return $clone;
+    },
+    setFileIds: function() {
+        $fileIds = null;
+        $('.clone:checkbox:checked').each(function() {
+            if (this.id != "element-0-clone") {
+                if ($fileIds) {
+                    $fileIds = $fileIds + "," + this.id;
+                } else {
+                    $fileIds = this.id;
+                }
+            }
+        });
+        $("input[name=fileIds]").val($fileIds);
+    },
+    setElementIds: function() {
+        $elementIds = [];
+        $(".diff-clone").each(function() {
+            if ($(this).find("input:checkbox:checked").length == 1) {
+                if($.inArray($(this).data("element-id"), $elementIds) === -1) {
+                    $elementIds.push($(this).data("element-id"));
+                }
+            }
+        });
+        $("input[name=elementIds]").val($elementIds.join(",").replace(/^,|,$/g,''));
     },
     init: function() {
         this.$publishSelectedBtn = $('#draft-publish');
@@ -64,33 +135,31 @@ Craft.Translations.OrderEntries = {
             });
         });
 
-        // Check is an entry is selected before form submission
-        $(document).on('submit', '#approve-publish-form', function(e) {
-            $selected = $('.clone:checkbox:checked').length;
-            if ($selected > 0) {
-                return true;
-            }
-            return false;
-        });
-
         // Modal checkboxes behaviour script
         $(document).on('click, change', '.clone:checkbox', function() {
             $value = $(this).val();
             $selected = $('.clone:checkbox:checked').length;
+            if ($selected == 0) {
+                Craft.Translations.OrderEntries.toggleApprovePublishButton(false)
+            } else {
+                if ($value != "on") {
+                    Craft.Translations.OrderEntries.toggleApprovePublishButton(true)
+                }
+            }
             $all = $('.clone:checkbox').length;
             if ($value !== 'on') {
                 if ($selected === ($all-1)) {
                     $('#element-0-clone').prop('checked', this.checked);
                 }
+                Craft.Translations.OrderEntries.setFileIds();
+                Craft.Translations.OrderEntries.setElementIds();
                 return;
+            } else {
+                Craft.Translations.OrderEntries.toggleApprovePublishButton(this.checked);
+                $('.clone:checkbox').prop('checked', this.checked);
+                Craft.Translations.OrderEntries.setFileIds();
+                Craft.Translations.OrderEntries.setElementIds();
             }
-            $('.clone:checkbox').prop('checked', this.checked);
-        });
-
-        // TODO: Not working need to fix.
-        // Close Modal on close icon click
-        $(document).on('click', '#close-publish-modal', function() {
-            $('.modal.scroll-y-auto, .modal-shade').hide();
         });
     },
 
@@ -107,14 +176,21 @@ Craft.Translations.OrderEntries = {
         });
 
         var $hiddenFields = $('<input type="hidden" name="orderId" value="' + $('input[name=orderId]').val() + '"/>\
+            <input type="hidden" name="fileIds" value=""/><input type="hidden" name="elementIds" value=""/>\
             <input type="hidden" name="action" value="translations/order/save-draft-and-publish"/>');
         $hiddenFields.appendTo($form);
         $form.append(Craft.getCsrfInput());
 
         $body = $('<div class="body input ltr"></div>');
 
-        var $header = $('<div class="header df position-fixed"><h1 class="mr-auto">Review and publish</h1>\
-            <a class="icon delete close-publish-modal" id="close-publish-modal"></a></div>');
+        var $header = $('<div class="header df position-fixed"><h1 class="mr-auto">Review and publish</h1></a></div>');
+        var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal">');
+        
+        $($closeIcon).on('click', function() {
+            $('.modal.scroll-y-auto, .modal-shade').remove();
+        });
+
+        $closeIcon.appendTo($header);
         $header.appendTo($form);
 
         var $table = $('<table class="data mt-4" dir="ltr"></table>');
@@ -122,19 +198,40 @@ Craft.Translations.OrderEntries = {
         var $tableHeader = $('<thead><tr><td class="thin checkbox-cell translations-checkbox-cell">\
             <input class="checkbox clone" id="element-0-clone" type="checkbox"/>\
             <label class="checkbox" for="element-0-clone"></label></td><td><b>Select all</b></td><td></td><td></td><td></td>\
-            <td><button type="submit" name="submit" class="btn right" value="draft">Approve changes</button></td>\
-            <td><button type="submit" name="submit" class="btn ml-10 submit right" value="publish">Publish selected</button>\
-            </td></tr></thead>');
+            <td><button type="submit" name="submit" class="btn right apply-translation" value="draft">Approve changes</button></td>\
+            <td><button type="submit" name="submit" class="btn ml-auto submit right apply-translation" value="publish">Publish selected</button>\
+            </td><td></td></tr></thead>');
 
         var $tableContent = $('<tbody></tbody>');
 
         $selections.each(function() {
             $cloneId = "element-" + $(this).val() + "-clone";
-            $clone = $(this).closest('tr').clone();
-            $clone.find('input').attr('id', $cloneId);
-            $clone.find('input').addClass('clone');
-            $clone.find('label').attr('for', $cloneId);
-            $clone.appendTo($tableContent);
+            $rowClass = $(this).data('detail');
+            $("."+$rowClass).each(function() {
+                $clone = Craft.Translations.OrderEntries.createRowClone(this, $cloneId);
+                $clone.appendTo($tableContent);
+                $('<tr>', {
+                    id: "data-"+$($clone).data("file-id"),
+                    // type: "hidden"
+                }).appendTo($tableContent);
+            });
+        });
+
+        $($tableContent).on('click', '.diff-clone-row', function(e) {
+            $fileId = $(this).closest('tr').find("input").attr("id");
+            $target = $("#data-"+$fileId);
+            $icon = $(this).closest('tr').find(".icon");
+            if ($target.children().length > 0) {
+                $target.toggle();
+                if ($target.is(":visible")) {
+                    $($icon).attr("data-icon", "minus");
+                } else {
+                    $($icon).attr("data-icon", "plus");
+                }
+            } else {
+                Craft.Translations.OrderEntries._addDiffViewEvent(this);
+                $($icon).attr("data-icon", "minus");
+            }
         });
 
         $tableHeader.appendTo($table);
@@ -145,6 +242,71 @@ Craft.Translations.OrderEntries = {
         $form.appendTo($modal)
 
         return $modal;
+    },
+    _addDiffViewEvent: function(that) {
+        $fileId = $(that).closest('tr').find("input").attr("id");
+        if ($fileId == undefined) {
+            return;
+        }
+        var fileData = {
+            fileId: $fileId
+        };
+
+        Craft.postActionRequest('translations/order/get-file-diff', fileData, function(response, textStatus) {
+            if (textStatus === 'success' && response.success) {
+                data = response.data;
+
+                diffHtml = Craft.Translations.OrderEntries.createDiffHtmlView(data);
+                diffHtml.attr("id", "data-"+$fileId)
+                $("#data-"+$fileId).replaceWith(diffHtml);
+                diffHtml.show();
+            } else {
+                Craft.cp.displayNotice(Craft.t('app', response.error));
+            }
+        });
+    },
+    createDiffHtmlView: function(data) {
+        var diffData = data.diff;
+
+        $mainContent = $('<tr>', {
+            id: "main-container"
+        });
+
+        $diffTable = $('<table>', {
+            id: "diffTable"
+        });
+        $mainTd = $('<td colspan=8>');
+        $diffTable.appendTo($mainTd);
+        $mainTd.appendTo($mainContent);
+
+        $.each(diffData, function(key, value) {
+            $tr = $('<tr>');
+            $td = $("<td class='source'>");
+            $td.appendTo($tr);
+            $("<label>", {
+                html: key+" :",
+                class: "diff-tl"
+            }).appendTo($td);
+            $('<br>').appendTo($td);
+            $("<span>", {
+                html: value.source,
+                class: "diff-bl"
+            }).appendTo($td);
+            $td = $("<td class='target'>").appendTo($tr);
+            $td.appendTo($tr);
+            $("<label>", {
+                html: key+" :",
+                class: "diff-tl"
+            }).appendTo($td);
+            $('<br>').appendTo($td);
+            $("<span>", {
+                html: value.target,
+                class: "diff-bl"
+            }).appendTo($td);
+            $tr.appendTo($diffTable);
+        });
+
+        return $mainContent;
     }
 };
 

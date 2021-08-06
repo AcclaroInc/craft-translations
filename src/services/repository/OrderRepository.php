@@ -86,6 +86,20 @@ class OrderRepository
     /**
      * @return \craft\elements\db\ElementQuery
      */
+    public function getOpenOrders()
+    {
+        $openOrders = Order::find()
+            ->andWhere(Db::parseParam('translations_orders.status', array(
+                'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval', 'complete'
+            )))
+            ->all();
+            
+        return $openOrders;
+    }
+    
+    /**
+     * @return \craft\elements\db\ElementQuery
+     */
     public function getInProgressOrders()
     {
         $inProgressOrders = Order::find()

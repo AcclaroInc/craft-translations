@@ -218,7 +218,7 @@ Craft.Translations.CategoryTranslations = {
             });
         }
 
-        var $link = Craft.getUrl('translations/orders/new', {'elements[]': categoryId, 'sourceSite': self.getSourceSite()});
+        var $link = Craft.getUrl('translations/orders/create', {'elements[]': categoryId, 'sourceSite': self.getSourceSite()});
 
         this.$btn.attr('href', $link);
 
@@ -241,7 +241,7 @@ Craft.Translations.CategoryTranslations = {
 
             var $form = $('<form>', {
                 'method': 'POST',
-                'action': Craft.getUrl('translations/orders/new')
+                'action': Craft.getUrl('translations/orders/create')
             });
 
             $form.hide();

@@ -78,6 +78,9 @@
                         }
                     }
 
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
+
                     $('.new-entry-check .checkbox').on('click', function(e) {
                         $(e.target).closest('tr[id^=item-entry-]').toggleClass('sel');
                         Craft.Translations.RecentEntries.prototype.updateSelected();
@@ -139,7 +142,7 @@
                 }
 
                 if (!$('#new-entry-orders').hasClass('disabled')) {
-                    $('#new-entry-orders').attr('href', Craft.getUrl('translations/orders/new?sourceSite='+ Craft.siteId + elements));
+                    $('#new-entry-orders').attr('href', Craft.getUrl('translations/orders/create?sourceSite='+ Craft.siteId + elements));
                 }
             }
         });

@@ -26,7 +26,7 @@
         </div>
         <div class="sync-status"></div>
     </form>
-    <a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}">{{ 'Create New Order'|t }}</a>
+    <a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/create') }}">{{ 'Create New Order'|t }}</a>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
@@ -82,7 +82,6 @@
     {#<div id="export-btn" class="btn hidden">{{ 'Export…'|t('app') }}</div>#}
 {% endblock %}
 
-
 {% block initJs %}
     Craft.elementIndex = Craft.createElementIndex('{{ elementType|e("js") }}', $('#page-container'), {
     elementTypeName: '{{ elementInstance.displayName()|e("js") }}',
@@ -90,6 +89,7 @@
     context: '{{ context }}',
     storageKey: 'elementindex.{{ elementType|e("js") }}',
     criteria: Craft.defaultIndexCriteria,
+    criteria: {{ (searchParams|raw) }},
     toolbarSelector: '#toolbar'
     });
 {% endblock %}
