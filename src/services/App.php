@@ -136,12 +136,18 @@ class App extends Component
     public $elementToXmlConverter;
     
     /**
+     * @var AcclaroService
+     */
+    public $acclaroService;
+    
+    /**
      * @var OrderSearchParams
      */
     public $orderSearchParams;
     
     public function init()
     {
+        $this->acclaroService = new AcclaroService();
         $this->urlHelper = new UrlHelper();
         $this->urlGenerator = new UrlGenerator();
         $this->translator = new Translator();
