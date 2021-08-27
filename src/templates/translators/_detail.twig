@@ -60,7 +60,7 @@
             value: translator.label,
             name: 'label',
             id: 'label',
-            size: 80,
+            class: "fullwidth",
             placeholder: 'Add translator name'|t,
         }) }}
 
@@ -72,24 +72,22 @@
             id: 'service',
         }) }}
 
-        {% if translator.service != "export_import" %}
-            <div class="translations-translator-settings bg-none" id="settings-acclaro">
-                {{ forms.textField({
-                    label: 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>'|t,
-                    value: translator.setting('apiToken'),
-                    name: 'settings[acclaro][apiToken]',
-                    size: 20,
-                    id: 'settings-acclaro-apiToken',
-                }) }}
+        <div class="translations-translator-settings bg-none" id="settings-acclaro">
+            {{ forms.textField({
+                label: 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>'|t,
+                value: translator.setting('apiToken'),
+                name: 'settings[acclaro][apiToken]',
+                size: 20,
+                id: 'settings-acclaro-apiToken',
+            }) }}
 
-                {{ forms.lightswitchField({
-                    label: 'Sandbox Mode'|t,
-                    on: translator.setting('sandboxMode'),
-                    name: 'settings[acclaro][sandboxMode]',
-                    id: 'settings-acclaro-sandboxMode',
-                }) }}
-            </div>
-        {% endif %}
+            {{ forms.lightswitchField({
+                label: 'Sandbox Mode'|t,
+                on: translator.setting('sandboxMode'),
+                name: 'settings[acclaro][sandboxMode]',
+                id: 'settings-acclaro-sandboxMode',
+            }) }}
+        </div>
     </form>
 {% endblock %}
 

@@ -125,7 +125,7 @@ class TranslatorController extends Controller
 
         if ($service !== 'export_import')
         {
-            $auth = AcclaroService::authenticateService($service, $allSettings[$service]);
+            $auth = (new AcclaroService())->authenticateService($service, $allSettings[$service]);
             if (! $auth) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Api token could not be authenticated.'));
                 return;

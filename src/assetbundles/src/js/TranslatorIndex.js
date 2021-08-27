@@ -9,21 +9,21 @@
         sideBar: null,
 
         hasSelections: function() {
-            return this.checkboxes.filter("tbody :checked").length;
+            return $("#content input[type=checkbox]").filter("tbody :checked").length;
         },
 
         toggleCheckboxes: function(status, selectAll) {
             if (selectAll) {
-                this.checkboxes.prop("checked", status);
+                $("#content input[type=checkbox]").prop("checked", status);
                 return;
             }
-            selectAll = this.hasSelections() === this.checkboxes.length-1;
+            selectAll = this.hasSelections() === $("#content input[type=checkbox]").length-1;
             // Toggle select all checkbox
             $("#translator-0").prop("checked", selectAll);
         },
 
-        toggleEditDeleteButton: function(that) {
-            var selected = that.hasSelections();
+        toggleEditDeleteButton: function() {
+            var selected = this.hasSelections();
             var editButton = $(".edit-translator");
             var deleteButton = $(".delete-translator");
 
@@ -40,37 +40,42 @@
         },
 
         init: function() {
-            var self = Craft.Translations.TranslatorIndex;
-            this.checkboxes = $('input[type="checkbox"]');
+            var self = this;
             this.sideBar = $('#sidebar a');
             $('#sidebar a:first').addClass("sel");
+            self.toggleCheckboxes(false, true);
+            self.toggleEditDeleteButton();
 
-            this.checkboxes.on('click', function() {
+            $("body").on('click', "input:checkbox", function() {
                 var isSelectAll = $(this).attr("id") === "translator-0";
                 self.toggleCheckboxes($(this).is(':checked'), isSelectAll);
-                self.toggleEditDeleteButton(self);
+                self.toggleEditDeleteButton();
             });
 
             this.sideBar.on('click', function() {
+                if ($(this).hasClass("sel")) {
+                    return;
+                }
                 self.sideBar.removeClass("sel");
                 $(this).addClass("sel");
                 data = self._getTranslatorsData($(this).data("key"));
                 if (data) {
                     $('#content').find(".translations-element-index").replaceWith(data);
+                    self.toggleEditDeleteButton();
                 }
             });
 
             $("#action-button").on('click', function() {
                 if (self.hasSelections()) {
-                    self.toggleEditDeleteButton(self);
+                    self.toggleEditDeleteButton();
                 }
             });
 
-            $("body").on('click', '.edit-translator', function(e) {
+            $("body").on('click', '.edit-translator', function() {
                 if ($(this).hasClass("disabled")) {
-                    return;
+                    return false;
                 }
-                selected = self.checkboxes.filter("tbody :checked");
+                selected = $("#content input[type=checkbox]").filter("tbody :checked");
                 window.location.href = $(selected).data("url");
             });
 
@@ -83,7 +88,7 @@
                     translatorIds: null
                 };
 
-                self.checkboxes.filter("tbody :checked").each(function() {
+                $("#content input[type=checkbox]").filter("tbody :checked").each(function() {
                     if (data.translatorIds) {
                         data.translatorIds += "," + $(this).data("id");
                     } else {
@@ -128,14 +133,18 @@
                         $tr = $('<tr>');
 
                         $id = "translator-"+this.id;
-                        $service = this.service == "export_import" ? "Export/Import" : this.service;
-                        $url = 'url(translations/translators/detail/'+$id+')';
+                        $service = this.service == "export_import" ? "Export/Import" 
+                            : this.service.substr(0,1).toUpperCase()+this.service.substr(1);
+                        $url = "translators/detail/"+this.id;
                         $statusClass = this.status == "active" ? "green" : "red";
+                        $status = this.status.substr(0,1).toUpperCase()+this.status.substr(1);
+                        $label = this.label !== "" ? this.label : $service;
 
                         $td = $("<td class=checkbox-cell><input type=checkbox title=select id="+$id+"\
-                            data-url="+$url+"/> <label for="+$id+"></label></td>"+'<td><a href='+$url+'>'+this.label+'\
+                            data-url="+$url+" data-id="+this.id+"> <label for="+$id+"></label></td>"+'\
+                            <td><a href='+$url+'>'+$label+'\
                             </a></td><td><span class="status '+$statusClass+'"></span>\
-                            '+this.status+'</td><td>'+$service+'</td>');
+                            '+$status+'</td><td>'+$service+'</td>');
 
                         $td.appendTo($tr);
                         $tr.appendTo($tbody);
