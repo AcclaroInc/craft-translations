@@ -183,7 +183,7 @@ class DraftRepository
             }
 
             // Let's remove the auto-propagated drafts
-            Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+            //Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
 
             // Apply the draft to the entry
             $newEntry = Craft::$app->getDrafts()->publishDraft($draft);
