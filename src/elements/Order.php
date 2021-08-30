@@ -28,7 +28,10 @@ use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\db\OrderQuery;
-
+use craft\controllers\ElementIndexesController;
+use craft\elements\actions\Delete;
+use craft\elements\Entry;
+use craft\models\Section;
 
 /**
  * @author    Acclaro
@@ -144,6 +147,57 @@ class Order extends Element
     //         ],
     //     ];
     // }
+
+    protected static function defineActions(string $source = null): array
+    {
+        // Get the selected site
+        $controller = Craft::$app->controller;
+        if ($controller instanceof ElementIndexesController) {
+            /** @var ElementQuery $elementQuery */
+            $elementQuery = $controller->getElementQuery();
+        } else {
+            $elementQuery = null;
+        }
+        $site = $elementQuery && $elementQuery->siteId
+            ? Craft::$app->getSites()->getSiteById($elementQuery->siteId)
+            : Craft::$app->getSites()->getCurrentSite();
+
+        // Get the section(s) we need to check permissions on
+        switch ($source) {
+            case 'all':
+                $sections = Craft::$app->getSections()->getEditableSections();
+                break;
+            case 'singles':
+                $sections = Craft::$app->getSections()->getSectionsByType(Section::TYPE_SINGLE);
+                break;
+            default:
+                if (preg_match('/^section:(\d+)$/', $source, $matches)) {
+                    if (($section = Craft::$app->getSections()->getSectionById($matches[1])) !== null) {
+                        $sections = [$section];
+                    }
+                } else if (preg_match('/^section:(.+)$/', $source, $matches)) {
+                    if (($section = Craft::$app->getSections()->getSectionByUid($matches[1])) !== null) {
+                        $sections = [$section];
+                    }
+                }
+        }
+
+        // Now figure out what we can do with these
+        $actions = [];
+        $elementsService = Craft::$app->getElements();
+
+        /** @var Section[] $sections */
+        if (!empty($sections)) {
+            $canEdit = true;
+
+            if ($source === 'all') {
+                // Delete
+                $actions[] = Delete::class;
+            }
+        }
+
+        return $actions;
+    }
 
     protected static function defineSources(string $context = null): array
     {
@@ -317,7 +371,7 @@ class Order extends Element
             'status' => ['label' => Translations::$plugin->translator->translate('app', 'Status')],
             'dateOrdered' => ['label' => Translations::$plugin->translator->translate('app', 'Created')],
             'dateUpdated' => ['label' => Translations::$plugin->translator->translate('app', 'Updated')],
-            'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
+            // 'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
         ];
 
         return $attributes;
@@ -356,18 +410,29 @@ class Order extends Element
     /**
      * Requests
      */
-    public function getElements()
+    public function getElements($source = true)
     {
         $elementIds = $this->elementIds ? json_decode($this->elementIds) : array();
 
         $elements = array();
         
         foreach ($elementIds as $key => $elementId) {
-            if (!array_key_exists($elementId, $this->_elements)) {
-                $this->_elements[$elementId] = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
+            if (!array_key_exists($elementId, $this->_elements) || ! $source) {
+                $element = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
+                if (! $element) {
+                    // ! Try if the id is a draft id
+                    $element = Entry::find()
+                        ->draftId($elementId)
+                        ->anyStatus()
+                        ->one();
+                    if ($source) {
+                        $element = $element->getCanonical(true);
+                    }
+                }
+                $source ? $this->_elements[$elementId] = $element : $elements[$elementId] = $element;
             }
 
-            if ($this->_elements[$elementId]) {
+            if ($source && $this->_elements[$elementId] && $source) {
                 $elements[] = $this->_elements[$elementId];
             }
         }
@@ -424,7 +489,8 @@ class Order extends Element
 
     public function getCpEditUrl()
     {
-        return Translations::$plugin->urlHelper->cpUrl('translations/orders/detail/'.$this->id);
+        $endpoint = in_array($this->status, ['failed', 'new']) ? "" : "#files";
+        return Translations::$plugin->urlHelper->cpUrl('translations/orders/detail/'.$this->id.$endpoint);
     }
 
     public function getStatusLabel()

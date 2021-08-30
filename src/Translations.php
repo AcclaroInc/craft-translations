@@ -346,7 +346,6 @@ class Translations extends Plugin
             UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function (RegisterUrlRulesEvent $event) {
                 $event->rules = array_merge($event->rules, [
                     'translations' => 'translations/widget/index',
-                    'translations/orders' => 'translations/base/order-index',
                     'translations/translators' => 'translations/base/translator-index',
                     'translations/translators/new' => 'translations/base/translator-detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
@@ -363,7 +362,8 @@ class Translations extends Plugin
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
                     'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/base/edit-category-draft',
-
+                    
+                    'translations/orders' => 'translations/order/order-index',
                     'translations/orders/create' => 'translations/order/order-detail',
                     'translations/orders/detail/<orderId:\d+>' => 'translations/order/order-detail',
                 ]);
@@ -701,7 +701,10 @@ class Translations extends Plugin
                     ],
                     'translations:orders:apply-translations' => [
                         'label' => Craft::t('translations', 'Apply Translations'),
-                    ]
+                    ],
+                    'translations:orders:draft:create' => [
+                        'label' => Craft::t('translations', 'Create Order Draft'),
+                    ],
                 ]
             ],
             'translations:settings' => [

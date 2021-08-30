@@ -3,6 +3,7 @@
 
 {% set title = "Orders"|t('app') %}
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
+{% set canHaveDrafts = true %}
 
 {% set elementInstance = craft.app.elements.createElement(elementType) %}
 {% set context = 'index' %}
@@ -90,6 +91,7 @@
     storageKey: 'elementindex.{{ elementType|e("js") }}',
     criteria: Craft.defaultIndexCriteria,
     criteria: {{ (searchParams|raw) }},
+    canHaveDrafts: {{ (canHaveDrafts ?? false) ? 'true' : 'false' }},
     toolbarSelector: '#toolbar'
     });
 {% endblock %}

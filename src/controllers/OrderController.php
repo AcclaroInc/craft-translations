@@ -37,8 +37,6 @@ use acclaro\translations\services\translator\AcclaroTranslationService;
 use Dotenv\Regex\Success;
 use Error;
 
-use function PHPSTORM_META\type;
-
 /**
  * @author    Acclaro
  * @package   Translations
@@ -180,7 +178,7 @@ class OrderController extends Controller
             }
 
             if ($orderDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
-                $newOrder->requestedDueDate = $orderDueDate;
+                $newOrder->sourceSite = $orderDueDate;
             }
 
             if ($orderComments= Craft::$app->getRequest()->getQueryParam('comments')) {
@@ -216,7 +214,17 @@ class OrderController extends Controller
         $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
 
         $variables['elements'] = [];
-        
+        $variables['elementVersionMap'] = array();
+
+        foreach ($variables['order']->getElements(false) as $elementId => $element) {
+            if ($element->getIsDraft()) {
+                $source = $element->getCanonical(true);
+                $variables['elementVersionMap'][$source->id] = $elementId;
+            } else {
+                $variables['elementVersionMap'][$element->id] = "current";
+            }
+        }
+
         if ($variables['inputElements']) {
             foreach ($variables['inputElements'] as $elementId) {
                 $element = Craft::$app->getElements()
@@ -224,6 +232,9 @@ class OrderController extends Controller
 
                 if ($element) {
                     $variables['elements'][] = $element;
+                    if (! isset($variables['elementVersionMap'][$element->id])) {
+                        $variables['elementVersionMap'][$element->id] = 'current';
+                    }
                 }
             }
         } else {
@@ -252,11 +263,11 @@ class OrderController extends Controller
 
         $variables['entriesCountByElement'] = 0;
         $variables['entriesCountByElementCompleted'] = 0;
+        $variables['elementHasCompleteFile'] = [];
 
         foreach ($variables['elements'] as $element) {
             $drafts = Craft::$app->getDrafts()->getEditableDrafts($element);
             $tempDraftNames = [];
-
             foreach ($drafts as $draft) {
                 $draftBehaviour = $draft->getBehavior("draft");
                 $tempDraftNames[] = [
@@ -301,6 +312,8 @@ class OrderController extends Controller
 
                 $isElementPublished = true;
 
+                $variables['elementHasCompleteFile'][$element->id] = false;
+
                 foreach ($variables['files'][$element->id] as $file) {
                     if ($file->status !== Constants::ORDER_STATUS_PUBLISHED) {
                         $isElementPublished = false;
@@ -320,6 +333,7 @@ class OrderController extends Controller
                             $file->status === Constants::ORDER_STATUS_PUBLISHED
                         ) {
                             $variables['entriesCountByElementCompleted']++;
+                            $variables['elementHasCompleteFile'][$element->id] = true;
                         }
                     } elseif ($element instanceof GlobalSet or $element instanceof Category) {
                         if (
@@ -327,6 +341,7 @@ class OrderController extends Controller
                             $file->status === Constants::ORDER_STATUS_PUBLISHED
                         ) {
                             $variables['entriesCountByElementCompleted']++;
+                            $variables['elementHasCompleteFile'][$element->id] = true;
                         }
                     }
 
@@ -421,32 +436,24 @@ class OrderController extends Controller
 
         $variables['isSubmitted'] = ($variables['order']->status !== Constants::ORDER_STATUS_NEW &&
             $variables['order']->status !== Constants::ORDER_STATUS_FAILED);
-        // echo "<pre>";print_r(json_encode($variables['constants'], true));die;
+        // echo "<pre>";print_r($variables['files']);die;
         $this->renderTemplate('translations/orders/detail', $variables);
     }
 
     public function actionSaveOrder()
     {
-        $backToNew = Craft::$app->getRequest()->getParam('flow') === "saveAndCreateNew";
-
         $this->requireLogin();
         $this->requirePostRequest();
-        $isOrderUpdated = Craft::$app->getRequest()->getParam('submit') === "update";
+
+        $flow = explode("_", Craft::$app->getRequest()->getParam('flow'));
+        $backToNew = count($flow) > 1 ? true : false;
+
+        $isOrderUpdated = $flow[0] === "update";
         $isNewOrder = $isOrderUpdated ? false : true;
 
         $currentUser = Craft::$app->getUser()->getIdentity();
 
-        // ? Logic to process version based orders WIP
-        // $elementIdVersion = ltrim(Craft::$app->getRequest()->getParam('elementIdVersions'), ',');
-
-        // if (trim($elementIdVersion)) {
-        //     $elementIdVersion = explode(',', $elementIdVersion);
-        //     $elementVersion = [];
-        //     foreach (explode(',', $elementIdVersion) as $element) {
-        //         $temp = explode('_', $element);
-        //         $elementVersion[$temp[0]] = $temp[1];
-        //     }
-        // }
+        $elementVersions = trim(Craft::$app->getRequest()->getParam('elementVersions'), ',') ?? array();
 
         if (!$currentUser->can('translations:orders:create')) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator
@@ -455,6 +462,7 @@ class OrderController extends Controller
         }
 
         $orderId = Craft::$app->getRequest()->getParam('id');
+        $sourceSite = Craft::$app->getRequest()->getParam('sourceSiteSelect');
 
         if ($orderId) {
             $isNewOrder = false;
@@ -464,6 +472,7 @@ class OrderController extends Controller
                 throw new HttpException(400, Translations::$plugin->translator->translate('app', 'Invalid Order'));
             }
 
+            $sourceSite = $sourceSite ?: $order->sourceSite;
             // Authenticate service
             $translator = $order->getTranslator();
             $service = $translator->service;
@@ -490,8 +499,6 @@ class OrderController extends Controller
                 }
             }
         } else {
-            $sourceSite = Craft::$app->getRequest()->getParam('sourceSiteSelect');
-
             if ($sourceSite && !Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
                 throw new HttpException(400, Translations::$plugin->translator
                     ->translate('app', 'Source site is not supported'));
@@ -521,6 +528,17 @@ class OrderController extends Controller
                 }
             }
 
+            $elementByVersion = [];
+            if ($elementVersions) {
+                $elementVersions = explode(',', $elementVersions);
+                foreach ($elementVersions as $element) {
+                    $temp = explode('_', $element);
+                    if ($temp[1] != "current") {
+                        $elementByVersion[$temp[0]] = $temp[1];
+                    }
+                }
+            }
+
             $requestedDueDate = Craft::$app->getRequest()->getParam('requestedDueDate');
 
             $translatorId = Craft::$app->getRequest()->getParam('translatorId');
@@ -537,6 +555,7 @@ class OrderController extends Controller
             $order->ownerId = Craft::$app->getRequest()->getParam('ownerId');
             
             $order->title = $title;
+            $order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
             if ($requestedDueDate) {
@@ -546,13 +565,19 @@ class OrderController extends Controller
                     $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
                 }
             }
-            $order->requestedDueDate = $requestedDueDate ? $requestedDueDate : null;
+            $order->requestedDueDate = $requestedDueDate ?: null;
 
             $order->comments = Craft::$app->getRequest()->getParam('comments');
             $order->translatorId = $translatorId;
 
             $elementIds = Craft::$app->getRequest()->getParam('elements') ?
                 Craft::$app->getRequest()->getParam('elements') : array();
+
+            foreach ($elementIds as $key => $elementId) {
+                if (array_key_exists($elementId, $elementByVersion)) {
+                    $elementIds[$key] = $elementByVersion[$elementId];
+                }
+            }
 
             $order->elementIds = json_encode($elementIds);
 
@@ -612,6 +637,7 @@ class OrderController extends Controller
 
             if (!$success) {
                 Craft::error('[' . __METHOD__ . '] Couldn’t save the order', 'translations');
+                $order->logActivity(Translations::$plugin->translator->translate('app', "Couldn’t save the order"));
                 Craft::$app->getSession()->setNotice(
                     Translations::$plugin->translator->translate('app', 'Error saving Order')
                 );
@@ -682,6 +708,7 @@ class OrderController extends Controller
 
                         if (! $success) {
                             Craft::error('[' . __METHOD__ . '] Couldn’t create the order file', 'translations');
+                            $order->logActivity(Translations::$plugin->translator->translate('app', "Couldn’t create the order file"));
                             Craft::$app->getSession()->setError(
                                 Translations::$plugin->translator->translate('app', 'Error saving order.')
                             );
@@ -693,6 +720,7 @@ class OrderController extends Controller
 
                             if (! $success) {
                                 Craft::error('[' . __METHOD__ . '] Couldn’t save the order', 'translations');
+                                $order->logActivity(Translations::$plugin->translator->translate('app', "Couldn’t save the order"));
                             } else {
                                 Craft::$app->getSession()->setNotice(
                                     Translations::$plugin->translator->translate('app', 'Order Saved.')
@@ -738,6 +766,7 @@ class OrderController extends Controller
             }
         } catch (Exception $e) {
             Craft::error('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), 'translations');
+            $order->logActivity(Translations::$plugin->translator->translate('app', $e->getMessage()));
             $order->status = Constants::ORDER_STATUS_FAILED;
             Craft::$app->getElements()->saveElement($order);
         }
@@ -871,7 +900,7 @@ class OrderController extends Controller
             array_push($allElementIds, $element->id);
             $wordCounts[$element->id] = Translations::$plugin->elementTranslator->getWordCount($element);
         }
-        
+
         if ($action == "draft-all") {
             $elementIds = $allElementIds;
             $action = "draft";
@@ -903,6 +932,7 @@ class OrderController extends Controller
                 );
             }
         } catch (Exception $e) {
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not publish draft Error: ' . $e->getMessage()));
             Craft::error( '['. __METHOD__ .'] Couldn’t save the draft. Error: '.$e->getMessage(), 'translations' );
             $order->status = 'failed';
             Craft::$app->getElements()->saveElement($order);
@@ -970,14 +1000,24 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Save Order Draft Action
+     *
+     * @return void
+     */
     public function actionSaveOrderDraft()
     {
         // TODO: need to add logic later
-        Craft::$app->getSession()->setError(
-            Translations::$plugin->translator->translate('app', 'Save Order Draft WIP.')
+        Craft::$app->getSession()->setNotice(
+            Translations::$plugin->translator->translate('app', 'Order draft save WIP.')
         );
     }
     
+    /**
+     * Delete Order Draft Action
+     *
+     * @return void
+     */
     public function actionDeleteOrderDraft()
     {
         // TODO: need to add logic later

@@ -10,6 +10,27 @@ if (typeof Craft.Translations === 'undefined') {
 Craft.Translations.OrderIndex = Garnish.Base.extend(
 {
     init: function() {
+        if ($('#sidebar-container').length) {
+            $(document).on('click', '#toolbar button', function() {
+                $selected = $('tbody').find('.sel');
+                if ($('ul[class=menu] ul').length == 1) {
+                    $('ul[class=menu]').prepend("<ul><li><a class=disabled>Edit Order</a></li></ul>");
+                }
+
+                if ($selected.length == 1) {
+                    $url = $selected.find('span[class=title] a').prop('href');
+                    $edit = $('ul[class=menu] li:first a');
+                    $edit.removeClass('disabled');
+                    $edit.attr('disabled', false);
+                    $edit.prop('href', $url);
+                } else {
+                    $edit = $('ul[class=menu] li:first a');
+                    $edit.addClass('disabled');
+                    $edit.attr('disabled', true);
+                }
+            });
+        }
+
         $(document).on("click", ".translations-delete-order", function() {
             var $button = $(this);
 

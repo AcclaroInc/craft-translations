@@ -8,41 +8,17 @@
 {% set title = 'Translations'|t %}
 {% block actionButton %}
     <div class="translations-loader hidden">
-        <div class="spinner"></div>
-        <p class="translations-loader-msg hidden">
+        <p class="translations-loader-msg">
             {{ 'Please wait and do not close this window until the page finishes loading.'|t }}</p>
     </div>
-    {# <small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small> #}
     <div class="item" data-position="left" data-colspan="1">
         <div class="buttons">
-            <input type="hidden" id="order-attr" data-submitted="{{ isSubmitted }}" data-changed="{{ isChanged }}"/>
-            {% if isSubmitted  or orderId %}
-                {% if licenseStatus == constant('acclaro\\translations\\Constants::LICENSE_STATUS_VALID') %}
-                    <div class="btngroup submit">
-                        {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-                            order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                            <button type="submit" name="submit" value=""
-                                class="btn big disabled" disabled="disabled">
-                                {{ 'Save as draft'|t }}
-                            </button>
-                        {% else %}
-                            <button type="submit" form="publish-form" name="submit" value="draft-all"
-                                class="btn big">{{ 'Save as draft'|t }}</button>
-                        {% endif %}
-                    </div>
-                {% endif %}
-                <div class="btngroup submit">
-                    <button type="submit" id="createNewOrder" name="create" value="create" class="btn big">
-                    {{ 'Create new order'|t }}</button>
-                </div>
-                <div class="btngroup submit">
-                    <button type="submit" id="updateOrder" form="order-form" name="submit" value="update"
-                        class="translations-submit-order btn big submit disabled"
-                        disabled="disabled">{{ isChanged ? 'Submit new order' : 'Update order'|t }}</button>
-                </div>
-            {% else %}
-                <div id="new-order-button-group" class="btngroup submit"></div>
-            {% endif %}
+            <input type="hidden" id="order-attr" data-status="{{ order.status }}" data-submitted="{{ isSubmitted }}" data-changed="{{ isChanged }}"/>
+            <div class="btngroup submit">
+                <button type="submit" id="createNewOrder" name="create" value="create" class="btn big">
+                {{ 'Create new order'|t }}</button>
+            </div>
+            <div id="new-order-button-group" class="btngroup submit"></div>
         </div>
     </div>
 
@@ -98,12 +74,6 @@
             name: 'sourceSite',
             value: order.sourceSite,
         }) }}
-        
-        {{ forms.hidden({
-            name: 'elementIdVersions',
-            id: 'elementIdVersions',
-            value: '',
-        }) }}
 
         <div id="order">
             {{ forms.textField({
@@ -112,7 +82,7 @@
                 placeholder: 'Translation Order Name',
                 name: 'title',
                 id: 'title',
-                size: 70,
+                class: "fullwidth",
                 maxlength: 255,
             }) }}
             <input type="hidden" id="originalTitle" value="{{ order.title }}">
@@ -129,6 +99,7 @@
             <hr>
 
             {% set elementIds = {} %}
+            {% set elementVersions = {} %}
             <div id="text-field" class="field">
                 <div class="heading">
                     <label id="entries-label" for="entries">
@@ -171,7 +142,7 @@
                                             {% set versionOptions = {'current':'Current'|t ~ '...'}|merge(versionsByElementId[element.id]) %}
                                         {% endif %}
                                         {{ forms.selectField({
-                                            value: "current",
+                                            value: elementVersionMap[element.id],
                                             options: versionOptions,
                                             name: 'version',
                                             id: versionId,
@@ -196,6 +167,7 @@
                                     </td>
                                 </tr>
                                 {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
+                                {% set elementVersions = elementVersions|merge({(loop.index0): element.id ~ "_" ~ elementVersionMap[element.id]}) %}
                             {% endfor %}
                             </tbody>
                         </table>
@@ -208,6 +180,7 @@
                     <div class="submit">
                         <input type="hidden" id="originalElementIds" value="{{ originalElementIds }}">
                         <input type="hidden" id="currentElementIds" value="{{ elementIds|join(',') }}">
+                        <input type="hidden" id="elementVersions" name="elementVersions" value="{{ elementVersions|join(',') }}">
                         <button type="button" class="btn add icon dashed addEntries">{{ 'Add an entry'|t }}</button>
                     </div>
                 </div>
@@ -342,14 +315,16 @@
                     <table class="data w-100" dir="ltr">
                         <thead>
                             <tr>
-                                {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') or
-                                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PROGRESS') %}
+                                {% if entriesCountByElementCompleted > 0 %}
                                     <td class="thin checkbox-cell translations-checkbox-cell">
                                         <input class="checkbox" id="element-0" type="checkbox">
                                         <label class="checkbox" for="element-0"></label>
                                     </td>
                                 {% else %}
-                                    <td> &nbsp; </td>
+                                    <td class="thin checkbox-cell translations-checkbox-cell">
+                                        <input class="checkbox" id="element-0" type="checkbox" disabled="disabled">
+                                        <label class="checkbox" for="element-0"></label>
+                                    </td>
                                 {% endif %}
                                 <th>{{ 'Title'|t }}</th>
                                 <th>{{ 'Source'|t }}</th>
@@ -368,14 +343,14 @@
                                 <tr data-word-count="{{ elementWordCounts[element.id] }}" class="row_{{ element.id }} diff-clone" data-file-id="{{ file.id }}">
                                     {% if setCheckbox %}
                                         {% set setCheckbox = false %}
-                                        {% if file.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') %}
+                                        {% if elementHasCompleteFile[element.id] %}
                                             <td rowspan={{ fileCountByElementId[tempElementId] }} class="thin checkbox-cell translations-checkbox-cell">
-                                                <input class="checkbox" data-detail="row_{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"{% if isElementPublished[element.id] %} disabled="disabled"{% endif %}>
+                                                <input class="checkbox" data-detail="row_{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}">
                                                 <label class="checkbox" for="element-{{ element.id }}"></label>
                                             </td>
                                         {% else %}
                                             <td rowspan={{ fileCountByElementId[tempElementId] }} class="thin checkbox-cell translations-checkbox-cell">
-                                                <input class="checkbox" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="" disabled="disabled">
+                                                <input class="checkbox" data-detail="row_{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}" disabled="disabled">
                                                 <label class="checkbox" for="element-{{ element.id }}"></label>
                                             </td>
                                         {% endif %}
@@ -441,12 +416,15 @@
                                         <table>
                                             <tr>
                                                 <td>
-                                                    <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
+                                                    <span class="status {{ file.statusColor }}" 
+                                                        data-status="{{ file.status == 'complete' 
+                                                        or file.status == 'published' ? 1 : 0 }}">
+                                                        </span>{{ file.statusLabel }}
                                                 </td>
                                             </tr>
                                         </table>
                                     </td>
-                                    <td><a class="icon hidden" data-icon="plus"></a></td>
+                                    <td><table><thead><th class="bg-none icon ordered desc hidden"></th></thead></table></td>
                                 </tr>
                             {% endfor %}
                             {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}

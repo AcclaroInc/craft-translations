@@ -856,3 +856,7 @@ select[name="version"] {
     width: 100%;
     border: 1px solid lightgray;
 }
+
+.bg-none {
+    background: none !important;
+}
