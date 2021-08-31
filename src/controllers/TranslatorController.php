@@ -29,6 +29,8 @@ class TranslatorController extends Controller
      */
     protected $pluginVersion;
 
+    const DEFAULT_TRANSLATOR = 'export_import';
+
     // Public Methods
     // =========================================================================
     
@@ -88,12 +90,14 @@ class TranslatorController extends Controller
     /**
      * @return mixed
      */
-    public function actionSave()
+    public function actionSave(array $variables = array())
     {
         $this->requireLogin();
         $this->requirePostRequest();
 
-        $translatorId = Craft::$app->getRequest()->getBodyParam('id');
+        $variables['pluginVersion'] = $this->pluginVersion;
+        $variables['translatorId'] = $translatorId = Craft::$app->getRequest()->getBodyParam('id');
+        $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
 
         $isContinue = Craft::$app->getRequest()->getBodyParam('flow') === "continue";
 
@@ -120,19 +124,8 @@ class TranslatorController extends Controller
         }
 
         $service = Craft::$app->getRequest()->getBodyParam('service');
-        
         $allSettings = Craft::$app->getRequest()->getBodyParam('settings');
-
-        if ($service !== 'export_import')
-        {
-            $auth = (new AcclaroService())->authenticateService($service, $allSettings[$service]);
-            if (! $auth) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Api token could not be authenticated.'));
-                return;
-            }
-        }
-
-        $settings = isset($allSettings[$service]) ? $allSettings[$service] : array();
+        $settings = $allSettings[$service] ?? array();
 
         $translator->label = Craft::$app->getRequest()->getBodyParam('label');
         $translator->service = $service;
@@ -140,11 +133,18 @@ class TranslatorController extends Controller
         $translator->status = Craft::$app->getRequest()->getBodyParam('status');
 
         //Make Export/Import Translator automatically active
-        if ($translator->service === 'export_import')
+        if ($translator->service !== self::DEFAULT_TRANSLATOR)
         {
-            $translator->status = 'active';
+            $auth = (new AcclaroService())->authenticateService($service, $settings);
+            if (! $auth) {
+                $translator->status = "";
+                $variables['translator'] = $translator;
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Api token could not be authenticated.'));
+                return $this->renderTemplate('translations/translators/_detail', $variables);
+            }
         }
 
+        $translator->status = 'active';
         Translations::$plugin->translatorRepository->saveTranslator($translator);
 
         Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator saved.'));
@@ -167,8 +167,6 @@ class TranslatorController extends Controller
 
         $variables['translatorId'] = isset($variables['translatorId']) ? $variables['translatorId'] : null;
 
-        $variables['selectedSubnavItem'] = 'translators';
-
         if ($variables['translatorId']) {
             $variables['translator'] = Translations::$plugin->translatorRepository->getTranslatorById($variables['translatorId']);
 
@@ -177,20 +175,6 @@ class TranslatorController extends Controller
             }
         } else {
             $variables['translator'] = Translations::$plugin->translatorRepository->makeNewTranslator();
-        }
-
-        $variables['orientation'] = Craft::$app->getLocale()->getOrientation();
-
-        $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
-        
-        $variables['targetSiteCheckboxOptions'] = array();
-
-        foreach ($variables['sites'] as $key => $site) {
-            $site = Craft::$app->getSites()->getSiteById($site);
-            $variables['targetSiteCheckboxOptions'][] = array(
-                'value' => $site->id,
-                'label' => $site->name. '<span class="light"> ('. $site->language. ')</span>'
-            );
         }
 
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
