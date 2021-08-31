@@ -150,53 +150,7 @@ class Order extends Element
 
     protected static function defineActions(string $source = null): array
     {
-        // Get the selected site
-        $controller = Craft::$app->controller;
-        if ($controller instanceof ElementIndexesController) {
-            /** @var ElementQuery $elementQuery */
-            $elementQuery = $controller->getElementQuery();
-        } else {
-            $elementQuery = null;
-        }
-        $site = $elementQuery && $elementQuery->siteId
-            ? Craft::$app->getSites()->getSiteById($elementQuery->siteId)
-            : Craft::$app->getSites()->getCurrentSite();
-
-        // Get the section(s) we need to check permissions on
-        switch ($source) {
-            case 'all':
-                $sections = Craft::$app->getSections()->getEditableSections();
-                break;
-            case 'singles':
-                $sections = Craft::$app->getSections()->getSectionsByType(Section::TYPE_SINGLE);
-                break;
-            default:
-                if (preg_match('/^section:(\d+)$/', $source, $matches)) {
-                    if (($section = Craft::$app->getSections()->getSectionById($matches[1])) !== null) {
-                        $sections = [$section];
-                    }
-                } else if (preg_match('/^section:(.+)$/', $source, $matches)) {
-                    if (($section = Craft::$app->getSections()->getSectionByUid($matches[1])) !== null) {
-                        $sections = [$section];
-                    }
-                }
-        }
-
-        // Now figure out what we can do with these
-        $actions = [];
-        $elementsService = Craft::$app->getElements();
-
-        /** @var Section[] $sections */
-        if (!empty($sections)) {
-            $canEdit = true;
-
-            if ($source === 'all') {
-                // Delete
-                $actions[] = Delete::class;
-            }
-        }
-
-        return $actions;
+        return [Delete::class];
     }
 
     protected static function defineSources(string $context = null): array

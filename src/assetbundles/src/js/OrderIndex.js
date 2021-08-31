@@ -13,6 +13,14 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
         if ($('#sidebar-container').length) {
             $(document).on('click', '#toolbar button', function() {
                 $selected = $('tbody').find('.sel');
+                $existingElements = $("ul[class=menu]");
+                if ($existingElements.length > 1) {
+                    $existingElements.each(function() {
+                        if ($(this).find("ul").length > 1) {
+                            $(this).remove();
+                        }
+                    });
+                }
                 if ($('ul[class=menu] ul').length == 1) {
                     $('ul[class=menu]').prepend("<ul><li><a class=disabled>Edit Order</a></li></ul>");
                 }
