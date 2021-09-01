@@ -15,15 +15,15 @@
     <div class="btn menubtn settings icon"></div>
     <div class="menu">
         <ul>
-            <li><a class="edit-translator disabled" title="{{ 'Edit Translator Service'|t }}"> Edit</a></li>
+            <li><a class="edit-translator disabled" title="{{ 'Edit translator service'|t }}"> Edit</a></li>
         </ul>
         <hr>
         <ul>
-            <li><a class="error delete-translator disabled" title="{{ 'Delete Translator Service'|t }}" data-confirm="{{ 'Are you sure you want to delete selected translators?'|t }}">Delete</a></li>
+            <li><a class="error delete-translator disabled" title="{{ 'Delete translator service'|t }}" data-confirm="{{ 'Are you sure you want to delete selected translators?'|t }}">Delete</a></li>
         </ul>
     </div>
-    <a class="btn big add icon btn-create-new-order" href="{{ url('translations/orders/new') }}" style="margin-left:5px;">{{ 'Create New Order'|t }}</a>
-    <a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New Translator'|t }}</a>
+    <a class="btn big add icon btn-create-new-order" href="{{ url('translations/orders/new') }}" style="margin-left:5px;">{{ 'Create new order'|t }}</a>
+    <a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New translator'|t }}</a>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}

@@ -151,7 +151,7 @@ Craft.Translations.TranslatorDetail = {
         });
         $btngroup.appendTo('#action-button');
 
-        $saveText = "Create Translator";
+        $saveText = "Create translator";
         $continueText = "Create and add another";
 
         $btn = $('<button>', {

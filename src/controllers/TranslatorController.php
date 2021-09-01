@@ -95,6 +95,7 @@ class TranslatorController extends Controller
         $this->requireLogin();
         $this->requirePostRequest();
 
+        $variables['selectedSubnavItem'] = 'translators';
         $variables['pluginVersion'] = $this->pluginVersion;
         $variables['translatorId'] = $translatorId = Craft::$app->getRequest()->getBodyParam('id');
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
@@ -164,6 +165,7 @@ class TranslatorController extends Controller
         $variables = Craft::$app->getRequest()->resolve()[1];
         
         $variables['pluginVersion'] = $this->pluginVersion;
+        $variables['selectedSubnavItem'] = 'translators';
 
         $variables['translatorId'] = isset($variables['translatorId']) ? $variables['translatorId'] : null;
 
