@@ -476,7 +476,7 @@
                 disabled: "disabled"
             });
 
-            this.$btn.html("<span class='spinner translations-loader hidden'></span>Create Order");
+            this.$btn.html("<span class='spinner translations-loader hidden'></span>Create order");
 
             this.$menubtn = $('<div>', {
                 'class': 'btn submit menubtn disabled',

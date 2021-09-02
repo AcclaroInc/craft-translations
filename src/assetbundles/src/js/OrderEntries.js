@@ -7,7 +7,7 @@ if (typeof Craft.Translations === 'undefined') {
 /**
  * Order entries class
  */
-Craft.Translations.OrderEntries = {
+    Craft.Translations.OrderEntries = {
     $checkboxes: null,
     $selectAllCheckbox: null,
     $publishSelectedBtn: null,
@@ -44,11 +44,30 @@ Craft.Translations.OrderEntries = {
             $(".apply-translation").prop('disabled', true).addClass('disabled');
         }
     },
-    createRowClone: function(that, $cloneId) {
-        $clone = $(that).clone();
-        $clone.find("td[rowspan]").remove();
+    createRowClone: function(that) {
+        $clone = $(that).closest('tr.diff-clone').clone();
+        $fileId = $clone.data("file-id");
+
+        $checkboxClone = $clone.find("td.translations-checkbox-cell");
+        $clone.find("td.translations-checkbox-cell").remove();
+
+        $checkBoxCell = $('<td>', {
+            class: "thin checkbox-cell translations-checkbox-cell"
+        });
+
+        $checkbox = $('<input>', {
+            type: "checkbox",
+            id: "file-"+$fileId+"-clone",
+            class: "checkbox clone",
+            name: "elements[]",
+            value: $fileId,
+            "data-element": $clone.data("element-id")
+        });
 
         $clone.find("td").addClass("diff-clone-row");
+        $clone.find("input[type=checkbox]").addClass("clone");
+        $clone.addClass("clone-modal-tr");
+
         $status = $clone.find("td .status").data("status") == 1;
         $isApplied = $.trim($clone.find("td .status").parent("td").text()) == "Applied";
 
@@ -57,39 +76,24 @@ Craft.Translations.OrderEntries = {
             $icon.removeClass("hidden");
         }
 
-
-        $checkBoxCell = $('<td>', {
-            class: "thin checkbox-cell translations-checkbox-cell"
-        });
-        $fileId = $(that).data("file-id");
         if (this.$selectedFileIds) {
             this.$selectedFileIds = this.$selectedFileIds +","+ $fileId;
         } else {
             this.$selectedFileIds = $fileId;
         }
 
-        $checkbox = $('<input>', {
-            "type": "checkbox",
-            "id": $fileId,
-            "class": "checkbox clone",
-            "name": "elements[]",
-            "value": $cloneId,
-        });
-        // ! NOTE: Keep check boxes unchecked as file and element ids are added when checked.
-        // $checkbox.prop("checked", true);
         if (! $status || $isApplied) {
             $checkbox.attr("disabled", "disabled");
         }
         $checkbox.appendTo($checkBoxCell);
 
         $('<label>', {
-            "for": $fileId,
+            "for": "file-"+$fileId+"-clone",
             "class": "checkbox"
         }).appendTo($checkBoxCell);
 
         $clone.find('td:first').before($checkBoxCell);
-        $elementId = $cloneId.split("-")[1];
-        $clone.attr('data-element-id', $elementId);
+
         return $clone;
     },
     setFileIds: function() {
@@ -97,9 +101,9 @@ Craft.Translations.OrderEntries = {
         $('.clone:checkbox:checked').each(function() {
             if (this.id != "element-0-clone") {
                 if ($fileIds) {
-                    $fileIds = $fileIds + "," + this.id;
+                    $fileIds = $fileIds + "," + $(this).val();
                 } else {
-                    $fileIds = this.id;
+                    $fileIds = $(this).val();
                 }
             }
         });
@@ -107,7 +111,7 @@ Craft.Translations.OrderEntries = {
     },
     setElementIds: function() {
         $elementIds = [];
-        $(".diff-clone").each(function() {
+        $(".clone-modal-tr").each(function() {
             if ($(this).find("input:checkbox:checked").length == 1) {
                 if($.inArray($(this).data("element-id"), $elementIds) === -1) {
                     $elementIds.push($(this).data("element-id"));
@@ -116,7 +120,19 @@ Craft.Translations.OrderEntries = {
         });
         $("input[name=elementIds]").val($elementIds.join(",").replace(/^,|,$/g,''));
     },
+    showFirstTdComparison: function() {
+        $row = $(".modal.scroll-y-auto").find("tr.clone-modal-tr");
+        $row.each(function() {
+            if ($(this).find(".status").data("status") == 1) {
+                self._addDiffViewEvent(this);
+                $(this).find(".icon").removeClass("desc");
+                $(this).find(".icon").addClass("asc");
+                return false;
+            }
+        });
+    },
     init: function() {
+        self = this;
         this.$publishSelectedBtn = $('#draft-publish');
         this.$formId = 'publish-form';
         this.$form = $('#' + this.$formId);
@@ -124,20 +140,20 @@ Craft.Translations.OrderEntries = {
         this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
 
         this.$selectAllCheckbox.on('change', function() {
-            Craft.Translations.OrderEntries.toggleSelected($(this).is(':checked'));
+            self.toggleSelected($(this).is(':checked'));
         });
 
         this.$checkboxes.on('change', function() {
-            Craft.Translations.OrderEntries.togglePublishButton();
-            Craft.Translations.OrderEntries.toggleSelectAllCheckbox();
+            self.togglePublishButton();
+            self.toggleSelectAllCheckbox();
         });
 
         this.$publishSelectedBtn.on('click', function () {
-            var form = Craft.Translations.OrderEntries._buildPublishModal();
+            var form = self._buildPublishModal();
             var $modal = new Garnish.Modal(form, {
                 closeOtherModals : false
             });
-
+            self.showFirstTdComparison();
             // Destroy the modal that is being hided as a new modal will be created every time
             $modal.on('hide', function() {
                 $('.modal.scroll-y-auto, .modal-shade').remove();
@@ -149,10 +165,10 @@ Craft.Translations.OrderEntries = {
             $value = $(this).val();
             $selected = $('tbody .clone:checkbox:checked').length;
             if ($selected == 0) {
-                Craft.Translations.OrderEntries.toggleApprovePublishButton(false)
+                self.toggleApprovePublishButton(false)
             } else {
                 if ($value != "on") {
-                    Craft.Translations.OrderEntries.toggleApprovePublishButton(true)
+                    self.toggleApprovePublishButton(true)
                 }
             }
             $all = $('.clone:checkbox').not("[disabled]").length;
@@ -162,22 +178,22 @@ Craft.Translations.OrderEntries = {
                 } else {
                     $('#element-0-clone').prop('checked', false);
                 }
-                Craft.Translations.OrderEntries.setFileIds();
-                Craft.Translations.OrderEntries.setElementIds();
+                self.setFileIds();
+                self.setElementIds();
                 return;
             } else {
                 if ($('tbody .clone:checkbox').not("[disabled]").length > 0) {
-                    Craft.Translations.OrderEntries.toggleApprovePublishButton(this.checked);
+                    self.toggleApprovePublishButton(this.checked);
                     $('.clone:checkbox').not("[disabled]").prop('checked', this.checked);
-                    Craft.Translations.OrderEntries.setFileIds();
-                    Craft.Translations.OrderEntries.setElementIds();
+                    self.setFileIds();
+                    self.setElementIds();
                 }
             }
         });
     },
 
     _buildPublishModal: function() {
-        var $selections = Craft.Translations.OrderEntries.getSelections();
+        var $selections = self.getSelections();
 
         var $modal = $('<div/>', {
             'class' : 'modal scroll-y-auto',
@@ -218,28 +234,24 @@ Craft.Translations.OrderEntries = {
         var $tableContent = $('<tbody></tbody>');
 
         $selections.each(function() {
-            $cloneId = "element-" + $(this).val() + "-clone";
-            $rowClass = $(this).data('detail');
-            $("."+$rowClass).each(function() {
-                $clone = Craft.Translations.OrderEntries.createRowClone(this, $cloneId);
-                $clone.appendTo($tableContent);
-                $('<tr>', {
-                    id: "data-"+$($clone).data("file-id"),
-                    // type: "hidden"
-                }).appendTo($tableContent);
-            });
+            $clone = self.createRowClone(this);
+            $clone.appendTo($tableContent);
+            $('<tr>', {
+                id: "data-"+$($clone).data("file-id"),
+            }).appendTo($tableContent);
         });
 
         $($tableContent).on('click', '.diff-clone-row', function(e) {
-            isCollapsable = $(this).closest('tr').find(".status").data("status") == 1;
+            $row = $(this).closest('tr.diff-clone');
+            isCollapsable = $row.find(".status").data("status") == 1;
 
             if (! isCollapsable) {
                 return;
             }
 
-            $fileId = $(this).closest('tr').find("input").attr("id");
+            $fileId = $row.data("file-id");
             $target = $("#data-"+$fileId);
-            $icon = $(this).closest('tr').find(".icon");
+            $icon = $row.find(".icon");
             if ($target.children().length > 0) {
                 $target.toggle();
                 if ($target.is(":visible")) {
@@ -250,7 +262,7 @@ Craft.Translations.OrderEntries = {
                     $($icon).addClass("desc");
                 }
             } else {
-                Craft.Translations.OrderEntries._addDiffViewEvent(this);
+                self._addDiffViewEvent($row);
                 $($icon).removeClass("desc");
                 $($icon).addClass("asc");
             }
@@ -266,7 +278,7 @@ Craft.Translations.OrderEntries = {
         return $modal;
     },
     _addDiffViewEvent: function(that) {
-        $fileId = $(that).closest('tr').find("input").attr("id");
+        $fileId = $(that).data("file-id");
         if ($fileId == undefined) {
             return;
         }
@@ -278,7 +290,7 @@ Craft.Translations.OrderEntries = {
             if (textStatus === 'success' && response.success) {
                 data = response.data;
 
-                diffHtml = Craft.Translations.OrderEntries.createDiffHtmlView(data);
+                diffHtml = self.createDiffHtmlView(data);
                 diffHtml.attr("id", "data-"+$fileId)
                 $("#data-"+$fileId).replaceWith(diffHtml);
                 diffHtml.show();

@@ -14,10 +14,10 @@
     <div class="item" data-position="left" data-colspan="1">
         <div class="buttons">
             <input type="hidden" id="order-attr" data-status="{{ order.status }}" data-submitted="{{ isSubmitted }}" data-changed="{{ isChanged }}"/>
-            <div class="btngroup submit">
-                <button type="submit" id="createNewOrder" name="create" value="create" class="btn big">
-                {{ 'Create new order'|t }}</button>
-            </div>
+{#            <div class="btngroup submit">#}
+{#                <button type="submit" id="createNewOrder" name="create" value="create" class="btn big add icon">#}
+{#                {{ 'Create order'|t }}</button>#}
+{#            </div>#}
             <div id="new-order-button-group" class="btngroup submit"></div>
         </div>
     </div>
@@ -337,24 +337,15 @@
                         </thead>
                         <tbody>
                         {% for element in elements %}
-                            {% set setCheckbox = true %}
                             {% set tempElementId = element.id %}
-                            {% for file in files[element.id] %}
-                                <tr data-word-count="{{ elementWordCounts[element.id] }}" class="row_{{ element.id }} diff-clone" data-file-id="{{ file.id }}">
-                                    {% if setCheckbox %}
-                                        {% set setCheckbox = false %}
-                                        {% if elementHasCompleteFile[element.id] %}
-                                            <td rowspan={{ fileCountByElementId[tempElementId] }} class="thin checkbox-cell translations-checkbox-cell">
-                                                <input class="checkbox" data-detail="row_{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}">
-                                                <label class="checkbox" for="element-{{ element.id }}"></label>
-                                            </td>
-                                        {% else %}
-                                            <td rowspan={{ fileCountByElementId[tempElementId] }} class="thin checkbox-cell translations-checkbox-cell">
-                                                <input class="checkbox" data-detail="row_{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}" disabled="disabled">
-                                                <label class="checkbox" for="element-{{ element.id }}"></label>
-                                            </td>
-                                        {% endif %}
-                                    {% endif %}
+                            {% for file in files[tempElementId] %}
+                                <tr data-word-count="{{ elementWordCounts[tempElementId] }}" data-element-id="{{ tempElementId }}" class="diff-clone" data-file-id="{{ file.id }}">
+
+                                    <td class="thin checkbox-cell translations-checkbox-cell">
+                                        <input class="checkbox" data-element="{{ tempElementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}"{% if not elementHasCompleteFile[tempElementId] %}disabled="disabled"{% endif %}>
+                                        <label class="checkbox" for="file-{{ file.id }}"></label>
+                                    </td>
+
                                     <td>
                                         <table>
                                             <tr>
@@ -362,7 +353,7 @@
                                                     <a href="{{ fileUrls[file.id] }}">
                                                         {{ element.title }}
                                                     </a>
-                                                    {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
+                                                    {% if duplicateEntries[tempElementId] is defined and chkDuplicateEntries %}
                                                         <span class="warning duplicate-warning"></span>
                                                     {% endif %}
                                                     {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
@@ -477,7 +468,7 @@
     <div id="settings" class="meta">
         <div id="order-id-field" class="field">
             <div class="heading">
-                <label id="slug-label" for="slug">Order id</label>
+                <label id="slug-label" for="slug">Order ID</label>
             </div>
 
             <div class="input ltr">
@@ -580,33 +571,33 @@
                                 order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') %}
                             <tr>
                                 <input type="button" form="export-zip" class="btn w-300 right disabled"
-                                    disabled="disabled" value="{{ "Download Source Files"|t('app') }}" />
+                                    disabled="disabled" value="{{ "Download source files"|t('app') }}" />
                             </tr>
                             <tr>
                                 <input type="button" form="export-zip" class="btn w-300 right disabled"
-                                    disabled="disabled" value="{{ "Upload Translated Files"|t('app') }}" />
+                                    disabled="disabled" value="{{ "Upload translated files"|t('app') }}" />
                             </tr>
                         {% else %}
                             {% if isSubmitted or orderId %}
                                 <tr>
                                     <input type="button" id="export-btn" form="export-zip" class="btn w-300 right"
-                                        value="{{ "Download Source Files"|t('app') }}" />
+                                        value="{{ "Download source files"|t('app') }}" />
                                     <div class="utility-status"></div>
                                 </tr>
                                 <tr>
                                     <input type="submit" form="export-zip" class="btn w-300 right"
-                                        value="{{ "Upload Translated Files"|t('app') }}" id="import-tool"/>
+                                        value="{{ "Upload translated files"|t('app') }}" id="import-tool"/>
                                     <div class="utility-status"></div>
                                 </tr>
                             {% else %}
                                 <tr>
                                     <input type="button" id="export-btn" form="export-zip" class="disabled btn w-300 right"
-                                        disabled="disabled" value="{{ "Download Source Files"|t('app') }}" />
+                                        disabled="disabled" value="{{ "Download source files"|t('app') }}" />
                                     <div class="utility-status"></div>
                                 </tr>
                                 <tr>
                                     <input type="submit" form="export-zip" class="btn w-300 right disabled"
-                                        disabled="disabled" value="{{ "Upload Translated Files"|t('app') }}" id="import-tool"/>
+                                        disabled="disabled" value="{{ "Upload translated files"|t('app') }}" id="import-tool"/>
                                     <div class="utility-status"></div>
                                 </tr>
                             {% endif %}

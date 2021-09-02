@@ -17,7 +17,8 @@ Craft.Translations.AddEntriesToTranslationOrder = {
     $createNewLink: null,
 
     isEditEntryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="entries/save-entry"]').length > 0;
+        return $('form#main-form input[type=hidden][name=action][value="entries/save-entry"]').length > 0 ||
+        $('form#main-form input[type=hidden][name=action][value="entry-revisions/publish-draft"]').length > 0;
     },
 
     getEditEntryId: function() {
@@ -129,6 +130,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         if (this.isEditEntryScreen()) {
             $settings = document.getElementById('settings');
+
             $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
@@ -138,9 +140,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
         } else {
-            if (data.licenseStatus === 'valid') {
-                $btngroup.insertBefore('#header #action-button');
-            }
+            $btngroup.insertBefore('#header #action-button');
         }
 
         this.$btn = $('<a>', {

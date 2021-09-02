@@ -975,14 +975,16 @@ class OrderController extends Controller
     
                     // Translated file XML
                     $targetContent = Translations::$plugin->elementTranslator->getTargetData($file->target, true);
+
                     foreach ($sourceContent as $key => $value) {
-                        $data['diff'][$key] = [
-                            'source' => $value ?? '',
-                            'target' => $targetContent[$key] ?? '',
-                        ];
+                        if ($value != $targetContent[$key] ?? '') {
+                            $data['diff'][$key] = [
+                                'source' => $value ?? '',
+                                'target' => $targetContent[$key] ?? '',
+                            ];
+                        }
                     }
 
-                    Craft::debug($data['diff'], "bhutarget");
                     $data['source'] = $sourceContent;
                     $data['target'] = $targetContent;
                     $error = null;
