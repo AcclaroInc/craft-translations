@@ -91,6 +91,7 @@
     criteria: Craft.defaultIndexCriteria,
     criteria: {{ (searchParams|raw) }},
     canHaveDrafts: {{ (canHaveDrafts ?? false) ? 'true' : 'false' }},
+
     toolbarSelector: '#toolbar'
     });
 {% endblock %}
