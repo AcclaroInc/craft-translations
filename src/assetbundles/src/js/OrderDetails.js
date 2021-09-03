@@ -6,6 +6,7 @@
     // Defaults to open file tab on detail page
     var isSubmitted = $("#order-attr").data("submitted");
     var isNew = $("#order-attr").data("status") === "new";
+    var isFailed = $("#order-attr").data("status") === "failed";
 
     function validateForm() {
         var buttonStatus = true;
@@ -203,7 +204,7 @@
             } else {
                 this._createNewOrderButtonGroup();
             }
-            if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+            if (validateForm() && (isNew || isFailed || isOrderChanged({all: "all"}))) {
                 setSubmitButtonStatus(true);
             }
             // Target lang Ajax
@@ -476,7 +477,7 @@
                 disabled: "disabled"
             });
 
-            this.$btn.html("<span class='spinner translations-loader hidden'></span>Create order");
+            this.$btn.html("<span class='spinner translations-loader hidden'></span>Create Order");
 
             this.$menubtn = $('<div>', {
                 'class': 'btn submit menubtn disabled',

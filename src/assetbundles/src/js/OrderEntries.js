@@ -50,6 +50,8 @@ if (typeof Craft.Translations === 'undefined') {
 
         $checkboxClone = $clone.find("td.translations-checkbox-cell");
         $clone.find("td.translations-checkbox-cell").remove();
+        $clone.find("td:nth-child(6)").hide();
+        $clone.find("td:nth-child(4)").remove();
 
         $checkBoxCell = $('<td>', {
             class: "thin checkbox-cell translations-checkbox-cell"
@@ -210,9 +212,9 @@ if (typeof Craft.Translations === 'undefined') {
         $hiddenFields.appendTo($form);
         $form.append(Craft.getCsrfInput());
 
-        $body = $('<div class="body input ltr"></div>');
+        $body = $('<div class="body pt-10"></div>');
 
-        var $header = $('<div class="header df position-fixed"><h1 class="mr-auto">Review and publish</h1></a></div>');
+        var $header = $('<div class="header df"><h1 class="mr-auto">Review and publish</h1></a></div>');
         var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal">');
         
         $($closeIcon).on('click', function() {
@@ -222,14 +224,14 @@ if (typeof Craft.Translations === 'undefined') {
         $closeIcon.appendTo($header);
         $header.appendTo($form);
 
-        var $table = $('<table class="data mt-4" dir="ltr"></table>');
+        var $table = $('<table class="data fullwidth" dir="ltr"></table>');
 
-        var $tableHeader = $('<thead><tr><td class="thin checkbox-cell translations-checkbox-cell">\
+        var $tableHeader = $('<thead><tr><td colspan="7" class="thin checkbox-cell translations-checkbox-cell">\
             <input class="checkbox clone" id="element-0-clone" type="checkbox"/>\
-            <label class="checkbox" for="element-0-clone"></label></td><td><b>Select all</b></td><td></td><td></td><td></td>\
-            <td><button type="submit" name="submit" class="btn right apply-translation disabled" disable="disabled" value="draft">Approve changes</button></td>\
-            <td><button type="submit" name="submit" class="btn ml-auto submit right apply-translation disabled" disable="disabled" value="publish">Publish selected</button>\
-            </td><td></td></tr></thead>');
+            <label class="checkbox" for="element-0-clone"><b>Select all</b></label>\
+            <button type="submit" name="submit" class="btn ml-10 ml-auto submit right apply-translation disabled" disable="disabled" value="publish">Publish selected</button>\
+            <button type="submit" name="submit" class="btn right apply-translation disabled" disable="disabled" value="draft">Approve changes</button>\
+            </td></tr></thead>');
 
         var $tableContent = $('<tbody></tbody>');
 

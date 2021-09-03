@@ -23,11 +23,11 @@
         <input type="hidden" name="action" value="translations/base/sync-orders">
         {{ csrfInput() }}
         <div class="btngroup" style="margin-right:5px;">
-            <input type="submit" class="btn big submit {{ disabled }}" value="{{ "Sync orders"|t('app') }}" {{ disabled }}/>
+            <input type="submit" class="btn big submit {{ disabled }}" value="{{ "Sync Orders"|t('app') }}" {{ disabled }}/>
         </div>
         <div class="sync-status"></div>
     </form>
-    <a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/create') }}">{{ 'New order'|t }}</a>
+    <a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/create') }}">{{ 'New Order'|t }}</a>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
@@ -78,7 +78,8 @@
 
 {% block footer %}
     <div id="count-container" class="light flex-grow">&nbsp;</div>
-    {#<div id="export-btn" class="btn hidden">{{ 'Export…'|t('app') }}</div>#}
+    <div id="export-files" class="btn">{{ 'Export…'|t('app') }}</div>
+    {% js "new Craft.Translations.CustomExporters('export-files')" %}
 {% endblock %}
 
 {% block initJs %}

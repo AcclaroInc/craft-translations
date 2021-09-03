@@ -183,7 +183,7 @@ class DraftRepository
             }
 
             // Let's remove the auto-propagated drafts
-            Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+            //Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
 
             // Apply the draft to the entry
             $newEntry = Craft::$app->getDrafts()->publishDraft($draft);
@@ -320,17 +320,17 @@ class DraftRepository
 
         try {
             // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->sourceId);
+            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->getCanonicalId());
             if (!empty($isExistingFile)) {
                 return;
             }
 
-            $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
+            $element = Craft::$app->getElements()->getElementById($draft->getCanonicalId(), null, $order->sourceSite);
 
             $wordCount = $wordCounts[$element->id] ?? 0;
 
             $file->orderId = $order->id;
-            $file->elementId = $draft->sourceId;
+            $file->elementId = $draft->getCanonicalId();
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
@@ -354,7 +354,7 @@ class DraftRepository
         } catch (Exception $e) {
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not create draft Error: ' .$e->getMessage()));
             $file->orderId = $order->id;
-            $file->elementId = $draft->sourceId;
+            $file->elementId = $draft->getCanonicalId();
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
@@ -515,7 +515,7 @@ class DraftRepository
     
                     $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 }
-    
+
                 if ($success) {
                     $oldTokenRoute = json_encode(array(
                         'action' => 'entries/view-shared-entry',

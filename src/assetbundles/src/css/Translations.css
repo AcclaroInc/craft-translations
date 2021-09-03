@@ -766,6 +766,10 @@ del {
     padding-left: 10px;
 }
 
+.pt-10 {
+    padding-top: 10px !important;
+}
+
 .w-300 {
     width: 300px;
 }

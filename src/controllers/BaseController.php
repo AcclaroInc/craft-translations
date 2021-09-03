@@ -79,7 +79,6 @@ class BaseController extends Controller
     // Callback & Request Methods
     // =========================================================================
 
-
     public function actionOrderCallback()
     {
         $this->logIncomingRequest('orderCallback');
