@@ -112,11 +112,23 @@ Craft.Translations.TranslatorDetail = {
         }
     },
 
+    isExistingTranslator: function() {
+        return $("input[name=id]").val() !== '';
+    },
+
+    getButtonText: function() {
+        $text = "create";
+        if (this.isExistingTranslator()) {
+            $text = "save";
+        }
+        return $text;
+    },
+
     init: function() {
         var self = this;
 
         if (this.isEditTranslatorScreen()) {
-            this._initSaveButtonContainer(self);
+            this._initSaveButtonContainer(this.getButtonText());
             this.toggleSaveButton();
             // !NOTE: to be used with draft functionality
             // if (this.validateFormFilled()) {
@@ -144,7 +156,7 @@ Craft.Translations.TranslatorDetail = {
             }
         });
     },
-    _initSaveButtonContainer: function(self) {
+    _initSaveButtonContainer: function(action) {
         var $btngroup = $('<div>', {
             id: "save-button-container",
             class: "btngroup submit"
@@ -153,6 +165,11 @@ Craft.Translations.TranslatorDetail = {
 
         $saveText = "Create translator";
         $continueText = "Create and add another";
+
+        if (action == "save") {
+            $saveText = "Save translator";
+            $continueText = "Save and add another";
+        }
 
         $btn = $('<button>', {
             'class': 'btn submit disabled',
