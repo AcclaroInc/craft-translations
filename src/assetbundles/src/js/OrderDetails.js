@@ -197,6 +197,18 @@
         return url
     }
 
+    function sendingOrderStatus($status) {
+        if ($status) {
+            $('.translations-loader').removeClass('hidden');
+            $('.translations-dropdown .btn').addClass('disabled').css('pointer-events', 'none');
+            $('.translations-dropdown .btn').prop('disabled', true);
+        } else {
+            $('.translations-loader').addClass('hidden');
+            $('.translations-dropdown .btn').removeClass('disabled').css('pointer-events', '');
+            $('.translations-dropdown .btn').prop('disabled', false);
+        }
+    }
+
     Craft.Translations.OrderDetails = {
         init: function() {
             if (isSubmitted) {
@@ -389,12 +401,6 @@
                 window.history.pushState("", "", url);
                 // window.location = url;
 
-            });
-
-            $('.translations-submit-order').on('click', function(e) {
-                $('.translations-loader').removeClass('hidden');
-                $('.translations-dropdown .btn').addClass('disabled').css('pointer-events', 'none');
-                $('.translations-dropdown .btn').prop('disabled', true);
             });
 
             $('.translations-order-form').on('submit', function(e) {
@@ -605,17 +611,31 @@
             var $form = $('#order-form');
             $(that).on('click', function(e) {
                 e.preventDefault();
-                window.history.replaceState(null, null, removeParams(window.location.href));
-
+                sendingOrderStatus(true);
+                // window.history.replaceState(null, null, removeParams(window.location.href));
                 var $hiddenAction = $('<input>', {
                     'type': 'hidden',
                     'name': 'flow',
                     'value': action
                 });
-
                 $hiddenAction.appendTo($form);
 
-                $form.submit();
+                Craft.postActionRequest($form.find('input[name=action]').val(), $form.serialize(), function(response, textStatus) {
+                    if (textStatus === 'success' && response.success) {
+                        if (response.message) {
+                            Craft.cp.displayNotice(Craft.t('app', response.message));
+                            sendingOrderStatus(false);
+                        } else if (response.url) {
+                            window.location.href = response.url;
+                        } else {
+                            Craft.cp.displayError(Craft.t('app', "No message or url"));
+                            sendingOrderStatus(false);
+                        }
+                    } else {
+                        Craft.cp.displayError(Craft.t('app', response.message));
+                        sendingOrderStatus(false);
+                    }
+                });
             });
         },
         _addSaveDraftAction: function(that) {
