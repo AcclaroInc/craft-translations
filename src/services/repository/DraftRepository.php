@@ -228,6 +228,33 @@ class DraftRepository
         }
     }
 
+    public function createOrderDrafts($orderId, $wordCounts, $queue=null)
+    {
+        $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+
+        $supportedSites = array_column($element->getSupportedSites(), 'siteId');
+
+        $enabledSites = (new Query())
+                ->select('siteId')
+                ->from('{{%elements_sites}}')
+                ->where([
+                                'enabled' => true,
+                                'elementId' => $element->id
+                        ])
+                ->column();
+
+        if ($element->getSection()->propagationMethod === Section::PROPAGATION_METHOD_CUSTOM && array_diff($supportedSites, $enabledSites)) {
+            $missingSites = [];
+            foreach ($supportedSites as $supportedSiteId) {
+                $missingSites[$supportedSiteId] = true;
+            }
+
+            $element->setEnabledForSite($missingSites);
+
+            Craft::$app->getElements()->saveElement($element);
+        }
+    }
+
     public function createOrderDrafts($orderId, $wordCounts, $queue=null, $publish = true, $elementIds = null, $fileIds = null)
     {
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
@@ -469,6 +496,7 @@ class DraftRepository
                 if (! in_array($file->id, $fileIds) || $file->status !== 'complete') {
                     if ($file->status == 'published') $publishedFilesCount++;
                     continue;
+
                 }
     
                 if ($queue) {
