@@ -72,7 +72,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.3.3';
+    public $schemaVersion = '1.3.4';
 
     const ACCLARO = 'acclaro';
 
@@ -346,9 +346,6 @@ class Translations extends Plugin
             UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function (RegisterUrlRulesEvent $event) {
                 $event->rules = array_merge($event->rules, [
                     'translations' => 'translations/widget/index',
-                    'translations/orders' => 'translations/base/order-index',
-                    'translations/orders/new' => 'translations/base/order-detail',
-                    'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
                     'translations/translators' => 'translations/base/translator-index',
                     'translations/translators/new' => 'translations/base/translator-detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
@@ -365,6 +362,10 @@ class Translations extends Plugin
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
                     'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/base/edit-category-draft',
+                    
+                    'translations/orders' => 'translations/order/order-index',
+                    'translations/orders/create' => 'translations/order/order-detail',
+                    'translations/orders/detail/<orderId:\d+>' => 'translations/order/order-detail',
                 ]);
             }
         );
@@ -527,28 +528,31 @@ class Translations extends Plugin
         $craft = Craft::$app;
         $request = $craft->getRequest();
 
-        $draft = $event->draft;
-
-        $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
-
-        $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
-
-        $action = $request->getActionSegments();
-        $action = end($action);
-
-        $applyDraftActions = [
-            'apply-drafts',
-            'apply-translation-draft',
-            'run',
-        ];
-
-        if(!empty($response) && !in_array($action, $applyDraftActions)) {
-
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
-            $path = $craft->request->getFullPath();
-            $params = $craft->request->getQueryParams();
-            $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
-            $craft->end();
+        if (!$request->getIsConsoleRequest()) {
+            $draft = $event->draft;
+    
+            $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
+    
+            $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
+    
+            $action = $request->getActionSegments();
+            $action = end($action);
+    
+            $applyDraftActions = [
+                'apply-drafts',
+                'apply-translation-draft',
+                'save-draft-and-publish',
+                'run',
+            ];
+    
+            if(!empty($response) && !in_array($action, $applyDraftActions)) {
+    
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
+                $path = $craft->request->getFullPath();
+                $params = $craft->request->getQueryParams();
+                $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
+                $craft->end();
+            }
         }
     }
 
@@ -699,7 +703,10 @@ class Translations extends Plugin
                     ],
                     'translations:orders:apply-translations' => [
                         'label' => Craft::t('translations', 'Apply Translations'),
-                    ]
+                    ],
+                    'translations:orders:draft:create' => [
+                        'label' => Craft::t('translations', 'Create Order Draft'),
+                    ],
                 ]
             ],
             'translations:settings' => [

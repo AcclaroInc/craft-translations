@@ -25,6 +25,8 @@ use acclaro\translations\records\OrderRecord;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
+use craft\db\Table;
+use craft\elements\Tag;
 use craft\helpers\App;
 
 class OrderRepository
@@ -273,6 +275,19 @@ class OrderRepository
         }
     }
 
+    public function deleteOrderTags($order, $settings, $tagIds) {
+        $acclaroApiClient = new AcclaroApiClient(
+            $settings['apiToken'],
+            !empty($settings['sandboxMode'])
+        );
+        foreach ($tagIds as $tagId) {
+            $tag = $this->orderTagExists($tagId);
+            if ($tag) {
+                $acclaroApiClient->removeOrderTags($order->id, $tag->title);
+            }
+        }
+    }
+
     /**
      * @param $order
      * @param $settings
@@ -309,6 +324,18 @@ class OrderRepository
             $order->serviceOrderId,
             Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
         );
+        if ($order->tags) {
+            $tags = [];
+            foreach (json_decode($order->tags, true) as $tagId) {
+                $tag = Craft::$app->getTags()->getTagById($tagId);
+                if ($tag) {
+                    array_push($tags, $tag->title);
+                }
+            }
+            if (! empty($tags)) {
+                $res = $acclaroApiClient->addOrderTags($orderResponse->orderid, implode(",", $tags));
+            }
+        }
 
         $tempPath = Craft::$app->path->getTempPath();
 
@@ -324,9 +351,9 @@ class OrderRepository
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.json';
             } else {
-                $filename = $element->slug.'-'.$targetSite.'.xml';
+                $filename = $element->slug.'-'.$targetSite.'.json';
             }
 
             $path = $tempPath .'/'. $file->elementId .'-'. $filename;
@@ -391,5 +418,32 @@ class OrderRepository
         Craft::$app->getElements()->saveElement($order);
 
         return true;
+    }
+
+    public function getAllOrderTags() {
+        $allOrderTags = [];
+
+        $orderTags = (new Query())
+            ->select(['id'])
+            ->from([Table::ELEMENTS])
+            ->where(['type' => Tag::class, 'fieldLayoutId' => null])
+            ->column();
+
+        foreach ($orderTags as $tagId) {
+            $allOrderTags[] = Craft::$app->getTags()->getTagById($tagId);
+        }
+
+        return $allOrderTags;
+    }
+
+    public function orderTagExists($title) {
+        $allOrderTags = $this->getAllOrderTags();
+
+        foreach ($allOrderTags as $tag) {
+            if ($tag->title == $title) {
+                return $tag;
+            }
+        }
+        return false;
     }
 }

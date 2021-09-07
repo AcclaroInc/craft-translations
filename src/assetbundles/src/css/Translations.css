@@ -207,7 +207,7 @@
     flex-direction: row;
     position: relative;
     float: right;
-    padding-bottom: 10px;
+    /* padding-bottom: 10px; */
     margin: 0;
 }
 
@@ -315,6 +315,10 @@
     bottom: 0;
     opacity: 0;
     z-index: 99999999;
+}
+
+.noClick {
+    pointer-events: none;
 }
 
 ins {
@@ -740,4 +744,123 @@ del {
 .footer-order-navigation a:hover,
 .top-order-navigation a:hover{
     color: #0B69A3;
+}
+
+/* CSS Used in Order Create and Details page */
+
+.publish-row {
+    background-color: lightgray;
+    height: 3em;
+    padding: 10px;
+}
+
+.close-publish-modal {
+    font-size: 20px;
+}
+
+.float-right {
+    float: right !important;
+}
+
+.pl-10 {
+    padding-left: 10px;
+}
+
+.pt-10 {
+    padding-top: 10px !important;
+}
+
+.w-300 {
+    width: 300px;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.fw-400 {
+    font-weight: 400;
+}
+
+.ml-auto {
+    margin-left: auto;
+}
+
+.mr-auto {
+    margin-right: auto !important;
+}
+
+.h-6 {
+    height: 6em;
+}
+
+.h-10 {
+    height: 10em;
+}
+
+.h-8 {
+    height: 8em;
+}
+
+.pr-10 {
+    padding-right: 10em;
+}
+
+.mb-1 {
+    margin-bottom: 1em;
+}
+
+.p-0 {
+    padding: 0 !important;
+}
+
+.ml-10 {
+    margin-left: 10px;
+}
+
+.df {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.scroll-y-auto {
+    overflow-y: auto;
+    height: 90%;
+}
+
+.position-fixed {
+    position: fixed;
+    width: 65%;
+}
+
+.mt-4 {
+    margin-top: 4em;
+}
+
+select[name="version"] {
+    width: 120px;
+}
+
+.diff-tl {
+    font-size: 10px;
+}
+
+.target {
+    width: 50%;
+    border-bottom: 1px solid lightgray;
+}
+
+.source {
+    width: 50%;
+    border-bottom: 1px solid lightgray;
+    border-right: 3px solid lightgray;
+}
+
+#diffTable {
+    width: 100%;
+    border: 1px solid lightgray;
+}
+
+.bg-none {
+    background: none !important;
 }

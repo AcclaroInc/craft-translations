@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\repository;
 
+use acclaro\translations\Constants;
 use Craft;
 use Exception;
 use acclaro\translations\Translations;
@@ -299,6 +300,19 @@ class FileRepository
         return FileRecord::findOne($attributes)->delete();
     }
 
+    public function deleteByOrderId($orderId)
+    {
+        $attributes = ['orderId' => (int) $orderId];
+
+        $records = FileRecord::find()->where($attributes)->all();
+
+        foreach($records as $record) {
+            $record->delete();
+        }
+        
+        return true;
+    }
+
     /**
      * @param $order
      * @param null $queue
@@ -375,5 +389,40 @@ class FileRepository
         }
 
         return $orderIds;
+    }
+
+    /**
+     * @param $order
+     * @param array $wordcounts
+     * @return bool
+     */
+    public function createOrderFiles($order, $wordCounts)
+    {
+        // ? Create File for each element per target language
+        foreach ($order->getTargetSitesArray() as $key => $targetSite) {
+            foreach ($order->getElements() as $element) {
+                $wordCount = $wordCounts[$element->id] ?? 0;
+
+                $file = $this->makeNewFile();
+
+                $file->orderId = $order->id;
+                $file->elementId = $element->id;
+                $file->sourceSite = $order->sourceSite;
+                $file->targetSite = $targetSite;
+                $file->source = Translations::$plugin->elementToFileConverter->convert(
+                    $element,
+                    Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                    [
+                        'sourceSite'    => $order->sourceSite,
+                        'targetSite'    => $targetSite,
+                        'wordCount'    => $wordCount,
+                    ]
+                );
+                $file->wordCount = $wordCount;
+
+                Translations::$plugin->fileRepository->saveFile($file);
+            }
+        }
+        return true;
     }
 }

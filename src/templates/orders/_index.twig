@@ -3,6 +3,7 @@
 
 {% set title = "Orders"|t('app') %}
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
+{% set canHaveDrafts = true %}
 
 {% set elementInstance = craft.app.elements.createElement(elementType) %}
 {% set context = 'index' %}
@@ -26,7 +27,7 @@
         </div>
         <div class="sync-status"></div>
     </form>
-    <a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}">{{ 'Create New Order'|t }}</a>
+    <a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/create') }}">{{ 'New Order'|t }}</a>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
@@ -62,13 +63,11 @@
     {% endif %}
 {% endblock %}
 
-
 {% block toolbar %}
     {% include '_elements/toolbar' with {
         showSiteMenu: false,
     } %}
 {% endblock %}
-
 
 {% block content %}
     <div class="main">
@@ -79,7 +78,8 @@
 
 {% block footer %}
     <div id="count-container" class="light flex-grow">&nbsp;</div>
-    {#<div id="export-btn" class="btn hidden">{{ 'Export…'|t('app') }}</div>#}
+    <div id="export-files" class="btn">{{ 'Export…'|t('app') }}</div>
+    {% js "new Craft.Translations.CustomExporters('export-files')" %}
 {% endblock %}
 
 {% block initJs %}
@@ -90,6 +90,7 @@
     storageKey: 'elementindex.{{ elementType|e("js") }}',
     criteria: Craft.defaultIndexCriteria,
     criteria: {{ (searchParams|raw) }},
+    canHaveDrafts: {{ (canHaveDrafts ?? false) ? 'true' : 'false' }},
     toolbarSelector: '#toolbar'
     });
 {% endblock %}

@@ -250,6 +250,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
             'sandboxMode' => $this->sandboxMode,
             'settings' => $this->settings
         ]));
+
+        return $job;
     }
     
     /**
@@ -269,7 +271,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $subdomain = $this->sandboxMode ? 'apisandbox' : 'my';
 
-        return sprintf('https://%s.acclaro.com/portal/vieworder.php?id=%s', $subdomain, $order->serviceOrderId);
+        return sprintf('https://%s.acclaro.com/orders/details/%s', $subdomain, $order->serviceOrderId);
     }
 
     public function getLanguages()

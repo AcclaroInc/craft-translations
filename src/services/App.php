@@ -136,6 +136,11 @@ class App extends Component
     public $elementToXmlConverter;
     
     /**
+     * @var ElementToFileConverter
+     */
+    public $elementToFileConverter;
+    
+    /**
      * @var OrderSearchParams
      */
     public $orderSearchParams;
@@ -165,6 +170,7 @@ class App extends Component
         $this->translatorFactory = new translator\Factory();
         $this->elementTranslator = new ElementTranslator();
         $this->elementToXmlConverter = new ElementToXmlConverter();
+        $this->elementToFileConverter = new ElementToFileConverter();
         $this->orderSearchParams = new OrderSearchParams();
     }
 }
