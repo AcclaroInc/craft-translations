@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\services\AcclaroService;
 use Craft;
 use DateTime;
 use Exception;
@@ -61,19 +62,6 @@ class BaseController extends Controller
         parent::__construct($id, $module);
 
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin('translations')->getVersion();
-    }
-
-    public function authenticateService($service, $settings)
-    {
-        $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
-        $translator->service = $service;
-        $translator->settings = json_encode($settings);
-        
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
-
-        $authenticate = $translationService->authenticate($settings);
-
-        return $authenticate;
     }
 
     // Callback & Request Methods
@@ -202,28 +190,6 @@ class BaseController extends Controller
         }
 
         Craft::$app->end('OK');
-    }
-
-    public function actionAuthenticateTranslationService()
-    {
-        $this->requireLogin();
-        $this->requirePostRequest();
-        $currentUser = Craft::$app->getUser()->getIdentity();
-        if (!$currentUser->can('translations:translator:edit')) {
-            return $this->asJson([
-                'success' => true,
-                'error' => Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action')
-            ]);
-        }
-
-        $service = Craft::$app->getRequest()->getRequiredParam('service');
-        $settings = Craft::$app->getRequest()->getRequiredParam('settings');
-
-        $response = self::authenticateService($service, $settings);
-
-        return $this->asJson(array(
-            'success' => $response,
-        ));
     }
 
     public function logIncomingRequest($endpoint)
@@ -379,24 +345,6 @@ class BaseController extends Controller
         $variables['selectedSubnavItem'] = 'orders';
 
         $this->renderTemplate('translations/orders/_index', $variables);
-    }
-    
-    /**
-     * @return mixed
-     */
-    public function actionTranslatorIndex()
-    {
-        $variables = array();
-
-        $variables['pluginVersion'] = $this->pluginVersion;
-
-        $variables['translators'] = Translations::$plugin->translatorRepository->getTranslators();
-
-        $variables['translatorTargetSites'] = array();
-
-        $variables['selectedSubnavItem'] = 'translators';
-        
-        $this->renderTemplate('translations/translators/_index', $variables);
     }
 
     // Detail Page Methods
@@ -636,48 +584,6 @@ class BaseController extends Controller
         $this->renderTemplate('translations/orders/_detail', $variables);
     }
 
-    /**
-     * @return mixed
-     */
-    public function actionTranslatorDetail(array $variables = array())
-    {   
-        $variables = Craft::$app->getRequest()->resolve()[1];
-        
-        $variables['pluginVersion'] = $this->pluginVersion;
-
-        $variables['translatorId'] = isset($variables['translatorId']) ? $variables['translatorId'] : null;
-
-        $variables['selectedSubnavItem'] = 'translators';
-
-        if ($variables['translatorId']) {
-            $variables['translator'] = Translations::$plugin->translatorRepository->getTranslatorById($variables['translatorId']);
-
-            if (!$variables['translator']) {
-                throw new HttpException(404);
-            }
-        } else {
-            $variables['translator'] = Translations::$plugin->translatorRepository->makeNewTranslator();
-        }
-
-        $variables['orientation'] = Craft::$app->getLocale()->getOrientation();
-
-        $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
-        
-        $variables['targetSiteCheckboxOptions'] = array();
-
-        foreach ($variables['sites'] as $key => $site) {
-            $site = Craft::$app->getSites()->getSiteById($site);
-            $variables['targetSiteCheckboxOptions'][] = array(
-                'value' => $site->id,
-                'label' => $site->name. '<span class="light"> ('. $site->language. ')</span>'
-            );
-        }
-
-        $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
-
-        $this->renderTemplate('translations/translators/_detail', $variables);
-    }
-
     public function actionApplyDrafts()
     {
         if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:apply-translations')) {
@@ -718,95 +624,6 @@ class BaseController extends Controller
         }
     }
 
-    // Translator CRUD Methods
-    // =========================================================================
-
-    public function actionDeleteTranslator()
-    {
-        $this->requireLogin();
-        $this->requirePostRequest();
-
-        if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:delete')) {
-            return;
-        }
-
-        $translatorId = Craft::$app->getRequest()->getBodyParam('translatorId');
-
-        $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
-
-        if (!$translator) {
-            throw new Exception('Invalid Translator');
-        }
-
-        // check if translator has any pending orders
-        $pendingOrders = Translations::$plugin->orderRepository->getInProgressOrdersByTranslatorId($translatorId);
-
-        $pendingOrdersCount = count($pendingOrders);
-
-        if ($pendingOrdersCount > 0) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'This translator cannot be deleted as orders has been created already.'));
-
-            return;
-        }
-
-        Translations::$plugin->translatorRepository->deleteTranslator($translator);
-
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator deleted.'));
-
-        return $this->redirect('translations/translators', 302, true);
-    }
-
-    public function actionSaveTranslator()
-    {
-        $this->requireLogin();
-        $this->requirePostRequest();
-
-        $translatorId = Craft::$app->getRequest()->getBodyParam('id');
-
-        if ($translatorId) {
-
-            if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:edit')) {
-                return;
-            }
-
-            $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
-
-            if (!$translator) {
-                // throw new HttpException(400, 'Invalid Translator');
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Invalid Translator'));
-                return;
-            }
-        } else {
-            if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:create')) {
-                return;
-            }
-            $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
-        }
-
-        $service = Craft::$app->getRequest()->getBodyParam('service');
-        
-        $allSettings = Craft::$app->getRequest()->getBodyParam('settings');
-
-        $settings = isset($allSettings[$service]) ? $allSettings[$service] : array();
-
-        $translator->label = Craft::$app->getRequest()->getBodyParam('label');
-        $translator->service = $service;
-        $translator->settings = json_encode($settings);
-        $translator->status = Craft::$app->getRequest()->getBodyParam('status');
-
-        //Make Export/Import Translator automatically active
-        if ($translator->service === 'export_import')
-        {
-            $translator->status = 'active';
-        }
-
-        Translations::$plugin->translatorRepository->saveTranslator($translator);
-
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator saved.'));
-
-        $this->redirect('translations/translators', 302, true);
-    }
-
     // Order CRUD Methods
     // =========================================================================
 
@@ -831,7 +648,7 @@ class BaseController extends Controller
             $translator = $order->getTranslator();
             $service = $translator->service;
             $settings = $translator->getSettings();
-            $authenticate = self::authenticateService($service, $settings);
+            $authenticate = AcclaroService::authenticateService($service, $settings);
             
             if (!$authenticate && $service == 'acclaro') {
                 $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
@@ -921,7 +738,7 @@ class BaseController extends Controller
             $translator = $order->getTranslator();
             $service = $translator->service;
             $settings = $translator->getSettings();
-            $authenticate = self::authenticateService($service, $settings);
+            $authenticate = AcclaroService::authenticateService($service, $settings);
             
             if (!$authenticate && $service == 'acclaro') {
                 $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
@@ -1153,7 +970,7 @@ class BaseController extends Controller
         $translator = $order->getTranslator();
         $service = $translator->service;
         $settings = $translator->getSettings();
-        $authenticate = self::authenticateService($service, $settings);
+        $authenticate = AcclaroService::authenticateService($service, $settings);
         
         if (!$authenticate && $service == 'acclaro') {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
@@ -1296,7 +1113,7 @@ class BaseController extends Controller
         $translator = $order->getTranslator();
         $service = $translator->service;
         $settings = $translator->getSettings();
-        $authenticate = self::authenticateService($service, $settings);
+        $authenticate = AcclaroService::authenticateService($service, $settings);
         
         if (!$authenticate && $service == 'acclaro') {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');

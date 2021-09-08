@@ -251,6 +251,13 @@ class Install extends Migration
      */
     protected function insertDefaultData()
     {
+        // Default Translator details
+        $defaultTranslator = [
+            "label" => "Export Import",
+            "service" => "export_import",
+            "status" => "active"
+        ];
+        $this->upsert('{{%translations_translators}}', $defaultTranslator)->execute();
     }
 
     /**

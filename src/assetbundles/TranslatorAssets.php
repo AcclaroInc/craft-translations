@@ -25,9 +25,11 @@ class TranslatorAssets extends AssetBundle
 
         $this->js = [
             'js/TranslatorDetail.js',
+            'js/TranslatorIndex.js',
         ];
 
         $this->css = [
+            'css/Translators.css',
         ];
 
         parent::init();

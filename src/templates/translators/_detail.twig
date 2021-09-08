@@ -3,9 +3,17 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}
 
-{% set title = 'Translations'|t %}
+{% set title = translator.label|default("New Translation Service") %}
+{% set defaultLabel = "" %}
+
 {% block actionButton %}
-<small class="translations-version-header">{{'Version'|t}} {{pluginVersion}}</small>
+    {# ! NOTE: hidden button we don't support draft as of now #}
+    <div class="btngroup hidden">
+        <button type="submit" name="submit" value=""
+            class="btn big disabled">
+            {{ 'Save as draft'|t }}
+        </button>
+    </div>
 {% endblock %}
 
 {% set crumbs = [
@@ -17,6 +25,9 @@
     {% set crumbs = crumbs|merge([
         { label: 'Edit Translation Service'|t, url: 'javascript:void(0)' },
     ])%}
+    {% if translator.label == "" %}
+        {% set defaultLabel = "Export/Import" %}
+    {% endif %}
 {% else %}
     {% set crumbs = crumbs|merge([
         { label: 'Add New Translation Service'|t, url: 'javascript:void(0)' },
@@ -33,6 +44,11 @@
         }) }}
 
         {{ forms.hidden({
+            name: 'flow',
+            value: "save",
+        }) }}
+
+        {{ forms.hidden({
             name: 'status',
             id: 'status',
             value: translator.status ?: 'inactive',
@@ -40,14 +56,17 @@
 
         {{ forms.hidden({
             name: 'action',
-            value: 'translations/base/save-translator'
+            value: 'translations/translator/save'
         }) }}
 
-        {% if translatorId %}
-        <h1>{{ 'Edit Translation Service'|t }}</h1>
-        {% else %}
-        <h1>{{ 'Add New Translation Service'|t }}</h1>
-        {% endif %}
+        {{ forms.textField({
+            label: 'Title <span class="required"></span><span class="ml-5" data-icon="language"></span>'|t,
+            value: translator.label|default(defaultLabel),
+            name: 'label',
+            id: 'label',
+            class: "fullwidth",
+            placeholder: 'Add translator name'|t,
+        }) }}
 
         {{ forms.selectField({
             label: 'Translation Service'|t,
@@ -57,52 +76,56 @@
             id: 'service',
         }) }}
 
-        {{ forms.textField({
-            label: 'Translation Service Custom Label'|t,
-            value: translator.label,
-            name: 'label',
-            id: 'label',
-            size: 20,
-            placeholder: 'Optional'|t,
-        }) }}
-
-        <p><a href="{{ url('settings/sites') }}" target="_blank">{{ 'Configure multi-site settings'|t }} &raquo;</a></p>
-
-        <h2 class="translations-translator-settings-header">{{ 'Translation Service Configuration'|t }}</h2>
-        <div class="translations-translator-settings" id="settings-acclaro">
-            <div class="translations-translator-logo-acclaro"></div>
-
+        <div class="translations-translator-settings bg-none" id="settings-acclaro">
             {{ forms.textField({
-                label: 'Acclaro API Token'|t,
+                label: 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>'|t,
                 value: translator.setting('apiToken'),
                 name: 'settings[acclaro][apiToken]',
                 size: 20,
                 id: 'settings-acclaro-apiToken',
             }) }}
 
-            <div class="field">
-                <div class="input {{ orientation }}">
-                    <button class="btn translations-authenticate-translation-service">{{ 'Authenticate'|t }}</button>
-                </div>
-            </div>
-
-            {{ forms.checkboxField({
+            {{ forms.lightswitchField({
                 label: 'Sandbox Mode'|t,
-                value: 1,
-                checked: translator.setting('sandboxMode'),
+                on: translator.setting('sandboxMode'),
                 name: 'settings[acclaro][sandboxMode]',
                 id: 'settings-acclaro-sandboxMode',
             }) }}
-
-            <p>Don't have an Acclaro API key? <a href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>
-        </div>
-
-        <div class="item" data-position="left" data-colspan="1">
-            <div class="buttons">
-                <div class="btngroup submit first">
-                    <input type="submit" class="btn submit" value="{{ 'Save'|t }}">
-                </div>
-            </div>
         </div>
     </form>
+{% endblock %}
+
+{% block details %}
+    <div id="meta-details" class="meta read-only">
+        <div class="data">
+            <div class="heading">
+                <label id="slug-label" for="slug">Status</label>
+            </div>
+            <div id="status-value" class="value">
+                {% if translator.status == "active" %}
+                    <span class="status green"></span> {{ 'Live'|t }}
+                {% elseif translator.status == "inactive" %}
+                    <span class="status red"></span> {{ 'Inactive'|t }}
+                {% else %}
+                    <span class="status"></span> {{ 'N/A'|t }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="data">
+            <div class="heading">
+                <span id="slug-label" for="slug">Created At</span>
+            </div>
+            <div id="status-value" class="value">
+                <span> {{ translator.dateCreated ? translator.dateCreated|date('n/j/Y, H:i A') : 'N/A' }} </span>
+            </div>
+        </div>
+        <div class="data">
+            <div class="heading">
+                <span id="slug-label" for="slug">Updated At</span>
+            </div>
+            <div id="status-value" class="value">
+                <span> {{ translator.dateUpdated ? translator.dateUpdated|date('n/j/Y, H:i A') : 'N/A' }} </span>
+            </div>
+        </div>
+    </div>
 {% endblock %}
