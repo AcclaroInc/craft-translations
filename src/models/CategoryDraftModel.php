@@ -163,7 +163,7 @@ class CategoryDraftModel extends Category
         ];
         $behaviors['draft'] = [
             'class' => DraftBehavior::class,
-            'sourceId' => $this->id,
+            // 'sourceId' => $this->id,
             'creatorId' => 1,
             'draftName' => 'Category Draft',
             'draftNotes' => '',

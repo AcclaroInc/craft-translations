@@ -45,7 +45,7 @@ class AssetDraftModel extends Asset
     public $site;
 
     public $data;
-    
+
     public $sourceSite;
 
     /**
@@ -69,12 +69,6 @@ class AssetDraftModel extends Asset
         return $rules;
     }
 
-    public function getFieldLayout()
-    {
-        
-        return parent::getFieldLayout();
-    }
-
     public function getHandle()
     {
         return $this->getAsset()->handle;
@@ -88,6 +82,7 @@ class AssetDraftModel extends Asset
 
         $assetData = json_decode($attributes['data'], true);
         $fieldContent = isset($assetData['fields']) ? $assetData['fields'] : null;
+        // $attributes['draftId'] = $attributes['id'];
         $attributes['id'] = $attributes['assetId'];
         
         $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'assetId')));
@@ -124,6 +119,11 @@ class AssetDraftModel extends Asset
         return $this->_asset;
     }
 
+    public function getUrl($transform = null, ?bool $generateNow = null)
+    {
+        return '';
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -131,8 +131,7 @@ class AssetDraftModel extends Asset
     {
         $asset = $this->getAsset();
 
-        $catUrl = $asset->id . ($asset->slug ? '-' . $asset->slug : '');
-        $path = 'translations/assets/'.$asset->getGroup()->handle.'/'.$catUrl.'/drafts/'.$this->draftId;
+        $path = 'translations/assets/'.$asset->id.'/drafts/'.$this->draftId;
         
         return Translations::$plugin->urlHelper->cpUrl($path);
     }

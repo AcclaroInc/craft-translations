@@ -12,32 +12,41 @@ if (typeof Craft.Translations === 'undefined') {
 
 Craft.Translations.AssetsTranslations = {
 
-    categories: [],
+    assets: [],
     $btn: null,
 
-    init: function(orders, categoryId) {
-        this.initAddToTranslationOrderButton(orders, categoryId);
+    init: function(orders, assetId) {
+        self = this;
+        self.addTranslationOrderButton(orders, assetId);
+
+        $(document).on('click', '#sidebar nav ul li a .label',function() {
+            endpoint = (window.location.href).split('/');
+            if ($(this).closest("a").data("volume-handle") !== endpoint[endpoint.length-1]) {
+                self.$btn.addClass('disabled');
+                self.$menubtn.addClass('disabled');
+            }
+        });
     },
 
-    isEditCategoryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="categories/save-category"]').length > 0;
+    isEditAssetScreen: function() {
+        return $('form#main-form input[type=hidden][name=action][value="assets/save-asset"]').length > 0;
     },
 
-    getEditCategoryId: function() {
-        return $('form#main-form input[type=hidden][name=categoryId]').val();
+    getEditAssetId: function() {
+        return $('form#main-form input[type=hidden][name=sourceId]').val();
     },
 
-    updateSelectedCategories: function() {
+    updateSelectedAssets: function() {
         var entries = [];
 
         $('.elements table.data tbody tr.sel[data-id]').each(function() {
             entries.push($(this).data('id'));
         });
 
-        this.categories = unique(entries);
+        this.assets = unique(entries);
 
-        $(this.$btn[0]).toggleClass('disabled', this.categories.length === 0);
-        $(this.$menubtn[0]).toggleClass('disabled', this.categories.length === 0);
+        $(this.$btn[0]).toggleClass('disabled', this.assets.length === 0);
+        $(this.$menubtn[0]).toggleClass('disabled', this.assets.length === 0);
 
         this.updateCreateNewLink();
     },
@@ -47,15 +56,15 @@ Craft.Translations.AssetsTranslations = {
 
         href += '?sourceSite='+this.getSourceSite();
 
-        for (var i = 0; i < this.categories.length; i++) {
-            href += '&elements[]=' + this.categories[i];
+        for (var i = 0; i < this.assets.length; i++) {
+            href += '&elements[]=' + this.assets[i];
         }
 
         this.$btn.attr('href', href);
     },
 
     getSourceSite: function() {
-        if (this.isEditCategoryScreen()) {
+        if (this.isEditAssetScreen()) {
             return $('[name=siteId]').val();
         }
 
@@ -74,9 +83,9 @@ Craft.Translations.AssetsTranslations = {
         return siteId;
     },
 
-    initAddToTranslationOrderButton: function(orders, categoryId) {
+    addTranslationOrderButton: function(orders, assetId) {
         var self = this;
-
+        assetId = this.getEditAssetId();
         //var sourceSite = $('form#main-form input[type=hidden][name=siteId]').val();
 
         var $btncontainer = document.createElement('div');
@@ -85,7 +94,7 @@ Craft.Translations.AssetsTranslations = {
 
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
-        if (this.isEditCategoryScreen()) {
+        if (this.isEditAssetScreen()) {
             $settings = document.getElementById('settings');
             $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
@@ -111,7 +120,7 @@ Craft.Translations.AssetsTranslations = {
             'class': 'btn submit menubtn'
         });
 
-        if (!this.isEditCategoryScreen()) {
+        if (!this.isEditAssetScreen()) {
             this.$btn.addClass('disabled');
             this.$menubtn.addClass('disabled');
         }
@@ -200,11 +209,11 @@ Craft.Translations.AssetsTranslations = {
 
                 $hiddenSourceSite.appendTo($form);
 
-                for (var j = 0; j < self.categories.length; j++) {
+                for (var j = 0; j < self.assets.length; j++) {
                     $('<input>', {
                         'type': 'hidden',
                         'name': 'elements[]',
-                        'value': self.categories[j]
+                        'value': self.assets[j]
                     }).appendTo($form);
                 }
 
@@ -218,7 +227,7 @@ Craft.Translations.AssetsTranslations = {
             });
         }
 
-        var $link = Craft.getUrl('translations/orders/new', {'elements[]': categoryId, 'sourceSite': self.getSourceSite()});
+        var $link = Craft.getUrl('translations/orders/new', {'elements[]': assetId, 'sourceSite': self.getSourceSite()});
 
         this.$btn.attr('href', $link);
 
@@ -227,12 +236,12 @@ Craft.Translations.AssetsTranslations = {
         var self = this;
 
         $(document).on('click', '.elements .checkbox, .elements .selectallcontainer .btn', function() {
-            setTimeout($.proxy(self.updateSelectedCategories(), self), 100);
+            setTimeout($.proxy(self.updateSelectedAssets(), self), 100);
         });
 
         // on edit entry screen
-        if (this.isEditCategoryScreen()) {
-            this.categories.push(this.getEditCategoryId());
+        if (this.isEditAssetScreen()) {
+            this.assets.push(this.getEditAssetId());
             this.updateCreateNewLink();
         }
 
@@ -258,11 +267,11 @@ Craft.Translations.AssetsTranslations = {
 
             $hiddenSourceSite.appendTo($form);
 
-            for (var j = 0; j < self.categories.length; j++) {
+            for (var j = 0; j < self.assets.length; j++) {
                 $('<input>', {
                     'type': 'hidden',
                     'name': 'elements[]',
-                    'value': self.categories[j]
+                    'value': self.assets[j]
                 }).appendTo($form);
             }
 

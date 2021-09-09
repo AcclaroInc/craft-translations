@@ -398,17 +398,22 @@ class Translations extends Plugin
         }
 
         if (preg_match('#^assets(/|$)#', $path, $match)) {
-            $this->_includeAssetResources();
+            $this->_includeAssetResources(Craft::$app->getRequest()->getParam('sourceId'));
         }
     }
 
-    private function _includeAssetResources()
+    private function _includeAssetResources($assetId)
     {
         $orders = array();
-        $assetId = 0;
+
+        foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
+            $orders[] = array(
+                'id' => $order->id,
+                'title' => $order->title,
+            );
+        }
 
         $orders = json_encode($orders);
-        $assetId = json_encode($assetId);
 
         self::$view->registerAssetBundle(Assets::class);
 

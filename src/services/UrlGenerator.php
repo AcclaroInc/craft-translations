@@ -66,6 +66,10 @@ class UrlGenerator
                     $element->getCpEditUrl($element)
                 );
             }
+
+            if ($element instanceof Asset) {
+                $element->getCpEditUrl($element);
+            }
     
             return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), [
                 'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle

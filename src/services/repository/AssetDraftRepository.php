@@ -21,11 +21,22 @@ use acclaro\translations\records\AssetDraftRecord;
 
 class AssetDraftRepository
 {
+    /**
+     * Create Asset Draft Model object
+     *
+     * @return AssetDraftModel
+     */
     public function makeNewDraft()
     {
         return new AssetDraftModel();
     }
 
+    /**
+     * Find asset draft by id
+     *
+     * @param int $draftId
+     * @return AssetDraftModel
+     */
     public function getDraftById($draftId)
     {
         $record = AssetDraftRecord::findOne($draftId);
@@ -63,6 +74,24 @@ class AssetDraftRepository
         return $assetDraft;
     }
 
+    /**
+     * Find Source Asset by id
+     *
+     * @param int $id
+     * @param int $site
+     * @return Asset
+     */
+    public function getAssetById($id, $site = null)
+    {
+        return Craft::$app->getAssets()->getAssetById($id, $site);
+    }
+
+    /**
+     * Find asset draft row
+     *
+     * @param \craft\elements\Asset $draft
+     * @return AssetDraftRecord
+     */
     public function getDraftRecord(Asset $draft)
     {
         if (isset($draft->draftId)) {
@@ -122,7 +151,9 @@ class AssetDraftRepository
             'benf\neo\Field'
         ];
 
-        foreach ($draft->getFieldLayout()->getFields() as $layoutField) {
+        $asset = $this->getAssetById($record->assetId, $draft->site);
+
+        foreach ($asset->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
@@ -177,5 +208,56 @@ class AssetDraftRepository
         }
 
         return true;
+    }
+
+    public function createDraft(Asset $asset, $site, $orderName, $sourceSite)
+    {
+        try {
+            $draft = $this->makeNewDraft();
+
+            $draft->name = sprintf('%s [%s]', $orderName, $site);
+            $draft->id = $asset->id;
+            $draft->title = $asset->title;
+            $draft->site = $site;
+
+            $post = Translations::$plugin->elementTranslator->toPostArray($asset);
+
+            $draft->setFieldValues($post);
+
+            $this->saveDraft($draft, $post);
+
+            return $draft;
+        } catch (Exception $e) {
+            Craft::error( '['. __METHOD__ .'] CreateAssetDraft exception:: '.$e->getMessage(), 'translations');
+            return [];
+        }
+
+    }
+
+    public function deleteDraft(Asset $draft)
+    {
+        try {
+            $record = $this->getDraftRecord($draft);
+        } catch (Exception $e) {
+            return false;
+        }
+
+        $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
+
+        try {
+            if ($record->delete(false)) {
+                if ($transaction !== null) {
+                    $transaction->commit();
+                }
+                
+                return true;
+            }
+        } catch (Exception $e) {
+            if ($transaction !== null) {
+                $transaction->rollback();
+            }
+
+            throw $e;
+        }
     }
 }

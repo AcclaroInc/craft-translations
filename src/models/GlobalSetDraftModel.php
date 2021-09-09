@@ -164,7 +164,7 @@ class GlobalSetDraftModel extends GlobalSet
         ];
         $behaviors['draft'] = [
             'class' => DraftBehavior::class,
-            'sourceId' => $this->id,
+            // 'sourceId' => $this->id,
             'creatorId' => 1,
             'draftName' => 'Global Draft',
             'draftNotes' => '',

@@ -231,7 +231,6 @@ class DraftRepository
 
     public function createOrderDrafts($orderId, $wordCounts, $queue=null)
     {
-
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
@@ -273,7 +272,6 @@ class DraftRepository
         } else {
             $order->status = 'in progress';
             $order->dateOrdered = new DateTime();
-            //echo ' status '.$order->status; die;
 
             $success = Craft::$app->getElements()->saveElement($order, true, true, false);
             if (!$success) {
@@ -284,7 +282,6 @@ class DraftRepository
 
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
     {
-
         switch (get_class($element)) {
             case Entry::class:
                 $draft = $this->createEntryDraft($element, $site, $order->title);
@@ -296,7 +293,7 @@ class DraftRepository
                 $draft = $this->createCategoryDraft($element, $site, $order->title, $order->sourceSite);
                 break;
             case Asset::class:
-                $draft = $this->createAssetDraft($element, $site, $order->title, $order->sourceSite);
+                $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
                 break;
         }
 
@@ -304,12 +301,11 @@ class DraftRepository
             $file = Translations::$plugin->fileRepository->makeNewFile();
         }
 
-
         if (empty($draft)) {
-
             Craft::error(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), 'translations' );
             return false;
         }
+
         if ($draft instanceof GlobalSet || $draft instanceof Category || $draft instanceof Asset) {
             $targetSite = $draft->site;
         } else {
@@ -436,33 +432,6 @@ class DraftRepository
         } catch (Exception $e) {
 
             Craft::error( '['. __METHOD__ .'] CreateCategoryDraft exception:: '.$e->getMessage(), 'translations');
-            return [];
-        }
-
-    }
-
-    public function createAssetDraft(Asset $asset, $site, $orderName, $sourceSite)
-    {
-        try {
-            $draft = Translations::$plugin->assetDraftRepository->makeNewDraft();
-            
-            $draft->name = sprintf('%s [%s]', $orderName, $site);
-            $draft->id = $asset->id;
-            $draft->title = $asset->title;
-            $draft->site = $site;
-            $draft->siteId = $site;
-            $draft->sourceSite = $sourceSite;
-
-            $post = Translations::$plugin->elementTranslator->toPostArray($asset);
-
-            $draft->setFieldValues($post);
-            
-            
-            Translations::$plugin->assetDraftRepository->saveDraft($draft, $post);
-            return $draft;
-        } catch (Exception $e) {
-
-            Craft::error( '['. __METHOD__ .'] CreateAssetDraft exception:: '.$e->getMessage(), 'translations');
             return [];
         }
 

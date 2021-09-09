@@ -4,8 +4,27 @@
 {% set saveSourceAction = 'translations/asset/save-draft' %}
 {% set publishSourceAction = 'translations/asset/publish-draft' %}
 {% set deleteSourceAction = 'translations/asset/delete-draft' %}
+{% set canEdit = true %}
 
 {% hook "cp.assets.edit" %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations') },
+    { label: 'Orders'|t, url: url('translations/orders') },
+    { label: element.title, url: 'javascript:void(0)' },
+] %}
+
+{% block contextMenu %}
+    <div class="select">
+        <select class="site">
+            <option value="{{ selectedSite.handle }}" selected>{{ selectedSite.name }}</option>
+            <!-- NOTE: Remove if not needed, Commented as user can confuse draft with other sites. -->
+            <!-- {% for site in craft.app.sites.getAllSites() %}
+                <option value="{{ site.handle }}"{% if site.id == selectedSite.id %} selected {% endif %}>{{ site.name }}</option>
+            {% endfor %} -->
+        </select>
+    </div>
+{% endblock %}
 
 {% block actionButton %}
     <div class="btngroup">
@@ -37,13 +56,34 @@
 {% endblock %}
 
 {% block content %}
-    {{ parent() }}
+    {{ hiddenInput('sourceId', asset.id) }}
+    {{ hiddenInput('draftId', element.id) }}
+    {{ actionInput(saveSourceAction) }}
 
-    {{ forms.hidden({
-        name: 'action',
-        value: saveSourceAction,
-    }) }}
+    <div id="fields">
+        {{ forms.textField({
+            label: "Title"|t('app'),
+            siteId: asset.siteId,
+            id: 'title',
+            name: 'title',
+            value: element.title,
+            errors: asset.getErrors('title'),
+            first: true,
+            autofocus: true,
+            required: true,
+            maxlength: 255
+        }) }}
 
+        {% for tab in asset.getFieldLayout().getTabs() %}
+            <div id="{{ tab.getHtmlId() }}"{% if not loop.first %} class="hidden"{% endif %}>
+                {% include "_includes/fields" with {
+                    fields:  tab.getFields(),
+                    element: asset,
+                    registerDeltas: true,
+                } only %}
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}
 
 {% block details %}
@@ -216,5 +256,11 @@
 
     $('#preview-btn').on('click', function() {
         new Craft.PreviewFileModal(assetId, null, settings);
+    });
+
+    $('div.select select.site').on('change', function() {
+        var site = $(this).val();
+        var url = (window.location.href).split("?")[0];
+        window.location.href = url+"?site="+site;
     });
 {% endjs %}
