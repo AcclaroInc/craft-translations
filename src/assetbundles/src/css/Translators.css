@@ -1,0 +1,27 @@
+input[type="checkbox"] {
+    opacity: 1;
+    position: relative;
+    width: 16px;
+    height: 16px;
+}
+
+input[type="checkbox"] :hover {
+    cursor: pointer !important;
+}
+
+.ml-5 {
+    margin: 5px;
+}
+
+#green-tick {
+    border-radius: 50%;
+    background: lightgray;
+}
+
+.fs-12 {
+    font-size: 12px;
+}
+
+.bg-none {
+    background: none;
+}

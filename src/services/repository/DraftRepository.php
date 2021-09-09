@@ -184,7 +184,7 @@ class DraftRepository
             }
 
             // Let's remove the auto-propagated drafts
-            Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+            //Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
 
             // Apply the draft to the entry
             $newEntry = Craft::$app->getDrafts()->publishDraft($draft);
@@ -314,15 +314,15 @@ class DraftRepository
 
         try {
             // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->sourceId);
+            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->getCanonicalId());
             if (!empty($isExistingFile)) {
                 return;
             }
 
-            $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
+            $element = Craft::$app->getElements()->getElementById($draft->getCanonicalId(), null, $order->sourceSite);
 
             $file->orderId = $order->id;
-            $file->elementId = $draft->sourceId;
+            $file->elementId = $draft->getCanonicalId();
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
@@ -345,7 +345,7 @@ class DraftRepository
         } catch (Exception $e) {
             
             $file->orderId = $order->id;
-            $file->elementId = $draft->sourceId;
+            $file->elementId = $draft->getCanonicalId();
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
@@ -445,7 +445,6 @@ class DraftRepository
      */
     public function applyDrafts($orderId, $elementIds, $queue=null)
     {
-
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
         $files = $order->getFiles();
 
@@ -459,6 +458,9 @@ class DraftRepository
 
         foreach ($files as $file) {
             if (!in_array($file->elementId, $elementIds)) {
+                if ($file->status === 'published') {
+                    $publishedFilesCount++;
+                }
                 continue;
             }
 

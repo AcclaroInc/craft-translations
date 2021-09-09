@@ -350,9 +350,9 @@ class Translations extends Plugin
                     'translations/orders' => 'translations/base/order-index',
                     'translations/orders/new' => 'translations/base/order-detail',
                     'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
-                    'translations/translators' => 'translations/base/translator-index',
-                    'translations/translators/new' => 'translations/base/translator-detail',
-                    'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
+                    'translations/translators' => 'translations/translator/index',
+                    'translations/translators/new' => 'translations/translator/detail',
+                    'translations/translators/detail/<translatorId:\d+>' => 'translations/translator/detail',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/base/edit-global-set-draft',
                     'translations/orders/exportfile' => 'translations/files/export-file',
                     'translations/orders/importfile' => 'translations/files/import-file',
@@ -551,28 +551,30 @@ class Translations extends Plugin
         $craft = Craft::$app;
         $request = $craft->getRequest();
 
-        $draft = $event->draft;
-
-        $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
-
-        $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
-
-        $action = $request->getActionSegments();
-        $action = end($action);
-
-        $applyDraftActions = [
-            'apply-drafts',
-            'apply-translation-draft',
-            'run',
-        ];
-
-        if(!empty($response) && !in_array($action, $applyDraftActions)) {
-
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
-            $path = $craft->request->getFullPath();
-            $params = $craft->request->getQueryParams();
-            $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
-            $craft->end();
+        if (!$request->getIsConsoleRequest()) {
+            $draft = $event->draft;
+    
+            $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
+    
+            $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
+    
+            $action = $request->getActionSegments();
+            $action = end($action);
+    
+            $applyDraftActions = [
+                'apply-drafts',
+                'apply-translation-draft',
+                'run',
+            ];
+    
+            if(!empty($response) && !in_array($action, $applyDraftActions)) {
+    
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
+                $path = $craft->request->getFullPath();
+                $params = $craft->request->getQueryParams();
+                $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
+                $craft->end();
+            }
         }
     }
 
