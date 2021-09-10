@@ -100,15 +100,15 @@ Craft.Translations.CategoryTranslations = {
 
 
         this.$btn = $('<a>', {
-            'class': 'btn submit icon',
+            'class': 'btn icon',
             'href': '#',
             'data-icon': "language",
         });
 
-        this.$btn.html("<span>" + Craft.t('app', 'New Translation') + "</span>");
+        this.$btn.html("<span>" + Craft.t('app', 'New translation') + "</span>");
 
         this.$menubtn = $('<div>', {
-            'class': 'btn submit menubtn'
+            'class': 'btn menubtn'
         });
 
         if (!this.isEditCategoryScreen()) {

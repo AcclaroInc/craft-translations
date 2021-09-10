@@ -34,24 +34,24 @@
         { label: order.title, url: 'javascript:void(0)' },
     ]) %}
     {% set tabs = {
-        "order": {label: "Order Details"|t, url: "#order"},
-        "files": {label: "Order Files"|t, url: "#files"},
+        "order": {label: "Order details"|t, url: "#order"},
+        "files": {label: "Order files"|t, url: "#files"},
     } %}
 {% elseif orderId %}
     {% set crumbs = crumbs|merge([
         { label: 'Edit Order'|t, url: 'javascript:void(0)' },
     ]) %}
     {% set tabs = {
-        "order": {label: "Order Details"|t, url: "#order"},
-        "files": {label: "Order Files"|t, url: "#files"},
+        "order": {label: "Order details"|t, url: "#order"},
+        "files": {label: "Order files"|t, url: "#files"},
     } %}
 {% else %}
     {% set crumbs = crumbs|merge([
-        { label: 'Create New Order'|t, url: 'javascript:void(0)' },
+        { label: 'New order'|t, url: 'javascript:void(0)' },
     ]) %}
     {% set tabs = {
-        "order": {label: "Order Details"|t, url: "#order"},
-        "files": {label: "Order Files"|t, url: "#files", class: "noClick"},
+        "order": {label: "Order details"|t, url: "#order"},
+        "files": {label: "Order files"|t, url: "#files", class: "noClick"},
     } %}
 {% endif %}
 
@@ -79,7 +79,7 @@
             {{ forms.textField({
                 label: 'Order name <span class="required"/>'|t,
                 value: order.title,
-                placeholder: 'Translation Order Name',
+                placeholder: 'Translation order name',
                 name: 'title',
                 id: 'title',
                 class: "fullwidth",
@@ -304,8 +304,8 @@
                     <label id="files-label">
                         Files
                     </label>
-                    <div class="btngroup submit ml-auto">
-                        <input type="button" id="draft-publish" class="btn submit disabled form-submit"
+                    <div class="btngroup ml-auto">
+                        <input type="button" id="draft-publish" class="btn disabled form-submit"
                             disabled="disabled" value="{{ 'Review and publish'|t }}">
                     </div>
                 </div>
@@ -327,8 +327,8 @@
                                     </td>
                                 {% endif %}
                                 <th>{{ 'Title'|t }}</th>
-                                <th>{{ 'Source'|t }}</th>
-                                <th>{{ 'Target'|t }}</th>
+                                {# <th>{{ 'Source'|t }}</th> #}
+                                <th>{{ 'Target Site'|t }}</th>
                                 <th>{{ 'Section'|t }}</th>
                                 <th>{{ 'Last Delivery'|t }}</th>
                                 <th>{{ 'Status'|t }}</th>
@@ -365,12 +365,12 @@
                                         </table>
                                     </td>
 
-                                    <td>
+                                    {# <td>
                                         {{sourceSite.name}}
                                         <span class="light">
                                             ({{ sourceSite.language }})
                                         </span>
-                                    </td>
+                                    </td> #}
 
                                     <td>
                                         <table>
@@ -466,7 +466,7 @@
 {% block details %}
 
     <div id="settings" class="meta">
-        <div id="order-id-field" class="field">
+        <div class="field">
             <div class="heading">
                 <label id="slug-label" for="slug">Order ID</label>
             </div>
@@ -485,7 +485,7 @@
 
             </div>
         </div>
-        <div id="order-id-field" class="field">
+        <div class="field">
             <div class="heading">
                 <label id="slug-label" for="slug">Translator</label>
             </div>
@@ -500,7 +500,20 @@
                 </div>
             </div>
         </div>
-        <div id="order-id-field" class="field">
+        <div class="field">
+            <div class="heading">
+                <label id="slug-label" for="slug">Source Site</label>
+            </div>
+            <div class="input ltr">
+                <label class='float-right'>
+                    {{sourceSite.name}}
+                    <span class="light">
+                        ({{ sourceSite.language }})
+                    </span>
+                </label>
+            </div>
+        </div>
+        <div class="field">
             <div class="heading">
                 <label id="slug-label" for="slug">Author</label>
             </div>
@@ -511,7 +524,7 @@
                 </div>
             </div>
         </div>
-        <div id="order-id-field" class="field">
+        <div class="field">
             <div class="heading">
                 <label id="slug-label" for="slug">Submitted</label>
             </div>
@@ -522,7 +535,7 @@
                 </div>
             </div>
         </div>
-        <div id="order-id-field" class="field">
+        <div class="field">
             <div class="heading">
                 <label id="slug-label" for="slug">Due Date</label>
             </div>
@@ -533,7 +546,7 @@
                 </div>
             </div>
         </div>
-        <div id="order-id-field" class="field">
+        <div class="field">
             <div class="heading">
                 <label id="slug-label" for="slug">Est. word count</label>
             </div>
@@ -545,75 +558,85 @@
         {# Export/Import Or Sync Buttons #}
         {% if order.translator.service is defined and
             order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
-            <div id="order-id-field" class="field h-6">
-                <table>
-                    <tr>
-                        <div class="buttons translations-order-detail-button-wrapper">
-                            {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
-                                order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-                                order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                                <input type="submit" form="sync-order" class="btn submit w-300 disabled"
-                                    disabled="disabled" value="{{ "Sync with Acclaro"|t('app') }}" />
-                            {% else %}
-                                <input type="submit" form="sync-order" class="btn submit w-300 right"
-                                    value="{{ "Sync with Acclaro"|t('app') }}" />
-                            {% endif %}
-                            <div class="sync-status"></div>
-                        </div>
-                    </tr>
-                </table>
+            <div class="field" style="justify-content: space-between;">
+                <div class="heading">
+                    <label id="acclaro-sync">My Acclaro</label>
+                </div>
+                {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                    <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync files"|t('app') }}</button>
+                {% else %}
+                    <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync files"|t('app') }}</button>
+                {% endif %}
+                {# <div class="sync-status"></div> #}
             </div>
         {% else %}
-            <div id="order-id-field" class="field h-8">
-                <table>
-                    <div class="buttons translations-order-detail-button-wrapper">
-                        {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') or
-                                order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') %}
-                            <tr>
-                                <input type="button" form="export-zip" class="btn w-300 right disabled"
-                                    disabled="disabled" value="{{ "Download source files"|t('app') }}" />
-                            </tr>
-                            <tr>
-                                <input type="button" form="export-zip" class="btn w-300 right disabled"
-                                    disabled="disabled" value="{{ "Upload translated files"|t('app') }}" />
-                            </tr>
-                        {% else %}
-                            {% if isSubmitted or orderId %}
-                                <tr>
-                                    <input type="button" id="export-btn" form="export-zip" class="btn w-300 right"
-                                        value="{{ "Download source files"|t('app') }}" />
-                                    <div class="utility-status"></div>
-                                </tr>
-                                <tr>
-                                    <input type="submit" form="export-zip" class="btn w-300 right"
-                                        value="{{ "Upload translated files"|t('app') }}" id="import-tool"/>
-                                    <div class="utility-status"></div>
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    <input type="button" id="export-btn" form="export-zip" class="disabled btn w-300 right"
-                                        disabled="disabled" value="{{ "Download source files"|t('app') }}" />
-                                    <div class="utility-status"></div>
-                                </tr>
-                                <tr>
-                                    <input type="submit" form="export-zip" class="btn w-300 right disabled"
-                                        disabled="disabled" value="{{ "Upload translated files"|t('app') }}" id="import-tool"/>
-                                    <div class="utility-status"></div>
-                                </tr>
-                            {% endif %}
-                            <div class="hud-wrapper hidden">
-                            <div id="translations-import-form" class="form meta">
-                                {{ forms.hidden({
-                                    name: 'orderId',
-                                    id: 'order_id',
-                                    value: orderId,
-                                }) }}
-                            </div>
-                            {% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
-                        {% endif %}
+            {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                <div class="field" style="justify-content: space-between;">
+                    <div class="heading">
+                        <label id="source-files">Source files</label>
                     </div>
-                </table>
-            </div>
+                    <button type="button" form="export-zip" class="btn icon disabled" disabled data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}</button>
+                </div>
+                
+                <div class="field" style="justify-content: space-between;">
+                    <div class="heading">
+                        <label id="translated-files">Translated files</label>
+                    </div>
+                    <button type="button" form="export-zip" class="btn icon disabled" disabled data-icon="upload" value="submit" style="width: 125px;">{{ "Upload"|t('app') }}</button>
+                </div>
+            {% else %}
+                {% if isSubmitted or orderId %}
+                    <div class="field" style="justify-content: space-between;">
+                        <div class="heading">
+                            <label id="source-files">Source files</label>
+                        </div>
+                        <button type="button" id="export-btn" form="export-zip" class="btn icon" data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
+                            <div class="utility-status"></div>
+                        </button>
+                    </div>
+                    
+                    <div class="field" style="justify-content: space-between;">
+                        <div class="heading">
+                            <label id="translated-files">Translated files</label>
+                        </div>
+                        <button type="submit" form="export-zip" class="btn icon" data-icon="upload" value="submit" id="import-tool" style="width: 125px;">{{ "Upload"|t('app') }}
+                            <div class="utility-status"></div>
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="field" style="justify-content: space-between;">
+                        <div class="heading">
+                            <label id="source-files">Source files</label>
+                        </div>
+                        <button type="button" id="export-btn" form="export-zip" class="disabled btn icon" disabled data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
+                            <div class="utility-status"></div>
+                        </button>
+                    </div>
+                    
+                    <div class="field" style="justify-content: space-between;">
+                        <div class="heading">
+                            <label id="translated-files">Translated files</label>
+                        </div>
+                        <button type="submit" form="export-zip" class="btn icon disabled" disabled data-icon="upload" value="submit" id="import-tool" style="width: 125px;">{{ "Upload"|t('app') }}
+                            <div class="utility-status"></div>
+                        </button>
+                    </div>
+                {% endif %}
+                <div class="hud-wrapper hidden">
+                    <div id="translations-import-form" class="form meta">
+                        {{ forms.hidden({
+                            name: 'orderId',
+                            id: 'order_id',
+                            value: orderId,
+                        }) }}
+                    </div>
+                </div>
+                {% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
+            {% endif %}
         {% endif %}
     </div>
 

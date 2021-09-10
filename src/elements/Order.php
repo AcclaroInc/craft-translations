@@ -167,11 +167,51 @@ class Order extends Element
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
-                'key' => 'in-progress',
-                'label' => Translations::$plugin->translator->translate('app', 'Orders in progress'),
+                'key' => 'pending',
+                'label' => Translations::$plugin->translator->translate('app', 'Pending'),
                 'criteria' => [
                     'status' => [
-                        'new', 'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval', 'complete'
+                        'new'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'in-progress',
+                'label' => Translations::$plugin->translator->translate('app', 'In progress'),
+                'criteria' => [
+                    'status' => [
+                        'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'ready-to-apply',
+                'label' => Translations::$plugin->translator->translate('app', 'Ready to apply'),
+                'criteria' => [
+                    'status' => [
+                        'complete'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'applied',
+                'label' => Translations::$plugin->translator->translate('app', 'Applied'),
+                'criteria' => [
+                    'status' => [
+                        'published'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'failed',
+                'label' => Translations::$plugin->translator->translate('app', 'Failed'),
+                'criteria' => [
+                    'status' => [
+                        'failed'
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -320,13 +360,13 @@ class Order extends Element
     {
         $attributes = [
             'title' => ['label' => Translations::$plugin->translator->translate('app', 'Name')],
-            'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
-            'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
-            'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
-            'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
-            'translatorId' => ['label' => Translations::$plugin->translator->translate('app', 'Translator')],
-            'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
+            // 'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
+            // 'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
+            // 'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
+            // 'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
             'status' => ['label' => Translations::$plugin->translator->translate('app', 'Status')],
+            'translatorId' => ['label' => Translations::$plugin->translator->translate('app', 'Translator')],
+            // 'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
             'dateOrdered' => ['label' => Translations::$plugin->translator->translate('app', 'Created')],
             'dateUpdated' => ['label' => Translations::$plugin->translator->translate('app', 'Updated')],
             // 'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]

@@ -203,15 +203,7 @@
     margin: 0 0 2em;
 }
 
-.translations-order-detail-button-wrapper {
-    flex-direction: row;
-    position: relative;
-    float: right;
-    /* padding-bottom: 10px; */
-    margin: 0;
-}
-
-.translations-order-detail-button-wrapper #import-tool {
+#import-tool {
     margin-left: 10px;
 }
 
@@ -219,12 +211,12 @@
     margin-right: 10px;
 }
 
-.translations-order-detail-button-wrapper .utility-status {
+.utility-status {
     display: flex;
     align-self: center;
 }
 
-.translations-order-detail-button-wrapper .utility-status .progressbar {
+.utility-status .progressbar {
     left: 50%;
     top: calc(50% - 5px);
     width: 60%;
@@ -821,6 +813,11 @@ del {
 .df {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+}
+
+.clone-modal-tr {
+    cursor: pointer;
 }
 
 .scroll-y-auto {

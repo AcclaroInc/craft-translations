@@ -19,8 +19,8 @@
         {{ 'Clear all translation orders.'|t('app') }}
     </div>
     <div class="buttons">
-        <input type="submit" class="formsubmit btn submit" data-redirect="{{ '/admin/translations/settings/clear-orders' }}" value="{{ "Clear orders"|t('app') }}" />&nbsp;&nbsp;
-        <span class="warning" title="{{ 'Warning'|t('app') }}" data-icon="alert">{{' This action cannot be undone'}}</span>
+        <button type="submit" class="formsubmit btn submit icon" data-icon="trash" data-redirect="{{ '/admin/translations/settings/clear-orders' }}" value="submit">{{ "Clear orders"|t('app') }}</button>&nbsp;&nbsp;
     </div>
+    <span class="warning" title="{{ 'Warning'|t('app') }}" data-icon="alert">{{' This action cannot be undone'}}</span>
 </form>
 {% endblock %}

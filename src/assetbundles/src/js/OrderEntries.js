@@ -214,24 +214,27 @@ if (typeof Craft.Translations === 'undefined') {
 
         $body = $('<div class="body pt-10"></div>');
 
-        var $header = $('<div class="header df"><h1 class="mr-auto">Review and publish</h1></a></div>');
-        var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal">');
+        var $header = $('<div class="header df"><h1 class="mr-auto">Review and publish</h1></div>');
+        var $modalButtons = $('<button type="submit" name="submit" class="btn apply-translation disabled" style="margin:0 5px;" disabled value="draft">Merge into draft</button>\
+            <button type="submit" name="submit" class="btn submit apply-translation disabled" style="margin:0 5px;" disabled value="publish">Merge and apply draft</button>');
+        var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal" style="margin-left:15px;"></a>');
         
         $($closeIcon).on('click', function() {
             $('.modal.scroll-y-auto, .modal-shade').remove();
         });
 
+        $modalButtons.appendTo($header);
         $closeIcon.appendTo($header);
         $header.appendTo($form);
 
         var $table = $('<table class="data fullwidth" dir="ltr"></table>');
 
-        var $tableHeader = $('<thead><tr><td colspan="7" class="thin checkbox-cell translations-checkbox-cell">\
+        var $tableHeader = $('<thead><tr>\
+            <td class="thin checkbox-cell translations-checkbox-cell">\
             <input class="checkbox clone" id="element-0-clone" type="checkbox"/>\
-            <label class="checkbox" for="element-0-clone"><b>Select all</b></label>\
-            <button type="submit" name="submit" class="btn ml-10 ml-auto submit right apply-translation disabled" disable="disabled" value="publish">Publish selected</button>\
-            <button type="submit" name="submit" class="btn right apply-translation disabled" disable="disabled" value="draft">Approve changes</button>\
-            </td></tr></thead>');
+            <label class="checkbox" for="element-0-clone"></label></td>\
+            <th>Title</th><th>Target Site</th><th>Section</th><th>Status</th>\
+            </tr></thead>');
 
         var $tableContent = $('<tbody></tbody>');
 
