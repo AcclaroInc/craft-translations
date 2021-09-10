@@ -13,7 +13,7 @@ Craft.Translations.TranslatorDetail = {
             $('.translations-translator-settings-header').hide();
         } else {
             var $settings = $('#settings-'+service);
-
+            
             $settings.show();
             $('.translations-translator-settings').not($settings).hide();
             $('.translations-translator-settings-header').show();
@@ -40,6 +40,23 @@ Craft.Translations.TranslatorDetail = {
         return valid;
     },
 
+    validateFormFilled: function() {
+        hasService = $("#service").val() != "";
+        hasTitle = $('#label').val() != "";
+
+        if (! hasService || ! hasTitle) {
+            return false;
+        }
+
+        if (! this.isDefaultTranslator()) {
+            if (! this.hasApiToken()) {
+                return false;
+            }
+        }
+
+        return true;
+    },
+
     toggleInputState: function(el, valid, message) {
         var $el = $(el);
         var $input = $el.closest('.input');
@@ -57,87 +74,161 @@ Craft.Translations.TranslatorDetail = {
         }
     },
 
-    serializeSettings: function(service) {
-        var data = {};
-
-        var $fields = $(':input[name^="settings['+service+']"]').not(':checkbox:not(:checked), :radio:not(:checked)');
-
-        $fields.each(function() {
-            var $el = $(this);
-            var regExp = new RegExp('^settings\\['+service+'\\]\\[(.*?)\\]$');
-            var name = $el.attr('name').replace(regExp, '$1');
-            var value = $el.val();
-            var multiple = /\]\[$/.test(name);
-
-            if (multiple) {
-                name = name.substr(0, name.length - 2);
-
-                if (typeof data[name] === 'undefined') {
-                    data[name] = [];
-                }
-
-                if ($.isArray(value)) {
-                    $.each(value, function(i, v) {
-                        data[name].push(v);
-                    });
-                } else {
-                    data[name].push(value);
-                }
-            } else {
-                data[name] = value;
-            }
-        });
-
-        return data;
+    hasApiToken: function() {
+        return $('input[name="settings[acclaro][apiToken]"]').val() != "";
     },
 
-    authenticateTranslationService: function() {
-        var service = $('#service').val();
-        var settings = this.serializeSettings(service);
+    isEditTranslatorScreen: function() {
+        return $('form input[type=hidden][name=id]').length > 0;
+    },
 
-        $.post(
-            location.href,
-            {
-                CRAFT_CSRF_TOKEN: Craft.csrfTokenValue,
-                action: 'translations/base/authenticate-translation-service',
-                service: service,
-                settings: settings
-            },
-            function(data) {
-                if (data.success) {
-                    if (!data.error) {
-                        $('#status').val('active');
-                        Craft.cp.displayNotice(Craft.t('app', 'You are now authenticated!'));
-                    } else {
-                        Craft.cp.displayError(Craft.t('app', data.error));
-                    }
-                } else {
-                    $('#status').val('inactive');
-                    Craft.cp.displayError(Craft.t('app', 'Invalid API token.'));
-                }
-            },
-            'json'
-        );
+    isDefaultTranslator: function() {
+        return $('form #service').val() == "export_import" || $('form #service').val() == "";
+    },
+
+    toggleGreenTick: function() {
+        // !NOTE: to be used with draft functionality
+        // if (this.validateFormFilled()) {
+        //     $pageTitle = $("#page-title");
+        //     if ($pageTitle.find("span").length == 0) {
+        //         $('<span>', {class: "checkmark-icon"}).appendTo($pageTitle);
+        //     } else {
+        //         $pageTitle.find("span").addClass("checkmark-icon");
+        //     }
+        // } else {
+        //     $pageTitle = $("#page-title");
+        //     $pageTitle.find("span").removeClass("checkmark-icon");
+        // }
+    },
+
+    toggleSaveButton: function() {
+        $button = $("#save-button-container .btn");
+        if (this.validateFormFilled()) {
+            $button.prop("disabled", false);
+            $button.removeClass("disabled");
+        } else {
+            $button.prop("disabled", true);
+            $button.addClass("disabled");
+        }
+    },
+
+    isExistingTranslator: function() {
+        return $("input[name=id]").val() !== '';
+    },
+
+    getButtonText: function() {
+        $text = "create";
+        if (this.isExistingTranslator()) {
+            $text = "save";
+        }
+        return $text;
     },
 
     init: function() {
         var self = this;
 
-        $('#service').on('change', $.proxy(this.updateService, this));
+        if (this.isEditTranslatorScreen()) {
+            this._initSaveButtonContainer(this.getButtonText());
+            this.toggleSaveButton();
+            // !NOTE: to be used with draft functionality
+            // if (this.validateFormFilled()) {
+            //     $pageTitle = $("#page-title");
+            //     $('<span>', {class: "checkmark-icon"}).appendTo($pageTitle);
+            // }
+        }
+
+        $('#label, input[name="settings[acclaro][apiToken]"').on('keyup', function() {
+            self.toggleGreenTick();
+            self.toggleSaveButton();
+        });
+        
+        $('#service').on('change', function() {
+            self.toggleGreenTick();
+            self.toggleSaveButton();
+            self.updateService();
+        });
 
         this.updateService();
-        
-
-        $('.translations-authenticate-translation-service').on('click', function(e) {
-            e.preventDefault();
-
-            self.authenticateTranslationService();
-        });
 
         $('.translations-translator-form').on('submit', function(e) {
             if (!self.validate()) {
                 e.preventDefault();
             }
+        });
+    },
+    _initSaveButtonContainer: function(action) {
+        var $btngroup = $('<div>', {
+            id: "save-button-container",
+            class: "btngroup submit"
+        });
+        $btngroup.appendTo('#action-button');
+
+        $saveText = "Create translator";
+        $continueText = "Create and add another";
+
+        if (action == "save") {
+            $saveText = "Save translator";
+            $continueText = "Save and add another";
+        }
+
+        $btn = $('<button>', {
+            'class': 'btn submit disabled',
+            'href': '#',
+            type: "submit",
+            text: $saveText,
+            id: "saveBtn",
+            disabled: "disabled"
+        });
+
+        $menubtn = $('<button>', {
+            'class': 'btn submit menubtn disabled',
+            type: "button",
+            disabled: "disabled"
+        });
+
+        $btn.appendTo($btngroup);
+
+        $menubtn.appendTo($btngroup);
+
+        $menubtn.on('click', function(e) {
+            e.preventDefault();
+        });
+
+        var $menu = $('<div>', {'class': 'menu'});
+
+        $menu.appendTo($btngroup);
+
+        var $dropdown = $('<ul>', {'class': ''});
+
+        $dropdown.appendTo($menu);
+
+        var $saveContinue = $('<li>');
+
+        $saveContinue.appendTo($dropdown);
+
+        var $link = $('<a>', {
+            'href': '#',
+            'text': $continueText,
+            class: "continueBtn"
+        });
+
+        $link.appendTo($saveContinue);
+
+        $menubtn.menubtn();
+
+        $link.on('click', function(e) {
+            e.preventDefault();
+
+            var $form = $('.translations-translator-form');
+            $form.find('input[name=flow]').val("continue");
+
+            $form.submit();
+        });
+
+        $btn.on('click', function(e) {
+            e.preventDefault();
+
+            $('.translations-translator-form').submit();
         });
     }
 };
