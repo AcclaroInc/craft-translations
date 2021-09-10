@@ -23,11 +23,11 @@
         <input type="hidden" name="action" value="translations/base/sync-orders">
         {{ csrfInput() }}
         <div class="btngroup" style="margin-right:5px;">
-            <input type="submit" class="btn big submit {{ disabled }}" value="{{ "Sync Orders"|t('app') }}" {{ disabled }}/>
+            <button type="submit" class="btn big {{ disabled }} icon" data-icon="refresh" value="submit" {{ disabled }}>{{ "Sync orders"|t('app') }}</button>
         </div>
         <div class="sync-status"></div>
     </form>
-    <a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/create') }}">{{ 'New Order'|t }}</a>
+    <a class="btn big submit icon btn-create-new-order" data-icon="language" href="{{ url('translations/orders/create') }}">{{ 'New order'|t }}</a>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
@@ -91,7 +91,6 @@
     criteria: Craft.defaultIndexCriteria,
     criteria: {{ (searchParams|raw) }},
     canHaveDrafts: {{ (canHaveDrafts ?? false) ? 'true' : 'false' }},
-
     toolbarSelector: '#toolbar'
     });
 {% endblock %}

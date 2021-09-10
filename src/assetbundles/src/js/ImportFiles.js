@@ -9,26 +9,23 @@
      */
     Craft.Translations.ImportFiles =
     {
+        $importBtn: null,
+
         init: function()
         {
             var self = this;
-
-            var $btn = $('#import-tool');
+            var buttonId = 'import-tool';
+            this.$status = $(".utility-status."+buttonId);
+            this.$importBtn = $('#'+buttonId);
             
-            var form = self.buildImportFilesForm();
-            var url = Craft.getUrl('translations/orders/importfile');
-            
-            $btn.on('click',function(){
-                var hud = new Garnish.HUD($btn, form, {
-                    orientations: ['top', 'bottom', 'right', 'left'],
-                    hudClass: 'hud toolhud import',
-                });
-            return false;
+            this.$importBtn.on('click',function(){
+                self._showImportHud();
             });
         },
-
-        buildImportFilesForm: function()
+        _showImportHud: function()
         {
+            var self = this;
+            this.$importBtn.addClass('active');
             var $form = $('<form/>', {
                 'method': 'POST',
                 'enctype' : 'multipart/form-data',
@@ -37,7 +34,6 @@
                 'action' : '',
                 'id' : 'translations-form-import'
             });
-
 
             $form.append(Craft.getCsrfInput());
 
@@ -84,7 +80,38 @@
             $submit.appendTo($div);
             $div.appendTo($form);
 
-            return $form;
+            var hud = new Garnish.HUD(this.$importBtn, $form, {
+                orientations: ['top', 'bottom', 'right', 'left'],
+                hudClass: 'hud toolhud import',
+            });
+
+            $submit.on('click', function() {
+                hud.hide();
+                self._showProgressBar();
+            });
+    
+            hud.on('hide', $.proxy(function() {
+                this.$importBtn.removeClass('active');
+            }, this));
+        },
+        _showProgressBar: function() {
+            if (! this.$importBtn.hasClass('disabled')) {
+                if (!this.progressBar) {
+                    this.progressBar = new Craft.ProgressBar(this.$status);
+                }
+                else {
+                    this.progressBar.resetProgressBar();
+                }
+
+                this.progressBar.$progressBar.removeClass('hidden');
+                this.progressBar.$progressBar.velocity('stop').velocity(
+                    {
+                        opacity: 1
+                    },
+                    {
+                        complete: $.proxy(function() {}, this)
+                    });
+            }
         }
     };
 
@@ -93,92 +120,3 @@
     });
 
 })(jQuery);
-
-// Craft.Translations.ImportFiles = Garnish.Base.extend(
-//     {
-//         uploader: null,
-//         allowedKinds: null,
-//         $element: null,
-//         settings: null,
-
-//         init: function($element, settings) {
-//             this.$element = $element;
-//             this.allowedKinds = null;
-
-//             settings = $.extend({}, Craft.Translations.ImportFiles.defaults, settings);
-
-//             var events = settings.events;
-//             delete settings.events;
-
-//             settings.autoUpload = false;
-
-//             this.uploader = this.$element.fileupload(settings);
-//             for (var event in events) {
-//                 if (!events.hasOwnProperty(event)) {
-//                     continue;
-//                 }
-
-//                 this.uploader.on(event, events[event]);
-//             }
-
-//             this.settings = settings;
-
-//             this.uploader.on('fileuploadadd', $.proxy(this, 'onFileAdd'));
-//         },
-
-//         /**
-//          * Set uploader parameters.
-//          */
-//         setParams: function(paramObject) {
-//             // If CSRF protection isn't enabled, these won't be defined.
-//             if (typeof Craft.csrfTokenName !== 'undefined' && typeof Craft.csrfTokenValue !== 'undefined') {
-//                 // Add the CSRF token
-//                 paramObject[Craft.csrfTokenName] = Craft.csrfTokenValue;
-//             }
-
-//             this.uploader.fileupload('option', {formData: paramObject});
-//         },
-
-//         /**
-//          * Get the number of uploads in progress.
-//          */
-//         getInProgress: function() {
-//             return this.uploader.fileupload('active');
-//         },
-
-//         /**
-//          * Called on file add.
-//          */
-//         onFileAdd: function(e, data) {
-//             e.stopPropagation();
-
-//             // Make sure that file API is there before relying on it
-//             data.process().done($.proxy(function() {
-//                 data.submit();
-//             }, this));
-
-//             return true;
-//         },
-
-//         destroy: function() {
-//             this.$element.fileupload('destroy');
-//             this.base();
-//         }
-//     },
-
-// // Static Properties
-// // =============================================================================
-
-//     {
-//         defaults: {
-//             dropZone: null,
-//             pasteZone: null,
-//             fileInput: true,
-//             sequentialUploads: false,
-//             allowedKinds: null,
-//             events: {},
-//             canAddMoreFiles: false,
-//             headers: {'Accept' : 'application/json;q=0.9,*/*;q=0.8'},
-//             paramName: 'zip-upload'
-//         }
-// });

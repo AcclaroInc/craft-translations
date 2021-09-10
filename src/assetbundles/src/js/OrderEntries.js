@@ -50,8 +50,8 @@ if (typeof Craft.Translations === 'undefined') {
 
         $checkboxClone = $clone.find("td.translations-checkbox-cell");
         $clone.find("td.translations-checkbox-cell").remove();
-        $clone.find("td:nth-child(6)").hide();
-        $clone.find("td:nth-child(4)").remove();
+        $clone.find("td:nth-child(5)").remove();
+        $clone.find("td:nth-child(2)").remove();
 
         $checkBoxCell = $('<td>', {
             class: "thin checkbox-cell translations-checkbox-cell"
@@ -208,30 +208,34 @@ if (typeof Craft.Translations === 'undefined') {
 
         var $hiddenFields = $('<input type="hidden" name="orderId" value="' + $('input[name=orderId]').val() + '"/>\
             <input type="hidden" name="fileIds" value=""/><input type="hidden" name="elementIds" value=""/>\
+            <input type="hidden" name="isProcessing" value="1"/>\
             <input type="hidden" name="action" value="translations/order/save-draft-and-publish"/>');
         $hiddenFields.appendTo($form);
         $form.append(Craft.getCsrfInput());
 
         $body = $('<div class="body pt-10"></div>');
 
-        var $header = $('<div class="header df"><h1 class="mr-auto">Review and publish</h1></a></div>');
-        var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal">');
+        var $header = $('<div class="header df"><h1 class="mr-auto">Review and publish</h1></div>');
+        var $modalButtons = $('<button type="submit" name="submit" class="btn apply-translation disabled" style="margin:0 5px;" disabled value="draft">Merge into draft</button>\
+            <button type="submit" name="submit" class="btn submit apply-translation disabled" style="margin:0 5px;" disabled value="publish">Merge and apply draft</button>');
+        var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal" style="margin-left:15px;"></a>');
         
         $($closeIcon).on('click', function() {
             $('.modal.scroll-y-auto, .modal-shade').remove();
         });
 
+        $modalButtons.appendTo($header);
         $closeIcon.appendTo($header);
         $header.appendTo($form);
 
         var $table = $('<table class="data fullwidth" dir="ltr"></table>');
 
-        var $tableHeader = $('<thead><tr><td colspan="7" class="thin checkbox-cell translations-checkbox-cell">\
+        var $tableHeader = $('<thead><tr>\
+            <th class="thin checkbox-cell translations-checkbox-cell">\
             <input class="checkbox clone" id="element-0-clone" type="checkbox"/>\
-            <label class="checkbox" for="element-0-clone"><b>Select all</b></label>\
-            <button type="submit" name="submit" class="btn ml-10 ml-auto submit right apply-translation disabled" disable="disabled" value="publish">Publish selected</button>\
-            <button type="submit" name="submit" class="btn right apply-translation disabled" disable="disabled" value="draft">Approve changes</button>\
-            </td></tr></thead>');
+            <label class="checkbox" for="element-0-clone"></label></th>\
+            <th>Title</th><th>Target Site</th><th>Section</th><th>Status</th><th></th>\
+            </tr></thead>');
 
         var $tableContent = $('<tbody></tbody>');
 

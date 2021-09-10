@@ -28,13 +28,9 @@ class CreateDrafts extends BaseJob
 
     public function execute($queue)
     {
-        if ($this->publish && $this->elementIds && $this->fileIds) {
-            Translations::$plugin->draftRepository->createOrderDrafts(
-                $this->orderId, $this->wordCounts, $queue, $this->publish, $this->elementIds, $this->fileIds
-            );
-        } else {
-            Translations::$plugin->draftRepository->createOrderDrafts($this->orderId, $this->wordCounts, $queue);
-        }
+        Translations::$plugin->draftRepository->createOrderDrafts(
+            $this->orderId, $this->wordCounts, $queue, $this->publish, $this->elementIds, $this->fileIds
+        );
     }
 
     public function updateProgress($queue, $progress) {
@@ -43,7 +39,7 @@ class CreateDrafts extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Creating translation drafts';
+        return $this->publish ? 'Publishing translation drafts' : 'Creating translation drafts';
     }
 
 }

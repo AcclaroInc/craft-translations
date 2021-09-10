@@ -597,12 +597,14 @@ class ImportFiles extends BaseJob
 
         $sourceContent = json_decode($sourceContent, true);
 
-        foreach ($targetContent['content'] as $key => $value) {
-            $data['target'][$key] = $key;
-        }
-
-        foreach ($sourceContent['content'] as $key => $value) {
-            $data['source'][$key] = $key;
+        if ($sourceContent['content'] ?? null) {
+            foreach ($targetContent['content'] as $key => $value) {
+                $data['target'][$key] = $key;
+            }
+    
+            foreach ($sourceContent['content'] as $key => $value) {
+                $data['source'][$key] = $key;
+            }
         }
 
         return array_diff($data['target'], $data['source']);

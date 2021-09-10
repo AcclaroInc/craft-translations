@@ -43,7 +43,6 @@ class ElementToFileConverter
 
         $elementIdMeta = $head->appendChild($dom->createElement('meta'));
         $elementIdMeta->setAttribute('elementId', $element->id);
-        $elementIdMeta->setAttribute('draftId', $draftId);
 
         $body = $xml->appendChild($dom->createElement('body'));
 

@@ -46,6 +46,7 @@ use acclaro\translations\assetbundles\DashboardAssets;
 use acclaro\translations\services\repository\FileRepository;
 use acclaro\translations\services\repository\SiteRepository;
 use acclaro\translations\assetbundles\RecentlyModifiedAssets;
+use acclaro\translations\Constants;
 use craft\models\Updates as UpdatesModel;
 
 // Widget Classes
@@ -451,7 +452,14 @@ class WidgetController extends Controller
                 // Is the element more recent than the file?
                 if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
                     // Current entries XML
-                    $currentXML = Translations::$plugin->elementToXmlConverter->toXml($element, 0, Craft::$app->getSites()->getPrimarySite()->id, $file->targetSite);
+                    $currentXML = Translations::$plugin->elementToFileConverter->convert(
+                        $element,
+                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        [
+                            'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
+                            'targetSite'    => $file->targetSite
+                        ]
+                    );
                     $currentXML = simplexml_load_string($currentXML)->body->asXML();
                     
                     // Translated file XML
@@ -1007,7 +1015,14 @@ class WidgetController extends Controller
             $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
 
             // Current entries XML
-            $currentXML = Translations::$plugin->elementToXmlConverter->toXml($element, 0, Craft::$app->getSites()->getPrimarySite()->id, Craft::$app->getSites()->getPrimarySite()->id);
+            $currentXML = Translations::$plugin->elementToFileConverter->convert(
+                $element,
+                Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                [
+                    'sourceSite'    => Craft::$app->getSites()->getPrimarySite()->id,
+                    'targetSite'    => Craft::$app->getSites()->getPrimarySite()->id,
+                ]
+            );
             $currentXML = simplexml_load_string($currentXML)->body->asXML();
 
             $blank = '';

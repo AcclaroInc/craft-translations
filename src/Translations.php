@@ -609,12 +609,14 @@ class Translations extends Plugin
 
                     $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->sourceSite);
                     $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
-                    $currentFile->source = Translations::$plugin->elementToXmlConverter->toXml(
+                    $currentFile->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        0,
-                        $currentFile->sourceSite,
-                        $currentFile->targetSite,
-                        $currentFile->previewUrl
+                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        [
+                            'sourceSite'    => $currentFile->sourceSite,
+                            'targetSite'    => $currentFile->targetSite,
+                            'previewUrl'    => $currentFile->previewUrl
+                        ]
                     );
 
                     self::$plugin->fileRepository->saveFile($currentFile);

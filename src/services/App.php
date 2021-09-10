@@ -131,11 +131,6 @@ class App extends Component
     public $elementTranslator;
     
     /**
-     * @var ElementToXmlConverter
-     */
-    public $elementToXmlConverter;
-    
-    /**
      * @var ElementToFileConverter
      */
     public $elementToFileConverter;
@@ -169,7 +164,6 @@ class App extends Component
         $this->fieldTranslatorFactory = new fieldtranslator\Factory();
         $this->translatorFactory = new translator\Factory();
         $this->elementTranslator = new ElementTranslator();
-        $this->elementToXmlConverter = new ElementToXmlConverter();
         $this->elementToFileConverter = new ElementToFileConverter();
         $this->orderSearchParams = new OrderSearchParams();
     }

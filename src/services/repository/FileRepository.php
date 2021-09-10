@@ -337,12 +337,14 @@ class FileRepository
                 if ($draft) {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
                     $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
-                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
+                    $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        $file->draftId,
-                        $file->sourceSite,
-                        $file->targetSite,
-                        $file->previewUrl
+                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        [
+                            'sourceSite'    => $file->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'previewUrl'    => $file->previewUrl
+                        ]
                     );
                 }
 

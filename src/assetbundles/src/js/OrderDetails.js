@@ -197,6 +197,20 @@
         return url
     }
 
+    function hasNewTag() {
+        return $("#fields-tags").find("input[type=text]").val();
+    }
+
+    function isTagNew($newTag) {
+        var isNew = true;
+        $("div .removable").each(function() {
+            if ($(this).data("label") === $newTag) {
+                isNew = false;
+            }
+        });
+        return isNew;
+    }
+
     function sendingOrderStatus($status) {
         if ($status) {
             $('.translations-loader').removeClass('hidden');
@@ -211,6 +225,7 @@
 
     Craft.Translations.OrderDetails = {
         init: function() {
+            self = this;
             if (isSubmitted) {
                 this._createUpdateOrderButtonGroup();
             } else {
@@ -471,6 +486,55 @@
                     closeOtherModals: false,
                 });
             });
+
+            // Add new tags to order tags fields
+            $("#fields-tags").on('keydown', 'input[type=text]', function(e) {
+                if (e.keyCode == 13 && hasNewTag() && isTagNew($(this).val())) {
+                    $data = {'title': $(this).val()};
+                    Craft.postActionRequest('translations/order/create-order-tag', $data, function(response, textStatus) {
+                        if (textStatus === 'success' && response.success) {
+                            Craft.Translations.OrderDetails._addOrderTag();
+                            $('#fields-tags').find('input[type=text]').val('');
+                        } else {
+                            Craft.cp.displayError(Craft.t('app', "Error adding new tag"));
+                        }
+                    });
+                }
+            });
+
+            $("#elementTags").on('click', 'a.custom-tag', function(e) {
+                $(this).closest('.removable').remove();
+            });
+        },
+        _addOrderTag: function() {
+            $newTag = $("#fields-tags").find("input[type=text]").val();
+            $mainDiv = $('<div>', {
+                class: "element small removable",
+                "data-label": $newTag
+            });
+
+            $mainDiv.appendTo($("#fields-tags .elements"));
+            $hiddenInput = $("<input>", {
+                type: "hidden",
+                class: "remove-tag",
+                name: "tags[]",
+                value: $newTag
+            });
+            $hiddenInput.appendTo($mainDiv);
+
+            $mainContent = $("<div class=label><span class=title>"+$newTag+"</span></div>");
+            $deleteTag = $("<a class='delete icon' data-label="+$newTag+" title=Remove></a>");
+            // Remove tag from order tag field
+            $deleteTag.on('click', function() {
+                Craft.Translations.OrderDetails._removeOrderTag(this);
+            });
+            $deleteTag.appendTo($mainContent);
+            $mainContent.appendTo($mainDiv);
+        },
+        _removeOrderTag: function(that) {
+            $label = $(that).data("label");
+            $mainDiv = $(that).parents(".removable");
+            $mainDiv.remove();
         },
         _createNewOrderButtonGroup: function() {
             var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
@@ -518,8 +582,6 @@
             $orderLink.appendTo($item);
             this._addSaveOrderAction($orderLink, "save_new");
 
-            // NOTE: Draft Action commented for now
-
             var $item1 = $('<li><hr>');
             $item1.appendTo($dropdown);
             var $saveDraftLink = $('<a>', {
@@ -530,19 +592,6 @@
 
             $saveDraftLink.appendTo($item1);
             this._addSaveDraftAction($saveDraftLink);
-
-            // var $item2 = $('<li>');
-            // $item2.appendTo($dropdown);
-            // var $deleteDraftLink = $('<a>', {
-            //     'class': 'translations-submit-order disabled',
-            //     'href': '#',
-            //     'text': 'Delete draft',
-            //     'disabled': "disabled"
-            // });
-            // $item2.prop("disabled", true);
-
-            // $deleteDraftLink.appendTo($item2);
-            // this._addDeleteDraftAction($deleteDraftLink);
         },
         _createUpdateOrderButtonGroup: function() {
             var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
@@ -621,14 +670,19 @@
                 $hiddenAction.appendTo($form);
 
                 Craft.postActionRequest($form.find('input[name=action]').val(), $form.serialize(), function(response, textStatus) {
+                    if (response == null) {
+                        sendingOrderStatus(false);
+                    }
                     if (textStatus === 'success' && response.success) {
                         if (response.message) {
                             Craft.cp.displayNotice(Craft.t('app', response.message));
                             sendingOrderStatus(false);
                         } else if (response.url) {
                             window.location.href = response.url;
+                        } else if (response.job) {
+                            Craft.Translations.trackJobProgressById(true, false, response.job);
                         } else {
-                            Craft.cp.displayError(Craft.t('app', "No message or url"));
+                            Craft.cp.displayError(Craft.t('app', "No data in response"));
                             sendingOrderStatus(false);
                         }
                     } else {

@@ -203,31 +203,21 @@
     margin: 0 0 2em;
 }
 
-.translations-order-detail-button-wrapper {
-    flex-direction: row;
-    position: relative;
-    float: right;
-    /* padding-bottom: 10px; */
-    margin: 0;
-}
-
-.translations-order-detail-button-wrapper #import-tool {
+/* #import-tool {
     margin-left: 10px;
-}
+} */
 
 .margin-right-10{
     margin-right: 10px;
 }
 
-.translations-order-detail-button-wrapper .utility-status {
+.utility-status {
     display: flex;
     align-self: center;
 }
 
-.translations-order-detail-button-wrapper .utility-status .progressbar {
+.utility-status .progressbar {
     left: 50%;
-    top: calc(50% - 5px);
-    width: 60%;
     transform: translateX(-50%) translateY(-50%);
 }
 
@@ -384,6 +374,11 @@ del {
     color: #8f98a3;
 }
 
+.activity-log {
+    overflow-y: auto;
+    max-height: 250px;
+}
+
 .translations-order-detail-activity-log {
     margin-top: 3rem;
 }
@@ -477,8 +472,8 @@ del {
     line-height: 2em;
 }
 
-#duplicate-modal .main {
-    padding: 20px;
+#duplicate-modal .main, .p-20 {
+    padding: 20px !important;
 }
 
 #duplicate-modal .footer {
@@ -802,6 +797,10 @@ del {
     height: 8em;
 }
 
+.h-7 {
+    height: 7em;
+}
+
 .pr-10 {
     padding-right: 10em;
 }
@@ -821,6 +820,15 @@ del {
 .df {
     display: flex;
     justify-content: flex-end;
+}
+
+.scroll-x-auto {
+    overflow-x: auto;
+    align-items: center;
+}
+
+.clone-modal-tr {
+    cursor: pointer;
 }
 
 .scroll-y-auto {

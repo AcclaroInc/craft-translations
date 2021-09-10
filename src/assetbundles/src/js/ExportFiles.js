@@ -1,13 +1,13 @@
 (function($) {
 
-  if (typeof Craft.Translations === 'undefined') {
-      Craft.Translations = {};
-  }
+    if (typeof Craft.Translations === 'undefined') {
+        Craft.Translations = {};
+    }
 
-  /**
-   * Order Export Files To Translate
-   */
-  Craft.Translations.ExportFiles = Garnish.Base.extend(
+    /**
+     * Order Export Files To Translate
+     */
+    Craft.Translations.ExportFiles = Garnish.Base.extend(
     {
         $trigger: null,
         $form: null,
@@ -17,7 +17,7 @@
             this.$formId = formId;
             this.$form = $('#' + formId);
             this.$trigger = $('input.submit', this.$form);
-            this.$status = $('.utility-status', this.$form);
+            this.$status = $(".utility-status."+buttonId);
             this.$exportBtn = $('#' + buttonId);
 
             this.addListener(this.$exportBtn, 'click', '_showExportHud');
@@ -131,67 +131,22 @@
             });
             $typeSelect.trigger('change');
     
-            $('<button/>', {
+            $download = $('<button/>', {
                 type: 'submit',
                 'class': 'btn submit fullwidth',
                 'form': this.$formId,
                 text: Craft.t('app', 'Download')
             }).appendTo($form);
     
-            var $spinner = $('<div/>', {
-                'class': 'spinner hidden'
-            }).appendTo($form);
-    
             var hud = new Garnish.HUD(this.$exportBtn, $form);
+
+            this.addListener($download, 'click', () => {
+                hud.hide();
+            });
     
             hud.on('hide', $.proxy(function() {
                 this.$exportBtn.removeClass('active');
             }, this));
-
-            var submitting = false;
-    
-            this.addListener($form, 'submit', function(ev) {
-                ev.preventDefault();
-                // if (submitting) {
-                //     return;
-                // }
-    
-                // submitting = true;
-                // $spinner.removeClass('hidden');
-    
-                // var params = this.getViewParams();
-                // delete params.criteria.offset;
-                // delete params.criteria.limit;
-    
-                // params.type = $typeField.find('select').val();
-                // params.format = $formatField.find('select').val();
-    
-                // if (selectedElementIds.length) {
-                //     params.criteria.id = selectedElementIds;
-                // } else {
-                //     var limit = parseInt($limitField.find('input').val());
-                //     if (limit && !isNaN(limit)) {
-                //         params.criteria.limit = limit;
-                //     }
-                // }
-    
-                // if (Craft.csrfTokenValue) {
-                //     params[Craft.csrfTokenName] = Craft.csrfTokenValue;
-                // }
-    
-                // Craft.downloadFromUrl('POST', Craft.getActionUrl('element-indexes/export'), params)
-                //     .then(function() {
-                //         submitting = false;
-                //         $spinner.addClass('hidden');
-                //     })
-                //     .catch(function() {
-                //         submitting = false;
-                //         $spinner.addClass('hidden');
-                //         if (!this._ignoreFailedRequest) {
-                //             Craft.cp.displayError(Craft.t('app', 'A server error occurred.'));
-                //         }
-                //     });
-            });
         }
     });
 

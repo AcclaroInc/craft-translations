@@ -515,7 +515,7 @@ class DraftRepository
     
                     $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 }
-    
+
                 if ($success) {
                     $oldTokenRoute = json_encode(array(
                         'action' => 'entries/view-shared-entry',

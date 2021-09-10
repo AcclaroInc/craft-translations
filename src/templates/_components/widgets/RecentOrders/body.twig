@@ -48,24 +48,23 @@
                 {% set disabled = 'disabled' %}
             {% endif %}
 
-            <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
-                <input type="hidden" name="action" value="translations/base/sync-orders">
-                {{ csrfInput() }}
-                <div class="btngroup" style="margin-right:5px;">
-                    <input type="submit" class="btn submit {{ disabled }}" value="{{ "Sync Orders"|t('app') }}" {{ disabled }} />
-                </div>
-                <div class="sync-status"></div>
-            </form>
-
+            <a class="btn" href="{{ url('translations/orders') }}">{{ 'View all orders'|t }}</a>
             <div class="btngroup">
-                <a class="btn" href="{{ url('translations/orders') }}">{{ 'View All Orders'|t }}</a>
+                <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
+                    <input type="hidden" name="action" value="translations/base/sync-orders">
+                    {{ csrfInput() }}
+                    <div class="btngroup" style="margin-right:5px;">
+                        <button type="submit" class="btn submit {{ disabled }} icon" data-icon="refresh" value="submit" {{ disabled }}>{{ "Sync orders"|t('app') }}</button>
+                    </div>
+                    <div class="sync-status"></div>
+                </form>
             </div>
         </div>
     {% else %}
         <table class="data fullwidth table">
             <tr>
                 <td>
-                    <p>{{ "No Orders exist yet."|t('app') }}</p>
+                    <p>{{ "No orders exist yet."|t('app') }}</p>
                 </td>
             </tr>
         </table>
