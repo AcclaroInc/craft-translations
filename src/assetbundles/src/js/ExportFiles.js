@@ -16,9 +16,9 @@
         init: function(formId, buttonId) {
             this.$formId = formId;
             this.$form = $('#' + formId);
-            this.$trigger = $('input.submit', this.$form);
-            this.$status = $(".utility-status."+buttonId);
+            this.$trigger = $('#export-btn');
             this.$exportBtn = $('#' + buttonId);
+            this.$status = this.$exportBtn.find(".utility-status");
 
             this.addListener(this.$exportBtn, 'click', '_showExportHud');
             this.addListener(this.$form, 'submit', 'onSubmit');
@@ -27,7 +27,7 @@
         onSubmit: function(ev) {
             ev.preventDefault();
 
-            if (!this.$trigger.hasClass('disabled')) {
+            if (!this.$trigger.hasClass('processing')) {
                 if (!this.progressBar) {
                     this.progressBar = new Craft.ProgressBar(this.$status);
                 }
@@ -85,7 +85,7 @@
                     this.$allDone.css('opacity', 0);
                 }
 
-                this.$trigger.addClass('disabled');
+                this.$trigger.addClass('processing').css('pointer-events', 'none');
                 this.$trigger.trigger('blur');
             }
         },
@@ -99,7 +99,7 @@
             this.progressBar.$progressBar.velocity({opacity: 0}, {
                 duration: 'fast', complete: $.proxy(function() {
 
-                    this.$trigger.removeClass('disabled');
+                    this.$trigger.removeClass('processing').css('pointer-events', '');
                     this.$trigger.trigger('focus');
                 },
                 this)

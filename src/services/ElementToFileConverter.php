@@ -151,4 +151,52 @@ class ElementToFileConverter
             return $this->toJson($element, $sourceSite, $targetSite, $wordCount);
         }
     }
+
+    /**
+     * Convert Json to XML
+     *
+     * @return Xml
+     */
+    public function jsonToXml($data) {
+        $dom = new DOMDocument('1.0', 'utf-8');
+
+        $dom->formatOutput = true;
+
+        $xml = $dom->appendChild($dom->createElement('xml'));
+
+        $head = $xml->appendChild($dom->createElement('head'));
+        $original = $head->appendChild($dom->createElement('original'));
+        $preview = $head->appendChild($dom->createElement('preview'));
+        $sites = $head->appendChild($dom->createElement('sites'));
+        $langs = $head->appendChild($dom->createElement('langs'));
+        $sites->setAttribute('source-site', $data['source-site']);
+        unset($data['source-site']);
+        $sites->setAttribute('target-site', $data['target-site']);
+        unset($data['target-site']);
+        $langs->setAttribute('source-language', $data['source-language']);
+        unset($data['source-language']);
+        $langs->setAttribute('target-language', $data['target-language'] ?? 'deleted');
+        unset($data['target-language']);
+        
+        $elementIdMeta = $head->appendChild($dom->createElement('meta'));
+        $elementIdMeta->setAttribute('elementId', $data['elementId']);
+        unset($data['elementId']);
+
+        $body = $xml->appendChild($dom->createElement('body'));
+
+        foreach ($data['content'] ?? null as $key => $value) {
+            $translation = $dom->createElement('content');
+
+            $translation->setAttribute('resname', $key);
+
+            // Does the value contain characters requiring a CDATA section?
+            $text = 1 === preg_match('/[&<>]/', $value) ? $dom->createCDATASection($value) : $dom->createTextNode($value);
+
+            $translation->appendChild($text);
+
+            $body->appendChild($translation);
+        }
+
+        return $dom->saveXML();
+    }
 }

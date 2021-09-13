@@ -281,7 +281,7 @@ class OrderRepository
             !empty($settings['sandboxMode'])
         );
         foreach ($tagIds as $tagId) {
-            $tag = $this->orderTagExists($tagId);
+            $tag = Craft::$app->getTags()->getTagById($tagId);
             if ($tag) {
                 $acclaroApiClient->removeOrderTags($order->id, $tag->title);
             }
@@ -440,10 +440,27 @@ class OrderRepository
         $allOrderTags = $this->getAllOrderTags();
 
         foreach ($allOrderTags as $tag) {
-            if ($tag->title == $title) {
+            if (strtolower($tag->title) == strtolower($title)) {
                 return $tag;
             }
         }
         return false;
+    }
+
+    /**
+     * @param $elements
+     * @return array
+     */
+    public function checkOrderDuplicates($elements)
+    {
+        $orderIds = [];
+        foreach ($elements as $element) {
+            $orders = Translations::$plugin->fileRepository->getOrdersByElement($element->id);
+            if ($orders) {
+                $orderIds[$element->id] = $orders;
+            }
+        }
+
+        return $orderIds;
     }
 }

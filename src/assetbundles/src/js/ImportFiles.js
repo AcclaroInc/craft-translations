@@ -15,8 +15,8 @@
         {
             var self = this;
             var buttonId = 'import-tool';
-            this.$status = $(".utility-status."+buttonId);
             this.$importBtn = $('#'+buttonId);
+            this.$status = this.$importBtn.find(".utility-status");
             
             this.$importBtn.on('click',function(){
                 self._showImportHud();
@@ -59,7 +59,6 @@
                 'name': 'action',
                 'value': 'translations/files/import-file'
             });
-
             $hiddenAction.appendTo($form);
 
             var $hiddenOrderId = $('<input/>', {
@@ -67,8 +66,15 @@
                 'name': 'orderId',
                 'value': $('#order_id').val()
             });
-
             $hiddenOrderId.appendTo($form);
+
+            var $hiddenField = $('<input/>', {
+                'type': 'hidden',
+                'name': 'isProcessing',
+                'value': '1'
+            });
+            $hiddenField.appendTo($form);
+
             var $div = $('<div class="buttons"></div>');
             var $submit = $('<input>', {
                 'type': 'submit',
@@ -95,7 +101,8 @@
             }, this));
         },
         _showProgressBar: function() {
-            if (! this.$importBtn.hasClass('disabled')) {
+            if (!this.$importBtn.hasClass('processing')) {
+                this.$importBtn.addClass('processing').css('pointer-events', 'none');
                 if (!this.progressBar) {
                     this.progressBar = new Craft.ProgressBar(this.$status);
                 }

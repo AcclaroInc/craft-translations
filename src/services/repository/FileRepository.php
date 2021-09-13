@@ -180,6 +180,47 @@ class FileRepository
     }
 
     /**
+     * @param  int|string $elementId
+     * @return \acclaro\translations\models\FileModel
+     */
+    public function getFilesByElementId(int $elementId, $orderId = null)
+    {
+        $attributes = array(
+            'elementId' => $elementId,
+            'dateDeleted' => null
+        );
+
+        if ($orderId) {
+            $attributes['orderId'] = $orderId;
+        }
+
+        $records = FileRecord::find()->where($attributes)->all();
+
+        $files = array();
+
+        foreach ($records as $key => $record) {
+            $files[$key] = new FileModel($record->toArray([
+                'id',
+                'orderId',
+                'elementId',
+                'draftId',
+                'sourceSite',
+                'targetSite',
+                'status',
+                'wordCount',
+                'source',
+                'target',
+                'previewUrl',
+                'serviceFileId',
+                'dateDelivered',
+                'dateDeleted',
+            ]));
+        }
+
+        return $files;
+    }
+
+    /**
      * @param  int|string $orderId
      * @return \acclaro\translations\models\FileModel
      */

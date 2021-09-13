@@ -56,8 +56,6 @@ class FilesController extends Controller
 
     protected $variables;
 
-    const WORDCOUNT_LIMIT = 2000;
-
     /**
 	 * Allowed types of site images.
 	 *
@@ -118,8 +116,7 @@ class FilesController extends Controller
 
                 $path = $tempPath . $filename;
                 
-                $fileContent = $fileFormat === Constants::DEFAULT_FILE_EXPORT_FORMAT ? $file->source :
-                    Translations::$plugin->elementToFileConverter->convert($element, $fileFormat,
+                $fileContent = Translations::$plugin->elementToFileConverter->convert($element, $fileFormat,
                     [
                         'sourceSite'    => $file->sourceSite,
                         'targetSite'    => $file->targetSite,
@@ -196,7 +193,8 @@ class FilesController extends Controller
             // Make sure a file was uploaded
             if ($file && $file->size > 0) {
                 if (!in_array($file->extension, $this->_allowedTypes)) {
-                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML, JSON, CSV] files.");
+                    Craft::$app->getSession()->set('fileImportError', 1);
+                    $this->showUserMessages("Invalid extension: The plugin only support [ZIP, XML, JSON, CSV] files.");
                 }
 
                 //If is a Zip File
@@ -264,7 +262,7 @@ class FilesController extends Controller
                         $zip->close();
 
                         // Process files via job or directly based on order "size"
-                        if ($totalWordCount > self::WORDCOUNT_LIMIT) {
+                        if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                             $job = Craft::$app->queue->push(new ImportFiles([
                                 'description' => 'Updating translation drafts',
                                 'orderId' => $orderId,
@@ -274,6 +272,9 @@ class FilesController extends Controller
                             ]));
 
                             if ($job) {
+                                $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                                $queueOrders[$job] = $orderId;
+                                Craft::$app->getSession()->set('queueOrders', $queueOrders);
                                 $params = [
                                     'id' => (int) $job,
                                     'notice' => 'Done updating translation drafts',
@@ -289,17 +290,12 @@ class FilesController extends Controller
                                 Craft::$app->getElements()->deleteElement($a);
                             }
                         }
-
-                        // $this->redirect(Constants::URL_ORDER_DETAIL . $orderId, 302, true);
                         $this->showUserMessages("File uploaded successfully: $fileName", true);
                     } else {
+                        Craft::$app->getSession()->set('fileImportError', 1);
                         $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
                     }
-                } elseif (
-                    $file->extension === Constants::FILE_FORMAT_XML ||
-                    $file->extension === Constants::DEFAULT_FILE_EXPORT_FORMAT ||
-                    $file->extension === Constants::FILE_FORMAT_CSV
-                ) {
+                } else {
                     $filename = Assets::prepareAssetName($file->name);
 
                     $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
@@ -326,7 +322,7 @@ class FilesController extends Controller
                     }
 
                     // Process files via job or directly based on order "size"
-                    if ($totalWordCount > self::WORDCOUNT_LIMIT) {
+                    if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                         $job = Craft::$app->queue->push(new ImportFiles([
                             'description' => 'Updating translation drafts',
                             'orderId' => $orderId,
@@ -336,6 +332,9 @@ class FilesController extends Controller
                         ]));
 
                         if ($job) {
+                            $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                            $queueOrders[$job] = $orderId;
+                            Craft::$app->getSession()->set('queueOrders', $queueOrders);
                             $params = [
                                 'id' => (int) $job,
                                 'notice' => 'Done updating translation drafts',
@@ -353,13 +352,13 @@ class FilesController extends Controller
                         if($res !== false){
                             $this->showUserMessages("File uploaded successfully: {$file->name}", true);
                         } else {
+                            Craft::$app->getSession()->set('fileImportError', 1);
                             $this->showUserMessages("File import error. Please check the order activity log for details.");
                         }
                     }
-                } else {
-                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML, JSON, CSV] files.");
                 }
             } else {
+                Craft::$app->getSession()->set('fileImportError', 1);
                 $this->showUserMessages("The file you are trying to import is empty.");
             }
         }
@@ -503,7 +502,7 @@ class FilesController extends Controller
     }
 
 	/**
-    * Show Flash Notificaitons and Erros to the trasnlator
+    * Show Flash Notifications and Errors to the translator
 	*/
     public function showUserMessages($message, $isSuccess = false)
     {

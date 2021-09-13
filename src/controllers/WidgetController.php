@@ -451,20 +451,26 @@ class WidgetController extends Controller
                 
                 // Is the element more recent than the file?
                 if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
+                    // Translated file XML
+                    if (strpos($file->source, "<xml>") !== false) {
+                        $translatedXML = $file->source;
+                    } else {
+                        $translatedXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($file->source, true));
+                    }
+                    $translatedXML = simplexml_load_string($translatedXML)->body->asXML();
+
                     // Current entries XML
+                    $fileFormat = strpos($file->source, "<xml>") !== false ? Constants::FILE_FORMAT_XML : Constants::DEFAULT_FILE_EXPORT_FORMAT;
                     $currentXML = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        $fileFormat,
                         [
                             'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
                             'targetSite'    => $file->targetSite
                         ]
                     );
+                    $currentXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($currentXML, true));
                     $currentXML = simplexml_load_string($currentXML)->body->asXML();
-                    
-                    // Translated file XML
-                    $translatedXML = $file->source;
-                    $translatedXML = simplexml_load_string($translatedXML)->body->asXML();
 
                     // Load a new Diff class
                     $differ = new Differ();
@@ -1017,7 +1023,7 @@ class WidgetController extends Controller
             // Current entries XML
             $currentXML = Translations::$plugin->elementToFileConverter->convert(
                 $element,
-                Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                Constants::FILE_FORMAT_XML,
                 [
                     'sourceSite'    => Craft::$app->getSites()->getPrimarySite()->id,
                     'targetSite'    => Craft::$app->getSites()->getPrimarySite()->id,

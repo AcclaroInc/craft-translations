@@ -50,8 +50,7 @@ if (typeof Craft.Translations === 'undefined') {
 
         $checkboxClone = $clone.find("td.translations-checkbox-cell");
         $clone.find("td.translations-checkbox-cell").remove();
-        $clone.find("td:nth-child(5)").remove();
-        $clone.find("td:nth-child(2)").remove();
+        $clone.find("td:nth-child(4)").remove();
 
         $checkBoxCell = $('<td>', {
             class: "thin checkbox-cell translations-checkbox-cell"
@@ -216,15 +215,26 @@ if (typeof Craft.Translations === 'undefined') {
         $body = $('<div class="body pt-10"></div>');
 
         var $header = $('<div class="header df"><h1 class="mr-auto">Review and publish</h1></div>');
-        var $modalButtons = $('<button type="submit" name="submit" class="btn apply-translation disabled" style="margin:0 5px;" disabled value="draft">Merge into draft</button>\
-            <button type="submit" name="submit" class="btn submit apply-translation disabled" style="margin:0 5px;" disabled value="publish">Merge and apply draft</button>');
+        var $draftButton = $('<button type="submit" name="submit" class="btn apply-translation disabled" style="margin:0 5px;" disabled value="draft">Merge into draft</button>');
+        var $publishButton = $('<button type="submit" name="submit" class="btn submit apply-translation disabled" style="margin:0 5px;" disabled value="publish">Merge and apply draft</button>');
         var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal" style="margin-left:15px;"></a>');
         
         $($closeIcon).on('click', function() {
             $('.modal.scroll-y-auto, .modal-shade').remove();
         });
 
-        $modalButtons.appendTo($header);
+        $($draftButton).on('click', function() {
+            $draftButton.addClass('disabled').css('pointer-events', 'none');
+            $publishButton.addClass('disabled').css('pointer-events', 'none');
+        });
+
+        $($publishButton).on('click', function() {
+            $draftButton.addClass('disabled').css('pointer-events', 'none');
+            $publishButton.addClass('disabled').css('pointer-events', 'none');
+        });
+
+        $draftButton.appendTo($header);
+        $publishButton.appendTo($header);
         $closeIcon.appendTo($header);
         $header.appendTo($form);
 

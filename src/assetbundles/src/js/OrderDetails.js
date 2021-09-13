@@ -152,6 +152,20 @@
                     return true;
                 }
             }
+            // Validate order tags
+            if (key== "tags" || key == "all") {
+                $originalTags = [];
+                if ($('#originalTags').val() != "") {
+                    $originalTags = $('#originalTags').val().split(',');
+                }
+                $currentTags = [];
+                $("div .removable").each(function() {
+                    $currentTags.push($(this).data("label"));
+                });
+                if (haveDifferences($originalTags, $currentTags)) {
+                    return true;
+                }
+            }
         };
 
         return false;
@@ -197,15 +211,14 @@
         return url
     }
 
-    function hasNewTag() {
-        return $("#fields-tags").find("input[type=text]").val();
-    }
-
-    function isTagNew($newTag) {
-        var isNew = true;
+    function isAlreadyAdded($newTag) {
+        var isNew = false;
+        if ($newTag == "") {
+            return isNew;
+        }
         $("div .removable").each(function() {
-            if ($(this).data("label") === $newTag) {
-                isNew = false;
+            if ($(this).data("label").toLowerCase() === $newTag.toLowerCase()) {
+                isNew = true;
             }
         });
         return isNew;
@@ -223,6 +236,10 @@
         }
     }
 
+    function toggleSelections($toggle) {
+        $(':checkbox[name="targetSites[]"]').prop('checked', $toggle);
+    }
+
     Craft.Translations.OrderDetails = {
         init: function() {
             self = this;
@@ -236,20 +253,29 @@
             }
             // Target lang Ajax
             $(':checkbox[name="targetSites[]"], :checkbox[name="targetSites"]').on('change', function() {
-                var $all = $(':checkbox[name="targetSites"]');
-                var $checkboxes = $all.is(':checked') ? $(':checkbox[name="targetSites[]"]') : $(':checkbox[name="targetSites[]"]:checked');
                 var targetSites = [];
-                var targetSitesLabels = [];
+                if ($(this).attr('name') == "targetSites") {
+                    toggleSelections($(this).is(':checked'));
+                } else {
+                    var $all = $(':checkbox[name="targetSites[]"]');
+                    var $checkboxes = $(':checkbox[name="targetSites[]"]:checked');
+                    if ($all.length == $checkboxes.length) {
+                        $(':checkbox[name=targetSites]').prop('checked', true);
+                        $(':checkbox[name="targetSites[]"]').prop('disabled', true);
+                    }
+                    var targetSitesLabels = [];
+    
+                    $checkboxes.each(function() {
+                        var $el = $(this);
+                        var val = $el.attr('value');
+                        var label = $.trim($el.next('label').text());
+                        targetSites.push(val);
+                        targetSitesLabels.push(label);
+                    });
+                
+                    $('[data-order-attribute=targetSites]').html(targetSitesLabels.join(', '));
+                }
 
-                $checkboxes.each(function() {
-                    var $el = $(this);
-                    var val = $el.attr('value');
-                    var label = $.trim($el.next('label').text());
-                    targetSites.push(val);
-                    targetSitesLabels.push(label);
-                });
-            
-                $('[data-order-attribute=targetSites]').html(targetSitesLabels.join(', '));
                 var $originalTargetSiteIds = $('#originalTargetSiteIds').val().replace(/[\[\]\"]/g, '');
                 if (isSubmitted) {
                     if (haveDifferences($originalTargetSiteIds.split(","), targetSites)) {
@@ -489,12 +515,17 @@
 
             // Add new tags to order tags fields
             $("#fields-tags").on('keydown', 'input[type=text]', function(e) {
-                if (e.keyCode == 13 && hasNewTag() && isTagNew($(this).val())) {
+                if (e.keyCode == 13 && !isAlreadyAdded($(this).val())) {
                     $data = {'title': $(this).val()};
                     Craft.postActionRequest('translations/order/create-order-tag', $data, function(response, textStatus) {
                         if (textStatus === 'success' && response.success) {
-                            Craft.Translations.OrderDetails._addOrderTag();
+                            Craft.Translations.OrderDetails._addOrderTag(response.title);
                             $('#fields-tags').find('input[type=text]').val('');
+                            if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+                                setSubmitButtonStatus(true);
+                            } else {
+                                setSubmitButtonStatus(false);
+                            }
                         } else {
                             Craft.cp.displayError(Craft.t('app', "Error adding new tag"));
                         }
@@ -504,10 +535,14 @@
 
             $("#elementTags").on('click', 'a.custom-tag', function(e) {
                 $(this).closest('.removable').remove();
+                if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+                    setSubmitButtonStatus(true);
+                } else {
+                    setSubmitButtonStatus(false);
+                }
             });
         },
-        _addOrderTag: function() {
-            $newTag = $("#fields-tags").find("input[type=text]").val();
+        _addOrderTag: function($newTag) {
             $mainDiv = $('<div>', {
                 class: "element small removable",
                 "data-label": $newTag
@@ -527,6 +562,11 @@
             // Remove tag from order tag field
             $deleteTag.on('click', function() {
                 Craft.Translations.OrderDetails._removeOrderTag(this);
+                if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+                    setSubmitButtonStatus(true);
+                } else {
+                    setSubmitButtonStatus(false);
+                }
             });
             $deleteTag.appendTo($mainContent);
             $mainContent.appendTo($mainDiv);
@@ -671,9 +711,9 @@
 
                 Craft.postActionRequest($form.find('input[name=action]').val(), $form.serialize(), function(response, textStatus) {
                     if (response == null) {
+                        Craft.cp.displayError(Craft.t('app', "Unable to create order."));
                         sendingOrderStatus(false);
-                    }
-                    if (textStatus === 'success' && response.success) {
+                    } else if (textStatus === 'success' && response.success) {
                         if (response.message) {
                             Craft.cp.displayNotice(Craft.t('app', response.message));
                             sendingOrderStatus(false);

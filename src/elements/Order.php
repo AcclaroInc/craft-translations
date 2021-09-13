@@ -489,8 +489,7 @@ class Order extends Element
 
     public function getCpEditUrl()
     {
-        $endpoint = in_array($this->status, ['failed', 'new']) ? "" : "#files";
-        return Translations::$plugin->urlHelper->cpUrl('translations/orders/detail/'.$this->id.$endpoint);
+        return Translations::$plugin->urlHelper->cpUrl('translations/orders/detail/'.$this->id);
     }
 
     public function getStatusLabel()

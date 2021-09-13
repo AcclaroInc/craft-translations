@@ -4,6 +4,8 @@ namespace acclaro\translations;
 
 class Constants
 {
+    const WORD_COUNT_LIMIT = 2000;
+
     // Licenses
     const LICENSE_STATUS_VALID  = 'valid';
 
