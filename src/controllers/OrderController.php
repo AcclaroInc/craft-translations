@@ -118,6 +118,12 @@ class OrderController extends Controller
             $submitAction = Craft::$app->getRequest()->getParam('submit');
             if ($submitAction == "draft" || $submitAction == "publish") {
                 $variables['isProcessing'] = $submitAction;
+            } else {
+                if (Craft::$app->getSession()->get('importQueued')) {
+                    Craft::$app->getSession()->set('importQueued', "0");
+                } else {
+                    $variables['isProcessing'] = null;
+                }
             }
         }
 

@@ -11,6 +11,7 @@
 namespace acclaro\translations\controllers;
 
 use acclaro\translations\Constants;
+use acclaro\translations\services\AcclaroService;
 use Craft;
 use DateTime;
 use Exception;
@@ -60,19 +61,6 @@ class BaseController extends Controller
         parent::__construct($id, $module);
 
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin('translations')->getVersion();
-    }
-
-    public function authenticateService($service, $settings)
-    {
-        $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
-        $translator->service = $service;
-        $translator->settings = json_encode($settings);
-        
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
-
-        $authenticate = $translationService->authenticate($settings);
-
-        return $authenticate;
     }
 
     // Callback & Request Methods
@@ -200,28 +188,6 @@ class BaseController extends Controller
         }
 
         Craft::$app->end('OK');
-    }
-
-    public function actionAuthenticateTranslationService()
-    {
-        $this->requireLogin();
-        $this->requirePostRequest();
-        $currentUser = Craft::$app->getUser()->getIdentity();
-        if (!$currentUser->can('translations:translator:edit')) {
-            return $this->asJson([
-                'success' => true,
-                'error' => Translations::$plugin->translator->translate('app', 'User does not have permission to perform this action')
-            ]);
-        }
-
-        $service = Craft::$app->getRequest()->getRequiredParam('service');
-        $settings = Craft::$app->getRequest()->getRequiredParam('settings');
-
-        $response = self::authenticateService($service, $settings);
-
-        return $this->asJson(array(
-            'success' => $response,
-        ));
     }
 
     public function logIncomingRequest($endpoint)
@@ -873,7 +839,7 @@ class BaseController extends Controller
         $translator = $order->getTranslator();
         $service = $translator->service;
         $settings = $translator->getSettings();
-        $authenticate = self::authenticateService($service, $settings);
+        $authenticate = AcclaroService::authenticateService($service, $settings);
         
         if (!$authenticate && $service == 'acclaro') {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');

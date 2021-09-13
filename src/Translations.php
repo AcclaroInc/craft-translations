@@ -346,14 +346,9 @@ class Translations extends Plugin
             UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function (RegisterUrlRulesEvent $event) {
                 $event->rules = array_merge($event->rules, [
                     'translations' => 'translations/widget/index',
-
-                    'translations/orders' => 'translations/base/order-index',
-                    'translations/orders/new' => 'translations/base/order-detail',
-                    'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
-                    'translations/translators' => 'translations/translator/index',
-                    'translations/translators/new' => 'translations/translator/detail',
-                    'translations/translators/detail/<translatorId:\d+>' => 'translations/translator/detail',
-
+                    'translations/translators' => 'translations/base/translator-index',
+                    'translations/translators/new' => 'translations/base/translator-detail',
+                    'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/base/edit-global-set-draft',
                     'translations/orders/exportfile' => 'translations/files/export-file',
                     'translations/orders/importfile' => 'translations/files/import-file',

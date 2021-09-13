@@ -199,4 +199,87 @@ class ElementToFileConverter
 
         return $dom->saveXML();
     }
+
+    public function getElementIdFromData($content, $extension) {
+        try {
+            if ($extension == Constants::FILE_FORMAT_XML) {
+                $xml_content = $content;
+            } else if ($extension == Constants::FILE_FORMAT_CSV) {
+                $xml_content = $this->jsonToXml($this->csvToJson($content));
+            } else {
+                $xml_content = $this->jsonToXml(json_decode($content, true));
+            }
+
+            $dom = new \DOMDocument('1.0', 'utf-8');
+    
+            //Turn LibXml Internal Errors Reporting On!
+            libxml_use_internal_errors(true);
+            if (!$dom->loadXML( $xml_content ))
+            {
+                $errors = $this->reportXmlErrors();
+                if($errors)
+                {
+                    Craft::error(Translations::$plugin->translator->translate('app', "We found errors parsing file's xml."  . $errors));
+                    return false;
+                }
+            }
+
+            // Meta ElementId
+            $element = $dom->getElementsByTagName('meta');
+            $element = isset($element[0]) ? $element[0] : $element;
+    
+            return (string)$element->getAttribute('elementId');
+        } catch(Exception $e) {
+            Craft::error(Translations::$plugin->translator->translate('app', $e->getMessage()));
+        }
+        
+    }
+
+    private function csvToJson($file_content)
+    {
+        $jsonData = [];
+        $contentArray = explode("\n", $file_content);
+
+        if (count($contentArray) != 2) {
+            $this->order->logActivity(
+                Translations::$plugin->translator->translate(
+                    'app', $asset->getFilename()." file you are trying to import has invalid content."
+                )
+            );
+            return false;
+        }
+
+        $keys = explode(",", $contentArray[0]);
+        $values = explode(",", $contentArray[1]);
+
+        if (count($keys) != count($values)) {
+            $this->order->logActivity(
+                Translations::$plugin->translator->translate(
+                    'app', "csv file you are trying to import has header and value mismatch."
+                )
+            );
+            return false;
+        }
+
+        $metaKeys = [
+            'source-site',
+            'target-site',
+            'source-language',
+            'target-language',
+            'elementId',
+            'wordCount',
+        ];
+
+        foreach ($keys as $i => $key) {
+            $key = trim($key, '"');
+            $value = trim($values[$i], '"');
+
+            if (in_array($key, $metaKeys)) {
+                $jsonData[$key] = $value;
+                continue;
+            }
+            $jsonData['content'][$key] = $value;
+        }
+        return $jsonData;
+    }
 }

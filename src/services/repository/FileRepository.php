@@ -468,4 +468,18 @@ class FileRepository
         }
         return true;
     }
+
+    public function getUploadedFilesWordCount($asset, $format)
+    {
+        $fileContents = $asset->getContents();
+        
+        $elementId = Translations::$plugin->elementToFileConverter->getElementIdFromData($fileContents, $format);
+        if (! $elementId) {
+            return 0;
+        }
+
+        $element = Craft::$app->getElements()->getElementById($elementId);
+
+        return Translations::$plugin->elementTranslator->getWordCount($element);
+    }
 }

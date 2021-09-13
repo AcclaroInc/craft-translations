@@ -26,6 +26,8 @@
 
         onSubmit: function(ev) {
             ev.preventDefault();
+            
+            this.$trigger.css('background-color', '#ced8e5');
 
             if (!this.$trigger.hasClass('processing')) {
                 if (!this.progressBar) {
@@ -88,6 +90,7 @@
                 this.$trigger.addClass('processing').css('pointer-events', 'none');
                 this.$trigger.trigger('blur');
             }
+            this.$trigger.css('background-color', '');
         },
 
         updateProgressBar: function() {

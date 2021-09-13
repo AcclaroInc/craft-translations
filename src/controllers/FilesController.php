@@ -275,6 +275,7 @@ class FilesController extends Controller
                                 $queueOrders = Craft::$app->getSession()->get('queueOrders');
                                 $queueOrders[$job] = $orderId;
                                 Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                                Craft::$app->getSession()->set('importQueued', "1");
                                 $params = [
                                     'id' => (int) $job,
                                     'notice' => 'Done updating translation drafts',
@@ -321,6 +322,8 @@ class FilesController extends Controller
                         return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                     }
 
+                    $totalWordCount = Translations::$plugin->fileRepository->getUploadedFilesWordCount($asset, $file->extension);
+
                     // Process files via job or directly based on order "size"
                     if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                         $job = Craft::$app->queue->push(new ImportFiles([
@@ -335,6 +338,7 @@ class FilesController extends Controller
                             $queueOrders = Craft::$app->getSession()->get('queueOrders');
                             $queueOrders[$job] = $orderId;
                             Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                            Craft::$app->getSession()->set('importQueued', "1");
                             $params = [
                                 'id' => (int) $job,
                                 'notice' => 'Done updating translation drafts',
