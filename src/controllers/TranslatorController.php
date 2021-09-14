@@ -72,7 +72,7 @@ class TranslatorController extends Controller
             $pendingOrdersCount = count($pendingOrders);
     
             if ($pendingOrdersCount > 0) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The translator cannot be deleted as orders has been created already.'));
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The translator cannot be deleted as orders have been created already.'));
     
                 return $this->asJson(["success" => false]);
             }
