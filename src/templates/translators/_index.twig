@@ -22,7 +22,7 @@
             <li><a class="error delete-translator disabled" title="{{ 'Delete translator service'|t }}" data-confirm="{{ 'Are you sure you want to delete selected translators?'|t }}">Delete</a></li>
         </ul>
     </div>
-    <a class="btn big add icon btn-create-new-order" href="{{ url('translations/orders/new') }}" style="margin-left:5px;">{{ 'Create new order'|t }}</a>
+    <a class="btn big icon btn-create-new-order" href="{{ url('translations/orders/create') }}" data-icon="language" style="margin-left:5px;">{{ 'New order'|t }}</a>
     <a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New translator'|t }}</a>
 {% endblock %}
 

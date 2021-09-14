@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Translations for Craft plugin for Craft CMS 3.x
  *
@@ -6,14 +7,14 @@
  *
  * @link      http://www.acclaro.com/
  * @copyright Copyright (c) 2018 Acclaro
- */
+*/
 
 namespace acclaro\translations\assetbundles;
 
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
 
-class OrderAssets extends AssetBundle
+class OrderAsset extends AssetBundle
 {
     public function init()
     {
@@ -24,12 +25,12 @@ class OrderAssets extends AssetBundle
         ];
 
         $this->js = [
+            'js/OrderDetails.js',
             'js/OrderEntries.js',
             'js/OrderIndex.js',
             'js/ExportFiles.js',
             'js/ImportFiles.js',
             'js/diff2html.min.js',
-            'js/CustomExporters.js',
         ];
 
         $this->css = [

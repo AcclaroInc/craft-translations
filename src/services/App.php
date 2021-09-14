@@ -131,9 +131,9 @@ class App extends Component
     public $elementTranslator;
     
     /**
-     * @var ElementToXmlConverter
+     * @var ElementToFileConverter
      */
-    public $elementToXmlConverter;
+    public $elementToFileConverter;
     
     /**
      * @var AcclaroService
@@ -170,7 +170,7 @@ class App extends Component
         $this->fieldTranslatorFactory = new fieldtranslator\Factory();
         $this->translatorFactory = new translator\Factory();
         $this->elementTranslator = new ElementTranslator();
-        $this->elementToXmlConverter = new ElementToXmlConverter();
+        $this->elementToFileConverter = new ElementToFileConverter();
         $this->orderSearchParams = new OrderSearchParams();
     }
 }

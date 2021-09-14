@@ -46,6 +46,7 @@ use acclaro\translations\assetbundles\DashboardAssets;
 use acclaro\translations\services\repository\FileRepository;
 use acclaro\translations\services\repository\SiteRepository;
 use acclaro\translations\assetbundles\RecentlyModifiedAssets;
+use acclaro\translations\Constants;
 use craft\models\Updates as UpdatesModel;
 
 // Widget Classes
@@ -450,13 +451,26 @@ class WidgetController extends Controller
                 
                 // Is the element more recent than the file?
                 if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
-                    // Current entries XML
-                    $currentXML = Translations::$plugin->elementToXmlConverter->toXml($element, 0, Craft::$app->getSites()->getPrimarySite()->id, $file->targetSite);
-                    $currentXML = simplexml_load_string($currentXML)->body->asXML();
-                    
                     // Translated file XML
-                    $translatedXML = $file->source;
+                    if (strpos($file->source, "<xml>") !== false) {
+                        $translatedXML = $file->source;
+                    } else {
+                        $translatedXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($file->source, true));
+                    }
                     $translatedXML = simplexml_load_string($translatedXML)->body->asXML();
+
+                    // Current entries XML
+                    $fileFormat = strpos($file->source, "<xml>") !== false ? Constants::FILE_FORMAT_XML : Constants::DEFAULT_FILE_EXPORT_FORMAT;
+                    $currentXML = Translations::$plugin->elementToFileConverter->convert(
+                        $element,
+                        $fileFormat,
+                        [
+                            'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
+                            'targetSite'    => $file->targetSite
+                        ]
+                    );
+                    $currentXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($currentXML, true));
+                    $currentXML = simplexml_load_string($currentXML)->body->asXML();
 
                     // Load a new Diff class
                     $differ = new Differ();
@@ -1007,7 +1021,14 @@ class WidgetController extends Controller
             $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
 
             // Current entries XML
-            $currentXML = Translations::$plugin->elementToXmlConverter->toXml($element, 0, Craft::$app->getSites()->getPrimarySite()->id, Craft::$app->getSites()->getPrimarySite()->id);
+            $currentXML = Translations::$plugin->elementToFileConverter->convert(
+                $element,
+                Constants::FILE_FORMAT_XML,
+                [
+                    'sourceSite'    => Craft::$app->getSites()->getPrimarySite()->id,
+                    'targetSite'    => Craft::$app->getSites()->getPrimarySite()->id,
+                ]
+            );
             $currentXML = simplexml_load_string($currentXML)->body->asXML();
 
             $blank = '';

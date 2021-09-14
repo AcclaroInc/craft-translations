@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\repository;
 
+use acclaro\translations\Constants;
 use Craft;
 use Exception;
 use acclaro\translations\Translations;
@@ -179,6 +180,47 @@ class FileRepository
     }
 
     /**
+     * @param  int|string $elementId
+     * @return \acclaro\translations\models\FileModel
+     */
+    public function getFilesByElementId(int $elementId, $orderId = null)
+    {
+        $attributes = array(
+            'elementId' => $elementId,
+            'dateDeleted' => null
+        );
+
+        if ($orderId) {
+            $attributes['orderId'] = $orderId;
+        }
+
+        $records = FileRecord::find()->where($attributes)->all();
+
+        $files = array();
+
+        foreach ($records as $key => $record) {
+            $files[$key] = new FileModel($record->toArray([
+                'id',
+                'orderId',
+                'elementId',
+                'draftId',
+                'sourceSite',
+                'targetSite',
+                'status',
+                'wordCount',
+                'source',
+                'target',
+                'previewUrl',
+                'serviceFileId',
+                'dateDelivered',
+                'dateDeleted',
+            ]));
+        }
+
+        return $files;
+    }
+
+    /**
      * @param  int|string $orderId
      * @return \acclaro\translations\models\FileModel
      */
@@ -299,6 +341,19 @@ class FileRepository
         return FileRecord::findOne($attributes)->delete();
     }
 
+    public function deleteByOrderId($orderId)
+    {
+        $attributes = ['orderId' => (int) $orderId];
+
+        $records = FileRecord::find()->where($attributes)->all();
+
+        foreach($records as $record) {
+            $record->delete();
+        }
+        
+        return true;
+    }
+
     /**
      * @param $order
      * @param null $queue
@@ -323,12 +378,14 @@ class FileRepository
                 if ($draft) {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
                     $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
-                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
+                    $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        $file->draftId,
-                        $file->sourceSite,
-                        $file->targetSite,
-                        $file->previewUrl
+                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        [
+                            'sourceSite'    => $file->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'previewUrl'    => $file->previewUrl
+                        ]
                     );
                 }
 
@@ -375,5 +432,54 @@ class FileRepository
         }
 
         return $orderIds;
+    }
+
+    /**
+     * @param $order
+     * @param array $wordcounts
+     * @return bool
+     */
+    public function createOrderFiles($order, $wordCounts)
+    {
+        // ? Create File for each element per target language
+        foreach ($order->getTargetSitesArray() as $key => $targetSite) {
+            foreach ($order->getElements() as $element) {
+                $wordCount = $wordCounts[$element->id] ?? 0;
+
+                $file = $this->makeNewFile();
+
+                $file->orderId = $order->id;
+                $file->elementId = $element->id;
+                $file->sourceSite = $order->sourceSite;
+                $file->targetSite = $targetSite;
+                $file->source = Translations::$plugin->elementToFileConverter->convert(
+                    $element,
+                    Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                    [
+                        'sourceSite'    => $order->sourceSite,
+                        'targetSite'    => $targetSite,
+                        'wordCount'    => $wordCount,
+                    ]
+                );
+                $file->wordCount = $wordCount;
+
+                Translations::$plugin->fileRepository->saveFile($file);
+            }
+        }
+        return true;
+    }
+
+    public function getUploadedFilesWordCount($asset, $format)
+    {
+        $fileContents = $asset->getContents();
+        
+        $elementId = Translations::$plugin->elementToFileConverter->getElementIdFromData($fileContents, $format);
+        if (! $elementId) {
+            return 0;
+        }
+
+        $element = Craft::$app->getElements()->getElementById($elementId);
+
+        return Translations::$plugin->elementTranslator->getWordCount($element);
     }
 }

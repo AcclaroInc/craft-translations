@@ -112,7 +112,7 @@
                         $modal.show();
 
                         // Set the reorder button
-                        $('.reorderUrl').attr('href', Craft.getUrl('translations/orders/new?sourceSite='+ content[$(e.target).attr('data-id')].siteId +'&elements[]='+ content[$(e.target).attr('data-id')].entryId));
+                        $('.reorderUrl').attr('href', Craft.getUrl('translations/orders/create?sourceSite='+ content[$(e.target).attr('data-id')].siteId +'&elements[]='+ content[$(e.target).attr('data-id')].entryId));
 
                         // Set modification details
                         for (let index = 0; index < classNames.length; index++) {
@@ -150,7 +150,7 @@
                 }
 
                 if (!$('#bulk-reorder').hasClass('disabled')) {
-                    $('#bulk-reorder').attr('href', Craft.getUrl('translations/orders/new?sourceSite='+ Craft.siteId + elements));
+                    $('#bulk-reorder').attr('href', Craft.getUrl('translations/orders/create?sourceSite='+ Craft.siteId + elements));
                 }
             }
         });

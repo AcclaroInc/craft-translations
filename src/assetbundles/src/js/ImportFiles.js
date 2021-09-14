@@ -9,78 +9,116 @@
      */
     Craft.Translations.ImportFiles =
     {
+        $importBtn: null,
+
         init: function()
         {
             var self = this;
-
-            var $btn = $('#import-tool');
+            var buttonId = 'import-tool';
+            this.$importBtn = $('#'+buttonId);
+            this.$status = this.$importBtn.find(".utility-status");
             
-            var form = self.buildImportFilesForm();
-            var url = Craft.getUrl('translations/orders/importfile');
-            
-            $btn.on('click',function(){
-                var hud = new Garnish.HUD($btn, form, {
-                    orientations: ['top', 'bottom', 'right', 'left'],
-                    hudClass: 'hud toolhud import',
-                });
-            return false;
+            this.$importBtn.on('click',function(){
+                self._showImportHud();
             });
         },
-
-        buildImportFilesForm: function()
+        _showImportHud: function()
         {
-            var $form = $('<form>', {
+            var self = this;
+            this.$importBtn.addClass('active');
+            var $form = $('<form/>', {
                 'method': 'POST',
                 'enctype' : 'multipart/form-data',
                 'accept-charset' : 'UTF-8',
-                'class' : 'form last',
+                'class' : 'form last export-form',
                 'action' : '',
                 'id' : 'translations-form-import'
             });
 
-
             $form.append(Craft.getCsrfInput());
 
-            var $label = $('<label>Select ZIP or XML File to Import</label>');
+            var $label = $('<div class="mb-1"><label>Supported file formats<br>[ ZIP, XML, JSON, CSV ]</label></div>');
 
+            $label.appendTo($form);
+            
+            $label = $('<label for="import-formId"><strong>Select File to Import</strong></label>');
             $label.appendTo($form);
 
             var $divFile = $('<div class="input-file"></div>');
-            var $file = $('<input>', {    
+            var $file = $('<input/>', {   
                 'type': 'file',
                 'name': 'zip-upload',
+                'id': 'import-formId'
             });
 
             $file.appendTo($divFile);
             $divFile.appendTo($form);
 
-            var $hiddenAction = $('<input>', {
+            var $hiddenAction = $('<input/>', {
                 'type': 'hidden',
                 'name': 'action',
                 'value': 'translations/files/import-file'
             });
-
             $hiddenAction.appendTo($form);
 
-            var $hiddenOrderId = $('<input>', {
+            var $hiddenOrderId = $('<input/>', {
                 'type': 'hidden',
                 'name': 'orderId',
                 'value': $('#order_id').val()
             });
-
             $hiddenOrderId.appendTo($form);
+
+            var $hiddenField = $('<input/>', {
+                'type': 'hidden',
+                'name': 'isProcessing',
+                'value': '1'
+            });
+            $hiddenField.appendTo($form);
+
             var $div = $('<div class="buttons"></div>');
             var $submit = $('<input>', {
                 'type': 'submit',
                 'id' : 'submit',
-                'class' : 'btn submit',
-                'value' : 'Go!'
+                'class' : 'btn submit fullwidth',
+                'value' : 'Upload'
             });
 
             $submit.appendTo($div);
             $div.appendTo($form);
 
-            return $form;
+            var hud = new Garnish.HUD(this.$importBtn, $form, {
+                orientations: ['top', 'bottom', 'right', 'left'],
+                hudClass: 'hud toolhud import',
+            });
+
+            $submit.on('click', function() {
+                hud.hide();
+                self._showProgressBar();
+            });
+    
+            hud.on('hide', $.proxy(function() {
+                this.$importBtn.removeClass('active');
+            }, this));
+        },
+        _showProgressBar: function() {
+            if (!this.$importBtn.hasClass('processing')) {
+                this.$importBtn.addClass('processing').css('pointer-events', 'none');
+                if (!this.progressBar) {
+                    this.progressBar = new Craft.ProgressBar(this.$status);
+                }
+                else {
+                    this.progressBar.resetProgressBar();
+                }
+
+                this.progressBar.$progressBar.removeClass('hidden');
+                this.progressBar.$progressBar.velocity('stop').velocity(
+                    {
+                        opacity: 1
+                    },
+                    {
+                        complete: $.proxy(function() {}, this)
+                    });
+            }
         }
     };
 
@@ -89,92 +127,3 @@
     });
 
 })(jQuery);
-
-// Craft.Translations.ImportFiles = Garnish.Base.extend(
-//     {
-//         uploader: null,
-//         allowedKinds: null,
-//         $element: null,
-//         settings: null,
-
-//         init: function($element, settings) {
-//             this.$element = $element;
-//             this.allowedKinds = null;
-
-//             settings = $.extend({}, Craft.Translations.ImportFiles.defaults, settings);
-
-//             var events = settings.events;
-//             delete settings.events;
-
-//             settings.autoUpload = false;
-
-//             this.uploader = this.$element.fileupload(settings);
-//             for (var event in events) {
-//                 if (!events.hasOwnProperty(event)) {
-//                     continue;
-//                 }
-
-//                 this.uploader.on(event, events[event]);
-//             }
-
-//             this.settings = settings;
-
-//             this.uploader.on('fileuploadadd', $.proxy(this, 'onFileAdd'));
-//         },
-
-//         /**
-//          * Set uploader parameters.
-//          */
-//         setParams: function(paramObject) {
-//             // If CSRF protection isn't enabled, these won't be defined.
-//             if (typeof Craft.csrfTokenName !== 'undefined' && typeof Craft.csrfTokenValue !== 'undefined') {
-//                 // Add the CSRF token
-//                 paramObject[Craft.csrfTokenName] = Craft.csrfTokenValue;
-//             }
-
-//             this.uploader.fileupload('option', {formData: paramObject});
-//         },
-
-//         /**
-//          * Get the number of uploads in progress.
-//          */
-//         getInProgress: function() {
-//             return this.uploader.fileupload('active');
-//         },
-
-//         /**
-//          * Called on file add.
-//          */
-//         onFileAdd: function(e, data) {
-//             e.stopPropagation();
-
-//             // Make sure that file API is there before relying on it
-//             data.process().done($.proxy(function() {
-//                 data.submit();
-//             }, this));
-
-//             return true;
-//         },
-
-//         destroy: function() {
-//             this.$element.fileupload('destroy');
-//             this.base();
-//         }
-//     },
-
-// // Static Properties
-// // =============================================================================
-
-//     {
-//         defaults: {
-//             dropZone: null,
-//             pasteZone: null,
-//             fileInput: true,
-//             sequentialUploads: false,
-//             allowedKinds: null,
-//             events: {},
-//             canAddMoreFiles: false,
-//             headers: {'Accept' : 'application/json;q=0.9,*/*;q=0.8'},
-//             paramName: 'zip-upload'
-//         }
-// });
