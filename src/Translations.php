@@ -542,9 +542,10 @@ class Translations extends Plugin
                 'apply-drafts',
                 'apply-translation-draft',
                 'save-draft-and-publish',
+                'publish-draft',
                 'run',
             ];
-    
+
             if(!empty($response) && !in_array($action, $applyDraftActions)) {
     
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));

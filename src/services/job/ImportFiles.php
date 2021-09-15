@@ -537,7 +537,7 @@ class ImportFiles extends BaseJob
     private function csvToJson($asset, $file_content)
     {
         $jsonData = [];
-        $contentArray = explode("\n", $file_content);
+        $contentArray = explode("\n", $file_content, 2);
 
         if (count($contentArray) != 2) {
             $this->order->logActivity(
@@ -549,8 +549,10 @@ class ImportFiles extends BaseJob
             return false;
         }
 
-        $keys = explode(",", $contentArray[0]);
-        $values = explode(",", $contentArray[1]);
+        $contentArray = str_replace('","', '"!@#$"', $contentArray);
+
+        $keys = explode("!@#$", $contentArray[0]);
+        $values = explode("!@#$", $contentArray[1]);
 
         if (count($keys) != count($values)) {
             $this->order->logActivity(

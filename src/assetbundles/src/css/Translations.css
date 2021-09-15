@@ -871,3 +871,7 @@ select[name="version"] {
 .bg-none {
     background: none !important;
 }
+
+.processing {
+    background-color: #ced8e5 !important;
+}

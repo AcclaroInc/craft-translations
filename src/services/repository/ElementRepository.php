@@ -13,11 +13,25 @@ namespace acclaro\translations\services\repository;
 use Craft;
 use Exception;
 use acclaro\translations\Translations;
+use craft\elements\Entry;
 
 class ElementRepository
 {
     public function getElementById($element, $siteId)
     {
         return Craft::$app->elements->getElementById($element, $siteId);
+    }
+
+    public function getElementByDraftId($draftId, $siteId = null)
+    {
+        if (! $siteId) {
+            $siteId = Craft::$app->getSites()->getPrimarySite()->id;
+        }
+        return Entry::find()
+            ->draftId($draftId)
+            ->provisionalDrafts(false)
+            ->siteId($siteId)
+            ->anyStatus()
+            ->one();
     }
 }

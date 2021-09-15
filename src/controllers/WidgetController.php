@@ -420,14 +420,14 @@ class WidgetController extends Controller
 
         // Get array of entry IDs sorted by most recently updated
         $entries = Entry::find()
-        ->orderBy(['dateUpdated' => SORT_DESC])
-        ->ids();
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->ids();
 
         // Get Files and order by most recently updated
         $records = FileRecord::find()
-        ->where(['status' => 'published'])
-        ->orderBy(['dateUpdated' => SORT_DESC])
-        ->all();
+            ->where(['status' => 'published'])
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->all();
 
         // Build file array
         foreach ($records as $key => $record) {
@@ -460,16 +460,15 @@ class WidgetController extends Controller
                     $translatedXML = simplexml_load_string($translatedXML)->body->asXML();
 
                     // Current entries XML
-                    $fileFormat = strpos($file->source, "<xml>") !== false ? Constants::FILE_FORMAT_XML : Constants::DEFAULT_FILE_EXPORT_FORMAT;
-                    $currentXML = Translations::$plugin->elementToFileConverter->convert(
+                    $currentJson = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        $fileFormat,
+                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
                         [
                             'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
                             'targetSite'    => $file->targetSite
                         ]
                     );
-                    $currentXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($currentXML, true));
+                    $currentXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($currentJson, true));
                     $currentXML = simplexml_load_string($currentXML)->body->asXML();
 
                     // Load a new Diff class
