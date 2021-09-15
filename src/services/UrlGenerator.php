@@ -122,7 +122,7 @@ class UrlGenerator
             $route = [
                 'preview/preview', [
                     'elementType' => $className,
-                    'sourceId' => $element->sourceId,
+                    'sourceId' => $element->canonicalId,
                     'siteId' => $siteId ? $siteId : $element->siteId,
                     'draftId' => $element->draftId,
                     'revisionId' => $element->revisionId
