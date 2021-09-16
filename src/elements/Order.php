@@ -28,7 +28,10 @@ use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\db\OrderQuery;
-
+use craft\controllers\ElementIndexesController;
+use craft\elements\actions\Delete;
+use craft\elements\Entry;
+use craft\models\Section;
 
 /**
  * @author    Acclaro
@@ -80,6 +83,12 @@ class Order extends Element
     public $elementIds;
     
     public $siteId;
+
+    public $trackChanges;
+
+    public $asynchronousPublishing;
+
+    public $tags;
 
     /**
      * Properties
@@ -145,6 +154,11 @@ class Order extends Element
     //     ];
     // }
 
+    protected static function defineActions(string $source = null): array
+    {
+        return [Delete::class];
+    }
+
     protected static function defineSources(string $context = null): array
     {
         $sources = [
@@ -155,11 +169,51 @@ class Order extends Element
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
-                'key' => 'in-progress',
-                'label' => Translations::$plugin->translator->translate('app', 'Orders in progress'),
+                'key' => 'pending',
+                'label' => Translations::$plugin->translator->translate('app', 'Pending'),
                 'criteria' => [
                     'status' => [
-                        'new', 'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval', 'complete'
+                        'new'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'in-progress',
+                'label' => Translations::$plugin->translator->translate('app', 'In progress'),
+                'criteria' => [
+                    'status' => [
+                        'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'ready-to-apply',
+                'label' => Translations::$plugin->translator->translate('app', 'Ready to apply'),
+                'criteria' => [
+                    'status' => [
+                        'complete'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'applied',
+                'label' => Translations::$plugin->translator->translate('app', 'Applied'),
+                'criteria' => [
+                    'status' => [
+                        'published'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'failed',
+                'label' => Translations::$plugin->translator->translate('app', 'Failed'),
+                'criteria' => [
+                    'status' => [
+                        'failed'
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -308,16 +362,16 @@ class Order extends Element
     {
         $attributes = [
             'title' => ['label' => Translations::$plugin->translator->translate('app', 'Name')],
-            'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
-            'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
-            'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
-            'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
-            'translatorId' => ['label' => Translations::$plugin->translator->translate('app', 'Translator')],
-            'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
+            // 'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
+            // 'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
+            // 'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
+            // 'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
             'status' => ['label' => Translations::$plugin->translator->translate('app', 'Status')],
+            'translatorId' => ['label' => Translations::$plugin->translator->translate('app', 'Translator')],
+            // 'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
             'dateOrdered' => ['label' => Translations::$plugin->translator->translate('app', 'Created')],
             'dateUpdated' => ['label' => Translations::$plugin->translator->translate('app', 'Updated')],
-            'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
+            // 'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
         ];
 
         return $attributes;
@@ -360,19 +414,15 @@ class Order extends Element
     {
         $elementIds = $this->elementIds ? json_decode($this->elementIds) : array();
 
-        $elements = array();
-        
         foreach ($elementIds as $key => $elementId) {
             if (!array_key_exists($elementId, $this->_elements)) {
-                $this->_elements[$elementId] = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
-            }
+                $element = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
 
-            if ($this->_elements[$elementId]) {
-                $elements[] = $this->_elements[$elementId];
+                $this->_elements[$elementId] = $element;
             }
         }
 
-        return $elements;
+        return $this->_elements;
     }
 
     public function getFiles()
@@ -484,6 +534,7 @@ class Order extends Element
         $record->entriesCount =  $this->entriesCount;
         $record->wordCount =  $this->wordCount;
         $record->elementIds =  $this->elementIds;
+        $record->tags =  $this->tags;
         
         $record->save(false);
         

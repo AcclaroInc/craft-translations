@@ -17,7 +17,8 @@ Craft.Translations.AddEntriesToTranslationOrder = {
     $createNewLink: null,
 
     isEditEntryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="entries/save-entry"]').length > 0;
+        return $('form#main-form input[type=hidden][name=action][value="entries/save-entry"]').length > 0 ||
+        $('form#main-form input[type=hidden][name=action][value="entry-revisions/publish-draft"]').length > 0;
     },
 
     getEditEntryId: function() {
@@ -129,6 +130,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         if (this.isEditEntryScreen()) {
             $settings = document.getElementById('settings');
+
             $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
@@ -138,21 +140,19 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
         } else {
-            if (data.licenseStatus === 'valid') {
-                $btngroup.insertBefore('#header #action-button');
-            }
+            $btngroup.insertBefore('#header #action-button');
         }
 
         this.$btn = $('<a>', {
-            'class': 'btn submit icon',
+            'class': 'btn icon',
             'href': '#',
             'data-icon': "language",
         });
 
-        this.$btn.html("<span>" + Craft.t('app', 'New Translation') + "</span>");
+        this.$btn.html("<span>" + Craft.t('app', 'New translation') + "</span>");
 
         this.$menubtn = $('<div>', {
-            'class': 'btn submit menubtn'
+            'class': 'btn menubtn'
         });
 
         if (!this.isEditEntryScreen()) {
@@ -266,7 +266,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         $item.prependTo($dropdown);
 
-        var $link = Craft.getUrl('translations/orders/new');
+        var $link = Craft.getUrl('translations/orders/create');
 
         this.$btn.attr('href', $link);
 
@@ -291,7 +291,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
             var $form = $('<form>', {
                 'method': 'POST',
-                'action': Craft.getUrl('translations/orders/new')
+                'action': Craft.getUrl('translations/orders/create')
             });
 
             $form.hide();

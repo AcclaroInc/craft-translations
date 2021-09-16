@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\translator;
 
+use acclaro\translations\Constants;
 use Craft;
 use DateTime;
 use Exception;
@@ -74,44 +75,33 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         return;
     }
 
-    public function updateIOFile(Order $order, FileModel $file, $target, $file_name)
-    { 
-        if (empty($target)) 
-        {
-            return;
-        }
-
-        $file->status = 'complete';
+    public function updateIOFile(Order $order, FileModel $file)
+    {
+        $target = $file->target;
         $file->dateDelivered = new \DateTime();
-       
-        if ($target) 
-        {
-            $file->target = $target;
 
-            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+        $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
-            if ($element instanceof GlobalSet) {
-                $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
-            } else if ($element instanceof Category) {
-                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
+        if ($element instanceof GlobalSet) {
+            $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+        } else if ($element instanceof Category) {
+            $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
 
-                $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
-                $draft->groupId = $category->groupId;
-            } else if ($element instanceof Asset) {
-                $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId, $file->targetSite);
-
-            } else {
-                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-            }
-
-            return $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite, $order, $file_name);
+            $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
+            $draft->groupId = $category->groupId;
+        } else if ($element instanceof Asset) {
+            $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+        }else {
+            $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
+
+        return $this->updateDraft($element, $draft, $target, $file->sourceSite, $file->targetSite, $order);
     }
 
-    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite, $order, $file_name)
+    public function updateDraft($element, $draft, $translatedContent, $sourceSite, $targetSite, $order)
     {
         // Get the data from the XML files
-        $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
+        $targetData = Translations::$plugin->elementTranslator->getTargetData($translatedContent);
 
         switch (true) {
             // Update Entry Drafts
@@ -120,9 +110,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
 
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
-
                 $draft->setFieldValues($post);
-                
                 $draft->siteId = $targetSite;
 
                 $res = Translations::$plugin->draftRepository->saveDraft($draft);

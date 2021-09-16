@@ -19,6 +19,8 @@ class AcclaroApiClient
 
     const DELIVERY = 'craftcms';
 
+    const DEFAULT_TAG = 'CraftCMS';
+
     protected $loggingEnabled = false;
 
     public function __construct(
@@ -171,7 +173,7 @@ class AcclaroApiClient
 
     public function createOrder($name, $comments, $dueDate, $craftOrderId, $wordCount)
     {
-        return $this->post('CreateOrder', array(
+        $order = $this->post('CreateOrder', array(
             'name' => $name,
             'comments' => $comments,
             'duedate' => $dueDate,
@@ -179,6 +181,10 @@ class AcclaroApiClient
             'delivery' => self::DELIVERY,
             'estwordcount' => $wordCount,
         ));
+
+        $this->addOrderTags($order->orderid);
+
+        return $order;
     }
 
     public function requestOrderCallback($orderId, $url)
@@ -317,6 +323,22 @@ class AcclaroApiClient
             'orderid' => $orderId,
             'name' => $name,
             'delivery' => self::DELIVERY,
+        ));
+    }
+
+    public function addOrderTags($orderId, $tags = null)
+    {
+        return $this->post('AddOrderTag', array(
+            'orderid' => $orderId,
+            'tag'     => $tags ?? self::DEFAULT_TAG
+        ));
+    }
+
+    public function removeOrderTags($orderId, $tag)
+    {
+        return $this->post('DeleteOrderTag', array(
+            'orderid' => $orderId,
+            'tag'     => $tag
         ));
     }
 }

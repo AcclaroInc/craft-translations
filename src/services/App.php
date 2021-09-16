@@ -74,6 +74,11 @@ class App extends Component
      * @var repository\EntryRepository
      */
     public $entryRepository;
+
+    /**
+     * @var repository\ElementRepository
+     */
+    public $elementRepository;
     
     /**
      * @var repository\FileRepository
@@ -136,9 +141,9 @@ class App extends Component
     public $elementTranslator;
     
     /**
-     * @var ElementToXmlConverter
+     * @var ElementToFileConverter
      */
-    public $elementToXmlConverter;
+    public $elementToFileConverter;
     
     /**
      * @var AcclaroService
@@ -164,6 +169,7 @@ class App extends Component
         $this->tagRepository = new repository\TagRepository();
         $this->draftRepository = new repository\DraftRepository();
         $this->entryRepository = new repository\EntryRepository();
+        $this->elementRepository = new repository\ElementRepository();
         $this->fileRepository = new repository\FileRepository();
         $this->globalSetRepository = new repository\GlobalSetRepository();
         $this->globalSetDraftRepository = new repository\GlobalSetDraftRepository();
@@ -176,7 +182,7 @@ class App extends Component
         $this->fieldTranslatorFactory = new fieldtranslator\Factory();
         $this->translatorFactory = new translator\Factory();
         $this->elementTranslator = new ElementTranslator();
-        $this->elementToXmlConverter = new ElementToXmlConverter();
+        $this->elementToFileConverter = new ElementToFileConverter();
         $this->orderSearchParams = new OrderSearchParams();
     }
 }

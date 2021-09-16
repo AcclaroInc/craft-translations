@@ -347,12 +347,9 @@ class Translations extends Plugin
             UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function (RegisterUrlRulesEvent $event) {
                 $event->rules = array_merge($event->rules, [
                     'translations' => 'translations/widget/index',
-                    'translations/orders' => 'translations/base/order-index',
-                    'translations/orders/new' => 'translations/base/order-detail',
-                    'translations/orders/detail/<orderId:\d+>' => 'translations/base/order-detail',
-                    'translations/translators' => 'translations/translator/index',
-                    'translations/translators/new' => 'translations/translator/detail',
-                    'translations/translators/detail/<translatorId:\d+>' => 'translations/translator/detail',
+                    'translations/translators' => 'translations/base/translator-index',
+                    'translations/translators/new' => 'translations/base/translator-detail',
+                    'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/base/edit-global-set-draft',
                     'translations/orders/exportfile' => 'translations/files/export-file',
                     'translations/orders/importfile' => 'translations/files/import-file',
@@ -367,6 +364,10 @@ class Translations extends Plugin
                     'translations/static-translations/import' => 'translations/static-translations/import',
                     'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/base/edit-category-draft',
                     'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
+                    
+                    'translations/orders' => 'translations/order/order-index',
+                    'translations/orders/create' => 'translations/order/order-detail',
+                    'translations/orders/detail/<orderId:\d+>' => 'translations/order/order-detail',
                 ]);
             }
         );
@@ -564,9 +565,11 @@ class Translations extends Plugin
             $applyDraftActions = [
                 'apply-drafts',
                 'apply-translation-draft',
+                'save-draft-and-publish',
+                'publish-draft',
                 'run',
             ];
-    
+
             if(!empty($response) && !in_array($action, $applyDraftActions)) {
     
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
@@ -631,12 +634,14 @@ class Translations extends Plugin
 
                     $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->sourceSite);
                     $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
-                    $currentFile->source = Translations::$plugin->elementToXmlConverter->toXml(
+                    $currentFile->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        0,
-                        $currentFile->sourceSite,
-                        $currentFile->targetSite,
-                        $currentFile->previewUrl
+                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        [
+                            'sourceSite'    => $currentFile->sourceSite,
+                            'targetSite'    => $currentFile->targetSite,
+                            'previewUrl'    => $currentFile->previewUrl
+                        ]
                     );
 
                     self::$plugin->fileRepository->saveFile($currentFile);
@@ -725,7 +730,10 @@ class Translations extends Plugin
                     ],
                     'translations:orders:apply-translations' => [
                         'label' => Craft::t('translations', 'Apply Translations'),
-                    ]
+                    ],
+                    'translations:orders:draft:create' => [
+                        'label' => Craft::t('translations', 'Create Order Draft'),
+                    ],
                 ]
             ],
             'translations:settings' => [

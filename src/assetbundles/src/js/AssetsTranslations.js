@@ -227,7 +227,7 @@ Craft.Translations.AssetsTranslations = {
             });
         }
 
-        var $link = Craft.getUrl('translations/orders/new', {'elements[]': assetId, 'sourceSite': self.getSourceSite()});
+        var $link = Craft.getUrl('translations/orders/create', {'elements[]': assetId, 'sourceSite': self.getSourceSite()});
 
         this.$btn.attr('href', $link);
 
@@ -250,7 +250,7 @@ Craft.Translations.AssetsTranslations = {
 
             var $form = $('<form>', {
                 'method': 'POST',
-                'action': Craft.getUrl('translations/orders/new')
+                'action': Craft.getUrl('translations/orders/create')
             });
 
             $form.hide();

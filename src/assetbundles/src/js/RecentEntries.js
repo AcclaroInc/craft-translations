@@ -142,7 +142,7 @@
                 }
 
                 if (!$('#new-entry-orders').hasClass('disabled')) {
-                    $('#new-entry-orders').attr('href', Craft.getUrl('translations/orders/new?sourceSite='+ Craft.siteId + elements));
+                    $('#new-entry-orders').attr('href', Craft.getUrl('translations/orders/create?sourceSite='+ Craft.siteId + elements));
                 }
             }
         });
