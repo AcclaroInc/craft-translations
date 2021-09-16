@@ -23,7 +23,7 @@
 {% block contextMenu %}
 
 <div class="select">
-    <select onchange="document.location.href='{{ url('categories/'~groupHandle ~'/'~slug~'/{locale}') }}'.replace('{locale}', this.value);">
+    <select onchange="document.location.href='{{ url('categories/'~groupHandle ~'/'~slug~'?site={locale}') }}'.replace('{locale}', this.value);">
         {% for site in craft.app.sites.getAllSites() %}
         <option value="{{ site.handle }}"{% if site.id == draft.site %} selected{% endif %}>{{ site.name }}</option>
         {% endfor %}

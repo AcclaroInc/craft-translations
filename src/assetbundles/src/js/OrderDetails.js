@@ -7,6 +7,9 @@
     var isSubmitted = $("#order-attr").data("submitted");
     var isNew = $("#order-attr").data("status") === "new";
     var isFailed = $("#order-attr").data("status") === "failed";
+    var isCompleted = $("#order-attr").data("status") === "completed";
+    var isPublished = $("#order-attr").data("status") === "published";
+    var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
 
     function validateForm() {
         var buttonStatus = true;
@@ -240,11 +243,48 @@
         $(':checkbox[name="targetSites[]"]').prop('checked', $toggle);
     }
 
+    function shouldCreateNewOrder() {
+        // Source Site Check
+        var originalSourceSite = $('#originalSourceSiteId').val();
+        var site = $("#sourceSiteSelect").val();
+
+        if (typeof originalSourceSite !== 'undefined') originalSourceSite = originalSourceSite.split(",");
+
+        if (haveDifferences(originalSourceSite, site.split(","))) return true;
+
+        // Target Sites Check
+        var $originalTargetSiteIds = $('#originalTargetSiteIds').val().replace(/[\[\]\"]/g, '').split(",");
+        var $all = $(':checkbox[name="targetSites"]');
+        var $checkboxes = $all.is(':checked') ? $(':checkbox[name="targetSites[]"]') : $(':checkbox[name="targetSites[]"]:checked');
+        var targetSites = [];
+
+        $checkboxes.each(function() {
+            var $el = $(this);
+            var val = $el.attr('value');
+            targetSites.push(val);
+        });
+
+        if ($($originalTargetSiteIds).not(targetSites).get().length > 0) return true;
+
+        // Translator check
+        $originalTranslatorId = $('#originalTranslatorId').val().split(',');
+        var currentTranslatorId = $('#translatorId').val().split(",");
+
+        if (haveDifferences($originalTranslatorId, currentTranslatorId)) return true;
+
+        // Order Modification on completed order
+        if (isDefaultTranslator && isPublished && isOrderChanged({all: "all"})) return true;
+        if (!isDefaultTranslator && (isCompleted || isPublished) && isOrderChanged({all: "all"})) return true;
+
+        return false;
+    }
+
     Craft.Translations.OrderDetails = {
         init: function() {
             self = this;
             if (isSubmitted) {
                 this._createUpdateOrderButtonGroup();
+                this._showNoEditWarning();
             } else {
                 this._createNewOrderButtonGroup();
             }
@@ -253,7 +293,6 @@
             }
             // Target lang Ajax
             $(':checkbox[name="targetSites[]"], :checkbox[name="targetSites"]').on('change', function() {
-                var targetSites = [];
                 if ($(this).attr('name') == "targetSites") {
                     toggleSelections($(this).is(':checked'));
                 } else {
@@ -267,23 +306,18 @@
     
                     $checkboxes.each(function() {
                         var $el = $(this);
-                        var val = $el.attr('value');
                         var label = $.trim($el.next('label').text());
-                        targetSites.push(val);
                         targetSitesLabels.push(label);
                     });
                 
                     $('[data-order-attribute=targetSites]').html(targetSitesLabels.join(', '));
                 }
 
-                var $originalTargetSiteIds = $('#originalTargetSiteIds').val().replace(/[\[\]\"]/g, '');
                 if (isSubmitted) {
-                    if (haveDifferences($originalTargetSiteIds.split(","), targetSites)) {
+                    if (shouldCreateNewOrder()) {
                         setButtonText('.translations-submit-order.submit', 'Create new order');
                     } else {
-                        if (! isOrderChanged({source: 'source', entry: 'entry'})) {
-                            setButtonText('.translations-submit-order.submit', 'Update order');
-                        }
+                        setButtonText('.translations-submit-order.submit', 'Update order');
                     }
                 }
 
@@ -330,6 +364,12 @@
             });
 
             $('#translatorId').on('change', function() {
+                if (shouldCreateNewOrder()) {
+                    setButtonText('.translations-submit-order.submit', 'Create new order');
+                } else {
+                    setButtonText('.translations-submit-order.submit', 'Update order');
+                }
+
                 if (validateForm() && isOrderChanged({all: "all"})) {
                     setSubmitButtonStatus(true);
                 } else {
@@ -381,8 +421,8 @@
 
                     $originalElementIds = $('#originalElementIds').val().split(',');
 
-                    if (haveDifferences($originalElementIds, currentElementIds.split(","))) {
-                        setButtonText('.translations-submit-order.submit', 'Submit new order');
+                    if (shouldCreateNewOrder()) {
+                        setButtonText('.translations-submit-order.submit', 'Create new order');
                     } else {
                         if (! isOrderChanged({source: 'source', target: 'target'})) {
                             setButtonText('.translations-submit-order.submit', 'Update order');
@@ -420,17 +460,10 @@
                     })
                 }
 
-                originalSourceSite = $('#originalSourceSiteId').val();
-                if (typeof originalSourceSite !== 'undefined') {
-                    originalSourceSite = originalSourceSite.split(",");
-                }
-
-                if (haveDifferences(originalSourceSite, site.split(","))) {
-                    setButtonText('.translations-submit-order.submit', 'Submit new order');
+                if (shouldCreateNewOrder()) {
+                    setButtonText('.translations-submit-order.submit', 'Create new order');
                 } else {
-                    if (! isOrderChanged({target: 'target', entry: 'entry'})) {
-                        setButtonText('.translations-submit-order.submit', 'Update order');
-                    }
+                    setButtonText('.translations-submit-order.submit', 'Update order');
                 }
 
                 if (validateForm() && isOrderChanged({all: "all"})) {
@@ -440,8 +473,6 @@
                 }
 
                 window.history.pushState("", "", url);
-                // window.location = url;
-
             });
 
             $('.translations-order-form').on('submit', function(e) {
@@ -695,41 +726,60 @@
 
             $saveDraftLink.appendTo($item1);
             this._addSaveDraftAction($saveDraftLink);
+
+            if (! isDefaultTranslator && isSubmitted && !(isCompleted || isPublished)) {
+                var $cancelOrder = $('<li>');
+                $cancelOrder.appendTo($dropdown);
+                var $cancelOrderLink = $('<a>', {
+                    'class': 'translations-submit-order',
+                    'href': '#',
+                    'text': 'Cancel Order',
+                });
+                $cancelOrderLink.appendTo($cancelOrder);
+                this._addCancelOrderAction($cancelOrderLink);
+            }
         },
         _addSaveOrderAction: function(that, action) {
             var $form = $('#order-form');
             $(that).on('click', function(e) {
                 e.preventDefault();
                 sendingOrderStatus(true);
-                // window.history.replaceState(null, null, removeParams(window.location.href));
-                var $hiddenAction = $('<input>', {
-                    'type': 'hidden',
-                    'name': 'flow',
-                    'value': action
-                });
-                $hiddenAction.appendTo($form);
+                if ($(that).text() == "Create new order") {
+                    var url = window.location.origin+"/admin/translations/orders/create";
+                    $form.find("input[type=hidden][name=action]").val('translations/order/clone-order');
+                    window.history.pushState("", "", url);
+                    $form.submit();
+                } else {
+                    var $hiddenFlow = $('<input>', {
+                        'type': 'hidden',
+                        'name': 'flow',
+                        'value': action
+                    });
+                    $hiddenFlow.appendTo($form);
 
-                Craft.postActionRequest($form.find('input[name=action]').val(), $form.serialize(), function(response, textStatus) {
-                    if (response == null) {
-                        Craft.cp.displayError(Craft.t('app', "Unable to create order."));
-                        sendingOrderStatus(false);
-                    } else if (textStatus === 'success' && response.success) {
-                        if (response.message) {
-                            Craft.cp.displayNotice(Craft.t('app', response.message));
+                    Craft.postActionRequest($form.find('input[name=action]').val(), $form.serialize(), function(response, textStatus) {
+                        if (response == null) {
+                            Craft.cp.displayError(Craft.t('app', "Unable to create order."));
                             sendingOrderStatus(false);
-                        } else if (response.url) {
-                            window.location.href = response.url;
-                        } else if (response.job) {
-                            Craft.Translations.trackJobProgressById(true, false, response.job);
+                        } else if (textStatus === 'success' && response.success) {
+                            if (response.message) {
+                                Craft.cp.displayNotice(Craft.t('app', response.message));
+                                sendingOrderStatus(false);
+                            } else if (response.url) {
+                                window.location.href = response.url;
+                            } else if (response.job) {
+                                Craft.Translations.trackJobProgressById(true, false, response.job);
+                            } else {
+                                Craft.cp.displayError(Craft.t('app', "No data in response"));
+                                sendingOrderStatus(false);
+                            }
                         } else {
-                            Craft.cp.displayError(Craft.t('app', "No data in response"));
+                            Craft.cp.displayError(Craft.t('app', response.message));
                             sendingOrderStatus(false);
                         }
-                    } else {
-                        Craft.cp.displayError(Craft.t('app', response.message));
-                        sendingOrderStatus(false);
-                    }
-                });
+                    });
+                }
+
             });
         },
         _addSaveDraftAction: function(that) {
@@ -749,23 +799,35 @@
                 $form.submit();
             });
         },
-        _addDeleteDraftAction: function(that) {
+        _addCancelOrderAction: function(that) {
             var $form = $('#order-form');
             $(that).on('click', function(e) {
                 e.preventDefault();
-                window.history.replaceState(null, null, removeParams(window.location.href));
-
-                var $hiddenAction = $('<input>', {
-                    'type': 'hidden',
-                    'name': 'action',
-                    'value': 'translations/order/delete-order-draft'
-                });
-
-                $hiddenAction.appendTo($form);
-
-                $form.submit();
+                if (confirm(Craft.t('app', 'Are you sure you want to cancel this order?'))) {
+                    $form.find("input[type=hidden][name=action]").val('translations/order/cancel-order');
+    
+                    $form.submit();
+                }
             });
         },
+        _showNoEditWarning: function() {
+            var $proceed = false;
+            if (isDefaultTranslator && isPublished) {
+                $proceed = true;
+            }
+            if (!isDefaultTranslator && (isCompleted || isPublished)) {
+                $proceed = true;
+            }
+            if ($proceed) {
+                var $warningContainer = document.createElement('div');
+                $warningContainer.id = 'edit-order-warning';
+                $warningContainer.className = 'meta read-only warning';
+                $details = document.getElementById('meta-details');
+                $($details).before($warningContainer);
+                var $warningMessage = $('<div>').html('<label>This order is not editable.</label>');
+                $warningMessage.appendTo($warningContainer);
+            }
+        }
     }
 
     $(function() {

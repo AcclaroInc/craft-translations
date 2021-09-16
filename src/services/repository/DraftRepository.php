@@ -266,6 +266,10 @@ class DraftRepository
                 $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
             }
 
+            if ($element->getIsDraft()) {
+                $element = $element->getCanonical(true);
+            }
+
             $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
 
             try {
@@ -476,6 +480,8 @@ class DraftRepository
                 }
     
                 $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+
+                if ($element->getIsDraft()) $element = $element->getCanonical(true);
     
                 if ($element instanceof GlobalSet) {
                     $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);

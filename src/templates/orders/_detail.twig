@@ -3,7 +3,9 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAsset") %}
 
-{% set sourceSite = sourceSiteObject %}
+{% if not isEditable %}
+    {% set isEditable = "noClick" %}
+{% endif %}
 
 {% set title = 'Translations'|t %}
 
@@ -15,7 +17,8 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ order.status }}" data-submitted="{{ isSubmitted }}" data-changed="{{ isChanged }}"/>
+                <input type="hidden" id="order-attr" data-status="{{ order.status }}" data-submitted="{{ isSubmitted }}"
+                data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>
         </div>
@@ -32,32 +35,22 @@
         { label: order.title, url: 'javascript:void(0)' },
     ]) %}
     {% if not isProcessing %}
-        {% set selectedTab = "files" %}
+        {% if not isChanged %}
+            {% set selectedTab = "files" %}
+        {% endif %}
         {% set tabs = {
-            "order": {label: "Order details"|t, url: "#order"},
-            "files": {label: "Order files"|t, url: "#files"},
+            "order": {label: "Order settings"|t, url: "#order"},
+            "files": {label: "Order details"|t, url: "#files"},
         } %}
     {% endif %}
 {% elseif orderId %}
     {% set crumbs = crumbs|merge([
         { label: 'Edit order'|t, url: 'javascript:void(0)' },
     ]) %}
-    {% if not isProcessing %}
-        {% set tabs = {
-            "order": {label: "Order details"|t, url: "#order"},
-            "files": {label: "Order files"|t, url: "#files", class: "noClick"},
-        } %}
-    {% endif %}
 {% else %}
     {% set crumbs = crumbs|merge([
         { label: 'New order'|t, url: 'javascript:void(0)' },
     ]) %}
-    {% if not isProcessing %}
-        {% set tabs = {
-            "order": {label: "Order details"|t, url: "#order"},
-            "files": {label: "Order files"|t, url: "#files", class: "noClick"},
-        } %}
-    {% endif %}
 {% endif %}
 
 {% block content %}
@@ -111,7 +104,7 @@
                     placeholder: 'Translation order name',
                     name: 'title',
                     id: 'title',
-                    class: "fullwidth",
+                    class: isEditable,
                     maxlength: 255,
                 }) }}
                 <input type="hidden" id="originalTitle" value="{{ order.title }}">
@@ -175,6 +168,7 @@
                                                 options: versionOptions,
                                                 name: 'version',
                                                 id: versionId,
+                                                class: isEditable
                                             }) }}
                                         </td>
                                         <td>
@@ -189,7 +183,7 @@
                                         </td>
                                         <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                         <td>
-                                            <a class="icon delete translations-order-delete-entry" 
+                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}" 
                                                 title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
                                                 <input type="hidden" name="elements[]" value="{{ element.id }}">
                                             </a>
@@ -204,7 +198,7 @@
                     {% endif %}
                 </div>
 
-                <div class="field" data-position="left" data-colspan="1">
+                <div class="field {{ isEditable }}" data-position="left" data-colspan="1">
                     <div class="buttons flex">
                         <div class="submit">
                             <input type="hidden" id="originalElementIds" value="{{ originalElementIds }}">
@@ -226,12 +220,13 @@
                     <div class="input {{ orientation }}">
 
                         {{ forms.selectField({
-                            value: sourceSite.id,
+                            value: sourceSiteObject.id,
                             options: {'':'Choose'|t ~ '...'}|merge(sourceSites),
                             name: 'sourceSiteSelect',
-                            id: 'sourceSiteSelect'
+                            id: 'sourceSiteSelect',
+                            class: isEditable
                         }) }}
-                        <input type="hidden" id="originalSourceSiteId" value="{{ sourceSite.id }}">
+                        <input type="hidden" id="originalSourceSiteId" value="{{ sourceSiteObject.id }}">
                     </div>
                 </div>
 
@@ -241,7 +236,8 @@
                     values: order.targetSites|json_decode(),
                     showAllOption: true,
                     name: 'targetSites',
-                    id: 'targetSites'
+                    id: 'targetSites',
+                    class: isEditable
                 }) }}
 
                 <input type="hidden" id="originalTargetSiteIds" value="{{ order.targetSites }}">
@@ -254,6 +250,7 @@
                     options: translatorOptions,
                     name: 'translatorId',
                     id: 'translatorId',
+                    class: isEditable,
                     size: 20
                 }) }}
                 <input type="hidden" id="originalTranslatorId" value="{{ order.translatorId }}">
@@ -300,7 +297,8 @@
                     name: 'requestedDueDate',
                     id: 'requestedDueDate',
                     size: 20,
-                    placeholder: 'Optional'
+                    placeholder: 'Optional',
+                    class: isEditable
                 }) }}
                 <input type="hidden" id="originalRequestedDueDate" value="{{ order.requestedDueDate }}">
 
@@ -310,13 +308,14 @@
                     name: 'comments',
                     placeholder: 'Additional comments and instructions',
                     id: 'comments',
+                    class: isEditable,
                     maxlength: 2000,
                     size: 20
                 }) }}
                 <input type="hidden" id="originalComments" value="{{ order.comments }}">
 
                 {% set orderTags = {} %}
-                <div id="fields">
+                <div id="fields" class="{{ isEditable }}">
                     <div id="tab-tag" class="flex-fields">
                         <div id="fields-tag-field" class="field width-100">
                             <div class="heading">
@@ -568,9 +567,9 @@
                 </div>
                 <div class="input ltr">
                     <label class='float-right'>
-                        {{sourceSite.name}}
+                        {{sourceSiteObject.name}}
                         <span class="light">
-                            ({{ sourceSite.language }})
+                            ({{ sourceSiteObject.language }})
                         </span>
                     </label>
                 </div>
