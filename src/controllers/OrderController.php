@@ -1104,6 +1104,7 @@ class OrderController extends Controller
                 if ($field == "elements") {
                     $updated = json_encode($updated);
                     $oldData['elements'] = $order->elementIds;
+                    $field = 'elementIds';
                 }
                 if ($field == "tags") {
                     if ($tags = $newData[$field] ?? []) {
@@ -1129,7 +1130,8 @@ class OrderController extends Controller
                 }
                 $order->$field = $updated;
 
-                if (in_array($field, ['title', 'comments'])) $editOrderRequest[$field] = $updated;
+                if ($field == 'title') $editOrderRequest[$field] = $updated;
+                if ($field == 'comments') $editOrderRequest['comment'] = $updated;
             }
 
             if (! empty($editOrderRequest) && ! $isDefaultTranslator) {
@@ -1327,17 +1329,24 @@ class OrderController extends Controller
         }
 
         if ($translator->service == Constants::TRANSLATOR_ACCLARO) {
-            $translatorService = new AcclaroService();
+            $translatorService = Translations::$plugin->translatorFactory
+                ->makeTranslationService(
+                    $order->getTranslator()->service,
+                    json_decode($order->getTranslator()->settings, true)
+                );
 
             $res = $translatorService->cancelOrder($order, $translator->getSettings());
 
-            if ($res['success'] != true) {
+            if (empty($res)) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator
                 ->translate('app', 'Unable to delete order.'));
                 return;
             }
         }
+        $order->status = Constants::ORDER_STATUS_CANCELED;
         Craft::$app->getElements()->saveElement($order);
+        Craft::$app->getSession()->setError(Translations::$plugin->translator
+                ->translate('app', 'Order deleted.'));
     }
 
     public function actionDeleteOrder()

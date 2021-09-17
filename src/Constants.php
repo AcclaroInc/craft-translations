@@ -22,6 +22,7 @@ class Constants
     const ORDER_STATUS_FAILED           = 'failed';
     const ORDER_STATUS_COMPLETE         = 'complete';
     const ORDER_STATUS_PUBLISHED        = 'published';
+    const ORDER_STATUS_CANCELED         = 'canceled';
 
     // Classes
     const CLASS_GLOBAL_SET  = 'craft\\elements\\GlobalSet';

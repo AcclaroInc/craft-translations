@@ -382,7 +382,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function cancelOrder($order, $settings)
     {
-        $this->acclaroApiClient->addOrderComment($order->serviceOrderId, "CANCEL ORDER");
+        return $this->acclaroApiClient->addOrderComment($order->serviceOrderId, "CANCEL ORDER");
     }
 
     /**
