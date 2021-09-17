@@ -69,6 +69,11 @@ class App extends Component
      * @var repository\EntryRepository
      */
     public $entryRepository;
+
+    /**
+     * @var repository\ElementRepository
+     */
+    public $elementRepository;
     
     /**
      * @var repository\FileRepository
@@ -158,6 +163,7 @@ class App extends Component
         $this->tagRepository = new repository\TagRepository();
         $this->draftRepository = new repository\DraftRepository();
         $this->entryRepository = new repository\EntryRepository();
+        $this->elementRepository = new repository\ElementRepository();
         $this->fileRepository = new repository\FileRepository();
         $this->globalSetRepository = new repository\GlobalSetRepository();
         $this->globalSetDraftRepository = new repository\GlobalSetDraftRepository();

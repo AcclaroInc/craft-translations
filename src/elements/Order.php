@@ -410,34 +410,19 @@ class Order extends Element
     /**
      * Requests
      */
-    public function getElements($source = true)
+    public function getElements()
     {
         $elementIds = $this->elementIds ? json_decode($this->elementIds) : array();
 
-        $elements = array();
-        
         foreach ($elementIds as $key => $elementId) {
-            if (!array_key_exists($elementId, $this->_elements) || ! $source) {
+            if (!array_key_exists($elementId, $this->_elements)) {
                 $element = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
-                if (! $element) {
-                    // ! Try if the id is a draft id
-                    $element = Entry::find()
-                        ->draftId($elementId)
-                        ->anyStatus()
-                        ->one();
-                    if ($source) {
-                        $element = $element->getCanonical(true);
-                    }
-                }
-                $source ? $this->_elements[$elementId] = $element : $elements[$elementId] = $element;
-            }
 
-            if ($source && $this->_elements[$elementId] && $source) {
-                $elements[] = $this->_elements[$elementId];
+                $this->_elements[$elementId] = $element;
             }
         }
 
-        return $elements;
+        return $this->_elements;
     }
 
     public function getFiles()
