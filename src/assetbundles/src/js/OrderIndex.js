@@ -51,7 +51,7 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
 
             if (confirm(Craft.t('app', 'Are you sure you want to '+conf_msg+' this order?'))) {
                 var data = {
-                    action: 'translations/base/delete-order',
+                    action: 'translations/order/delete-order',
                     orderId: $button.data('order-id'),
                     hardDelete: $button.data('hard-delete'),
                 };
@@ -101,7 +101,7 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
 
             if (confirm(Craft.t('app', 'Are you sure you want to restore this order?'))) {
                 var data = {
-                    action: 'translations/base/delete-order',
+                    action: 'translations/order/delete-order',
                     orderId: $button.data('order-id'),
                     restore: 1
                 };

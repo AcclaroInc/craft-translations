@@ -302,7 +302,7 @@ if (typeof Craft.Translations === 'undefined') {
             fileId: $fileId
         };
 
-        Craft.postActionRequest('translations/order/get-file-diff', fileData, function(response, textStatus) {
+        Craft.postActionRequest('translations/files/get-file-diff', fileData, function(response, textStatus) {
             if (textStatus === 'success' && response.success) {
                 data = response.data;
 

@@ -70,7 +70,8 @@
         return true;
     }
 
-    function isOrderChanged($data) {
+    function isOrderChanged($data, $needData = false) {
+        $responseData = [];
         for(var key in $data) {
             // Validate Target Sites
             if (key == "target" || key == "all") {
@@ -85,7 +86,8 @@
                     targetSites.push(val);
                 });
                 if (haveDifferences($originalTargetSiteIds.split(","), targetSites)) {
-                    return true;
+                    if (!$needData) return true;
+                    $responseData.push("targetSites");
                 }
             }
             // Validate Source Site
@@ -97,7 +99,8 @@
                 }
 
                 if (haveDifferences(originalSourceSite, site.split(","))) {
-                    return true;
+                    if (!$needData) return true;
+                    $responseData.push("sourceSiteSelect");
                 }
             }
             // Validate Entries
@@ -106,7 +109,8 @@
                 var currentElementIds = $('#currentElementIds').val().split(",");
 
                 if (haveDifferences($originalElementIds, currentElementIds)) {
-                    return true;
+                    if (!$needData) return true;
+                    $responseData.push("elements");
                 }
             }
             // Validate Title
@@ -119,7 +123,8 @@
                 }
 
                 if (haveDifferences($originalTitle, currentTitle.split(","))) {
-                    return true;
+                    if (!$needData) return true;
+                    $responseData.push("title");
                 }
             }
             // Validate Translator
@@ -128,7 +133,8 @@
                 var currentTranslatorId = $('#translatorId').val().split(",");
 
                 if (haveDifferences($originalTranslatorId, currentTranslatorId)) {
-                    return true;
+                    if (!$needData) return true;
+                    $responseData.push("translatorId");
                 }
             }
             // Validate Due Date
@@ -143,7 +149,8 @@
                 }
 
                 if ($originalDueDate && currentDueDate && haveDifferences($originalDueDate, currentDueDate)) {
-                    return true;
+                    if (!$needData) return true;
+                    $responseData.push("requestedDueDate");
                 }
             }
             // Validate Comments
@@ -152,7 +159,8 @@
                 var currentComments = $('#comments').val().split(",");
 
                 if (haveDifferences($originalComments, currentComments)) {
-                    return true;
+                    if (!$needData) return true;
+                    $responseData.push("comments");
                 }
             }
             // Validate order tags
@@ -166,12 +174,13 @@
                     $currentTags.push($(this).data("label"));
                 });
                 if (haveDifferences($originalTags, $currentTags)) {
-                    return true;
+                    if (!$needData) return true;
+                    $responseData.push("tags");
                 }
             }
         };
 
-        return false;
+        return $needData ? $responseData : false;
     }
 
     function setButtonText($button, $value) {
@@ -277,6 +286,12 @@
         if (!isDefaultTranslator && (isCompleted || isPublished) && isOrderChanged({all: "all"})) return true;
 
         return false;
+    }
+
+    function setUpdatedFields() {
+        $changedFields = isOrderChanged({all: 'all'}, true);
+        $changedFields = $changedFields.length > 0 ? JSON.stringify($changedFields) : "";
+        $('input[name=updatedFields]').val($changedFields);
     }
 
     Craft.Translations.OrderDetails = {
@@ -733,7 +748,7 @@
                 var $cancelOrderLink = $('<a>', {
                     'class': 'translations-submit-order',
                     'href': '#',
-                    'text': 'Cancel Order',
+                    'text': 'Cancel order',
                 });
                 $cancelOrderLink.appendTo($cancelOrder);
                 this._addCancelOrderAction($cancelOrderLink);
@@ -749,6 +764,27 @@
                     $form.find("input[type=hidden][name=action]").val('translations/order/clone-order');
                     window.history.pushState("", "", url);
                     $form.submit();
+                }else if ($(that).text() == "Update order") {
+                    // Set updated fields before proceeding
+                    setUpdatedFields();
+
+                    Craft.postActionRequest('translations/order/update-order', $form.serialize(), function(response, textStatus) {
+                        if (response == null) {
+                            Craft.cp.displayError(Craft.t('app', "Unable to update order."));
+                            sendingOrderStatus(false);
+                        } else if (textStatus === 'success' && response.success) {
+                            if (response.message) {
+                                Craft.cp.displayNotice(Craft.t('app', response.message));
+                                sendingOrderStatus(false);
+                            } else {
+                                Craft.cp.displayError(Craft.t('app', "Something went wrong"));
+                                sendingOrderStatus(false);
+                            }
+                        } else {
+                            Craft.cp.displayError(Craft.t('app', response.message));
+                            sendingOrderStatus(false);
+                        }
+                    });
                 } else {
                     var $hiddenFlow = $('<input>', {
                         'type': 'hidden',

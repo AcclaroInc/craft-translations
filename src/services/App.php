@@ -56,6 +56,11 @@ class App extends Component
     public $categoryDraftRepository;
 
     /**
+     * @var repository\AssetDraftRepository
+     */
+    public $assetDraftRepository;
+
+    /**
      * @var repository\TagRepository
      */
     public $tagRepository;
@@ -160,6 +165,7 @@ class App extends Component
         $this->translationRepository = new repository\TranslationRepository();
         $this->categoryRepository = new repository\CategoryRepository();
         $this->categoryDraftRepository = new repository\CategoryDraftRepository();
+        $this->assetDraftRepository = new repository\AssetDraftRepository();
         $this->tagRepository = new repository\TagRepository();
         $this->draftRepository = new repository\DraftRepository();
         $this->entryRepository = new repository\EntryRepository();

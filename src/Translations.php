@@ -35,6 +35,7 @@ use acclaro\translations\base\PluginTrait;
 use craft\console\Application as ConsoleApplication;
 use acclaro\translations\assetbundles\EntryAssets;
 use acclaro\translations\assetbundles\CategoryAssets;
+use acclaro\translations\assetbundles\Assets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
@@ -113,7 +114,7 @@ class Translations extends Plugin
 
         Event::on(
             Drafts::class,
-            Drafts::EVENT_BEFORE_PUBLISH_DRAFT,
+            Drafts::EVENT_BEFORE_APPLY_DRAFT,
             function (DraftEvent $event) {
                 // Craft::debug(
                 //     'Drafts::EVENT_BEFORE_PUBLISH_DRAFT',
@@ -122,7 +123,7 @@ class Translations extends Plugin
                 Craft::info(
                     Craft::t(
                         'translations',
-                        '{name} Drafts::EVENT_BEFORE_PUBLISH_DRAFT',
+                        '{name} Drafts::EVENT_BEFORE_APPLY_DRAFT',
                         ['name' => $this->name]
                     ),
                     'translations'
@@ -134,10 +135,10 @@ class Translations extends Plugin
         
         Event::on(
             Drafts::class,
-            Drafts::EVENT_AFTER_PUBLISH_DRAFT,
+            Drafts::EVENT_AFTER_APPLY_DRAFT,
             function (DraftEvent $event) {
                 Craft::debug(
-                    '['. __METHOD__ .'] Drafts::EVENT_AFTER_PUBLISH_DRAFT',
+                    '['. __METHOD__ .'] Drafts::EVENT_AFTER_APPLY_DRAFT',
                     'translations'
                 );
                 if ($event->draft) {
@@ -319,7 +320,7 @@ class Translations extends Plugin
             $this->_registerCpRoutes();
 
             if (Craft::$app->request->getIsCpRequest()) {
-                $this->_includeResouces(Craft::$app->getRequest()->getPathInfo());
+                $this->_includeResources(Craft::$app->getRequest()->getPathInfo());
             }
             
             self::$plugin->translationRepository->loadTranslations();
@@ -345,34 +346,43 @@ class Translations extends Plugin
         Event::on(
             UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function (RegisterUrlRulesEvent $event) {
                 $event->rules = array_merge($event->rules, [
+                    // Widget Controller
                     'translations' => 'translations/widget/index',
-                    'translations/translators' => 'translations/base/translator-index',
-                    'translations/translators/new' => 'translations/base/translator-detail',
-                    'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
-                    'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/base/edit-global-set-draft',
-                    'translations/orders/exportfile' => 'translations/files/export-file',
-                    'translations/orders/importfile' => 'translations/files/import-file',
-                    'translations/settings' => 'translations/settings/index',
-                    'translations/settings/settings-check' => 'translations/settings/settings-check',
-                    'translations/settings/send-logs' => 'translations/settings/send-logs',
-                    'translations/orders/get-file-diff/<fileId:\d+>' => 'translations/base/get-file-diff',
-                    'translations/orders/get-file-diff-html/<fileId:\d+>' => 'translations/base/get-file-diff-html',
-                    'translations/settings/configuration-options' => 'translations/settings/configuration-options',
-                    'translations/static-translations' => 'translations/static-translations',
-                    'translations/static-translations/export-file' => 'translations/static-translations/export-file',
-                    'translations/static-translations/import' => 'translations/static-translations/import',
-                    'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/base/edit-category-draft',
-                    
+
+                    // Translator Controller
+                    'translations/translators' => 'translations/translator/index',
+                    'translations/translators/new' => 'translations/translator/detail',
+                    'translations/translators/detail/<translatorId:\d+>' => 'translations/translator/detail',
+
+                    // Order Controller
                     'translations/orders' => 'translations/order/order-index',
                     'translations/orders/create' => 'translations/order/order-detail',
                     'translations/orders/detail/<orderId:\d+>' => 'translations/order/order-detail',
+                    'translations/orders/exportfile' => 'translations/files/export-file',
+                    'translations/orders/importfile' => 'translations/files/import-file',
+
+                    // Settings Controller
+                    'translations/settings' => 'translations/settings/index',
+                    'translations/settings/settings-check' => 'translations/settings/settings-check',
+                    'translations/settings/send-logs' => 'translations/settings/send-logs',
+                    'translations/settings/configuration-options' => 'translations/settings/configuration-options',
+
+                    // Static Translations Controller
+                    'translations/static-translations' => 'translations/static-translations',
+                    'translations/static-translations/export-file' => 'translations/static-translations/export-file',
+                    'translations/static-translations/import' => 'translations/static-translations/import',
+
+                    // Asset, Category, Global-set Controllers
+                    'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
+                    'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/category/edit-draft',
+                    'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/global-set/edit-draft',
                 ]);
             }
         );
     }
 
     // Finish adding resources and bundler
-    private function _includeResouces($path)
+    private function _includeResources($path)
     {
         $this->_includeUniversalResources();
 
@@ -395,6 +405,28 @@ class Translations extends Plugin
         if (preg_match('#^globals/([^/]+)/([^/]+)$#', $path, $match)) {
             $this->_includeGlobalSetResources($match[2], $match[1]);
         }
+
+        if (preg_match('#^assets(/|$)#', $path, $match)) {
+            $this->_includeAssetResources(Craft::$app->getRequest()->getParam('sourceId'));
+        }
+    }
+
+    private function _includeAssetResources($assetId)
+    {
+        $orders = array();
+
+        foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
+            $orders[] = array(
+                'id' => $order->id,
+                'title' => $order->title,
+            );
+        }
+
+        $orders = json_encode($orders);
+
+        self::$view->registerAssetBundle(Assets::class);
+
+        self::$view->registerJs("$(function(){ Craft.Translations.AssetsTranslations.init({$orders}, {$assetId}); });");
     }
 
     private function _includeUniversalResources()
@@ -540,7 +572,6 @@ class Translations extends Plugin
     
             $applyDraftActions = [
                 'apply-drafts',
-                'apply-translation-draft',
                 'save-draft-and-publish',
                 'publish-draft',
                 'run',

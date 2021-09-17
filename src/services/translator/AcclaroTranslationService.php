@@ -238,6 +238,18 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 break;
         }
     }
+
+    /**
+     * Get order status on acclaro
+     *
+     * @param [type] $order
+     * @return void
+     */
+    public function getOrderStatus($order)
+    {
+        $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
+        return ! empty($orderResponse) ? $orderResponse->status : null;
+    }
  
     /**
      * {@inheritdoc}
@@ -346,5 +358,72 @@ class AcclaroTranslationService implements TranslationServiceInterface
             unlink($path);
         }
 
+    }
+
+    /**
+     * Update Order details on Acclaro
+     *
+     * @return void
+     */
+    public function editOrder($order, $settings, $data)
+    {
+        $this->acclaroApiClient->editOrder(
+            $order->serviceOrderId,
+            $data['title'] ?? $order->title,
+            $data['comments'] ?? null,
+            $data['requestedDueDate'] ?? null
+        );
+    }
+
+    /**
+     * Cancel an Acclaro order.
+     *
+     * @return void
+     */
+    public function cancelOrder($order, $settings)
+    {
+        $this->acclaroApiClient->addOrderComment($order->serviceOrderId, "CANCEL ORDER");
+    }
+
+    /**
+     * Add comment to Acclaro order.
+     *
+     * @return void
+     */
+    public function addFileComment($order, $settings, $file, $comment)
+    {
+        $this->acclaroApiClient->addFileComment($order->serviceOrderId, $file->serviceFileId, $comment);
+    }
+
+    /**
+     * Cancel an Acclaro order.
+     *
+     * @return void
+     */
+    public function editOrderTags($order, $settings, $newTags)
+    {
+        $oldTags = [];
+
+        foreach (json_decode($order->tags, true) as $tagId) {
+            $tag = Craft::$app->getTags()->getTagById($tagId);
+            if ($tag) {
+                array_push($oldTags, $tag->title);
+            }
+        }
+
+        $remove = array_diff($oldTags, $newTags);
+        $add = array_diff($newTags, $oldTags);
+
+        if (! empty($remove)) {
+            foreach ($remove as $title) {
+                $this->acclaroApiClient->removeOrderTags($order->serviceOrderId, $title);
+            }
+        }
+
+        if (! empty($add)) {
+            foreach ($add as $title) {
+                $this->acclaroApiClient->addOrderTags($order->serviceOrderId, $title);
+            }
+        }
     }
 }

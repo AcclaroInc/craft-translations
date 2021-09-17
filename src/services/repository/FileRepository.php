@@ -469,6 +469,32 @@ class FileRepository
         return true;
     }
 
+    public function createOrderFile($order, $elementId, $targetSite)
+    {
+        $element = Craft::$app->getElements()->getElementById($elementId);
+        $wordCount = Translations::$plugin->elementTranslator->getWordCount($element) ?? 0;
+
+        $file = $this->makeNewFile();
+
+        $file->orderId = $order->id;
+        $file->elementId = $element->id;
+        $file->sourceSite = $order->sourceSite;
+        $file->targetSite = $targetSite;
+        $file->source = Translations::$plugin->elementToFileConverter->convert(
+            $element,
+            Constants::DEFAULT_FILE_EXPORT_FORMAT,
+            [
+                'sourceSite'    => $order->sourceSite,
+                'targetSite'    => $targetSite,
+                'wordCount'    => $wordCount,
+            ]
+        );
+        $file->wordCount = $wordCount;
+
+        Translations::$plugin->fileRepository->saveFile($file);
+        return $file;
+    }
+
     public function getUploadedFilesWordCount($asset, $format)
     {
         $fileContents = $asset->getContents();

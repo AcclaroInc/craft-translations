@@ -2,6 +2,7 @@
 
 namespace acclaro\translations\services\api;
 
+use acclaro\translations\Constants;
 use Craft;
 use Exception;
 use GuzzleHttp\Client;
@@ -13,14 +14,6 @@ use GuzzleHttp\Exception\RequestException;
 
 class AcclaroApiClient
 {
-    const PRODUCTION_URL = 'https://my.acclaro.com/api2/ ';
-
-    const SANDBOX_URL = 'https://apisandbox.acclaro.com/api2/';
-
-    const DELIVERY = 'craftcms';
-
-    const DEFAULT_TAG = 'CraftCMS';
-
     protected $loggingEnabled = false;
 
     public function __construct(
@@ -29,7 +22,7 @@ class AcclaroApiClient
         Client $client = null
     ) {
         $this->client = $client ?: new Client([
-            'base_uri' => $sandboxMode ? self::SANDBOX_URL : self::PRODUCTION_URL,
+            'base_uri' => $sandboxMode ? Constants::SANDBOX_URL : Constants::PRODUCTION_URL,
             'headers' => array(
                 'Authorization' => sprintf('Bearer %s', $apiToken),
                 'Accept' => 'application/json',
@@ -171,6 +164,7 @@ class AcclaroApiClient
         return $this->get('GetAccount');
     }
 
+    // Order Endpoints
     public function createOrder($name, $comments, $dueDate, $craftOrderId, $wordCount)
     {
         $order = $this->post('CreateOrder', array(
@@ -178,7 +172,7 @@ class AcclaroApiClient
             'comments' => $comments,
             'duedate' => $dueDate,
             // 'clientref' => $craftOrderId,
-            'delivery' => self::DELIVERY,
+            'delivery' => Constants::DELIVERY,
             'estwordcount' => $wordCount,
         ));
 
@@ -202,13 +196,6 @@ class AcclaroApiClient
         ));
     }
 
-    public function getFileInfo($orderId)
-    {
-        return $this->get('GetFileInfo', array(
-            'orderid' => $orderId,
-        ));
-    }
-
     public function simulateOrderComplete($orderId)
     {
         return $this->post('SimulateOrderComplete', array(
@@ -223,6 +210,62 @@ class AcclaroApiClient
         ));
     }
 
+    public function editOrderName($orderId, $name)
+    {
+        return $this->post('EditOrder', array(
+            'orderid' => $orderId,
+            'name' => $name,
+            'delivery' => Constants::DELIVERY,
+        ));
+    }
+
+    public function addOrderTags($orderId, $tags = null)
+    {
+        return $this->post('AddOrderTag', array(
+            'orderid' => $orderId,
+            'tag'     => $tags ?? Constants::DEFAULT_TAG
+        ));
+    }
+
+    public function removeOrderTags($orderId, $tag)
+    {
+        return $this->post('DeleteOrderTag', array(
+            'orderid' => $orderId,
+            'tag'     => $tag
+        ));
+    }
+
+    public function addOrderComment($orderId, $comment)
+    {
+        return $this->post('AddOrderComment', array(
+            'orderid'   => $orderId,
+            'comment'   => $comment
+        ));
+    }
+
+    public function editOrder($orderId, $name, $comment = null, $dueDate = null)
+    {
+        $data = [
+            'orderid'   => $orderId,
+            'name'      => $name
+        ];
+
+        if ($comment) $data['comment'] = $comment;
+        if ($dueDate) $data['duedate'] = $dueDate;
+
+        return $this->post('EditOrder', $data);
+    }
+
+    // File Endpoints
+    public function addFileComment($orderId, $fileId, $comment)
+    {
+        return $this->post('AddFileComment', array(
+            'orderid'   => $orderId,
+            'fileid'    => $fileId,
+            'comment'   => $comment
+        ));
+    }
+
     public function addReviewUrl($orderId, $fileId, $url)
     {
         return $this->post('AddReviewURL', array(
@@ -234,8 +277,6 @@ class AcclaroApiClient
 
     public function sendSourceFile($orderId, $sourceSite, $targetSite, $craftOrderId, $sourceFile)
     {
-        // var_dump([$orderId, $sourceSite, $targetSite, $craftOrderId, $sourceFile]);
-        // die;
         return $this->post('SendSourceFile', array(
             'orderid' => $orderId,
             'sourcelang' => $sourceSite,
@@ -251,6 +292,13 @@ class AcclaroApiClient
         return $this->get('GetFileStatus', array(
             'orderid' => $orderId,
             'fileid' => $fileId,
+        ));
+    }
+
+    public function getFileInfo($orderId)
+    {
+        return $this->get('GetFileInfo', array(
+            'orderid' => $orderId,
         ));
     }
 
@@ -317,28 +365,12 @@ class AcclaroApiClient
         ));
     }
 
-    public function editOrderName($orderId, $name)
+    public function addLanguagePair($orderId, $sourceLang, $targetLang)
     {
-        return $this->post('EditOrder', array(
-            'orderid' => $orderId,
-            'name' => $name,
-            'delivery' => self::DELIVERY,
-        ));
-    }
-
-    public function addOrderTags($orderId, $tags = null)
-    {
-        return $this->post('AddOrderTag', array(
-            'orderid' => $orderId,
-            'tag'     => $tags ?? self::DEFAULT_TAG
-        ));
-    }
-
-    public function removeOrderTags($orderId, $tag)
-    {
-        return $this->post('DeleteOrderTag', array(
-            'orderid' => $orderId,
-            'tag'     => $tag
+        return $this->post('AddLanguagePair', array(
+            'orderid'       => $orderId,
+            'sourcelang'    => $sourceLang,
+            'targetlang'    => $targetLang
         ));
     }
 }

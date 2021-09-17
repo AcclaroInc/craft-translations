@@ -26,6 +26,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\CreateDrafts;
+use craft\elements\Asset;
 
 class DraftRepository
 {
@@ -305,6 +306,9 @@ class DraftRepository
             case Category::class:
                 $draft = $this->createCategoryDraft($element, $site, $order->title, $order->sourceSite);
                 break;
+            case Asset::class:
+                $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
+                break;
         }
 
         if (!($file instanceof FileModel)) {
@@ -316,7 +320,7 @@ class DraftRepository
             return false;
         }
 
-        if ($draft instanceof GlobalSet || $draft instanceof Category) {
+        if ($draft instanceof GlobalSet || $draft instanceof Category || $draft instanceof Asset) {
             $targetSite = $draft->site;
         } else {
             $targetSite = $draft->siteId;
@@ -495,7 +499,7 @@ class DraftRepository
                         $success = false;
                     }
     
-                    $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 } else if ($element instanceof Category) {
                     $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
     
@@ -509,7 +513,21 @@ class DraftRepository
                         $success = false;
                     }
     
-                    $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                } else if ($element instanceof Asset) {
+                    $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+    
+                    // keep original category name
+                    $draft->name = $element->title;
+                    $draft->site = $file->targetSite;
+    
+                    if ($draft) {
+                        $success = Translations::$plugin->assetDraftRepository->publishDraft($draft);
+                    } else {
+                        $success = false;
+                    }
+    
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 } else {
                     $draft = $this->getDraftById($file->draftId, $file->targetSite);
     
@@ -519,9 +537,8 @@ class DraftRepository
                         $success = false;
                     }
     
-                    $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 }
-
                 if ($success) {
                     $oldTokenRoute = json_encode(array(
                         'action' => 'entries/view-shared-entry',

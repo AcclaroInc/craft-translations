@@ -97,6 +97,11 @@
                 value: order.sourceSite,
             }) }}
 
+            {{ forms.hidden({
+                name: 'updatedFields',
+                value: '',
+            }) }}
+
             <div id="order" class="{% if selectedTab|default(null) %} hidden {% endif %}">
                 {{ forms.textField({
                     label: 'Order name <span class="required"/>'|t,
@@ -176,6 +181,8 @@
                                                 {{ 'Globals' }}
                                             {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
                                                 {{ 'Category' }}
+                                            {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
+                                                {{ 'Asset' }}
                                             {% else %}
                                                 {{ element.section.name }}
                                             {% endif %}
@@ -425,7 +432,8 @@
                                                                 <span class="warning duplicate-warning"></span>
                                                             {% endif %}
                                                             {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
-                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
+                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') and
+                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
                                                                 <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
                                                             {% endif %}
                                                         </td>
@@ -448,6 +456,8 @@
                                                     {{ 'Globals' }}
                                                 {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
                                                     {{ 'Category' }}
+                                                {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
+                                                    {{ 'Asset' }}
                                                 {% else %}
                                                     {{ element.section.name }}
                                                 {% endif %}
@@ -492,7 +502,7 @@
 
         {# Additional Forms for order export/import and sync #}
         {% if order.translator.service is defined and
-            order.translator.service == constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+            order.translator.service == constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
             <form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
                 {{ csrfInput() }}
                 {{ forms.hidden({
@@ -534,7 +544,7 @@
 
                 <div class="input ltr">
                     {% if order.translator.service is defined and
-                        order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+                        order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
                         {% if order.serviceOrderId %}
                             <a class="right" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
                         {% else %}
@@ -619,7 +629,7 @@
             {# Export/Import Or Sync Buttons #}
 
             {% if order.translator.service is defined and
-                order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+                order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
                 <div class="field" style="justify-content: space-between;">
                     <div class="heading">
                         <label id="acclaro-sync">My Acclaro</label>
