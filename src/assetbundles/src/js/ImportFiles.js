@@ -103,11 +103,13 @@
         _showProgressBar: function() {
             if (!this.$importBtn.hasClass('processing')) {
                 this.$importBtn.addClass('processing').css('pointer-events', 'none');
+                this.$importBtn.css('color', '#ced8e5');
                 if (!this.progressBar) {
                     this.progressBar = new Craft.ProgressBar(this.$status);
                 }
                 else {
                     this.progressBar.resetProgressBar();
+                    this.$importBtn.css('color', '#3f4d5a');
                 }
 
                 this.progressBar.$progressBar.removeClass('hidden');

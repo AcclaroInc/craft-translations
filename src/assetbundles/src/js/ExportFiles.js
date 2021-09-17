@@ -26,10 +26,10 @@
 
         onSubmit: function(ev) {
             ev.preventDefault();
-            
-            this.$trigger.css('background-color', '#ced8e5');
 
             if (!this.$trigger.hasClass('processing')) {
+                this.$trigger.css('color', '#ced8e5');
+
                 if (!this.progressBar) {
                     this.progressBar = new Craft.ProgressBar(this.$status);
                 }
@@ -103,6 +103,7 @@
                 duration: 'fast', complete: $.proxy(function() {
 
                     this.$trigger.removeClass('processing').css('pointer-events', '');
+                    this.$trigger.css('color', '#3f4d5a');
                     this.$trigger.trigger('focus');
                 },
                 this)
