@@ -47,6 +47,13 @@
     {% set crumbs = crumbs|merge([
         { label: 'Edit order'|t, url: 'javascript:void(0)' },
     ]) %}
+
+    {% if not isProcessing and order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
+        {% set tabs = {
+            "order": {label: "Order settings"|t, url: "#order"},
+            "files": {label: "Order details"|t, url: "#files", class: "noClick"},
+        } %}
+    {% endif %}
 {% else %}
     {% set crumbs = crumbs|merge([
         { label: 'New order'|t, url: 'javascript:void(0)' },
