@@ -67,7 +67,7 @@ class FilesController extends Controller
     {
         $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
         
-        $fileFormat = $params['format'] ?? Constants::DEFAULT_FILE_EXPORT_FORMAT;
+        $fileFormat = $params['format'] ?? Constants::FILE_FORMAT_XML;
 
         $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
         $files = Translations::$plugin->fileRepository->getFilesByOrderId($params['orderId'], null);
@@ -372,6 +372,7 @@ class FilesController extends Controller
         }
     }
 
+    // !Note remove this later if not used
     public function actionApplyTranslationDraft()
     {
         $this->requirePostRequest();
@@ -426,6 +427,20 @@ class FilesController extends Controller
 
             if ($draft) {
                 $response = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
+                $message = 'Draft applied for '. '"'. $draft->name .'"';
+            } else {
+                $response = false;
+            }
+
+            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+        } else if ($element instanceof Asset) {
+            $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+
+            $draft->name = $element->title;
+            $draft->site = $file->targetSite;
+
+            if ($draft) {
+                $response = Translations::$plugin->assetDraftRepository->publishDraft($draft);
                 $message = 'Draft applied for '. '"'. $draft->name .'"';
             } else {
                 $response = false;
@@ -503,6 +518,58 @@ class FilesController extends Controller
                 'success' => true,
             ]);
         }
+    }
+
+    /**
+     * Get Difference in File source and target
+     *
+     * @return void
+     */
+    public function actionGetFileDiff()
+    {
+        $variables = Craft::$app->getRequest()->resolve()[1];
+        $success = false;
+        $error = null;
+        $data = [];
+
+        $fileId = Craft::$app->getRequest()->getParam('fileId');
+        if (!$fileId) {
+            $error = "FileId not found.";
+        } else {
+            $file = Translations::$plugin->fileRepository->getFileById($fileId);
+            $error = "File not found.";
+            if ($file && ($file->status == 'complete' || $file->status == 'published')) {
+                try {
+                    // Current entries XML
+                    $sourceContent = Translations::$plugin->elementTranslator->getTargetData($file->source, true);
+    
+                    // Translated file XML
+                    $targetContent = Translations::$plugin->elementTranslator->getTargetData($file->target, true);
+
+                    foreach ($sourceContent as $key => $value) {
+                        if ($value != $targetContent[$key] ?? '') {
+                            $data['diff'][$key] = [
+                                'source' => $value ?? '',
+                                'target' => $targetContent[$key] ?? '',
+                            ];
+                        }
+                    }
+
+                    $data['source'] = $sourceContent;
+                    $data['target'] = $targetContent;
+                    $error = null;
+                    $success = true;
+                } catch(Exception $e) {
+                    $error = $e->getMessage();
+                }
+            }
+        }
+
+        return $this->asJson([
+            'success' => $success,
+            'data' => $data,
+            'error' => $error
+        ]);
     }
 
 	/**

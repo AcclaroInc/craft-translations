@@ -327,6 +327,18 @@ class FileRepository
     }
 
     /**
+     * @param $fileId
+     * @return false|int
+     * @throws \Throwable
+     */
+    public function deleteById($fileId)
+    {
+        $attributes = ['id' => (int) $fileId];
+
+        return FileRecord::findOne($attributes)->delete();
+    }
+
+    /**
      * @param $draftId
      * @return false|int
      * @throws \Throwable
@@ -380,7 +392,7 @@ class FileRepository
                     $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
                     $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        Constants::FILE_FORMAT_XML,
                         [
                             'sourceSite'    => $file->sourceSite,
                             'targetSite'    => $file->targetSite,
@@ -397,7 +409,7 @@ class FileRepository
             }
         }
 
-        if ($order->translator->service !== 'export_import') {
+        if ($order->translator->service !== Constants::TRANSLATOR_DEFAULT) {
             $translator = $order->getTranslator();
 
             $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
@@ -454,7 +466,7 @@ class FileRepository
                 $file->targetSite = $targetSite;
                 $file->source = Translations::$plugin->elementToFileConverter->convert(
                     $element,
-                    Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                    Constants::FILE_FORMAT_XML,
                     [
                         'sourceSite'    => $order->sourceSite,
                         'targetSite'    => $targetSite,
@@ -467,6 +479,33 @@ class FileRepository
             }
         }
         return true;
+    }
+
+    public function createOrderFile($order, $elementId, $targetSite)
+    {
+        $element = Craft::$app->getElements()->getElementById($elementId);
+        $wordCount = Translations::$plugin->elementTranslator->getWordCount($element) ?? 0;
+
+        $file = $this->makeNewFile();
+
+        $file->orderId = $order->id;
+        $file->elementId = $element->id;
+        $file->sourceSite = $order->sourceSite;
+        $file->targetSite = $targetSite;
+        $file->source = Translations::$plugin->elementToFileConverter->convert(
+            $element,
+            Constants::FILE_FORMAT_XML,
+            [
+                'sourceSite'    => $order->sourceSite,
+                'targetSite'    => $targetSite,
+                'wordCount'    => $wordCount,
+            ]
+        );
+        $file->wordCount = $wordCount;
+
+        // return without saving as acclaro order files are created later
+        // Translations::$plugin->fileRepository->saveFile($file);
+        return $file;
     }
 
     public function getUploadedFilesWordCount($asset, $format)

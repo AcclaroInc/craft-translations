@@ -763,6 +763,10 @@ del {
     padding-top: 10px !important;
 }
 
+.pt-5 {
+    padding-top: 5px !important;
+}
+
 .w-300 {
     width: 300px;
 }
@@ -874,4 +878,16 @@ select[name="version"] {
 
 .processing {
     background-color: #ced8e5 !important;
+}
+
+.color-red {
+    color: red;
+}
+
+.mr--10 {
+    margin-right: -10px;
+}
+
+.bg-white {
+    background: white;
 }

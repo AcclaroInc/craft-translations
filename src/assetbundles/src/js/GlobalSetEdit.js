@@ -63,7 +63,7 @@ Craft.Translations.GlobalSetEdit = {
         var $formsubmit = $('<a>', {
             'class': 'formsubmit',
             'text': Craft.t('app', 'Save as a draft'),
-            'data-action': 'translations/base/save-global-set-draft'
+            'data-action': 'translations/global-set/save-draft'
         }).appendTo($item);
 
         $btn.menubtn();

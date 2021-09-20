@@ -10,7 +10,7 @@ class Constants
     const LICENSE_STATUS_VALID  = 'valid';
 
     // Translators
-    const TRANSLATOR_EXPORT_IMPORT  = 'export_import';
+    const TRANSLATOR_DEFAULT        = 'export_import';
     const TRANSLATOR_ACCLARO        = 'acclaro';
 
     // Orders
@@ -22,10 +22,12 @@ class Constants
     const ORDER_STATUS_FAILED           = 'failed';
     const ORDER_STATUS_COMPLETE         = 'complete';
     const ORDER_STATUS_PUBLISHED        = 'published';
+    const ORDER_STATUS_CANCELED         = 'canceled';
 
     // Classes
     const CLASS_GLOBAL_SET  = 'craft\\elements\\GlobalSet';
     const CLASS_CATEGORY    = 'craft\\elements\\Category';
+    const CLASS_ASSET    = 'craft\\elements\\Asset';
 
     // Urls
     const URL_ORDER_DETAIL  = 'translations/orders/detail/';
@@ -35,7 +37,7 @@ class Constants
     const URL_ENTRIES       = 'entries/';
 
     // Files format
-    const DEFAULT_FILE_EXPORT_FORMAT    = 'json';
+    const FILE_FORMAT_JSON              = 'json';
     const FILE_FORMAT_CSV               = 'csv';
     const FILE_FORMAT_XML               = 'xml';
     const FILE_FORMAT_ZIP               = 'zip';
@@ -46,4 +48,16 @@ class Constants
     const FILE_STATUS_FAILED        = 'failed';
     const FILE_STATUS_PUBLISHED     = 'published';
     const FILE_STATUS_IN_PROGRESS   = 'in progress';
+
+    // Acclaro Constants
+    const PRODUCTION_URL = 'https://my.acclaro.com/api2/ ';
+    const SANDBOX_URL = 'https://apisandbox.acclaro.com/api2/';
+
+    const DELIVERY = 'craftcms';
+    const DEFAULT_TAG = 'CraftCMS';
+
+    // Acclaro Order Comments
+    const ACCLARO_FILE_NEW = 'NEW FILE';
+    const ACCLARO_FILE_CANCEL = 'CANCEL FILE';
+    const ACCLARO_ORDER_CANCEL = 'CANCEL ORDER';
 }
