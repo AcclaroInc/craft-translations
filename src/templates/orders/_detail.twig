@@ -47,13 +47,6 @@
     {% set crumbs = crumbs|merge([
         { label: 'Edit order'|t, url: 'javascript:void(0)' },
     ]) %}
-
-    {% if not isProcessing and order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
-        {% set tabs = {
-            "order": {label: "Order settings"|t, url: "#order"},
-            "files": {label: "Order details"|t, url: "#files", class: "noClick"},
-        } %}
-    {% endif %}
 {% else %}
     {% set crumbs = crumbs|merge([
         { label: 'New order'|t, url: 'javascript:void(0)' },
@@ -314,7 +307,7 @@
                     placeholder: 'Optional',
                     class: isEditable
                 }) }}
-                <input type="hidden" id="originalRequestedDueDate" value="{{ order.requestedDueDate }}">
+                <input type="hidden" id="originalRequestedDueDate" value="{{ date(order.requestedDueDate) | date('m/d/Y') }}">
 
                 {{ forms.textareaField({
                     label: 'Order notes'|t,
@@ -546,14 +539,15 @@
         <div id="settings" class="meta">
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Order ID</label>
+                    <label>Order ID</label>
                 </div>
 
                 <div class="input ltr">
                     {% if order.translator.service is defined and
                         order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
                         {% if order.serviceOrderId %}
-                            <a class="right" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
+                            <table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
+                            <a class="right pt-5 mr--10" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
                         {% else %}
                             <label class="right">{{ 'N/A' }} </label>
                         {% endif %}
@@ -565,7 +559,7 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Translator</label>
+                    <label>Translator</label>
                 </div>
                 <div class="input ltr">
                     <div class="float-right">
@@ -580,7 +574,7 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Source Site</label>
+                    <label>Source Site</label>
                 </div>
                 <div class="input ltr">
                     <label class='float-right'>
@@ -593,7 +587,7 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Author</label>
+                    <label>Author</label>
                 </div>
                 <div class="input ltr">
                     <div class="float-right">
@@ -604,7 +598,7 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Submitted</label>
+                    <label>Submitted</label>
                 </div>
                 <div class="input ltr">
                     <div class="float-right">
@@ -615,7 +609,7 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Due Date</label>
+                    <label>Due Date</label>
                 </div>
                 <div class="input ltr">
                     <div class="float-right">
@@ -626,7 +620,7 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Est. word count</label>
+                    <label>Est. word count</label>
                 </div>
                 <div class="input ltr">
                     <label class='float-right'> {{ orderWordCount ?? 0 }} </label>
@@ -701,7 +695,7 @@
         <div id="meta-details" class="meta read-only">
             <div class="data">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Status</label>
+                    <label>Status</label>
                 </div>
                 <div id="status-value" class="value">
                     {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
@@ -726,7 +720,7 @@
             </div>
             <div class="data">
                 <div class="heading">
-                    <span id="slug-label" for="slug">Created At</span>
+                    <span>Created At</span>
                 </div>
                 <div id="status-value" class="value">
                     <span> {{ order.dateOrdered ? order.dateOrdered|date('n/j/Y, H:i A') : 'N/A' }} </span>
@@ -734,7 +728,7 @@
             </div>
             <div class="data">
                 <div class="heading">
-                    <span id="slug-label" for="slug">Updated At</span>
+                    <span>Updated At</span>
                 </div>
                 <div id="status-value" class="value">
                     <span> {{ order.dateUpdated ? order.dateUpdated|date('n/j/Y, H:i A') : 'N/A' }} </span>

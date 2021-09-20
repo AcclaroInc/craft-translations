@@ -367,12 +367,16 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function editOrder($order, $settings, $data)
     {
-        $this->acclaroApiClient->editOrder(
+        $res = $this->acclaroApiClient->editOrder(
             $order->serviceOrderId,
             $data['title'] ?? $order->title,
-            $data['comments'] ?? null,
+            $data['comment'] ?? null,
             $data['requestedDueDate'] ?? null
         );
+
+        if (empty($res)) {
+            throw new Exception('Error updating order', 1);
+        }
     }
 
     /**

@@ -327,6 +327,18 @@ class FileRepository
     }
 
     /**
+     * @param $fileId
+     * @return false|int
+     * @throws \Throwable
+     */
+    public function deleteById($fileId)
+    {
+        $attributes = ['id' => (int) $fileId];
+
+        return FileRecord::findOne($attributes)->delete();
+    }
+
+    /**
      * @param $draftId
      * @return false|int
      * @throws \Throwable
@@ -491,7 +503,8 @@ class FileRepository
         );
         $file->wordCount = $wordCount;
 
-        Translations::$plugin->fileRepository->saveFile($file);
+        // return without saving as acclaro order files are created later
+        // Translations::$plugin->fileRepository->saveFile($file);
         return $file;
     }
 

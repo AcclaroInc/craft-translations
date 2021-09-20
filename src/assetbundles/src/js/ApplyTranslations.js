@@ -30,6 +30,7 @@ Craft.Translations.ApplyTranslations = {
         //     $applyTranslationsContainer.className = "field";
         
         // var $btngroup = $('<div>', {'class': 'apply-translations'}).css('float', 'right');
+
         // $settings = document.getElementById('settings');
         // if (!isDraftEdit()) {
         //     $settings.insertBefore($applyTranslationsContainer, $settings.firstChild);

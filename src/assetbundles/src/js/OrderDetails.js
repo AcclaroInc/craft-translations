@@ -140,25 +140,23 @@
             // Validate Due Date
             if (key == "dueDate" || key == "all") {
                 $originalDueDate = $('#originalRequestedDueDate').val();
-                if (typeof $originalDueDate !== 'undefined') {
-                    $originalDueDate = $originalDueDate.split(',');
-                }
-                var currentDueDate = $('#requestedDueDate').val();
-                if (typeof currentDueDate !== 'undefined') {
-                    var currentDueDate = currentDueDate.split(",");
+                var currentDueDate = $('#requestedDueDate-date').val();
+                if (currentDueDate == undefined || currentDueDate == '') {
+                    dueDate = new Date();
+                    currentDueDate = (dueDate.getMonth('mm')+1)+"/"+dueDate.getDate()+"/"+dueDate.getFullYear();
                 }
 
-                if ($originalDueDate && currentDueDate && haveDifferences($originalDueDate, currentDueDate)) {
+                if (Date.parse($originalDueDate) != Date.parse(currentDueDate)) {
                     if (!$needData) return true;
                     $responseData.push("requestedDueDate");
                 }
             }
             // Validate Comments
             if (key == "comments" || key == "all") {
-                $originalComments = $('#originalComments').val().split(',');
-                var currentComments = $('#comments').val().split(",");
+                $originalComments = $('#originalComments').val();
+                var currentComments = $('#comments').val();
 
-                if (haveDifferences($originalComments, currentComments)) {
+                if ($originalComments != currentComments) {
                     if (!$needData) return true;
                     $responseData.push("comments");
                 }
@@ -587,6 +585,20 @@
                     setSubmitButtonStatus(false);
                 }
             });
+
+            $('#cancel-order-link').on('click', function() {
+                var $cancelTab = $('#cancel-order-tab');
+                var $cancelIcon = $('#cancel-order-link');
+                if ($cancelTab.hasClass('hidden')) {
+                    $cancelTab.removeClass('hidden');
+                    $cancelIcon.removeClass('desc');
+                    $cancelIcon.addClass('asc');
+                } else {
+                    $cancelTab.addClass('hidden');
+                    $cancelIcon.removeClass('asc');
+                    $cancelIcon.addClass('desc');
+                }
+            });
         },
         _addOrderTag: function($newTag) {
             $mainDiv = $('<div>', {
@@ -743,14 +755,24 @@
             this._addSaveDraftAction($saveDraftLink);
 
             if (! isDefaultTranslator && isSubmitted && !(isCompleted || isPublished)) {
-                var $cancelOrder = $('<li>');
-                $cancelOrder.appendTo($dropdown);
-                var $cancelOrderLink = $('<a>', {
-                    'class': 'translations-submit-order',
-                    'href': '#',
-                    'text': 'Cancel order',
+                var $cancelOrderDiv = $('<div>', {
+                    class: "field hidden bg-white",
+                    id: "cancel-order-tab"
                 });
-                $cancelOrderLink.appendTo($cancelOrder);
+                var settingsDiv = $('#settings div:eq(0)');
+                $cancelOrderDiv.insertAfter(settingsDiv);
+                var $cancelOrderHead = $('<div class=heading><label>Order Actions</label></div>');
+                $cancelOrderHead.appendTo($cancelOrderDiv);
+                var $cancelOrderBody = $('<div>', {
+                    class: "input ltr"
+                });
+                $cancelOrderBody.appendTo($cancelOrderDiv);
+                var $cancelOrderLink = $('<a>', {
+                    class: 'translations-submit-order right color-red',
+                    href: '#',
+                    text: 'Cancel order',
+                });
+                $cancelOrderLink.appendTo($cancelOrderBody);
                 this._addCancelOrderAction($cancelOrderLink);
             }
         },
@@ -767,7 +789,6 @@
                 }else if ($(that).text() == "Update order") {
                     // Set updated fields before proceeding
                     setUpdatedFields();
-
                     Craft.postActionRequest('translations/order/update-order', $form.serialize(), function(response, textStatus) {
                         if (response == null) {
                             Craft.cp.displayError(Craft.t('app', "Unable to update order."));

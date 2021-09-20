@@ -430,20 +430,8 @@ class OrderController extends Controller
             $variables['translator'] = Translations::$plugin->translatorRepository
                 ->getTranslatorById($variables['translatorId']);
 
-            $isDefaultTranslator = $variables['translator']->service === Constants::TRANSLATOR_DEFAULT;
             $orderStatus = $variables['order']->status;
-
-            if (!$isDefaultTranslator) {
-                // Get Order Status from translator api
-                // $orderStatus = ;
-                if (in_array(
-                    $orderStatus, [Constants::ORDER_STATUS_COMPLETE, Constants::ORDER_STATUS_PUBLISHED]
-                    )) {
-                        $variables['isEditable'] = false;
-                }
-            } else {
-                if ($orderStatus === Constants::ORDER_STATUS_PUBLISHED) $variables['isEditable'] = false;
-            }
+            if ($orderStatus === Constants::ORDER_STATUS_PUBLISHED) $variables['isEditable'] = false;
         }
 
         $variables['targetSiteCheckboxOptions'] = array();
@@ -468,6 +456,8 @@ class OrderController extends Controller
 
             $translatorUrl = $translationService->getOrderUrl($variables['order']);
             $variables['translator_url'] = $translatorUrl;
+            $orderStatus = $translationService->getOrderStatus($variables['order']);
+            if ($orderStatus === Constants::ORDER_STATUS_COMPLETE) $variables['isEditable'] = false;
         }
 
         $variables['isSubmitted'] = ($variables['order']->status !== Constants::ORDER_STATUS_NEW &&
@@ -1130,13 +1120,17 @@ class OrderController extends Controller
                 }
                 $order->$field = $updated;
 
-                if ($field == 'title') $editOrderRequest[$field] = $updated;
+                // Make Api Request to update title
+                if ($field == 'title' && ! $isDefaultTranslator) {
+                    $translatorService->editOrderName($order->serviceOrderId, trim($updated));
+                }
                 if ($field == 'comments') $editOrderRequest['comment'] = $updated;
             }
 
-            if (! empty($editOrderRequest) && ! $isDefaultTranslator) {
-                $translatorService->editOrder($order, $settings, $editOrderRequest);
-            }
+            // Logic to update dueDate and comments in acclaro order
+            // if (! empty($editOrderRequest) && ! $isDefaultTranslator) {
+            //     $translatorService->editOrder($order, $settings, $editOrderRequest);
+            // }
 
             if (! empty($oldData)) {
                 if ($oldData['elements'] ?? null) {
@@ -1151,7 +1145,7 @@ class OrderController extends Controller
                                 if (! $isDefaultTranslator) {
                                     $translatorService->addFileComment($order, $settings, $file, "CANCEL FILE");
                                 }
-                                Translations::$plugin->fileRepository->delete($file->draftId, $elementId);
+                                Translations::$plugin->fileRepository->deleteById($file->id);
                             }
                         }
                     }
@@ -1168,6 +1162,8 @@ class OrderController extends Controller
                                 if (! $isDefaultTranslator) {
                                     $translatorService->sendOrderFile($order, $file, $settings);
                                     $translatorService->addFileComment($order, $settings, $file, "NEW FILE");
+                                } else {
+                                    Translations::$plugin->fileRepository->saveFile($file);
                                 }
                             }
                         }
@@ -1179,12 +1175,14 @@ class OrderController extends Controller
                     $newTargetSites = array_diff($newData['targetSites'], $oldTargetSites);
 
                     foreach ($newTargetSites as $site) {
-                        $orderElements = isset($oldData['elements']) ? json_decode($oldData['elements'], true) : $newData['elements'];
+                        $orderElements = $newData['elements'];
                         foreach ($orderElements as $elementId) {
                             $file = Translations::$plugin->fileRepository->createOrderFile($order, $elementId, $site);
                             if (! $isDefaultTranslator) {
                                 $translatorService->sendOrderFile($order, $file, $settings);
                                 $translatorService->addFileComment($order, $settings, $file, "NEW FILE");
+                            } else {
+                                Translations::$plugin->fileRepository->saveFile($file);
                             }
                         }
                     }
@@ -1193,11 +1191,17 @@ class OrderController extends Controller
         } catch (Exception $e) {
             return $this->asJson(["success" => false, "message" => $e->getMessage()]);
         }
-        Craft::$app->getElements()->saveElement($order);
-        return $this->asJson([
-            'success' => true,
-            'message' => "Order updated."
-        ]);
+        if (Craft::$app->getElements()->saveElement($order, true, true, false)) {
+            return $this->asJson([
+                'success' => true,
+                'message' => "Order updated."
+            ]);
+        } else {
+            return $this->asJson([
+                'success' => false,
+                'message' => "Error saving order."
+            ]);
+        }
     }
 
     /**
