@@ -462,7 +462,7 @@ class WidgetController extends Controller
                     // Current entries XML
                     $currentJson = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        Constants::FILE_FORMAT_JSON,
                         [
                             'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
                             'targetSite'    => $file->targetSite

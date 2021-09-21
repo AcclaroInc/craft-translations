@@ -122,15 +122,6 @@ class AcclaroApiClient
 
         $responseJson = json_decode($body->getContents(), true);
 
-        // var_dump($endpoint);
-        // var_dump($responseJson);
-        // die;
-
-        // if (empty($responseJson['success'])) {
-        //     //@TODO
-        //     return $responseJson['data'];
-        // }
-
         if (!isset($responseJson['data']) || $responseJson['success'] === false) {
             return null;
         }
@@ -141,10 +132,6 @@ class AcclaroApiClient
                 return (object) $row;
             }, $responseJson['data']);
         }
-
-        // var_dump($endpoint);
-        // var_dump($responseJson);
-        // die;
 
         return (object) $responseJson['data'];
     }

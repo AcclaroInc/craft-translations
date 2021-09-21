@@ -282,4 +282,33 @@ class ElementToFileConverter
         }
         return $jsonData;
     }
+
+    public function addDataToSourceXML($xml_content, array $data)
+    {
+        $dom = new \DOMDocument('1.0', 'utf-8');
+        $dom->formatOutput = true;
+    
+        //Turn LibXml Internal Errors Reporting On!
+        libxml_use_internal_errors(true);
+        if (!$dom->loadXML( $xml_content ))
+        {
+            $errors = $this->reportXmlErrors();
+            if($errors)
+            {
+                Craft::error(Translations::$plugin->translator->translate('app', "We found errors parsing file's xml."  . $errors));
+                return false;
+            }
+        }
+
+        $xml = $dom->getElementsByTagName('xml')->item(0);
+        $head = $xml->getElementsByTagName('head')->item(0);
+        $meta = $head->getElementsByTagName('meta')->item(0);
+        foreach ($data as $key => $value) {
+            if (! $meta->hasAttribute($key)) {
+                $meta->setAttribute($key, $value);
+            }
+        }
+
+        return $dom->saveXML();
+    }
 }

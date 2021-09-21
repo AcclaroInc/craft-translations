@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\translator;
 
+use acclaro\translations\Constants;
 use Craft;
 use DateTime;
 use Exception;
@@ -309,17 +310,24 @@ class AcclaroTranslationService implements TranslationServiceInterface
             !empty($settings['sandboxMode'])
         );
 
+        $orderData = [
+            'acclaroOrderId'    => $order->serviceOrderId,
+            'orderId'      => $order->id
+        ];
+
         if ($file) {
 
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+
+            $file->source = Translations::$plugin->elementToFileConverter->addDataToSourceXML($file->source, $orderData);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             } else {
-                $filename = $element->slug.'-'.$targetSite.'.xml';
+                $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             }
 
             $path = $tempPath .'/'. $file->elementId .'-'. $filename;

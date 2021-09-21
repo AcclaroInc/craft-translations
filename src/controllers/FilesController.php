@@ -67,7 +67,7 @@ class FilesController extends Controller
     {
         $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
         
-        $fileFormat = $params['format'] ?? Constants::DEFAULT_FILE_EXPORT_FORMAT;
+        $fileFormat = $params['format'] ?? Constants::FILE_FORMAT_XML;
 
         $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
         $files = Translations::$plugin->fileRepository->getFilesByOrderId($params['orderId'], null);

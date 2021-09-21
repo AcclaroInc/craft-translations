@@ -76,7 +76,7 @@ class ImportFiles extends BaseJob
                 return false;
             }
 
-            if ($this->fileFormat === Constants::DEFAULT_FILE_EXPORT_FORMAT) {
+            if ($this->fileFormat === Constants::FILE_FORMAT_JSON) {
                 return $this->processJsonFile($asset, $file_content);
             } elseif ($this->fileFormat == Constants::FILE_FORMAT_CSV) {
                 return $this->processCsvFile($asset, $file_content);

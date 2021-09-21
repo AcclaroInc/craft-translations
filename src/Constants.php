@@ -37,7 +37,7 @@ class Constants
     const URL_ENTRIES       = 'entries/';
 
     // Files format
-    const DEFAULT_FILE_EXPORT_FORMAT    = 'json';
+    const FILE_FORMAT_JSON              = 'json';
     const FILE_FORMAT_CSV               = 'csv';
     const FILE_FORMAT_XML               = 'xml';
     const FILE_FORMAT_ZIP               = 'zip';
@@ -45,6 +45,7 @@ class Constants
 
     // Files status
     const FILE_STATUS_COMPLETE      = 'complete';
+    const FILE_STATUS_CANCELED      = 'canceled';
     const FILE_STATUS_FAILED        = 'failed';
     const FILE_STATUS_PUBLISHED     = 'published';
     const FILE_STATUS_IN_PROGRESS   = 'in progress';

@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\repository;
 
+use acclaro\translations\Constants;
 use Craft;
 use DateTime;
 use Exception;
@@ -317,7 +318,12 @@ class OrderRepository
             $order->wordCount
         );
 
-        $order->serviceOrderId = (!is_null($orderResponse)) ? $orderResponse->orderid : '';
+        $orderData = [
+            'acclaroOrderId'    => (!is_null($orderResponse)) ? $orderResponse->orderid : '',
+            'orderId'      => $order->id
+        ];
+
+        $order->serviceOrderId = $orderData['acclaroOrderId'];
         $order->status = (!is_null($orderResponse)) ? $orderResponse->status : '';
 
         $orderCallbackResponse = $acclaroApiClient->requestOrderCallback(
@@ -345,15 +351,17 @@ class OrderRepository
                 $sendOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
             }
 
+            $file->source = Translations::$plugin->elementToFileConverter->addDataToSourceXML($file->source, $orderData);
+
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.json';
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             } else {
-                $filename = $element->slug.'-'.$targetSite.'.json';
+                $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             }
 
             $path = $tempPath .'/'. $file->elementId .'-'. $filename;
@@ -384,7 +392,6 @@ class OrderRepository
                 $file->serviceFileId,
                 $file->previewUrl
             );
-            // }
 
             fclose($stream);
 

@@ -7,7 +7,8 @@
     var isSubmitted = $("#order-attr").data("submitted");
     var isNew = $("#order-attr").data("status") === "new";
     var isFailed = $("#order-attr").data("status") === "failed";
-    var isCompleted = $("#order-attr").data("status") === "completed";
+    var isCompleted = $("#order-attr").data("status") === "complete";
+    var isCanceled = $("#order-attr").data("status") === "canceled";
     var isPublished = $("#order-attr").data("status") === "published";
     var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
 
@@ -234,15 +235,17 @@
         return isNew;
     }
 
-    function sendingOrderStatus($status) {
+    function sendingOrderStatus($status, $btnStatus = false) {
         if ($status) {
             $('.translations-loader').removeClass('hidden');
             $('.translations-dropdown .btn').addClass('disabled').css('pointer-events', 'none');
             $('.translations-dropdown .btn').prop('disabled', true);
         } else {
             $('.translations-loader').addClass('hidden');
-            $('.translations-dropdown .btn').removeClass('disabled').css('pointer-events', '');
-            $('.translations-dropdown .btn').prop('disabled', false);
+            if (! $btnStatus) {
+                $('.translations-dropdown .btn').removeClass('disabled').css('pointer-events', '');
+                $('.translations-dropdown .btn').prop('disabled', false);
+            }
         }
     }
 
@@ -327,7 +330,7 @@
                 }
 
                 if (isSubmitted) {
-                    if (shouldCreateNewOrder()) {
+                    if (shouldCreateNewOrder() && ! isDefaultTranslator) {
                         setButtonText('.translations-submit-order.submit', 'Create new order');
                     } else {
                         setButtonText('.translations-submit-order.submit', 'Update order');
@@ -754,7 +757,7 @@
             $saveDraftLink.appendTo($item1);
             this._addSaveDraftAction($saveDraftLink);
 
-            if (! isDefaultTranslator && isSubmitted && !(isCompleted || isPublished)) {
+            if (! isDefaultTranslator && isSubmitted && !(isCompleted || isPublished || isCanceled)) {
                 var $cancelOrderDiv = $('<div>', {
                     class: "field hidden bg-white",
                     id: "cancel-order-tab"
@@ -796,7 +799,9 @@
                         } else if (textStatus === 'success' && response.success) {
                             if (response.message) {
                                 Craft.cp.displayNotice(Craft.t('app', response.message));
-                                sendingOrderStatus(false);
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 200);
                             } else {
                                 Craft.cp.displayError(Craft.t('app', "Something went wrong"));
                                 sendingOrderStatus(false);
@@ -821,7 +826,9 @@
                         } else if (textStatus === 'success' && response.success) {
                             if (response.message) {
                                 Craft.cp.displayNotice(Craft.t('app', response.message));
-                                sendingOrderStatus(false);
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 200);
                             } else if (response.url) {
                                 window.location.href = response.url;
                             } else if (response.job) {
@@ -872,7 +879,7 @@
             if (isDefaultTranslator && isPublished) {
                 $proceed = true;
             }
-            if (!isDefaultTranslator && (isCompleted || isPublished)) {
+            if (!isDefaultTranslator && (isCompleted || isPublished || isCanceled)) {
                 $proceed = true;
             }
             if ($proceed) {

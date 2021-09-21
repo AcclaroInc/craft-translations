@@ -273,14 +273,7 @@ class FileRepository
         $isNew = !$file->id;
 
         if (!$isNew) {
-            // echo '<pre>';
-            // var_dump($file->id);
-            // echo '</pre>';
             $record = FileRecord::findOne($file->id);
-            // echo '<pre>';
-            // var_dump($record);
-            // echo '</pre>';
-            // die;
 
             if (!$record) {
                 throw new Exception('No file exists with that ID.');
@@ -326,6 +319,12 @@ class FileRepository
         return false;
     }
 
+    public function cancelOrderFile($file)
+    {
+        $file->status = Constants::FILE_STATUS_CANCELED;
+        Translations::$plugin->fileRepository->saveFile($file);
+    }
+
     /**
      * @param $fileId
      * @return false|int
@@ -353,9 +352,11 @@ class FileRepository
         return FileRecord::findOne($attributes)->delete();
     }
 
-    public function deleteByOrderId($orderId)
+    public function deleteByOrderId($orderId, $targetSite = null)
     {
         $attributes = ['orderId' => (int) $orderId];
+
+        if ($targetSite) $attributes['targetSite'] = (int) $targetSite;
 
         $records = FileRecord::find()->where($attributes)->all();
 
@@ -392,7 +393,7 @@ class FileRepository
                     $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
                     $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        Constants::FILE_FORMAT_XML,
                         [
                             'sourceSite'    => $file->sourceSite,
                             'targetSite'    => $file->targetSite,
@@ -409,7 +410,7 @@ class FileRepository
             }
         }
 
-        if ($order->translator->service !== 'export_import') {
+        if ($order->translator->service !== Constants::TRANSLATOR_DEFAULT) {
             $translator = $order->getTranslator();
 
             $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
@@ -466,7 +467,7 @@ class FileRepository
                 $file->targetSite = $targetSite;
                 $file->source = Translations::$plugin->elementToFileConverter->convert(
                     $element,
-                    Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                    Constants::FILE_FORMAT_XML,
                     [
                         'sourceSite'    => $order->sourceSite,
                         'targetSite'    => $targetSite,
@@ -494,7 +495,7 @@ class FileRepository
         $file->targetSite = $targetSite;
         $file->source = Translations::$plugin->elementToFileConverter->convert(
             $element,
-            Constants::DEFAULT_FILE_EXPORT_FORMAT,
+            Constants::FILE_FORMAT_XML,
             [
                 'sourceSite'    => $order->sourceSite,
                 'targetSite'    => $targetSite,

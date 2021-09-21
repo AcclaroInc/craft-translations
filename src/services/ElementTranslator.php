@@ -58,7 +58,7 @@ class ElementTranslator
         if (strpos($data, "<xml>") !== false) {
             return Constants::FILE_FORMAT_XML;
         }
-        return Constants::DEFAULT_FILE_EXPORT_FORMAT;
+        return Constants::FILE_FORMAT_JSON;
     }
 
     public function getTargetData($content, $nonNested = false) {
@@ -173,12 +173,6 @@ class ElementTranslator
 
             $post = array_merge($post, $fieldPost);
         }
-
-        // echo '<pre>';
-        // echo "//======================================================================<br>// post ElementTranslator<br>//======================================================================<br>";
-        // var_dump($post);
-        // echo '</pre>';
-        // die;
 
         return $post;
     }

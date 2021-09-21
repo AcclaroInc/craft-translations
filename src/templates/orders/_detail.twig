@@ -3,6 +3,10 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAsset") %}
 
+{% set isCancellable =  order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
+                        order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
+                        order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') or
+                        order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
 {% if not isEditable %}
     {% set isEditable = "noClick" %}
 {% endif %}
@@ -17,7 +21,7 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ order.status }}" data-submitted="{{ isSubmitted }}"
+                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('') }}" data-submitted="{{ isSubmitted }}"
                 data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>
@@ -546,7 +550,9 @@
                     {% if order.translator.service is defined and
                         order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
                         {% if order.serviceOrderId %}
-                            <table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
+                            {% if not isCancellable %}
+                                <table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
+                            {% endif %}
                             <a class="right pt-5 mr--10" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
                         {% else %}
                             <label class="right">{{ 'N/A' }} </label>
@@ -635,14 +641,11 @@
                     <div class="heading">
                         <label id="acclaro-sync">My Acclaro</label>
                     </div>
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                    {% if isCancellable %}
                         <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync files"|t('app') }}</button>
                     {% else %}
                         <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync files"|t('app') }}</button>
                     {% endif %}
-                    {# <div class="sync-status"></div> #}
                 </div>
             {% else %}
                 {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
@@ -715,6 +718,9 @@
                     {% endif %}
                     {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') %}
                         <span class="status red"></span> {{ 'Order Failed'|t }}
+                    {% endif %}
+                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') %}
+                        <span class="status crimson"></span> {{ 'Order Cancelled'|t }}
                     {% endif %}
                 </div>
             </div>

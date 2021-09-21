@@ -643,7 +643,7 @@ class Translations extends Plugin
                     $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
                     $currentFile->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        Constants::DEFAULT_FILE_EXPORT_FORMAT,
+                        Constants::FILE_FORMAT_XML,
                         [
                             'sourceSite'    => $currentFile->sourceSite,
                             'targetSite'    => $currentFile->targetSite,

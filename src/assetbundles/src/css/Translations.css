@@ -891,3 +891,7 @@ select[name="version"] {
 .bg-white {
     background: white;
 }
+
+.crimson {
+    background-color: crimson;
+}

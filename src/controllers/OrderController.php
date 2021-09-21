@@ -340,7 +340,7 @@ class OrderController extends Controller
 
                             $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
                         } else {
-                            $variables['webUrls'][$file->id] = $file->previewUrl;
+                            $variables['webUrls'][$file->id] = $file->previewUrl ?? $translatedElement ? $translatedElement->url : $element->url;
                         }
 
                         if (
@@ -422,6 +422,7 @@ class OrderController extends Controller
 
         $variables['translator'] = null;
         $variables['isEditable'] =  true;
+        $variables['orderRecentStatus'] = null;
 
         $variables['translatorId'] = !is_null($variables['order']->translator) ?
             $variables['order']->translator->id : null;
@@ -430,8 +431,8 @@ class OrderController extends Controller
             $variables['translator'] = Translations::$plugin->translatorRepository
                 ->getTranslatorById($variables['translatorId']);
 
-            $orderStatus = $variables['order']->status;
-            if ($orderStatus === Constants::ORDER_STATUS_PUBLISHED) $variables['isEditable'] = false;
+            $variables['orderRecentStatus'] = $variables['order']->status;
+            if ($variables['orderRecentStatus'] === Constants::ORDER_STATUS_PUBLISHED) $variables['isEditable'] = false;
         }
 
         $variables['targetSiteCheckboxOptions'] = array();
@@ -448,16 +449,21 @@ class OrderController extends Controller
             !is_null($variables['translator']) &&
             $variables['translator']->service !== Constants::TRANSLATOR_DEFAULT
         ) {
-            $translationService = Translations::$plugin->translatorFactory
-                ->makeTranslationService(
-                    $variables['translator']->service,
-                    json_decode($variables['translator']->settings, true)
-                );
+            $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
+                $variables['translator']->service,
+                json_decode($variables['translator']->settings, true)
+            );
 
             $translatorUrl = $translationService->getOrderUrl($variables['order']);
             $variables['translator_url'] = $translatorUrl;
             $orderStatus = $translationService->getOrderStatus($variables['order']);
-            if ($orderStatus === Constants::ORDER_STATUS_COMPLETE) $variables['isEditable'] = false;
+            if ($variables['order']->status == Constants::ORDER_STATUS_CANCELED) {
+                $variables['isEditable'] = false;
+            }
+            if (
+                $orderStatus === Constants::ORDER_STATUS_COMPLETE ||
+                $variables['order']->status == Constants::ORDER_STATUS_CANCELED
+            ) $variables['isEditable'] = false;
         }
 
         $variables['isSubmitted'] = ($variables['order']->status !== Constants::ORDER_STATUS_NEW &&
@@ -857,7 +863,7 @@ class OrderController extends Controller
 
         $variables['isProcessing'] = null;
         $variables['isChanged'] = null;
-        $variables['isEditable'] = null;
+        $variables['isEditable'] = true;
         $variables['isSubmitted'] = null;
         $variables['selectedSubnavItem'] = 'orders';
         $variables['orderId'] = null;
@@ -1017,6 +1023,7 @@ class OrderController extends Controller
     {
         $this->requireLogin();
         $this->requirePostRequest();
+        $isCancelledOrder = false;
         $newData = Craft::$app->getRequest()->getBodyParams();
 
         $currentUser = Craft::$app->getUser()->getIdentity();
@@ -1041,9 +1048,9 @@ class OrderController extends Controller
         }
 
         if ($order->status === Constants::ORDER_STATUS_FAILED) {
-            $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
-            $isOrderUpdated = true;
+            $isCancelledOrder = true;
         }
+        $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
 
         $sourceSite = $sourceSite ?: $order->sourceSite;
         // Authenticate service
@@ -1173,6 +1180,7 @@ class OrderController extends Controller
                 if ($oldData['targetSites'] ?? null) {
                     $oldTargetSites = json_decode($oldData['targetSites'], true);
                     $newTargetSites = array_diff($newData['targetSites'], $oldTargetSites);
+                    $removedTargetSites = array_diff($oldTargetSites, $newData['targetSites']);
 
                     foreach ($newTargetSites as $site) {
                         $orderElements = $newData['elements'];
@@ -1184,6 +1192,12 @@ class OrderController extends Controller
                             } else {
                                 Translations::$plugin->fileRepository->saveFile($file);
                             }
+                        }
+                    }
+
+                    if ($isDefaultTranslator) {
+                        foreach ($removedTargetSites as $site) {
+                            Translations::$plugin->fileRepository->deleteByOrderId($order->id, $site);
                         }
                     }
                 }
@@ -1343,14 +1357,26 @@ class OrderController extends Controller
 
             if (empty($res)) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator
-                ->translate('app', 'Unable to delete order.'));
+                ->translate('app', "Unable to cancel order: $order->title"));
                 return;
             }
         }
+
+        foreach ($order->files as $file) {
+            Translations::$plugin->fileRepository->cancelOrderFile($file);
+        }
+
         $order->status = Constants::ORDER_STATUS_CANCELED;
+        $order->logActivity(Translations::$plugin->translator->translate(
+            'app',
+            'Sent My Acclaro order cancellation request.'
+        ));
         Craft::$app->getElements()->saveElement($order);
-        Craft::$app->getSession()->setError(Translations::$plugin->translator
-                ->translate('app', 'Order deleted.'));
+
+        Craft::$app->getSession()->setNotice(Translations::$plugin->translator
+                ->translate('app', "Order cancelled: $order->title"));
+
+        return $this->redirect(Constants::URL_ORDER_DETAIL.$order->id, 302, true);
     }
 
     public function actionDeleteOrder()

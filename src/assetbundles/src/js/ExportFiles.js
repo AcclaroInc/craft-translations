@@ -120,7 +120,7 @@
             var $formatField = Craft.ui.createSelectField({
                 label: Craft.t('app', 'Format'),
                 options: [
-                    {label: 'JSON', value: 'json'}, {label: 'CSV', value: 'csv'}, {label: 'XML', value: 'xml'},
+                    {label: 'XML', value: 'xml'}, {label: 'JSON', value: 'json'}, {label: 'CSV', value: 'csv'},
                 ],
                 'class': 'fullwidth',
             }).appendTo($form);
