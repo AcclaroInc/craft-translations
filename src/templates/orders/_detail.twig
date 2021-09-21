@@ -3,10 +3,14 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAsset") %}
 
-{% set isCancellable =  order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
-                        order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-                        order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') or
-                        order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+{% set orderStatus = orderRecentStatus | default(order.status) %}
+
+{% set isCancellable =  orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+
 {% if not isEditable %}
     {% set isEditable = "noClick" %}
 {% endif %}
@@ -550,7 +554,7 @@
                     {% if order.translator.service is defined and
                         order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
                         {% if order.serviceOrderId %}
-                            {% if not isCancellable %}
+                            {% if isCancellable %}
                                 <table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
                             {% endif %}
                             <a class="right pt-5 mr--10" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
