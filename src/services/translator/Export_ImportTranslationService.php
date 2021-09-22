@@ -10,18 +10,19 @@
 
 namespace acclaro\translations\services\translator;
 
-use acclaro\translations\Constants;
 use Craft;
 use DateTime;
 use Exception;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
+use acclaro\translations\Constants;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
+use craft\elements\Asset;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
@@ -57,19 +58,18 @@ class Export_ImportTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
-        if ($order->status !== 'complete') {
+        if ($order->status !== Constants::ORDER_STATUS_REVIEW_READY) {
             $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), 'complete')
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), Constants::ORDER_STATUS_REVIEW_READY)
             );
         }
 
-        $order->status = 'complete';
+        $order->status = Constants::ORDER_STATUS_REVIEW_READY;
     }
 
-     /**
+    /**
      * {@inheritdoc}
      */
-
     public function updateFile(Order $order, FileModel $file){
         return;
     }
@@ -88,8 +88,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
             $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
             $draft->groupId = $category->groupId;
-
-        } else {
+        } else if ($element instanceof Asset) {
+            $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+        }else {
             $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
 
@@ -169,13 +170,30 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     return false;
                 }
                 break;
+            // Update Asset Drafts
+            case $draft instanceof Asset:
+                $draft->siteId = $targetSite;
+               
+                // $element->siteId = $targetSite;
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+                $draft->setFieldValues($post);
+
+                $res = Translations::$plugin->assetDraftRepository->saveDraft($draft, $post);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
+
+                    return false;
+                }
+                break;
             default:
                 break;
         }
         
         return true;
     }
-
 
     /**
      * {@inheritdoc}

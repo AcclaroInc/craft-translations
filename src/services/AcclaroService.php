@@ -2,6 +2,7 @@
 
 namespace acclaro\translations\services;
 
+use acclaro\translations\services\api\AcclaroApiClient;
 use Craft;
 use acclaro\translations\Translations;
 

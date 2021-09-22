@@ -189,6 +189,16 @@ class Order extends Element
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
+                'key' => 'ready-for-review',
+                'label' => Translations::$plugin->translator->translate('app', 'Ready for review'),
+                'criteria' => [
+                    'status' => [
+                        'ready for review'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
                 'key' => 'ready-to-apply',
                 'label' => Translations::$plugin->translator->translate('app', 'Ready to apply'),
                 'criteria' => [
@@ -304,22 +314,7 @@ class Order extends Element
                 return sprintf('<a href="%s" target="_blank">#%s</a>', $translationService->getOrderUrl($this), $value);
 
             case 'status':
-            switch ($this->statusLabel) {
-                case 'Order failed':
-                    return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Pending submission':
-                    return '<span class="status"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'In progress':
-                    return '<span class="status orange"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'In review':
-                    return '<span class="status yellow"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Ready to apply':
-                    return '<span class="status blue"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Cancelled':
-                    return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Applied':
-                    return '<span class="status green"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-            }
+                return "<span class='status $this->statusColour'></span>".Translations::$plugin->translator->translate('app', $this->statusLabel);
 
             case 'orderDueDate':
             case 'requestedDueDate':
@@ -486,17 +481,41 @@ class Order extends Element
             case 'needs approval':
             case 'in preparation':
             case 'in progress':
-                return 'In progress';
             case 'in review':
-                return 'In review';
+                return 'In progress';
+            case 'ready for review':
+                return 'Ready for review';
             case 'complete':
                 return 'Ready to apply';
             case 'canceled':
-                return 'Cancelled';
+                return 'Canceled';
             case 'published':
                 return 'Applied';
             case 'failed':
-                return 'Order failed';
+                return 'Failed';
+        }
+    }
+
+    public function getStatusColour()
+    {
+        switch ($this->status) {
+            case 'new':
+                return '';
+            case 'getting quote':
+            case 'needs approval':
+            case 'in preparation':
+            case 'in review':
+            case 'in progress':
+                return 'orange';
+            case 'ready for review':
+                return 'yellow';
+            case 'complete':
+                return 'blue';
+            case 'published':
+                return 'green';
+            case 'canceled':
+            case 'failed':
+                return 'red';
         }
     }
 

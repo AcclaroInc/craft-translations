@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use Craft;
 use Exception;
 use craft\web\Controller;
@@ -24,25 +25,6 @@ use acclaro\translations\services\AcclaroService;
  */
 class TranslatorController extends Controller
 {
-    /**
-     * @var int
-     */
-    protected $pluginVersion;
-
-    const DEFAULT_TRANSLATOR = 'export_import';
-
-    // Public Methods
-    // =========================================================================
-    
-    public function __construct(
-        $id,
-        $module = null
-    ) {
-        parent::__construct($id, $module);
-
-        $this->pluginVersion = Craft::$app->getPlugins()->getPlugin('translations')->getVersion();
-    }
-
     /**
      * @return mixed
      */
@@ -96,7 +78,6 @@ class TranslatorController extends Controller
         $this->requirePostRequest();
 
         $variables['selectedSubnavItem'] = 'translators';
-        $variables['pluginVersion'] = $this->pluginVersion;
         $variables['translatorId'] = $translatorId = Craft::$app->getRequest()->getBodyParam('id');
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
 
@@ -134,7 +115,7 @@ class TranslatorController extends Controller
         $translator->status = Craft::$app->getRequest()->getBodyParam('status');
 
         //Make Export/Import Translator automatically active
-        if ($translator->service !== self::DEFAULT_TRANSLATOR)
+        if ($translator->service !== Constants::TRANSLATOR_DEFAULT)
         {
             $auth = (new AcclaroService())->authenticateService($service, $settings);
             if (! $auth) {
@@ -164,7 +145,6 @@ class TranslatorController extends Controller
     {
         $variables = Craft::$app->getRequest()->resolve()[1];
         
-        $variables['pluginVersion'] = $this->pluginVersion;
         $variables['selectedSubnavItem'] = 'translators';
 
         $variables['translatorId'] = isset($variables['translatorId']) ? $variables['translatorId'] : null;
@@ -190,8 +170,6 @@ class TranslatorController extends Controller
     public function actionIndex()
     {
         $variables = array();
-
-        $variables['pluginVersion'] = $this->pluginVersion;
 
         $variables['translators'] = Translations::$plugin->translatorRepository->getTranslators();
 

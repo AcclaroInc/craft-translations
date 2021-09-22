@@ -3,7 +3,18 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAsset") %}
 
-{% set sourceSite = sourceSiteObject %}
+{% set orderStatus = orderRecentStatus | default(order.status) %}
+
+{% set isCancellable =  orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
+%}
+
+{% if not isEditable %}
+    {% set isEditable = "noClick" %}
+{% endif %}
 
 {% set title = 'Translations'|t %}
 
@@ -15,7 +26,8 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ order.status }}" data-submitted="{{ isSubmitted }}" data-changed="{{ isChanged }}"/>
+                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('') }}" data-submitted="{{ isSubmitted }}"
+                data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>
         </div>
@@ -32,7 +44,9 @@
         { label: order.title, url: 'javascript:void(0)' },
     ]) %}
     {% if not isProcessing %}
-        {% set selectedTab = "files" %}
+        {% if not isChanged %}
+            {% set selectedTab = "files" %}
+        {% endif %}
         {% set tabs = {
             "order": {label: "Order settings"|t, url: "#order"},
             "files": {label: "Order details"|t, url: "#files"},
@@ -42,12 +56,6 @@
     {% set crumbs = crumbs|merge([
         { label: 'Edit order'|t, url: 'javascript:void(0)' },
     ]) %}
-    {% if not isProcessing and order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
-        {% set tabs = {
-            "order": {label: "Order settings"|t, url: "#order"},
-            "files": {label: "Order details"|t, url: "#files", class: "noClick"},
-        } %}
-    {% endif %}
 {% else %}
     {% set crumbs = crumbs|merge([
         { label: 'New order'|t, url: 'javascript:void(0)' },
@@ -57,26 +65,22 @@
 {% block content %}
     {% if isProcessing %}
         {% if isProcessing == "draft" %}
-            {% set message = "Your order draft's are being created and has been placed in the queue" %}
-            {% set instructions = "You can navigate away from this page. If you are not automatically redirected after your order drafts are created" %}
+            {% set message = "Due to the large order size, we've added a job to the Queue Manager to create translation drafts" %}
         {% elseif isProcessing == "publish" %}
-            {% set message = "Your order is being published and has been placed in the queue" %}
-            {% set instructions = "You can navigate away from this page. If you are not automatically redirected after your order are published" %}
+            {% set message = "Due to the large order size, we've added a job to the Queue Manager to publish translation drafts" %}
         {% else %}
-            {% set message = "Your order file's are being uploaded and has been placed in the queue" %}
-            {% set instructions = "You can navigate away from this page. If you are not automatically redirected after your order files are uploaded" %}
+            {% set message = "Due to the large file size, we've added a job to the Queue Manager to process the upload" %}
         {% endif %}
         <div class="translations-order-confirmation flex">
             <div class="fullwidth readable">
-                <img src="{{ cpAssetUrl }}/images/success.png" alt="">
+                <span style="font-size: 48px;line-height: 48px;">🚧</span>
                 <div class="thank-you">
-                    <h2>Thank You!</h2>
+                    <h2>Added job to queue</h2>
                     <p>{{ message }}</p>
                 </div>
                 <div class="instructions">
-                    <p>{{ instructions }}, you can <a href="{{ url('translations/orders') }}">view your orders here</a>.</p>
+                    <p>This page should automatically refresh as soon as the job completes.</p>
                 </div>
-                <a href="{{ url('entries') }}" class="btn submit">Create New Order</a>
             </div>
         </div>
     {% else %}
@@ -98,6 +102,11 @@
                 value: order.sourceSite,
             }) }}
 
+            {{ forms.hidden({
+                name: 'updatedFields',
+                value: '',
+            }) }}
+
             <div id="order" class="{% if selectedTab|default(null) %} hidden {% endif %}">
                 {{ forms.textField({
                     label: 'Order name <span class="required"/>'|t,
@@ -105,7 +114,7 @@
                     placeholder: 'Translation order name',
                     name: 'title',
                     id: 'title',
-                    class: "fullwidth",
+                    class: isEditable,
                     maxlength: 255,
                 }) }}
                 <input type="hidden" id="originalTitle" value="{{ order.title }}">
@@ -169,6 +178,7 @@
                                                 options: versionOptions,
                                                 name: 'version',
                                                 id: versionId,
+                                                class: isEditable
                                             }) }}
                                         </td>
                                         <td>
@@ -176,6 +186,8 @@
                                                 {{ 'Globals' }}
                                             {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
                                                 {{ 'Category' }}
+                                            {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
+                                                {{ 'Asset' }}
                                             {% else %}
                                                 {{ element.section.name }}
                                             {% endif %}
@@ -183,7 +195,7 @@
                                         </td>
                                         <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                         <td>
-                                            <a class="icon delete translations-order-delete-entry" 
+                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}" 
                                                 title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
                                                 <input type="hidden" name="elements[]" value="{{ element.id }}">
                                             </a>
@@ -198,7 +210,7 @@
                     {% endif %}
                 </div>
 
-                <div class="field" data-position="left" data-colspan="1">
+                <div class="field {{ isEditable }}" data-position="left" data-colspan="1">
                     <div class="buttons flex">
                         <div class="submit">
                             <input type="hidden" id="originalElementIds" value="{{ originalElementIds }}">
@@ -220,12 +232,13 @@
                     <div class="input {{ orientation }}">
 
                         {{ forms.selectField({
-                            value: sourceSite.id,
+                            value: sourceSiteObject.id,
                             options: {'':'Choose'|t ~ '...'}|merge(sourceSites),
                             name: 'sourceSiteSelect',
-                            id: 'sourceSiteSelect'
+                            id: 'sourceSiteSelect',
+                            class: isEditable
                         }) }}
-                        <input type="hidden" id="originalSourceSiteId" value="{{ sourceSite.id }}">
+                        <input type="hidden" id="originalSourceSiteId" value="{{ sourceSiteObject.id }}">
                     </div>
                 </div>
 
@@ -235,7 +248,8 @@
                     values: order.targetSites|json_decode(),
                     showAllOption: true,
                     name: 'targetSites',
-                    id: 'targetSites'
+                    id: 'targetSites',
+                    class: isEditable
                 }) }}
 
                 <input type="hidden" id="originalTargetSiteIds" value="{{ order.targetSites }}">
@@ -248,6 +262,7 @@
                     options: translatorOptions,
                     name: 'translatorId',
                     id: 'translatorId',
+                    class: isEditable,
                     size: 20
                 }) }}
                 <input type="hidden" id="originalTranslatorId" value="{{ order.translatorId }}">
@@ -294,9 +309,10 @@
                     name: 'requestedDueDate',
                     id: 'requestedDueDate',
                     size: 20,
-                    placeholder: 'Optional'
+                    placeholder: 'Optional',
+                    class: isEditable
                 }) }}
-                <input type="hidden" id="originalRequestedDueDate" value="{{ order.requestedDueDate }}">
+                <input type="hidden" id="originalRequestedDueDate" value="{{ date(order.requestedDueDate) | date('m/d/Y') }}">
 
                 {{ forms.textareaField({
                     label: 'Order notes'|t,
@@ -304,13 +320,14 @@
                     name: 'comments',
                     placeholder: 'Additional comments and instructions',
                     id: 'comments',
+                    class: isEditable,
                     maxlength: 2000,
                     size: 20
                 }) }}
                 <input type="hidden" id="originalComments" value="{{ order.comments }}">
 
                 {% set orderTags = {} %}
-                <div id="fields">
+                <div id="fields" class="{{ isEditable }}">
                     <div id="tab-tag" class="flex-fields">
                         <div id="fields-tag-field" class="field width-100">
                             <div class="heading">
@@ -365,7 +382,7 @@
                         </label>
                         <div class="btngroup submit ml-auto">
                             <input type="button" id="draft-publish" class="btn submit disabled form-submit"
-                                disabled="disabled" value="{{ 'Review and publish'|t }}">
+                                disabled="disabled" value="{{ 'Review changes'|t }}">
                         </div>
                     </div>
                 </div>
@@ -401,6 +418,7 @@
 
                                             <td class="thin checkbox-cell translations-checkbox-cell">
                                                 {% if file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_COMPLETE') or
+                                                    file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_REVIEW_READY') or
                                                     file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_PUBLISHED') %}
                                                     <input class="checkbox" data-element="{{ tempElementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}"/>
                                                 {% else %}
@@ -420,7 +438,8 @@
                                                                 <span class="warning duplicate-warning"></span>
                                                             {% endif %}
                                                             {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
-                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
+                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') and
+                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
                                                                 <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
                                                             {% endif %}
                                                         </td>
@@ -443,6 +462,8 @@
                                                     {{ 'Globals' }}
                                                 {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
                                                     {{ 'Category' }}
+                                                {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
+                                                    {{ 'Asset' }}
                                                 {% else %}
                                                     {{ element.section.name }}
                                                 {% endif %}
@@ -465,7 +486,7 @@
                                                         <td>
                                                             <span class="status {{ file.statusColor }}" 
                                                                 data-status="{{ file.status == 'complete' 
-                                                                or file.status == 'published' ? 1 : 0 }}">
+                                                                or file.status == 'published' or file.status == 'ready for review' ? 1 : 0 }}">
                                                                 </span>{{ file.statusLabel }}
                                                         </td>
                                                     </tr>
@@ -487,7 +508,7 @@
 
         {# Additional Forms for order export/import and sync #}
         {% if order.translator.service is defined and
-            order.translator.service == constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+            order.translator.service == constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
             <form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
                 {{ csrfInput() }}
                 {{ forms.hidden({
@@ -520,18 +541,21 @@
 {% endblock %}
 
 {% block details %}
-    {% if not isProcessing %}
+    {# {% if not isProcessing %} #}
         <div id="settings" class="meta">
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Order ID</label>
+                    <label>Order ID</label>
                 </div>
 
                 <div class="input ltr">
                     {% if order.translator.service is defined and
-                        order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+                        order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
                         {% if order.serviceOrderId %}
-                            <a class="right" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
+                            {% if isCancellable %}
+                                <table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
+                            {% endif %}
+                            <a class="right pt-5 mr--10" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
                         {% else %}
                             <label class="right">{{ 'N/A' }} </label>
                         {% endif %}
@@ -543,7 +567,7 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Translator</label>
+                    <label>Translator</label>
                 </div>
                 <div class="input ltr">
                     <div class="float-right">
@@ -558,20 +582,20 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Source Site</label>
+                    <label>Source Site</label>
                 </div>
                 <div class="input ltr">
                     <label class='float-right'>
-                        {{sourceSite.name}}
+                        {{sourceSiteObject.name}}
                         <span class="light">
-                            ({{ sourceSite.language }})
+                            ({{ sourceSiteObject.language }})
                         </span>
                     </label>
                 </div>
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Author</label>
+                    <label>Author</label>
                 </div>
                 <div class="input ltr">
                     <div class="float-right">
@@ -582,7 +606,7 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Submitted</label>
+                    <label>Submitted</label>
                 </div>
                 <div class="input ltr">
                     <div class="float-right">
@@ -593,18 +617,18 @@
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Due Date</label>
+                    <label>Due Date</label>
                 </div>
                 <div class="input ltr">
                     <div class="float-right">
                         <label> {{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }} </label>
-                        <label class="pl-10"> {{ order.requestedDueDate ? order.requestedDueDate|date('H:i A') : '' }} </label>
+                        {# <label class="pl-10"> {{ order.requestedDueDate ? order.requestedDueDate|date('H:i A') : '' }} </label> #}
                     </div>
                 </div>
             </div>
             <div class="field">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Est. word count</label>
+                    <label>Est. word count</label>
                 </div>
                 <div class="input ltr">
                     <label class='float-right'> {{ orderWordCount ?? 0 }} </label>
@@ -614,19 +638,16 @@
             {# Export/Import Or Sync Buttons #}
 
             {% if order.translator.service is defined and
-                order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_EXPORT_IMPORT') %}
+                order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
                 <div class="field" style="justify-content: space-between;">
                     <div class="heading">
                         <label id="acclaro-sync">My Acclaro</label>
                     </div>
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                        <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync files"|t('app') }}</button>
+                    {% if not isCancellable %}
+                        <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
                     {% else %}
-                        <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync files"|t('app') }}</button>
+                        <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
                     {% endif %}
-                    {# <div class="sync-status"></div> #}
                 </div>
             {% else %}
                 {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
@@ -679,32 +700,15 @@
         <div id="meta-details" class="meta read-only">
             <div class="data">
                 <div class="heading">
-                    <label id="slug-label" for="slug">Status</label>
+                    <label>Status</label>
                 </div>
                 <div id="status-value" class="value">
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
-                        <span class="status"></span> {{ 'Pending submission'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PROGRESS') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_GETTING_QUOTE') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEEDS_APPROVAL') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PREPARATION') %}
-                        <span class="status orange"></span>{{ 'In progress'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') %}
-                        <span class="status blue"></span> {{ 'Ready to Apply'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                        <span class="status live"></span> {{ 'Applied'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') %}
-                        <span class="status red"></span> {{ 'Order Failed'|t }}
-                    {% endif %}
+                    <span class="status {{ order.statusColour }}"></span> {{ order.statusLabel|t }}
                 </div>
             </div>
             <div class="data">
                 <div class="heading">
-                    <span id="slug-label" for="slug">Created At</span>
+                    <span>Created At</span>
                 </div>
                 <div id="status-value" class="value">
                     <span> {{ order.dateOrdered ? order.dateOrdered|date('n/j/Y, H:i A') : 'N/A' }} </span>
@@ -712,7 +716,7 @@
             </div>
             <div class="data">
                 <div class="heading">
-                    <span id="slug-label" for="slug">Updated At</span>
+                    <span>Updated At</span>
                 </div>
                 <div id="status-value" class="value">
                     <span> {{ order.dateUpdated ? order.dateUpdated|date('n/j/Y, H:i A') : 'N/A' }} </span>
@@ -732,6 +736,6 @@
                 {% endif %}
             </ul>
         </div>
-    {% endif %}
+    {# {% endif %} #}
 {% endblock %}
 
