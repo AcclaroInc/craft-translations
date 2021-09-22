@@ -23,6 +23,10 @@ class m210922_095949_add_ready_for_review_status extends Migration
         echo "Adding translations_orders status column...\n";
         $this->alterColumn('{{%translations_orders}}', 'status', $this->enum('status', Constants::ORDER_STATUSES)->defaultValue('new'));
         echo "Done adding translations_orders status column...\n";
+
+        echo "Altering translations_orders activity log column...\n";
+        $this->alterColumn('{{%translations_orders}}', 'activityLog', $this->longText());
+        echo "Done altering translations_orders activity log column...\n";
     }
 
     /**
