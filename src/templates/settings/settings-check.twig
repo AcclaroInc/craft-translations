@@ -15,7 +15,7 @@
         <tbody>
             <tr>
                 <td class="thin centeralign">
-                    {% if settings.craftVersion < '3.7.9' %}
+                    {% if settings.craftVersion < 3.7.9 %}
                         <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
