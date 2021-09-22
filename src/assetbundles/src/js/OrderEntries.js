@@ -214,7 +214,7 @@ if (typeof Craft.Translations === 'undefined') {
 
         $body = $('<div class="body pt-10"></div>');
 
-        var $header = $('<div class="header df"><h1 class="mr-auto">Review and publish</h1></div>');
+        var $header = $('<div class="header df"><h1 class="mr-auto">Review changes</h1></div>');
         var $draftButton = $('<button type="submit" name="submit" class="btn apply-translation disabled" style="margin:0 5px;" disabled value="draft">Merge into draft</button>');
         var $publishButton = $('<button type="submit" name="submit" class="btn submit apply-translation disabled" style="margin:0 5px;" disabled value="publish">Merge and apply draft</button>');
         var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal" style="margin-left:15px;"></a>');
