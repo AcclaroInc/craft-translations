@@ -894,14 +894,11 @@
         },
         _disableOrderSettingsTab: function() {
             var $proceed = false;
-            if (isDefaultTranslator && isPublished) {
-                $proceed = true;
-            }
             if (!isDefaultTranslator && (isCompleted || isPublished || isCanceled)) {
                 $proceed = true;
             }
             if ($proceed) {
-                $('li[data-id=order]').attr('title', 'This order is no longer editable. The corresponding order is '+$("#order-attr").data("status"));
+                $('li[data-id=order]').attr('title', 'This order is no longer editable. The corresponding My Acclaro order is '+$("#order-attr").data("status")+'.');
                 $('#tab-order').addClass('noClick');
             }
         }
