@@ -89,7 +89,7 @@ class FileModel extends Model
             case 'complete':
                 return 'Ready to apply';
             case 'canceled':
-                return 'Cancelled';
+                return 'Canceled';
             case 'published':
                 return 'Applied';
             case 'failed':

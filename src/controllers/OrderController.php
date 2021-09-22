@@ -1023,7 +1023,7 @@ class OrderController extends Controller
     {
         $this->requireLogin();
         $this->requirePostRequest();
-        $isCancelledOrder = false;
+        $isCanceledOrder = false;
         $newData = Craft::$app->getRequest()->getBodyParams();
 
         $currentUser = Craft::$app->getUser()->getIdentity();
@@ -1048,7 +1048,7 @@ class OrderController extends Controller
         }
 
         if ($order->status === Constants::ORDER_STATUS_FAILED) {
-            $isCancelledOrder = true;
+            $isCanceledOrder = true;
         }
         $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
 
@@ -1374,7 +1374,7 @@ class OrderController extends Controller
         Craft::$app->getElements()->saveElement($order);
 
         Craft::$app->getSession()->setNotice(Translations::$plugin->translator
-                ->translate('app', "Order cancelled: $order->title"));
+                ->translate('app', "Order canceled: $order->title"));
 
         return $this->redirect(Constants::URL_ORDER_DETAIL.$order->id, 302, true);
     }

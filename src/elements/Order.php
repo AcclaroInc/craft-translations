@@ -315,7 +315,7 @@ class Order extends Element
                     return '<span class="status yellow"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Ready to apply':
                     return '<span class="status blue"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Cancelled':
+                case 'Canceled':
                     return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
                 case 'Applied':
                     return '<span class="status green"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
@@ -492,7 +492,7 @@ class Order extends Element
             case 'complete':
                 return 'Ready to apply';
             case 'canceled':
-                return 'Cancelled';
+                return 'Canceled';
             case 'published':
                 return 'Applied';
             case 'failed':

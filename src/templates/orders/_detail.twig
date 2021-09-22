@@ -721,10 +721,10 @@
                         <span class="status live"></span> {{ 'Applied'|t }}
                     {% endif %}
                     {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') %}
-                        <span class="status red"></span> {{ 'Order Failed'|t }}
+                        <span class="status red"></span> {{ 'Failed'|t }}
                     {% endif %}
                     {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') %}
-                        <span class="status crimson"></span> {{ 'Order Cancelled'|t }}
+                        <span class="status red"></span> {{ 'Canceled'|t }}
                     {% endif %}
                 </div>
             </div>

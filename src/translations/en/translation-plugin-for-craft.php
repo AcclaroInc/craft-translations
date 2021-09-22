@@ -132,7 +132,7 @@ return [
     'in preparation' => 'In Preparation',
     'in progress' => 'In progress',
     'complete' => 'Complete',
-    'canceled' => 'Cancelled',
+    'canceled' => 'Canceled',
     'published' => 'Applied',
     'preview' => 'Preview',
     'Version' => 'Version',
