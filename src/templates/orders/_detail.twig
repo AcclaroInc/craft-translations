@@ -9,7 +9,8 @@
                         orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') and
                         orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') and
                         orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
+%}
 
 {% if not isEditable %}
     {% set isEditable = "noClick" %}
@@ -417,6 +418,7 @@
 
                                             <td class="thin checkbox-cell translations-checkbox-cell">
                                                 {% if file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_COMPLETE') or
+                                                    file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_REVIEW_READY') or
                                                     file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_PUBLISHED') %}
                                                     <input class="checkbox" data-element="{{ tempElementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}"/>
                                                 {% else %}
@@ -484,7 +486,7 @@
                                                         <td>
                                                             <span class="status {{ file.statusColor }}" 
                                                                 data-status="{{ file.status == 'complete' 
-                                                                or file.status == 'published' ? 1 : 0 }}">
+                                                                or file.status == 'published' or file.status == 'ready for review' ? 1 : 0 }}">
                                                                 </span>{{ file.statusLabel }}
                                                         </td>
                                                     </tr>
@@ -620,7 +622,7 @@
                 <div class="input ltr">
                     <div class="float-right">
                         <label> {{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }} </label>
-                        <label class="pl-10"> {{ order.requestedDueDate ? order.requestedDueDate|date('H:i A') : '' }} </label>
+                        {# <label class="pl-10"> {{ order.requestedDueDate ? order.requestedDueDate|date('H:i A') : '' }} </label> #}
                     </div>
                 </div>
             </div>
@@ -641,7 +643,7 @@
                     <div class="heading">
                         <label id="acclaro-sync">My Acclaro</label>
                     </div>
-                    {% if isCancellable %}
+                    {% if not isCancellable %}
                         <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
                     {% else %}
                         <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
@@ -701,27 +703,7 @@
                     <label>Status</label>
                 </div>
                 <div id="status-value" class="value">
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
-                        <span class="status"></span> {{ 'Pending submission'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PROGRESS') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_GETTING_QUOTE') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEEDS_APPROVAL') or
-                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PREPARATION') %}
-                        <span class="status orange"></span>{{ 'In progress'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') %}
-                        <span class="status blue"></span> {{ 'Ready to Apply'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                        <span class="status live"></span> {{ 'Applied'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') %}
-                        <span class="status red"></span> {{ 'Failed'|t }}
-                    {% endif %}
-                    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') %}
-                        <span class="status red"></span> {{ 'Canceled'|t }}
-                    {% endif %}
+                    <span class="status {{ order.statusColour }}"></span> {{ order.statusLabel|t }}
                 </div>
             </div>
             <div class="data">

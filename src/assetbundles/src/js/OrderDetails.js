@@ -295,12 +295,30 @@
         $('input[name=updatedFields]').val($changedFields);
     }
 
+    function createUrl(currentElementIds) {
+        var $url = removeParams(window.location.href);
+
+        var site = $("#sourceSiteSelect").val();
+
+        var fieldValues = getFieldValuesAsUrlParams();
+
+        var elementUrl = "";
+
+        for (var i = 0; i < currentElementIds.length; i++) {
+            if (currentElementIds[i]) {
+                elementUrl += '&elements[]='+currentElementIds[i];
+            }
+        }
+
+        return $url+'?sourceSite='+site+elementUrl+fieldValues;
+    }
+
     Craft.Translations.OrderDetails = {
         init: function() {
             self = this;
             if (isSubmitted) {
                 this._createUpdateOrderButtonGroup();
-                this._showNoEditWarning();
+                this._disableOrderSettingsTab();
             } else {
                 this._createNewOrderButtonGroup();
             }
@@ -800,7 +818,7 @@
                             if (response.message) {
                                 Craft.cp.displayNotice(Craft.t('app', response.message));
                                 setTimeout(function() {
-                                    location.reload();
+                                    window.location.href = removeParams(location.href);
                                 }, 200);
                             } else {
                                 Craft.cp.displayError(Craft.t('app', "Something went wrong"));
@@ -874,7 +892,7 @@
                 }
             });
         },
-        _showNoEditWarning: function() {
+        _disableOrderSettingsTab: function() {
             var $proceed = false;
             if (isDefaultTranslator && isPublished) {
                 $proceed = true;
@@ -883,13 +901,8 @@
                 $proceed = true;
             }
             if ($proceed) {
-                var $warningContainer = document.createElement('div');
-                $warningContainer.id = 'edit-order-warning';
-                $warningContainer.className = 'meta read-only warning';
-                $details = document.getElementById('meta-details');
-                $($details).before($warningContainer);
-                var $warningMessage = $('<div>').html('<label>This order is not editable.</label>');
-                $warningMessage.appendTo($warningContainer);
+                $('li[data-id=order]').attr('title', 'This order is no longer editable. The corresponding order is '+$("#order-attr").data("status"));
+                $('#tab-order').addClass('noClick');
             }
         }
     }

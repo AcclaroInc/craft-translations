@@ -73,7 +73,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.3.4';
+    public $schemaVersion = '1.3.5';
 
     const ACCLARO = 'acclaro';
 

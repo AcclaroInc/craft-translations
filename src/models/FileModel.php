@@ -86,6 +86,8 @@ class FileModel extends Model
             case 'preview':
             case 'in progress':
                 return 'In progress';
+            case 'ready for review':
+                return 'Ready for review';
             case 'complete':
                 return 'Ready to apply';
             case 'canceled':
@@ -104,6 +106,8 @@ class FileModel extends Model
             case 'preview':
             case 'in progress':
                 return 'orange';
+            case 'ready for review':
+                return 'yellow';
             case 'complete':
                 return 'blue';
             case 'failed':

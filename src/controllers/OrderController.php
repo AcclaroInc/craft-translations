@@ -340,11 +340,12 @@ class OrderController extends Controller
 
                             $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
                         } else {
-                            $variables['webUrls'][$file->id] = $file->previewUrl ?? $translatedElement ? $translatedElement->url : $element->url;
+                            $variables['webUrls'][$file->id] = $file->previewUrl ?? ($translatedElement ? $translatedElement->url : $element->url);
                         }
 
                         if (
                             $file->status === Constants::ORDER_STATUS_COMPLETE ||
+                            $file->status === Constants::ORDER_STATUS_REVIEW_READY ||
                             $file->status === Constants::ORDER_STATUS_PUBLISHED
                         ) {
                             $variables['entriesCountByElementCompleted']++;
@@ -352,6 +353,7 @@ class OrderController extends Controller
                     } elseif ($element instanceof GlobalSet or $element instanceof Category or $element instanceof Asset) {
                         if (
                             $file->status === Constants::ORDER_STATUS_COMPLETE ||
+                            $file->status === Constants::ORDER_STATUS_REVIEW_READY ||
                             $file->status === Constants::ORDER_STATUS_PUBLISHED
                         ) {
                             $variables['entriesCountByElementCompleted']++;
@@ -1091,11 +1093,14 @@ class OrderController extends Controller
 
             $oldData = [];
             $editOrderRequest = [];
-
             foreach ($updatedFields as $field) {
                 $updated = $newData[$field];
                 if ($field == "requestedDueDate") {
-                    $updated = DateTime::createFromFormat('n/j/Y', $updated['date'])->format("Y-n-j");
+                    if ($updated['date']) {
+                        $updated = DateTime::createFromFormat('n/j/Y', $updated['date'])->format("Y-n-j");
+                    } else {
+                        $updated = '';
+                    }
                     $editOrderRequest[$field] = $updated;
                 }
                 if ($field == "elements") {
@@ -1267,7 +1272,7 @@ class OrderController extends Controller
         try {
             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                 $job = Craft::$app->queue->push(new CreateDrafts([
-                    'description' => 'Creating translation drafts',
+                    'description' => $action == 'publish' ? 'Applying translation drafts' : 'Creating translation drafts',
                     'orderId' => $order->id,
                     'wordCounts' => $wordCounts,
                     'publish' => $action == 'publish' ? true : false,
@@ -1460,7 +1465,7 @@ class OrderController extends Controller
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
 
-        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
 
         // Authenticate service
         $translator = $order->getTranslator();

@@ -50,8 +50,8 @@ class FilesController extends Controller
     protected $pluginVersion;
 
     /**
-    * @var Order
-    */
+     * @var Order
+     */
     protected $order;
 
     protected $variables;
@@ -264,7 +264,7 @@ class FilesController extends Controller
                         // Process files via job or directly based on order "size"
                         if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                             $job = Craft::$app->queue->push(new ImportFiles([
-                                'description' => 'Updating translation drafts',
+                                'description' => 'Importing translation files',
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,
                                 'assets' => $assetIds,
@@ -327,7 +327,7 @@ class FilesController extends Controller
                     // Process files via job or directly based on order "size"
                     if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                         $job = Craft::$app->queue->push(new ImportFiles([
-                            'description' => 'Updating translation drafts',
+                            'description' => 'Importing translation files',
                             'orderId' => $orderId,
                             'totalFiles' => $total_files,
                             'assets' => [$asset->id],
@@ -372,154 +372,6 @@ class FilesController extends Controller
         }
     }
 
-    // !Note remove this later if not used
-    public function actionApplyTranslationDraft()
-    {
-        $this->requirePostRequest();
-        $request = Craft::$app->getRequest();
-        
-        // Get the fileId param
-        $fileId = Craft::$app->getRequest()->getParam('fileId');
-        if (!$fileId) {
-            $this->showUserMessages("File not found.");
-            return;
-        }
-
-        // Get the file
-        $file = Translations::$plugin->fileRepository->getFileById($fileId);
-        if (!$file) {
-            $this->showUserMessages("File not found.");
-            return;
-        }
-
-        // Get the element
-        $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-        if (!$element) {
-            $this->showUserMessages("Entry not found for file.");
-            return;
-        }
-
-        $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
-        if (!$order) {
-            $this->showUserMessages("Order not found.");
-            return;
-        }
-
-        if ($element instanceof GlobalSet) {
-            $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
-            
-            $draft->name = $element->name;
-            $draft->site = $file->targetSite;
-
-            if ($draft) {
-                $response = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
-                $message = 'Draft applied for '. '"'. $draft->name .'"';
-            } else {
-                $response = false;
-            }
-
-            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-        } else if ($element instanceof Category) {
-            $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
-
-            $draft->name = $element->title;
-            $draft->site = $file->targetSite;
-
-            if ($draft) {
-                $response = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
-                $message = 'Draft applied for '. '"'. $draft->name .'"';
-            } else {
-                $response = false;
-            }
-
-            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-        } else if ($element instanceof Asset) {
-            $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
-
-            $draft->name = $element->title;
-            $draft->site = $file->targetSite;
-
-            if ($draft) {
-                $response = Translations::$plugin->assetDraftRepository->publishDraft($draft);
-                $message = 'Draft applied for '. '"'. $draft->name .'"';
-            } else {
-                $response = false;
-            }
-
-            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-        } else {
-            $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-
-            if ($draft) {
-                $response = Translations::$plugin->draftRepository->applyTranslationDraft($file->id, $file, $draft);
-                $message = 'Draft applied for '. '"'. $element->title .'"';
-            } else {
-                $response = false;
-            }
-
-            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-        }
-
-        if ($response) {
-            $order->logActivity(Translations::$plugin->translator->translate('app', $message));
-
-            $oldTokenRoute = json_encode(array(
-                'action' => 'entries/view-shared-entry',
-                'params' => array(
-                    'draftId' => $file->draftId,
-                ),
-            ));
-
-            $newTokenRoute = json_encode(array(
-                'action' => 'entries/view-shared-entry',
-                'params' => array(
-                    'entryId' => $draft->id,
-                    'locale' => $file->targetSite,
-                ),
-            ));
-
-            Craft::$app->db->createCommand()->update(
-                'tokens',
-                array('route' => $newTokenRoute),
-                'route = :oldTokenRoute',
-                array(':oldTokenRoute' => $oldTokenRoute)
-            );
-        } else {
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t apply draft for '. '"'. $element->title .'"'));
-            Translations::$plugin->orderRepository->saveOrder($order);
-        }
-
-        $file->draftId = 0;
-        $file->status = 'published';
-
-        Translations::$plugin->fileRepository->saveFile($file);
-
-        $files = $order->getFiles();
-        $filesCount = count($files);
-        $publishedFilesCount = 0;
-
-        foreach ($files as $key => $f) {
-            if ($f->status === 'published') {
-                $publishedFilesCount++;
-            }
-        }
-
-        if ($publishedFilesCount === $filesCount) {
-            $order->status = 'published';
-        }
-
-        Translations::$plugin->orderRepository->saveOrder($order);
-
-        if (
-            $response &&
-            $request->getAcceptsJson()
-        ) {
-            return $this->asJson([
-                'success' => true,
-            ]);
-        }
-    }
-
     /**
      * Get Difference in File source and target
      *
@@ -538,7 +390,7 @@ class FilesController extends Controller
         } else {
             $file = Translations::$plugin->fileRepository->getFileById($fileId);
             $error = "File not found.";
-            if ($file && ($file->status == 'complete' || $file->status == 'published')) {
+            if ($file && ($file->status == 'complete' || $file->status == 'published' || $file->status == 'ready for review')) {
                 try {
                     // Current entries XML
                     $sourceContent = Translations::$plugin->elementTranslator->getTargetData($file->source, true);
@@ -573,8 +425,8 @@ class FilesController extends Controller
     }
 
 	/**
-    * Show Flash Notifications and Errors to the translator
-	*/
+     * Show Flash Notifications and Errors to the translator
+	 */
     public function showUserMessages($message, $isSuccess = false)
     {
     	if ($isSuccess)
@@ -588,9 +440,9 @@ class FilesController extends Controller
     }
 
     /**
-    * Report and Validate XML imported files
-	* @return string
-    */
+     * Report and Validate XML imported files
+	 * @return string
+     */
     public function reportXmlErrors()
     {
     	$errors = array();

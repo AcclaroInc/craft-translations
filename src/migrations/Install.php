@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\migrations;
 
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 
 use Craft;
@@ -78,7 +79,7 @@ class Install extends Migration
                     'draftId'           => $this->integer()->notNull(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSite'        => $this->integer()->notNull(),
-                    'status'            => $this->enum('status', ['new','in progress','preview','complete','canceled','published', 'failed'])->defaultValue('new'),
+                    'status'            => $this->enum('status', Constants::FILE_STATUSES)->defaultValue('new'),
                     'wordCount'         => $this->integer(),
                     'source'            => $this->longText(),
                     'target'            => $this->longText(),
@@ -122,7 +123,7 @@ class Install extends Migration
                     'ownerId'           => $this->integer()->notNull(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSites'       => $this->string(1020)->notNull()->defaultValue(''),
-                    'status'            => $this->enum('status', ['new','getting quote','needs approval','in preparation','in review','in progress','complete','canceled','published','failed'])->defaultValue('new'),
+                    'status'            => $this->enum('status', Constants::ORDER_STATUSES)->defaultValue('new'),
                     'requestedDueDate'  => $this->dateTime(),
                     'orderDueDate'      => $this->dateTime(),
                     'comments'          => $this->text(),

@@ -45,7 +45,7 @@ class ImportFiles extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Updating Translation Drafts';
+        return 'Importing translation files';
     }
 
     /**
@@ -177,7 +177,7 @@ class ImportFiles extends BaseJob
 
 
         $order_file->target = $file_content;
-        $order_file->status = Constants::FILE_STATUS_COMPLETE;
+        $order_file->status = Constants::FILE_STATUS_REVIEW_READY;
         $order_file->dateDelivered = new \DateTime();
 
         // If Successfully saved
@@ -192,7 +192,7 @@ class ImportFiles extends BaseJob
             );
 
             //Verify All files on this order were successfully imported.
-            if ($this->isOrderCompleted())
+            if ($this->isOrderReady())
             {
                 //Save Order with status complete
                 $translationService->updateOrder($this->order);
@@ -304,7 +304,7 @@ class ImportFiles extends BaseJob
             ->makeTranslationService($translation_service, $this->order->translator->getSettings());
 
 
-        $draft_file->status = Constants::FILE_STATUS_COMPLETE;
+        $draft_file->status = Constants::FILE_STATUS_REVIEW_READY;
         $draft_file->target = $xml_content;
 
         //If Successfully saved
@@ -318,7 +318,7 @@ class ImportFiles extends BaseJob
             );
 
             //Verify All files on this order were successfully imported.
-            if ($this->isOrderCompleted())
+            if ($this->isOrderReady())
             {
                 //Save Order with status complete
                 $translationService->updateOrder($this->order);
@@ -413,7 +413,7 @@ class ImportFiles extends BaseJob
 
 
         $order_file->target = $file_content;
-        $order_file->status = Constants::FILE_STATUS_COMPLETE;
+        $order_file->status = Constants::FILE_STATUS_REVIEW_READY;
         $order_file->dateDelivered = new \DateTime();
 
         // If Successfully saved
@@ -428,7 +428,7 @@ class ImportFiles extends BaseJob
             );
 
             //Verify All files on this order were successfully imported.
-            if ($this->isOrderCompleted())
+            if ($this->isOrderReady())
             {
                 //Save Order with status complete
                 $translationService->updateOrder($this->order);
@@ -497,12 +497,12 @@ class ImportFiles extends BaseJob
      * Verify if the all entries per order have been completed
      * @return boolean
      */
-    private function isOrderCompleted()
+    private function isOrderReady()
     {
         $files = Translations::$plugin->fileRepository->getFilesByOrderId($this->order->id);
         foreach ($files as $file)
         {
-            if ($file->status !== Constants::FILE_STATUS_COMPLETE)
+            if ($file->status !== Constants::FILE_STATUS_REVIEW_READY)
             {
                 return false;
             }

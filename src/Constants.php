@@ -17,6 +17,8 @@ class Constants
     const ORDER_STATUS_NEW              = 'new';
     const ORDER_STATUS_NEEDS_APPROVAL   = 'needs approval';
     const ORDER_STATUS_GETTING_QUOTE    = 'getting quote';
+    const ORDER_STATUS_IN_REVIEW        = 'in review';
+    const ORDER_STATUS_REVIEW_READY     = 'ready for review';
     const ORDER_STATUS_IN_PREPARATION   = 'in preparation';
     const ORDER_STATUS_IN_PROGRESS      = 'in progress';
     const ORDER_STATUS_FAILED           = 'failed';
@@ -44,6 +46,7 @@ class Constants
     const FILE_FORMAT_TXT               = 'txt';
 
     // Files status
+    const FILE_STATUS_REVIEW_READY  = 'ready for review';
     const FILE_STATUS_COMPLETE      = 'complete';
     const FILE_STATUS_CANCELED      = 'canceled';
     const FILE_STATUS_FAILED        = 'failed';
@@ -61,4 +64,12 @@ class Constants
     const ACCLARO_FILE_NEW = 'NEW FILE';
     const ACCLARO_FILE_CANCEL = 'CANCEL FILE';
     const ACCLARO_ORDER_CANCEL = 'CANCEL ORDER';
+
+    const FILE_STATUSES = [
+        'new','in progress','preview','ready for review','complete','canceled','published', 'failed'
+    ];
+    const ORDER_STATUSES = [
+        'new','getting quote','needs approval','in preparation','in review','in progress',
+        'ready for review','complete','canceled','published','failed'
+    ];
 }

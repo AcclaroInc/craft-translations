@@ -98,8 +98,13 @@ class BaseController extends Controller
         }
 
         // don't process published orders
-        if ($order->status === 'published') {
+        if ($order->status === Constants::ORDER_STATUS_PUBLISHED) {
             Craft::$app->end('Order already published');
+        }
+
+        // don't process canceled orders
+        if ($order->status === Constants::ORDER_STATUS_CANCELED) {
+            Craft::$app->end('Can not update canceled order');
         }
 
         $translator = $order->getTranslator();
@@ -151,10 +156,14 @@ class BaseController extends Controller
             echo 'Found file'.PHP_EOL;
         }
 
-
         // don't process published files
-        if ($file->status === 'published') {
+        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
             Craft::$app->end('File already published');
+        }
+
+        // don't process canceled files
+        if ($file->status === Constants::FILE_STATUS_CANCELED) {
+            Craft::$app->end('Can not update canceled file');
         }
 
         $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);

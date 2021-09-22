@@ -80,15 +80,20 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
+        if ($order->status === Constants::ORDER_STATUS_CANCELED) return;
+
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
         if (empty($orderResponse->status)) {
             return;
         }
 
-        if ($order->status !== $orderResponse->status) {
+        $orderStatus = $orderResponse->status === Constants::ORDER_STATUS_COMPLETE ?
+            Constants::ORDER_STATUS_REVIEW_READY : $orderResponse->status;
+
+        if ($order->status !== $orderStatus) {
             $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderResponse->status)
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderStatus)
             );
         }
         
@@ -96,7 +101,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             Translations::$plugin->orderRepository->saveOrderName($order->id, $orderResponse->name);
         }
         
-        $order->status = $orderResponse->status;
+        $order->status = $orderStatus;
         // check if due date set then update it
         if($orderResponse->duedate){
             $dueDate = new DateTime($orderResponse->duedate);
@@ -110,6 +115,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
     public function updateFile(Order $order, FileModel $file)
     {
         try {
+            if ($file->status === Constants::FILE_STATUS_CANCELED) return;
+
             $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
             
             if (!is_array($fileInfoResponse)) {
@@ -132,7 +139,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
     
             $fileStatusResponse = $this->acclaroApiClient->getFileStatus($order->serviceOrderId, $targetFileId);
     
-            $file->status = $fileStatusResponse->status;
+            $file->status = $fileStatusResponse->status == Constants::FILE_STATUS_COMPLETE ? 
+                Constants::FILE_STATUS_REVIEW_READY : $fileStatusResponse->status;
             $file->dateDelivered = new \DateTime();
     
             // download the file
@@ -140,21 +148,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
     
             if ($target) {
                 $file->target = $target;
-    
-                $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-    
-                if ($element instanceof GlobalSet) {
-                    $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
-                } else if ($element instanceof Category) {
-                    $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
-    
-                    $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
-                    $draft->groupId = $category->groupId;
-                } else {
-                    $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-                }
-    
-                $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite, $order);
             }
         } catch (Exception $e) {
             Craft::error(  '['. __METHOD__ .'] Couldn’t update file. Error: '.$e->getMessage(), 'translations' );
