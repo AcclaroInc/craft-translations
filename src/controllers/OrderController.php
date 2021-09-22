@@ -434,7 +434,10 @@ class OrderController extends Controller
                 ->getTranslatorById($variables['translatorId']);
 
             $variables['orderRecentStatus'] = $variables['order']->status;
-            if ($variables['orderRecentStatus'] === Constants::ORDER_STATUS_PUBLISHED) $variables['isEditable'] = false;
+            if (
+                $variables['orderRecentStatus'] === Constants::ORDER_STATUS_PUBLISHED &&
+                $variables['translator']->service !== Constants::TRANSLATOR_DEFAULT
+            ) $variables['isEditable'] = false;
         }
 
         $variables['targetSiteCheckboxOptions'] = array();
