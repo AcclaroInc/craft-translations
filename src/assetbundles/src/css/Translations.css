@@ -220,7 +220,8 @@
 }
 
 .translations-order-confirmation .readable{
-    margin: 30px 0;
+    margin: 30px auto;
+    max-width: 400px;
 }
 
 .translations-order-confirmation .readable{

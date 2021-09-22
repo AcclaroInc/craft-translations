@@ -64,26 +64,22 @@
 {% block content %}
     {% if isProcessing %}
         {% if isProcessing == "draft" %}
-            {% set message = "Your order draft's are being created and has been placed in the queue" %}
-            {% set instructions = "You can navigate away from this page. If you are not automatically redirected after your order drafts are created" %}
+            {% set message = "Due to the large order size, we've added a job to the Queue Manager to create translation drafts" %}
         {% elseif isProcessing == "publish" %}
-            {% set message = "Your order is being published and has been placed in the queue" %}
-            {% set instructions = "You can navigate away from this page. If you are not automatically redirected after your order are published" %}
+            {% set message = "Due to the large order size, we've added a job to the Queue Manager to publish translation drafts" %}
         {% else %}
-            {% set message = "Your order file's are being uploaded and has been placed in the queue" %}
-            {% set instructions = "You can navigate away from this page. If you are not automatically redirected after your order files are uploaded" %}
+            {% set message = "Due to the large file size, we've added a job to the Queue Manager to process the upload" %}
         {% endif %}
         <div class="translations-order-confirmation flex">
             <div class="fullwidth readable">
-                <img src="{{ cpAssetUrl }}/images/success.png" alt="">
+                <span style="font-size: 48px;line-height: 48px;">🚧</span>
                 <div class="thank-you">
-                    <h2>Thank You!</h2>
+                    <h2>Added job to queue</h2>
                     <p>{{ message }}</p>
                 </div>
                 <div class="instructions">
-                    <p>{{ instructions }}, you can <a href="{{ url('translations/orders') }}">view your orders here</a>.</p>
+                    <p>This page should automatically refresh as soon as the job completes.</p>
                 </div>
-                <a href="{{ url('entries') }}" class="btn submit">Create New Order</a>
             </div>
         </div>
     {% else %}
