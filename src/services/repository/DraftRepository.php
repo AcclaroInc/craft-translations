@@ -273,8 +273,11 @@ class DraftRepository
             if ($element->getIsDraft()) {
                 $element = $element->getCanonical(true);
             }
-
-            $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+            
+            // Create draft only if not already exist
+            if (! $file->draftId) {
+                $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+            }
 
             try {
                 $translation_service = $order->translator->service;
@@ -363,7 +366,8 @@ class DraftRepository
                     [
                         'sourceSite' => $order->sourceSite,
                         'targetSite' => $targetSite,
-                        'wordCount'  => $wordCount
+                        'wordCount'  => $wordCount,
+                        'orderId'    => $order->id,
                     ]
                 );
             }

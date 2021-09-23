@@ -467,6 +467,7 @@ class ImportFiles extends BaseJob
                 'sourceSite'    => $file->sourceSite,
                 'targetSite'    => $file->targetSite,
                 'wordCount'     => $file->wordCount,
+                'orderId'       => $file->orderId,
             ]
         );
 
@@ -502,6 +503,11 @@ class ImportFiles extends BaseJob
         $files = Translations::$plugin->fileRepository->getFilesByOrderId($this->order->id);
         foreach ($files as $file)
         {
+            if (
+                $file->status === Constants::FILE_STATUS_PUBLISHED ||
+                $file->status === Constants::FILE_STATUS_COMPLETE
+            ) continue;
+
             if ($file->status !== Constants::FILE_STATUS_REVIEW_READY)
             {
                 return false;

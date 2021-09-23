@@ -397,7 +397,8 @@ class FileRepository
                         [
                             'sourceSite'    => $file->sourceSite,
                             'targetSite'    => $file->targetSite,
-                            'previewUrl'    => $file->previewUrl
+                            'previewUrl'    => $file->previewUrl,
+                            'orderId'       => $file->orderId,
                         ]
                     );
                 }
@@ -471,7 +472,8 @@ class FileRepository
                     [
                         'sourceSite'    => $order->sourceSite,
                         'targetSite'    => $targetSite,
-                        'wordCount'    => $wordCount,
+                        'wordCount'     => $wordCount,
+                        'orderId'       => $order->id
                     ]
                 );
                 $file->wordCount = $wordCount;
@@ -499,7 +501,8 @@ class FileRepository
             [
                 'sourceSite'    => $order->sourceSite,
                 'targetSite'    => $targetSite,
-                'wordCount'    => $wordCount,
+                'wordCount'     => $wordCount,
+                'orderId'       => $order->id,
             ]
         );
         $file->wordCount = $wordCount;

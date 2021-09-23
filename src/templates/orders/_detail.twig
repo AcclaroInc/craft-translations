@@ -1,6 +1,8 @@
 {% extends '_layouts/cp' %}
 {% import '_includes/forms' as forms %}
 
+{% from "_includes/forms" import text %}
+
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAsset") %}
 
 {% set orderStatus = orderRecentStatus | default(order.status) %}
@@ -338,11 +340,11 @@
                                     <div id="elementTags" class="elements">
                                         {% if hasTags %}
                                             {% for tag in tags %}
-                                                <div class="element small removable" data-label="{{ tag.title }}">
-                                                    <input type="hidden" class="remove-tag" name="tags[]" value="{{ tag.title }}"/>
+                                                <div class="element small removable" data-editable="1" data-id="{{ tag.id }}" data-label="{{ tag.title }}">
+                                                    <input type="hidden" name="tags[]" value="{{ tag.id }}"/>
+                                                    <a class="delete icon custom-tag" data-label="{{ tag.title }}" data-id="{{ tag.id }}" title="Remove"></a>
                                                     <div class="label">
                                                         <span class="title">{{ tag.title }}</span>
-                                                        <a class="delete icon custom-tag" data-label="{{ tag.title }}" title="Remove"></a>
                                                     </div>
                                                 </div>
                                                 {% set orderTags = orderTags|merge({(loop.index0):tag.title}) %}
@@ -350,8 +352,11 @@
                                         {% endif %}
                                     </div>
                                     <div class="texticon add icon">
-                                        <input type="text" class="text fullwidth ml-0" autocomplete="off"\
-                                        placeholder="Add a tag" style='margin-left:0px;'/>
+                                        {{ text({
+                                            placeholder: 'Add a tag',
+                                            size: 10
+                                        }) }}
+                                        <div class="spinner hidden"></div>
                                     </div>
                                 </div>
                             </div>
@@ -359,6 +364,7 @@
                     </div>
                 </div>
                 <input type="hidden" id="originalTags" value="{{ orderTags|join(',') }}">
+                <input type="hidden" id="tagGroupId" value="{{ tagGroup.id|default('') }}">
             </div>
         </form>
 
@@ -483,7 +489,7 @@
                                             <td>
                                                 <table>
                                                     <tr>
-                                                        <td>
+                                                        <td class="inline-flex align-center">
                                                             <span class="status {{ file.statusColor }}" 
                                                                 data-status="{{ file.status == 'complete' 
                                                                 or file.status == 'published' or file.status == 'ready for review' ? 1 : 0 }}">
@@ -739,3 +745,14 @@
     {# {% endif %} #}
 {% endblock %}
 
+{% set jsSettings = {
+    id: 'fields-tags',
+    name: 'tags',
+    tagGroupId: tagGroup.id,
+    sourceElementId: null,
+    targetSiteId: order.sourceSite
+} %}
+
+{% js %}
+    new Craft.TagSelectInput({{ jsSettings|json_encode|raw }});
+{% endjs %}

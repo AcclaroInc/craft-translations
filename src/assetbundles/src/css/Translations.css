@@ -893,6 +893,10 @@ select[name="version"] {
     background: white;
 }
 
-.crimson {
-    background-color: crimson;
+.inline-flex {
+    display: inline-flex;
+}
+
+.align-center {
+    align-items: center;
 }

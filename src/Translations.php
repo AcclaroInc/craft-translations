@@ -647,7 +647,8 @@ class Translations extends Plugin
                         [
                             'sourceSite'    => $currentFile->sourceSite,
                             'targetSite'    => $currentFile->targetSite,
-                            'previewUrl'    => $currentFile->previewUrl
+                            'previewUrl'    => $currentFile->previewUrl,
+                            'orderId'       => $order->id
                         ]
                     );
 
