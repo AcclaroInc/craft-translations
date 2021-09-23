@@ -601,21 +601,22 @@ class Translations extends Plugin
 
         $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
-        $currentFile->status = 'published';
+        $currentFile->status = Constants::FILE_STATUS_PUBLISHED;
+        $currentFile->draftId = 0;
 
         self::$plugin->fileRepository->saveFile($currentFile);
 
         $areAllFilesPublished = true;
 
         foreach ($order->files as $file) {
-            if ($file->status !== 'published') {
+            if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
                 $areAllFilesPublished = false;
                 break;
             }
         }
 
         if ($areAllFilesPublished) {
-            $order->status = 'published';
+            $order->status = Constants::ORDER_STATUS_PUBLISHED;
 
             Craft::$app->elements->saveElement($order);
         }

@@ -365,6 +365,9 @@ class OrderController extends Controller
                         [ 'language' => 'Deleted' ]);
 
                     if (Craft::$app->getSites()->getSiteById($file->targetSite)) {
+                        if ($file->status === Constants::FILE_STATUS_PUBLISHED && $element->getIsDraft()) {
+                            $element = $element->getCanonical();
+                        }
                         $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                     }
                     $variables['isElementPublished'][$element->id] = $isElementPublished;
@@ -603,8 +606,8 @@ class OrderController extends Controller
             $orderTags = Craft::$app->getRequest()->getParam('tags') ?? array();
             $orderTagIds = array();
 
-            foreach ($orderTags as $tagTitle) {
-                $tag = Translations::$plugin->orderRepository->orderTagExists($tagTitle);
+            foreach ($orderTags as $tagId) {
+                $tag = Craft::$app->getTags()->getTagById($tagId);
                 if ($tag) {
                     array_push($orderTagIds, $tag->id);
                 }
