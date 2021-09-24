@@ -267,6 +267,20 @@ class OrderController extends Controller
 
         $variables['duplicateEntries'] = Translations::$plugin->orderRepository->checkOrderDuplicates($variables['elements']);
 
+        // Remove current order id from duplicates
+        if (! empty($duplicates = $variables['duplicateEntries']) && $variables['orderId']) {
+            foreach ($variables['elements'] as $element) {
+                if (array_key_exists($element->id, $duplicates)) {
+                    $orderIds = array_diff($duplicates[$element->id], [$variables['orderId']]);
+                    if (! empty($orderIds)) {
+                        $variables['duplicateEntries'][$element->id] = $orderIds;
+                    } else {
+                        unset($variables['duplicateEntries'][$element->id]);
+                    }
+                }
+            }
+        }
+
         $variables['chkDuplicateEntries'] = Translations::getInstance()->settings->chkDuplicateEntries;
 
         $variables['orderWordCount'] = 0;
@@ -387,6 +401,13 @@ class OrderController extends Controller
 
         if (!$variables['translatorOptions']) {
             $variables['translatorOptions'] = array('' => Translations::$plugin->translator->translate('app', 'No Translators'));
+        } else {
+            foreach ($variables['translatorOptions'] as $translatorId => $val) {
+                $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
+                if ($translator->service === Constants::TRANSLATOR_DEFAULT) {
+                    $variables['defaultTranslatorId'] = $translatorId;
+                }
+            }
         }
 
         $user = Craft::$app->getUser();
@@ -585,7 +606,8 @@ class OrderController extends Controller
                     }
                 }
             } else {
-                $elementIds = Craft::$app->getRequest()->getParam('elements') ?? array();
+                $elementIds = Craft::$app->getRequest()->getBodyParam('currentElementIds') ?? '';
+                $elementIds = explode(',', $elementIds);
             }
 
             $requestedDueDate = Craft::$app->getRequest()->getParam('requestedDueDate');
@@ -1003,6 +1025,13 @@ class OrderController extends Controller
         $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
         if (!$variables['translatorOptions']) {
             $variables['translatorOptions'] = array('' => Translations::$plugin->translator->translate('app', 'No Translators'));
+        } else {
+            foreach ($variables['translatorOptions'] as $translatorId => $val) {
+                $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
+                if ($translator->service === Constants::TRANSLATOR_DEFAULT) {
+                    $variables['defaultTranslatorId'] = $translatorId;
+                }
+            }
         }
 
         $orderTags = $data['tags'] ?? array();
@@ -1031,8 +1060,15 @@ class OrderController extends Controller
     {
         $this->requireLogin();
         $this->requirePostRequest();
-        $isCanceledOrder = false;
         $newData = Craft::$app->getRequest()->getBodyParams();
+        $resetStatus = false;
+        $resetStatuses = [
+            Constants::ORDER_STATUS_FAILED,
+            Constants::ORDER_STATUS_CANCELED,
+            Constants::ORDER_STATUS_COMPLETE,
+            Constants::ORDER_STATUS_PUBLISHED,
+            Constants::ORDER_STATUS_REVIEW_READY
+        ];
 
         $currentUser = Craft::$app->getUser()->getIdentity();
 
@@ -1055,10 +1091,9 @@ class OrderController extends Controller
             return $this->asJson(["success" => false, "message" => "Invalid Order."]);
         }
 
-        if ($order->status === Constants::ORDER_STATUS_FAILED) {
-            $isCanceledOrder = true;
+        if (in_array($order->status, $resetStatuses)) {
+            $resetStatus = true;
         }
-        $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
 
         $sourceSite = $sourceSite ?: $order->sourceSite;
         // Authenticate service
@@ -1084,6 +1119,7 @@ class OrderController extends Controller
                 Craft::$app->getSession()->set('queueOrders', $queueOrders);
             }
         }
+
         try {
             $updatedFields = json_decode($newData['updatedFields']) ?? [];
 
@@ -1210,6 +1246,15 @@ class OrderController extends Controller
                             Translations::$plugin->fileRepository->deleteByOrderId($order->id, $site);
                         }
                     }
+                }
+            }
+
+            // Update Order and File Status
+            if ($resetStatus) {
+                $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
+                foreach ($order->files as $file) {
+                    $file->status = Constants::FILE_STATUS_IN_PROGRESS;
+                    Translations::$plugin->fileRepository->saveFile($file);
                 }
             }
         } catch (Exception $e) {

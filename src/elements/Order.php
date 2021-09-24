@@ -413,7 +413,7 @@ class Order extends Element
             if (!array_key_exists($elementId, $this->_elements)) {
                 $element = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
 
-                $this->_elements[$elementId] = $element;
+                $element ? $this->_elements[$elementId] = $element : '';
             }
         }
 
