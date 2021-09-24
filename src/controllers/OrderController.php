@@ -184,6 +184,10 @@ class OrderController extends Controller
                 $newOrder->targetSites = json_encode($orderTargetSites);
             }
 
+            if ($orderElements= Craft::$app->getRequest()->getQueryParam('elements') ?? Craft::$app->getRequest()->getParam('elements')) {
+                $newOrder->elementIds = json_encode($orderElements);
+            }
+
             if ($orderDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
                 $newOrder->orderDueDate = $orderDueDate;
             }
@@ -195,7 +199,6 @@ class OrderController extends Controller
             if ($orderTranslatorId= Craft::$app->getRequest()->getQueryParam('translatorId')) {
                 $newOrder->translatorId = $orderTranslatorId;
             }
-                
 
             $variables['order'] = $newOrder;
             $variables['inputElements'] = Craft::$app->getRequest()->getQueryParam('elements');
@@ -232,12 +235,15 @@ class OrderController extends Controller
 
         $variables['elements'] = [];
         $variables['elementVersionMap'] = array();
+        $originalElementIds = [];
 
         foreach ($variables['order']->getElements() as $element) {
             if ($element->getIsDraft()) {
-                $variables['elementVersionMap'][$element->id] = $element->draftId;
+                $variables['elementVersionMap'][$element->getCanonicalId()] = $element->draftId;
+                array_push($originalElementIds, $element->getCanonicalId());
             } else {
                 $variables['elementVersionMap'][$element->id] = "current";
+                array_push($originalElementIds, $element->id);
             }
         }
 
@@ -254,18 +260,29 @@ class OrderController extends Controller
                 }
             }
         } else {
-            $variables['elements'] = $variables['order']->getElements();
-        }
-
-        $originalElementIds = [];
-
-        foreach($variables['order']->getElements() as $element) {
-            array_push($originalElementIds, $element->id);
+            foreach ($variables['order']->getElements() as $element) {
+                if ($element->getIsDraft()) $element = $element->getCanonical();
+                $variables['elements'][] = $element;
+            }
         }
 
         $variables['originalElementIds'] = implode(",", $originalElementIds);
 
         $variables['duplicateEntries'] = Translations::$plugin->orderRepository->checkOrderDuplicates($variables['elements']);
+
+        // Remove current order id from duplicates
+        if (! empty($duplicates = $variables['duplicateEntries']) && $variables['orderId']) {
+            foreach ($variables['elements'] as $element) {
+                if (array_key_exists($element->id, $duplicates)) {
+                    $orderIds = array_diff($duplicates[$element->id], [$variables['orderId']]);
+                    if (! empty($orderIds)) {
+                        $variables['duplicateEntries'][$element->id] = $orderIds;
+                    } else {
+                        unset($variables['duplicateEntries'][$element->id]);
+                    }
+                }
+            }
+        }
 
         $variables['chkDuplicateEntries'] = Translations::getInstance()->settings->chkDuplicateEntries;
 
@@ -277,8 +294,10 @@ class OrderController extends Controller
         $variables['entriesCountByElementCompleted'] = 0;
         $variables['translatedFiles'] = [];
 
-        foreach ($variables['elements'] as $element) {
+        foreach ($variables['order']->getElements() as $element) {
             $drafts = Craft::$app->getDrafts()->getEditableDrafts($element);
+            $tempElement = $element;
+            $element = $element->getIsDraft() ? $element->getCanonical() : $element;
             $tempDraftNames = [];
             foreach ($drafts as $draft) {
                 if (Translations::$plugin->draftRepository->isTranslationDraft($draft->draftId)) {
@@ -295,26 +314,16 @@ class OrderController extends Controller
                 $variables['versionsByElementId'][$element->id] = $tempDraftNames;
             }
 
-            $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+            $wordCount = Translations::$plugin->elementTranslator->getWordCount($tempElement);
 
             $variables['elementWordCounts'][$element->id] = $wordCount;
 
             $variables['orderWordCount'] += $wordCount;
 
-            if ($element instanceof GlobalSet) {
-                $sectionName = 'Globals';
-            } elseif ($element instanceof Category) {
-                $sectionName = 'Category';
-            } elseif ($element instanceof Asset) {
-                $sectionName = 'Asset';
-            } else {
-                $sectionName = $element->section->name;
-            }
-
             //Is an order being created or are we on the detail page?
             if (!isset($variables['inputSourceSite']) || ($variables['isChanged'] && $variables['orderId'])) {
                 $variables['files'][$element->id] =
-                    Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $element->id);
+                    Translations::$plugin->fileRepository->getFilesByOrderId($variables['orderId'], $tempElement->id);
 
                 $variables['entriesCountByElement'] += count($variables['files'][$element->id]);
 
@@ -323,40 +332,32 @@ class OrderController extends Controller
                 foreach ($variables['files'][$element->id] as $file) {
                     $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
 
-                    if ($file->status !== Constants::ORDER_STATUS_PUBLISHED) {
+                    if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
                         $isElementPublished = false;
                     }
 
-                    if ($file->status === Constants::ORDER_STATUS_PUBLISHED ||
-                        $file->status === Constants::ORDER_STATUS_COMPLETE) {
-                        if ($file->draftId || $file->status === Constants::ORDER_STATUS_PUBLISHED) {
+                    if ($file->status === Constants::FILE_STATUS_PUBLISHED ||
+                        $file->status === Constants::FILE_STATUS_COMPLETE) {
+                        if ($file->draftId || $file->status === Constants::FILE_STATUS_PUBLISHED) {
                             $variables['translatedFiles'][$file->id] = $translatedElement->title ?? $element->title;
                         }
                     }
 
                     if ($element instanceof Entry) {
-                        if ($file->status === Constants::ORDER_STATUS_PUBLISHED) {
+                        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
 
                             $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
                         } else {
                             $variables['webUrls'][$file->id] = $file->previewUrl ?? ($translatedElement ? $translatedElement->url : $element->url);
                         }
+                    }
 
-                        if (
-                            $file->status === Constants::ORDER_STATUS_COMPLETE ||
-                            $file->status === Constants::ORDER_STATUS_REVIEW_READY ||
-                            $file->status === Constants::ORDER_STATUS_PUBLISHED
-                        ) {
-                            $variables['entriesCountByElementCompleted']++;
-                        }
-                    } elseif ($element instanceof GlobalSet or $element instanceof Category or $element instanceof Asset) {
-                        if (
-                            $file->status === Constants::ORDER_STATUS_COMPLETE ||
-                            $file->status === Constants::ORDER_STATUS_REVIEW_READY ||
-                            $file->status === Constants::ORDER_STATUS_PUBLISHED
-                        ) {
-                            $variables['entriesCountByElementCompleted']++;
-                        }
+                    if (
+                        $file->status === Constants::FILE_STATUS_COMPLETE ||
+                        $file->status === Constants::FILE_STATUS_REVIEW_READY ||
+                        $file->status === Constants::FILE_STATUS_PUBLISHED
+                    ) {
+                        $variables['entriesCountByElementCompleted']++;
                     }
 
                     $variables['fileTargetSites'][$file->targetSite] =
@@ -365,8 +366,8 @@ class OrderController extends Controller
                         [ 'language' => 'Deleted' ]);
 
                     if (Craft::$app->getSites()->getSiteById($file->targetSite)) {
-                        if ($file->status === Constants::FILE_STATUS_PUBLISHED && $element->getIsDraft()) {
-                            $element = $element->getCanonical();
+                        if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
+                            $element = $tempElement;
                         }
                         $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                     }
@@ -387,6 +388,13 @@ class OrderController extends Controller
 
         if (!$variables['translatorOptions']) {
             $variables['translatorOptions'] = array('' => Translations::$plugin->translator->translate('app', 'No Translators'));
+        } else {
+            foreach ($variables['translatorOptions'] as $translatorId => $val) {
+                $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
+                if ($translator->service === Constants::TRANSLATOR_DEFAULT) {
+                    $variables['defaultTranslatorId'] = $translatorId;
+                }
+            }
         }
 
         $user = Craft::$app->getUser();
@@ -585,7 +593,8 @@ class OrderController extends Controller
                     }
                 }
             } else {
-                $elementIds = Craft::$app->getRequest()->getParam('elements') ?? array();
+                $elementIds = Craft::$app->getRequest()->getBodyParam('currentElementIds') ?? '';
+                $elementIds = explode(',', $elementIds);
             }
 
             $requestedDueDate = Craft::$app->getRequest()->getParam('requestedDueDate');
@@ -1003,6 +1012,13 @@ class OrderController extends Controller
         $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
         if (!$variables['translatorOptions']) {
             $variables['translatorOptions'] = array('' => Translations::$plugin->translator->translate('app', 'No Translators'));
+        } else {
+            foreach ($variables['translatorOptions'] as $translatorId => $val) {
+                $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
+                if ($translator->service === Constants::TRANSLATOR_DEFAULT) {
+                    $variables['defaultTranslatorId'] = $translatorId;
+                }
+            }
         }
 
         $orderTags = $data['tags'] ?? array();
@@ -1031,12 +1047,37 @@ class OrderController extends Controller
     {
         $this->requireLogin();
         $this->requirePostRequest();
-        $isCanceledOrder = false;
         $newData = Craft::$app->getRequest()->getBodyParams();
+        $resetStatus = false;
+        $resetStatuses = [
+            Constants::ORDER_STATUS_FAILED,
+            Constants::ORDER_STATUS_CANCELED,
+            Constants::ORDER_STATUS_COMPLETE,
+            Constants::ORDER_STATUS_PUBLISHED,
+            Constants::ORDER_STATUS_REVIEW_READY
+        ];
 
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $elementVersions = trim(Craft::$app->getRequest()->getParam('elementVersions'), ',') ?? array();
+        $elementVersionsMap = [];
+        $elementIds = [];
+        $sourceSite = Craft::$app->getRequest()->getParam('sourceSiteSelect');
+
+        if ($elementVersions) {
+            $elementVersions = explode(',', $elementVersions);
+            foreach ($elementVersions as $element) {
+                $temp = explode('_', $element);
+                if ($temp[1] != "current") {
+                    $draftElement = Translations::$plugin->elementRepository->getElementByDraftId($temp[1], $sourceSite);
+                    array_push($elementIds, $draftElement->id);
+                    $elementVersionsMap[$temp[0]] = $draftElement->id;
+                } else {
+                    array_push($elementIds, $temp[0]);
+                }
+            }
+        }
+        // Craft::debug($elementVersions, "bhu123");die;
         $orderTags = Craft::$app->getRequest()->getParam('tags');
 
         if (!$currentUser->can('translations:orders:create')) {
@@ -1044,7 +1085,6 @@ class OrderController extends Controller
         }
 
         $orderId = Craft::$app->getRequest()->getParam('id');
-        $sourceSite = Craft::$app->getRequest()->getParam('sourceSiteSelect');
 
         if (!$orderId) {
             return $this->asJson(["success" => false, "message" => "Invalid OrderId."]);
@@ -1055,10 +1095,9 @@ class OrderController extends Controller
             return $this->asJson(["success" => false, "message" => "Invalid Order."]);
         }
 
-        if ($order->status === Constants::ORDER_STATUS_FAILED) {
-            $isCanceledOrder = true;
+        if (in_array($order->status, $resetStatuses)) {
+            $resetStatus = true;
         }
-        $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
 
         $sourceSite = $sourceSite ?: $order->sourceSite;
         // Authenticate service
@@ -1084,6 +1123,7 @@ class OrderController extends Controller
                 Craft::$app->getSession()->set('queueOrders', $queueOrders);
             }
         }
+
         try {
             $updatedFields = json_decode($newData['updatedFields']) ?? [];
 
@@ -1108,10 +1148,14 @@ class OrderController extends Controller
                     }
                     $editOrderRequest[$field] = $updated;
                 }
-                if ($field == "elements") {
-                    $updated = json_encode($updated);
-                    $oldData['elements'] = $order->elementIds;
-                    $field = 'elementIds';
+                if ($field == "elements" || $field == 'version') {
+                    if (! isset($oldData['elements'])) {
+                        $updated = json_encode($elementIds);
+                        $oldData['elements'] = $order->elementIds;
+                        $field = 'elementIds';
+                    } else {
+                        continue;
+                    }
                 }
                 if ($field == "tags") {
                     if ($tags = isset($newData[$field]) ? $newData[$field] : []) {
@@ -1152,9 +1196,8 @@ class OrderController extends Controller
             if (! empty($oldData)) {
                 if ($oldData['elements'] ?? null) {
                     $oldElementIds = json_decode($oldData['elements'] ?? null);
-                    $added = array_diff($newData['elements'], $oldElementIds);
-                    $removed = array_diff($oldElementIds, $newData['elements']);
-
+                    $added = array_diff($elementIds, $oldElementIds);
+                    $removed = array_diff($oldElementIds, $elementIds);
                     if (!empty($removed)) {
                         foreach ($removed as $elementId) {
                             $files = Translations::$plugin->fileRepository->getFilesByElementId($elementId, $order->id);
@@ -1212,6 +1255,15 @@ class OrderController extends Controller
                     }
                 }
             }
+
+            // Update Order and File Status
+            if ($resetStatus) {
+                $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
+                foreach ($order->files as $file) {
+                    $file->status = Constants::FILE_STATUS_IN_PROGRESS;
+                    Translations::$plugin->fileRepository->saveFile($file);
+                }
+            }
         } catch (Exception $e) {
             return $this->asJson(["success" => false, "message" => $e->getMessage()]);
         }
@@ -1259,7 +1311,8 @@ class OrderController extends Controller
         $totalWordCount = 0;
 
         foreach ($order->getElements() as $element) {
-            if (in_array($element->id, $elementIds)) {
+            $originalElement = ! $element->getIsDraft() ? $element : $element->getCanonical();
+            if (in_array($originalElement->id, $elementIds)) {
                 $fileWordCount = Translations::$plugin->elementTranslator->getWordCount($element);
                 $elementFiles = Translations::$plugin->fileRepository->getFilesByElementId($element->id, $order->id);
 
@@ -1268,7 +1321,7 @@ class OrderController extends Controller
                         $totalWordCount += $fileWordCount;
                     }
                 }
-                $wordCounts[$element->id] = $fileWordCount;
+                $wordCounts[$originalElement->id] = $fileWordCount;
             }
         }
 

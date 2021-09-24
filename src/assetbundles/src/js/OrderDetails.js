@@ -11,6 +11,7 @@
     var isCanceled = $("#order-attr").data("status") === "canceled";
     var isPublished = $("#order-attr").data("status") === "published";
     var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
+    var defaultTranslatorId = $("#originalTranslatorId").data("id");
 
     function validateForm() {
         var buttonStatus = true;
@@ -139,7 +140,7 @@
                 }
             }
             // Validate Due Date
-            if (key == "dueDate" || key == "all") {
+            if (! isDefaultTranslator && (key == "dueDate" || key == "all")) {
                 $originalDueDate = $('#originalRequestedDueDate').val();
                 var currentDueDate = $('#requestedDueDate-date').val();
                 if (currentDueDate == undefined || currentDueDate == '') {
@@ -153,7 +154,7 @@
                 }
             }
             // Validate Comments
-            if (key == "comments" || key == "all") {
+            if (! isDefaultTranslator && (key == "comments" || key == "all")) {
                 $originalComments = $('#originalComments').val();
                 var currentComments = $('#comments').val();
 
@@ -163,7 +164,7 @@
                 }
             }
             // Validate order tags
-            if (key== "tags" || key == "all") {
+            if (! isDefaultTranslator && (key== "tags" || key == "all")) {
                 $originalTags = [];
                 if ($('#originalTags').val() != "") {
                     $originalTags = $('#originalTags').val().split(',');
@@ -175,6 +176,15 @@
                 if (haveDifferences($originalTags, $currentTags)) {
                     if (!$needData) return true;
                     $responseData.push("tags");
+                }
+            }
+            // Validate entry version
+            if (key== "version" || key == "all") {
+                var currentElementVersions = $('#elementVersions').val().split(",");
+                var originalElementVersions = $('#originalElementVersions').val().split(",");
+                if (haveDifferences(originalElementVersions, currentElementVersions)) {
+                    if (!$needData) return true;
+                    $responseData.push("version");
                 }
             }
         };
@@ -282,9 +292,54 @@
         $('input[name=updatedFields]').val($changedFields);
     }
 
+    function toggleTranslatorBasedFields(status = false) {
+        if (status) {
+            $('#extra-fields').removeClass('hidden');
+        } else {
+            $('#extra-fields').addClass('hidden');
+        }
+    }
+
+    function syncElementVersions() {
+        var currentElementIds = $('#currentElementIds').val().split(",");
+        var elementVersions = $('#elementVersions').val().split(",");
+        var updatedVersions = [];
+        $.each(elementVersions, function(key, value) {
+            elementId = value.split('_')[0];
+            if ($.inArray(elementId, currentElementIds)) {
+                updatedVersions.push(value);
+            }
+        });
+        $('#elementVersions').val(updatedVersions.join(','));
+    }
+
+    function syncSites() {
+        var source = $("#sourceSiteSelect").val();
+        var targetCheckboxes = $(':checkbox[name="targetSites[]"]');
+        targetCheckboxes.each(function() {
+            siteId = $(this).val();
+            if ($(this).closest('div').hasClass('hidden')) {
+                if (! $('input[type=hidden][name=targetSites]').prop('disabled')) {
+                    $(this).prop('disabled', false);
+                }
+                $(this).closest('div').removeClass('hidden');
+            }
+            if (siteId != '' && source != '' && siteId == source) {
+                $(this).prop('disabled', true);
+                $(this).closest('div').addClass('hidden');
+            }
+        });
+    }
+
     Craft.Translations.OrderDetails = {
         init: function() {
             self = this;
+
+            if (isDefaultTranslator) {
+                toggleTranslatorBasedFields();
+            }
+
+            syncSites();
 
             if (isSubmitted) {
                 this._createUpdateOrderButtonGroup();
@@ -292,9 +347,11 @@
             } else {
                 this._createNewOrderButtonGroup();
             }
+
             if (validateForm() && (isNew || isFailed || isOrderChanged({all: "all"}))) {
                 setSubmitButtonStatus(true);
             }
+
             // Target lang Ajax
             $(':checkbox[name="targetSites[]"], :checkbox[name="targetSites"]').on('change', function() {
                 if ($(this).attr('name') == "targetSites") {
@@ -332,6 +389,7 @@
                 }
             });
 
+            // Order Elements Version script
             $('select[name=version]').on('change', function() {
                 var elementVersions = $('#elementVersions').val().split(",");
                 var elementId = $(this).attr('id').replace('version_', '');
@@ -344,6 +402,12 @@
                 elementVersions.join(',');
 
                 $('#elementVersions').val(elementVersions);
+
+                if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+                    setSubmitButtonStatus(true);
+                } else {
+                    setSubmitButtonStatus(false);
+                }
             });
 
             $('li[data-id]').on('click', function() {
@@ -368,6 +432,11 @@
             });
 
             $('#translatorId').on('change', function() {
+                if ($(this).find(':selected').val() == defaultTranslatorId) {
+                    toggleTranslatorBasedFields();
+                } else {
+                    toggleTranslatorBasedFields(true);
+                }
                 if (shouldCreateNewOrder()) {
                     setButtonText('.translations-submit-order.submit', 'Create new order');
                 } else {
@@ -384,6 +453,8 @@
             $('#createNewOrder').on('click', function () {
                 window.location.href = "/admin/translations/orders/create";
             });
+
+            $('.duplicate-warning', '#global-container').infoicon();
 
             // Delete an entry
             $('.translations-order-delete-entry').on('click', function(e) {
@@ -440,6 +511,7 @@
                     }
 
                     $('#currentElementIds').val(currentElementIds);
+                    syncElementVersions();
                 }
             });
 
@@ -457,6 +529,8 @@
                 if (site != "") {
                     url += '?sourceSite='+site;
                 }
+
+                syncSites();
                 
                 if (currentElementIds.length > 1) {
                     currentElementIds.forEach(function (element) {

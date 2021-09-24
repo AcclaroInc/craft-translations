@@ -334,7 +334,14 @@ class FileRepository
     {
         $attributes = ['id' => (int) $fileId];
 
-        return FileRecord::findOne($attributes)->delete();
+        $record = FileRecord::findOne($attributes);
+
+        if ($record && $record->draftId) {
+            $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
+            Craft::$app->getElements()->deleteElement($element);
+        }
+
+        return $record->delete();
     }
 
     /**
@@ -349,7 +356,14 @@ class FileRepository
             $attributes['elementId'] = $elementId;
         }
 
-        return FileRecord::findOne($attributes)->delete();
+        $record = FileRecord::findOne($attributes);
+
+        if ($record && $record->draftId) {
+            $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
+            Craft::$app->getElements()->deleteElement($element);
+        }
+
+        return $record->delete();
     }
 
     public function deleteByOrderId($orderId, $targetSite = null)
@@ -361,6 +375,10 @@ class FileRepository
         $records = FileRecord::find()->where($attributes)->all();
 
         foreach($records as $record) {
+            if ($record && $record->draftId) {
+                $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
+                Craft::$app->getElements()->deleteElement($element);
+            }
             $record->delete();
         }
         
