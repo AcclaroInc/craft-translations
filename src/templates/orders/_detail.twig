@@ -28,7 +28,7 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('') }}" data-submitted="{{ isSubmitted }}"
+                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}" data-submitted="{{ isSubmitted }}"
                 data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>
@@ -217,6 +217,7 @@
                         <div class="submit">
                             <input type="hidden" id="originalElementIds" value="{{ originalElementIds }}">
                             <input type="hidden" id="currentElementIds" value="{{ elementIds|join(',') }}">
+                            <input type="hidden" id="originalElementVersions" name="originalElementVersions" value="{{ elementVersions|join(',') }}">
                             <input type="hidden" id="elementVersions" name="elementVersions" value="{{ elementVersions|join(',') }}">
                             <button type="button" class="btn add icon dashed addEntries">{{ 'Add an entry'|t }}</button>
                         </div>

@@ -81,6 +81,8 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
         $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
+        if ($element->getIsDraft()) $element = $element->getCanonical();
+
         if ($element instanceof GlobalSet) {
             $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
         } else if ($element instanceof Category) {

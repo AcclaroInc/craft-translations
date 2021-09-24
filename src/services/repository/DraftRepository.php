@@ -206,6 +206,7 @@ class DraftRepository
     public function enableForAllSupportedSites($file)
     {
         $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+        $element = $element->getIsDraft() ? $element->getCanonical() : $element;
 
         $supportedSites = array_column($element->getSupportedSites(), 'siteId');
 
@@ -271,12 +272,16 @@ class DraftRepository
             }
 
             if ($element->getIsDraft()) {
-                $element = $element->getCanonical(true);
+                $element = $element->getCanonical();
             }
             
             // Create draft only if not already exist
             if (! $file->draftId) {
                 $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+            } else {
+                $file->status = Constants::FILE_STATUS_COMPLETE;
+                Translations::$plugin->fileRepository->saveFile($file);
+
             }
 
             try {
@@ -300,6 +305,10 @@ class DraftRepository
             $order->status = Constants::ORDER_STATUS_COMPLETE;
 
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
+
+            Translations::$plugin->orderRepository->saveOrder($order);
+        } else {
+            $order->status = Constants::ORDER_STATUS_REVIEW_READY;
 
             Translations::$plugin->orderRepository->saveOrder($order);
         }

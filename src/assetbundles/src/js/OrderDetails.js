@@ -140,7 +140,7 @@
                 }
             }
             // Validate Due Date
-            if (key == "dueDate" || key == "all") {
+            if (! isDefaultTranslator && (key == "dueDate" || key == "all")) {
                 $originalDueDate = $('#originalRequestedDueDate').val();
                 var currentDueDate = $('#requestedDueDate-date').val();
                 if (currentDueDate == undefined || currentDueDate == '') {
@@ -154,7 +154,7 @@
                 }
             }
             // Validate Comments
-            if (key == "comments" || key == "all") {
+            if (! isDefaultTranslator && (key == "comments" || key == "all")) {
                 $originalComments = $('#originalComments').val();
                 var currentComments = $('#comments').val();
 
@@ -164,7 +164,7 @@
                 }
             }
             // Validate order tags
-            if (key== "tags" || key == "all") {
+            if (! isDefaultTranslator && (key== "tags" || key == "all")) {
                 $originalTags = [];
                 if ($('#originalTags').val() != "") {
                     $originalTags = $('#originalTags').val().split(',');
@@ -176,6 +176,15 @@
                 if (haveDifferences($originalTags, $currentTags)) {
                     if (!$needData) return true;
                     $responseData.push("tags");
+                }
+            }
+            // Validate entry version
+            if (key== "version" || key == "all") {
+                var currentElementVersions = $('#elementVersions').val().split(",");
+                var originalElementVersions = $('#originalElementVersions').val().split(",");
+                if (haveDifferences(originalElementVersions, currentElementVersions)) {
+                    if (!$needData) return true;
+                    $responseData.push("version");
                 }
             }
         };
@@ -338,9 +347,11 @@
             } else {
                 this._createNewOrderButtonGroup();
             }
+
             if (validateForm() && (isNew || isFailed || isOrderChanged({all: "all"}))) {
                 setSubmitButtonStatus(true);
             }
+
             // Target lang Ajax
             $(':checkbox[name="targetSites[]"], :checkbox[name="targetSites"]').on('change', function() {
                 if ($(this).attr('name') == "targetSites") {
@@ -378,6 +389,7 @@
                 }
             });
 
+            // Order Elements Version script
             $('select[name=version]').on('change', function() {
                 var elementVersions = $('#elementVersions').val().split(",");
                 var elementId = $(this).attr('id').replace('version_', '');
@@ -390,6 +402,12 @@
                 elementVersions.join(',');
 
                 $('#elementVersions').val(elementVersions);
+
+                if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+                    setSubmitButtonStatus(true);
+                } else {
+                    setSubmitButtonStatus(false);
+                }
             });
 
             $('li[data-id]').on('click', function() {
