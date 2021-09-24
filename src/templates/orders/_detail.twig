@@ -489,8 +489,9 @@
                                             <td>
                                                 <table>
                                                     <tr>
-                                                        <td class="inline-flex align-center">
+                                                        <td>
                                                             <span class="status {{ file.statusColor }}" 
+                                                                style="position: absolute;left: -10px;"
                                                                 data-status="{{ file.status == 'complete' 
                                                                 or file.status == 'published' or file.status == 'ready for review' ? 1 : 0 }}">
                                                                 </span>{{ file.statusLabel }}
