@@ -465,7 +465,8 @@ class WidgetController extends Controller
                         Constants::FILE_FORMAT_JSON,
                         [
                             'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
-                            'targetSite'    => $file->targetSite
+                            'targetSite'    => $file->targetSite,
+                            'orderId'       => $file->orderId,
                         ]
                     );
                     $currentXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($currentJson, true));

@@ -57,8 +57,6 @@ class OrderController extends Controller
      */
     protected $pluginVersion;
 
-    public const ORDER_TAG_GROUP_HANDLE = "craftTranslations";
-
     // Public Methods
     // =========================================================================
 
@@ -131,6 +129,7 @@ class OrderController extends Controller
         $variables['isChanged'] = Craft::$app->getRequest()->getQueryParam('changed') ?? null;
 
         $variables['orderId'] = $variables['orderId'] ?? null;
+        $variables['tagGroup'] = Craft::$app->getTags()->getTagGroupByHandle(Constants::ORDER_TAG_GROUP_HANDLE);
 
         $variables['inputSourceSite'] = Craft::$app->getRequest()->getQueryParam('sourceSite');
 
@@ -178,24 +177,24 @@ class OrderController extends Controller
         } else {
             $newOrder = Translations::$plugin->orderRepository->makeNewOrder($variables['inputSourceSite']);
             if ($orderTitle= Craft::$app->getRequest()->getQueryParam('title')) {
-                    $newOrder->title = $orderTitle;
-                }
+                $newOrder->title = $orderTitle;
+            }
 
-                if ($orderTargetSites= Craft::$app->getRequest()->getQueryParam('targetSite')) {
-                    $newOrder->targetSites = json_encode($orderTargetSites);
-                }
+            if ($orderTargetSites= Craft::$app->getRequest()->getQueryParam('targetSite')) {
+                $newOrder->targetSites = json_encode($orderTargetSites);
+            }
 
-                if ($orderDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
-                    $newOrder->orderDueDate = $orderDueDate;
-                }
+            if ($orderDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
+                $newOrder->orderDueDate = $orderDueDate;
+            }
 
-                if ($orderComments= Craft::$app->getRequest()->getQueryParam('comments')) {
-                    $newOrder->comments = $orderComments;
-                }
+            if ($orderComments= Craft::$app->getRequest()->getQueryParam('comments')) {
+                $newOrder->comments = $orderComments;
+            }
 
-                if ($orderTranslatorId= Craft::$app->getRequest()->getQueryParam('translatorId')) {
-                    $newOrder->translatorId = $orderTranslatorId;
-                }
+            if ($orderTranslatorId= Craft::$app->getRequest()->getQueryParam('translatorId')) {
+                $newOrder->translatorId = $orderTranslatorId;
+            }
                 
 
             $variables['order'] = $newOrder;
@@ -366,6 +365,9 @@ class OrderController extends Controller
                         [ 'language' => 'Deleted' ]);
 
                     if (Craft::$app->getSites()->getSiteById($file->targetSite)) {
+                        if ($file->status === Constants::FILE_STATUS_PUBLISHED && $element->getIsDraft()) {
+                            $element = $element->getCanonical();
+                        }
                         $variables['fileUrls'][$file->id] = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                     }
                     $variables['isElementPublished'][$element->id] = $isElementPublished;
@@ -604,8 +606,8 @@ class OrderController extends Controller
             $orderTags = Craft::$app->getRequest()->getParam('tags') ?? array();
             $orderTagIds = array();
 
-            foreach ($orderTags as $tagTitle) {
-                $tag = Translations::$plugin->orderRepository->orderTagExists($tagTitle);
+            foreach ($orderTags as $tagId) {
+                $tag = Craft::$app->getTags()->getTagById($tagId);
                 if ($tag) {
                     array_push($orderTagIds, $tag->id);
                 }
@@ -872,6 +874,7 @@ class OrderController extends Controller
         $variables['isSubmitted'] = null;
         $variables['selectedSubnavItem'] = 'orders';
         $variables['orderId'] = null;
+        $variables['tagGroup'] = Craft::$app->getTags()->getTagGroupByHandle(Constants::ORDER_TAG_GROUP_HANDLE);
 
         $variables['elementIds'] = json_encode($data['elements']);
         $variables['sourceSite'] = $data['sourceSiteSelect'];
@@ -1006,9 +1009,9 @@ class OrderController extends Controller
         $variables['hasTags'] = false;
         $orderTagIds = array();
 
-        foreach ($orderTags as $tagTitle) {
+        foreach ($orderTags as $tagId) {
             $variables['hasTags'] = true;
-            $tag = Translations::$plugin->orderRepository->orderTagExists($tagTitle);
+            $tag = Craft::$app->getTags()->getTagById($tagId);
             if ($tag) {
                 array_push($orderTagIds, $tag->id);
                 $variables['tags'][] = $tag;
@@ -1081,7 +1084,6 @@ class OrderController extends Controller
                 Craft::$app->getSession()->set('queueOrders', $queueOrders);
             }
         }
-
         try {
             $updatedFields = json_decode($newData['updatedFields']) ?? [];
 
@@ -1097,7 +1099,7 @@ class OrderController extends Controller
             $oldData = [];
             $editOrderRequest = [];
             foreach ($updatedFields as $field) {
-                $updated = $newData[$field];
+                $updated = $newData[$field] ?? '';
                 if ($field == "requestedDueDate") {
                     if ($updated['date']) {
                         $updated = DateTime::createFromFormat('n/j/Y', $updated['date'])->format("Y-n-j");
@@ -1112,20 +1114,20 @@ class OrderController extends Controller
                     $field = 'elementIds';
                 }
                 if ($field == "tags") {
-                    if ($tags = $newData[$field] ?? []) {
+                    if ($tags = isset($newData[$field]) ? $newData[$field] : []) {
                         $updatedTags = [];
                         $updatedTagIds = [];
-                        foreach ($tags as $tagTitle) {
-                            $tag = Translations::$plugin->orderRepository->orderTagExists($tagTitle);
+                        foreach ($tags as $tagId) {
+                            $tag = Craft::$app->getTags()->getTagById((int) $tagId);
                             if ($tag) {
                                 array_push($updatedTagIds, $tag->id);
-                                array_push($updatedTags, $tagTitle);
+                                array_push($updatedTags, $tag->title);
                             }
                         }
                         $updated = !empty($updatedTagIds) ? json_encode($updatedTagIds) : '';
                         // Make Api Request to update tags
                         if (! $isDefaultTranslator) {
-                            $translatorService->editOrderTags($order, $settings, $newData['tags']);
+                            $translatorService->editOrderTags($order, $settings, implode(',',$updatedTags));
                         }
                     }
                 }
@@ -1797,42 +1799,5 @@ class OrderController extends Controller
         Craft::$app->getSession()->setError(
             Translations::$plugin->translator->translate('app', 'Delete Order Draft WIP.')
         );
-    }
-
-    // Order tag methods
-    /**
-     * Adds tags added to order to global tags list for translations in crafts default tags table
-     *
-     * @return jsonResponse
-     */
-    public function actionCreateOrderTag()
-    {
-        $group = Craft::$app->getTags()->getTagGroupByHandle(self::ORDER_TAG_GROUP_HANDLE);
-        $title = trim($this->request->getRequiredBodyParam('title'));
-
-        if ($tag = Translations::$plugin->orderRepository->orderTagExists($title)) {
-            return $this->asJson([
-                'success' => true,
-                'id'    => $tag->id,
-                'title' => $tag->title
-            ]);
-        }
-
-        $tag = new Tag();
-        $tag->groupId = $group->id;
-        $tag->title = $title;
-
-        // Don't validate required custom fields
-        if (!Craft::$app->getElements()->saveElement($tag)) {
-            return $this->asJson([
-                'success' => false,
-            ]);
-        }
-
-        return $this->asJson([
-            'success' => true,
-            'id'    => $tag->id,
-            'title' => $tag->title
-        ]);
     }
 }

@@ -397,7 +397,8 @@ class FileRepository
                         [
                             'sourceSite'    => $file->sourceSite,
                             'targetSite'    => $file->targetSite,
-                            'previewUrl'    => $file->previewUrl
+                            'previewUrl'    => $file->previewUrl,
+                            'orderId'       => $file->orderId,
                         ]
                     );
                 }
@@ -456,7 +457,7 @@ class FileRepository
     {
         // ? Create File for each element per target language
         foreach ($order->getTargetSitesArray() as $key => $targetSite) {
-            foreach ($order->getElements() as $element) {
+            foreach ($order->getElements(false) as $element) {
                 $wordCount = $wordCounts[$element->id] ?? 0;
 
                 $file = $this->makeNewFile();
@@ -465,13 +466,15 @@ class FileRepository
                 $file->elementId = $element->id;
                 $file->sourceSite = $order->sourceSite;
                 $file->targetSite = $targetSite;
+                
                 $file->source = Translations::$plugin->elementToFileConverter->convert(
                     $element,
                     Constants::FILE_FORMAT_XML,
                     [
                         'sourceSite'    => $order->sourceSite,
                         'targetSite'    => $targetSite,
-                        'wordCount'    => $wordCount,
+                        'wordCount'     => $wordCount,
+                        'orderId'       => $order->id
                     ]
                 );
                 $file->wordCount = $wordCount;
@@ -499,7 +502,8 @@ class FileRepository
             [
                 'sourceSite'    => $order->sourceSite,
                 'targetSite'    => $targetSite,
-                'wordCount'    => $wordCount,
+                'wordCount'     => $wordCount,
+                'orderId'       => $order->id,
             ]
         );
         $file->wordCount = $wordCount;

@@ -101,7 +101,7 @@ class FilesController extends Controller
             foreach ($order->files as $file)
             {
                 // skip failed files
-                if ($file->status == 'canceled' ) continue;
+                if ($file->status === Constants::FILE_STATUS_CANCELED) continue;
 
                 $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
@@ -121,6 +121,7 @@ class FilesController extends Controller
                         'sourceSite'    => $file->sourceSite,
                         'targetSite'    => $file->targetSite,
                         'wordCount'     => $file->wordCount,
+                        'orderId'       => $order->id,
                     ]
                 );
 

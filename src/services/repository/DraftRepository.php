@@ -273,8 +273,11 @@ class DraftRepository
             if ($element->getIsDraft()) {
                 $element = $element->getCanonical(true);
             }
-
-            $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+            
+            // Create draft only if not already exist
+            if (! $file->draftId) {
+                $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+            }
 
             try {
                 $translation_service = $order->translator->service;
@@ -345,29 +348,11 @@ class DraftRepository
                 return;
             }
 
-            $element = Craft::$app->getElements()->getElementById($draft->getCanonicalId(), null, $order->sourceSite);
+            // $element = Craft::$app->getElements()->getElementById($draft->getCanonicalId(), null, $order->sourceSite);
 
-            $wordCount = $wordCounts[$element->id] ?? 0;
-
-            $file->orderId = $order->id;
-            $file->elementId = $draft->getCanonicalId();
             $file->draftId = $draft->draftId;
-            $file->sourceSite = $order->sourceSite;
-            $file->targetSite = $targetSite;
-            $file->status = Constants::FILE_STATUS_COMPLETE;
             $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
-            if (! $file->source) {
-                $file->source = Translations::$plugin->elementToFileConverter->convert(
-                    ($draft instanceof Entry) ? $draft : $element, // Send the element for custom drafts (GlobalSets, Categories)
-                    Constants::FILE_FORMAT_XML,
-                    [
-                        'sourceSite' => $order->sourceSite,
-                        'targetSite' => $targetSite,
-                        'wordCount'  => $wordCount
-                    ]
-                );
-            }
-            $file->wordCount = $wordCount;
+            $file->status = Constants::FILE_STATUS_COMPLETE;
             
             Translations::$plugin->fileRepository->saveFile($file);
             
@@ -490,8 +475,11 @@ class DraftRepository
 
         try {
             foreach ($files as $file) {
-                if (! in_array($file->id, $fileIds) || $file->status !== 'complete') {
-                    if ($file->status == 'published') $publishedFilesCount++;
+                if (
+                    ! in_array($file->id, $fileIds) ||
+                    $file->status !== Constants::FILE_STATUS_COMPLETE
+                ) {
+                    if ($file->status == Constants::FILE_STATUS_PUBLISHED) $publishedFilesCount++;
                     continue;
                 }
     
@@ -500,8 +488,6 @@ class DraftRepository
                 }
     
                 $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-
-                if ($element->getIsDraft()) $element = $element->getCanonical(true);
     
                 if ($element instanceof GlobalSet) {
                     $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
@@ -552,8 +538,6 @@ class DraftRepository
                     } else {
                         $success = false;
                     }
-    
-                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 }
                 if ($success) {
                     $oldTokenRoute = json_encode(array(

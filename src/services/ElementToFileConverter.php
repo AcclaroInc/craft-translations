@@ -21,7 +21,7 @@ use acclaro\translations\Translations;
 
 class ElementToFileConverter
 {
-    public function toXml(Element $element, $draftId = 0, $sourceSite = null, $targetSite = null, $previewUrl = null)
+    public function toXml(Element $element, $draftId, $sourceSite, $targetSite, $previewUrl, $orderId)
     {
         $dom = new DOMDocument('1.0', 'utf-8');
 
@@ -43,6 +43,9 @@ class ElementToFileConverter
 
         $elementIdMeta = $head->appendChild($dom->createElement('meta'));
         $elementIdMeta->setAttribute('elementId', $element->id);
+        if ($orderId) {
+            $elementIdMeta->setAttribute('orderId', $orderId);
+        }
 
         $body = $xml->appendChild($dom->createElement('body'));
 
@@ -62,7 +65,7 @@ class ElementToFileConverter
         return $dom->saveXML();
     }
 
-    public function toJson(Element $element, $sourceSite = null, $targetSite = null, $wordCount = 0)
+    public function toJson(Element $element, $sourceSite, $targetSite, $wordCount, $orderId)
     {
         $sourceLanguage = Craft::$app->sites->getSiteById($sourceSite)->language;
         $targetLanguage = Craft::$app->sites->getSiteById($targetSite) ?
@@ -74,6 +77,7 @@ class ElementToFileConverter
             "source-language"   => $sourceLanguage,
             "target-language"   => $targetLanguage,
             "elementId"         => $element->id,
+            "orderId"           => $orderId,
             "wordCount"         => $wordCount
         ];
 
@@ -98,13 +102,13 @@ class ElementToFileConverter
      * @param [string] $wordCount
      * @return file
      */
-    public function toCsv(Element $element, $sourceSite, $targetSite, $wordCount) {
+    public function toCsv(Element $element, $sourceSite, $targetSite, $wordCount, $orderId) {
         $sourceLanguage = Craft::$app->sites->getSiteById($sourceSite)->language;
         $targetLanguage = Craft::$app->sites->getSiteById($targetSite) ?
                             Craft::$app->sites->getSiteById($targetSite)->language : 'deleted';
 
-        $headers = '"elementId","source-site","target-site","source-language","target-language","wordCount"';   
-        $content = "\"$element->id\",\"$sourceSite\",\"$targetSite\",\"$sourceLanguage\",\"$targetLanguage\",\"$wordCount\"";
+        $headers = '"orderId","elementId","source-site","target-site","source-language","target-language","wordCount"';   
+        $content = "\"$orderId\",\"$element->id\",\"$sourceSite\",\"$targetSite\",\"$sourceLanguage\",\"$targetLanguage\",\"$wordCount\"";
   
         foreach (
             Translations::$plugin->elementTranslator->toTranslationSource(
@@ -135,20 +139,23 @@ class ElementToFileConverter
             $wordCount  = $data['wordCount'] ?? 0;
             $draftId    = $data['draftId'] ?? 0;
             $previewUrl = $data['previewUrl'] ?? null;
+            $orderId = $data['orderId'] ?? 0;
 
-            return $this->toXml($element, $draftId, $sourceSite, $targetSite, $previewUrl);
+            return $this->toXml($element, $draftId, $sourceSite, $targetSite, $previewUrl, $orderId);
         } elseif ($format == Constants::FILE_FORMAT_CSV) {
             $sourceSite = $data['sourceSite'] ?? null;
             $targetSite = $data['targetSite'] ?? null;
             $wordCount  = $data['wordCount'] ?? 0;
+            $orderId    = $data['orderId'] ?? 0;
 
-            return $this->toCsv($element, $sourceSite, $targetSite, $wordCount);
+            return $this->toCsv($element, $sourceSite, $targetSite, $wordCount, $orderId);
         } else {
             $sourceSite = $data['sourceSite'] ?? null;
             $targetSite = $data['targetSite'] ?? null;
             $wordCount  = $data['wordCount'] ?? 0;
+            $orderId    = $data['orderId'] ?? 0;
 
-            return $this->toJson($element, $sourceSite, $targetSite, $wordCount);
+            return $this->toJson($element, $sourceSite, $targetSite, $wordCount, $orderId);
         }
     }
 

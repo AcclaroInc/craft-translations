@@ -169,7 +169,7 @@
                     $originalTags = $('#originalTags').val().split(',');
                 }
                 $currentTags = [];
-                $("div .removable").each(function() {
+                $("#elementTags .removable").each(function() {
                     $currentTags.push($(this).data("label"));
                 });
                 if (haveDifferences($originalTags, $currentTags)) {
@@ -220,19 +220,6 @@
             url += targetSites
         }
         return url
-    }
-
-    function isAlreadyAdded($newTag) {
-        var isNew = false;
-        if ($newTag == "") {
-            return isNew;
-        }
-        $("div .removable").each(function() {
-            if ($(this).data("label").toLowerCase() === $newTag.toLowerCase()) {
-                isNew = true;
-            }
-        });
-        return isNew;
     }
 
     function sendingOrderStatus($status, $btnStatus = false) {
@@ -295,27 +282,10 @@
         $('input[name=updatedFields]').val($changedFields);
     }
 
-    function createUrl(currentElementIds) {
-        var $url = removeParams(window.location.href);
-
-        var site = $("#sourceSiteSelect").val();
-
-        var fieldValues = getFieldValuesAsUrlParams();
-
-        var elementUrl = "";
-
-        for (var i = 0; i < currentElementIds.length; i++) {
-            if (currentElementIds[i]) {
-                elementUrl += '&elements[]='+currentElementIds[i];
-            }
-        }
-
-        return $url+'?sourceSite='+site+elementUrl+fieldValues;
-    }
-
     Craft.Translations.OrderDetails = {
         init: function() {
             self = this;
+
             if (isSubmitted) {
                 this._createUpdateOrderButtonGroup();
                 this._disableOrderSettingsTab();
@@ -472,7 +442,7 @@
                     $('#currentElementIds').val(currentElementIds);
                 }
             });
-    
+
             // Source Site Ajax
             $("#sourceSiteSelect").change(function (e) {
                 $(window).off('beforeunload.windowReload');
@@ -578,34 +548,22 @@
                 });
             });
 
-            // Add new tags to order tags fields
-            $("#fields-tags").on('keydown', 'input[type=text]', function(e) {
-                if (e.keyCode == 13 && !isAlreadyAdded($(this).val())) {
-                    $data = {'title': $(this).val()};
-                    Craft.postActionRequest('translations/order/create-order-tag', $data, function(response, textStatus) {
-                        if (textStatus === 'success' && response.success) {
-                            Craft.Translations.OrderDetails._addOrderTag(response.title);
-                            $('#fields-tags').find('input[type=text]').val('');
-                            if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
-                                setSubmitButtonStatus(true);
-                            } else {
-                                setSubmitButtonStatus(false);
-                            }
-                        } else {
-                            Craft.cp.displayError(Craft.t('app', "Error adding new tag"));
-                        }
-                    });
-                }
-            });
-
-            $("#elementTags").on('click', 'a.custom-tag', function(e) {
-                $(this).closest('.removable').remove();
+            $('#elementTags').on('DOMNodeInserted', 'input[type=hidden]', function() {
                 if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
                     setSubmitButtonStatus(true);
                 } else {
                     setSubmitButtonStatus(false);
                 }
             });
+
+            // ! NOTE: need to work on this
+            // $('#elementTags').on('DOMNodeRemoved', function() {
+            //     if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+            //         setSubmitButtonStatus(true);
+            //     } else {
+            //         setSubmitButtonStatus(false);
+            //     }
+            // });
 
             $('#cancel-order-link').on('click', function() {
                 var $cancelTab = $('#cancel-order-tab');
@@ -621,7 +579,7 @@
                 }
             });
         },
-        _addOrderTag: function($newTag) {
+        _addOrderTag: function($newTag, $tagId) {
             $mainDiv = $('<div>', {
                 class: "element small removable",
                 "data-label": $newTag
@@ -637,7 +595,7 @@
             $hiddenInput.appendTo($mainDiv);
 
             $mainContent = $("<div class=label><span class=title>"+$newTag+"</span></div>");
-            $deleteTag = $("<a class='delete icon' data-label="+$newTag+" title=Remove></a>");
+            $deleteTag = $("<a class='delete icon' data-label="+$newTag+" data-id="+$tagId+" title=Remove></a>");
             // Remove tag from order tag field
             $deleteTag.on('click', function() {
                 Craft.Translations.OrderDetails._removeOrderTag(this);
