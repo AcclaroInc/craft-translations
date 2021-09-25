@@ -31,9 +31,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\services\job\ImportFiles;
 use acclaro\translations\services\repository\SiteRepository;
 use craft\elements\Asset;
-use craft\errors\UploadFailedException;
 use craft\helpers\ArrayHelper;
-use yii\base\ErrorException;
 
 /**
  * @author    Acclaro
@@ -116,18 +114,35 @@ class FilesController extends Controller
 
                 $path = $tempPath . $filename;
                 
-                $fileContent = Translations::$plugin->elementToFileConverter->convert($element, $fileFormat,
-                    [
-                        'sourceSite'    => $file->sourceSite,
-                        'targetSite'    => $file->targetSite,
-                        'wordCount'     => $file->wordCount,
-                        'orderId'       => $order->id,
-                    ]
-                );
+                $sourceFormat = Translations::$plugin->fileRepository->getFileSourceFormat($file->source);
+                if (in_array($sourceFormat, [Constants::FILE_FORMAT_JSON, Constants::FILE_FORMAT_XML])) {
 
-                if (!$zip->addFromString($filename, $fileContent)) {
-                    $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
-                    Craft::log( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, LogLevel::Error, 'translations' );
+                    if ($fileFormat === Constants::FILE_FORMAT_JSON) {
+                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
+                            $fileContent = Translations::$plugin->elementToFileConverter->xmlToJson($file->source);
+                        } else {
+                            $fileContent = $file->source;
+                        }
+                    } else if ($fileFormat === Constants::FILE_FORMAT_CSV) {
+                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
+                            $fileContent = Translations::$plugin->elementToFileConverter->xmlToCsv($file->source);
+                        } else {
+                            $fileContent = Translations::$plugin->elementToFileConverter->jsonToCsv($file->source);
+                        }
+                    } else {
+                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
+                            $fileContent = $file->source;
+                        } else {
+                            $fileContent = Translations::$plugin->elementToFileConverter->jsonToXml($file->source);
+                        }
+                    }
+
+                    if (! $fileContent || !$zip->addFromString($filename, $fileContent)) {
+                        $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
+                        Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
+                    }
+                } else {
+                    Craft::error('The File Source is not of valid xml/json format.');
                 }
             }
         }
@@ -284,15 +299,22 @@ class FilesController extends Controller
                                 ];
                                 Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                             }
+                            $this->showUserMessages("File queued for import. Check activity log for any errors.", true);
                         } else {
                             $fileSvc = new ImportFiles();
+                            $success = true;
                             foreach ($assetIds as $key => $id) {
                                 $a = Craft::$app->getAssets()->getAssetById($id);
-                                $fileSvc->processFile($a, $this->order, $fileInfo['extension']);
+                                $res = $fileSvc->processFile($a, $this->order, $fileInfo['extension']);
                                 Craft::$app->getElements()->deleteElement($a);
+                                if ($res === false) $success = false;
+                            }
+                            if (! $success) {
+                                $this->showUserMessages("Error importing file. Please check activity log for details.");
+                            } else {
+                                $this->showUserMessages("File uploaded successfully", true);
                             }
                         }
-                        $this->showUserMessages("File uploaded successfully: $fileName", true);
                     } else {
                         Craft::$app->getSession()->set('fileImportError', 1);
                         $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
@@ -347,7 +369,7 @@ class FilesController extends Controller
                             ];
                             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                         }
-                        $this->showUserMessages("File uploaded successfully: {$file->name}", true);
+                        $this->showUserMessages("File: {$file->name} queued for import. Check activity log for any errors.", true);
                     } else {
                         $fileSvc = new ImportFiles();
                         $a = Craft::$app->getAssets()->getAssetById($asset->id);
@@ -438,24 +460,6 @@ class FilesController extends Controller
     	{
     		Craft::$app->session->setError(Craft::t('app', $message));
     	}	
-    }
-
-    /**
-     * Report and Validate XML imported files
-	 * @return string
-     */
-    public function reportXmlErrors()
-    {
-    	$errors = array();
-    	$libErros = libxml_get_errors();
-    	
-    	$msg = false;
-    	if ($libErros && isset($libErros[0]))
-    	{
-    		$msg = $libErros[0]->code . ": " .$libErros[0]->message;
-    	}
-
-    	return $msg;
     }
 
     /**

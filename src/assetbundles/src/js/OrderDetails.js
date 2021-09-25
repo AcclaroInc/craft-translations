@@ -375,8 +375,10 @@
                 }
 
                 if (isSubmitted) {
-                    if (shouldCreateNewOrder() && ! isDefaultTranslator) {
-                        setButtonText('.translations-submit-order.submit', 'Create new order');
+                    if (shouldCreateNewOrder()) {
+                        if (! isDefaultTranslator) {
+                            setButtonText('.translations-submit-order.submit', 'Create new order');
+                        }
                     } else {
                         setButtonText('.translations-submit-order.submit', 'Update order');
                     }
@@ -544,7 +546,7 @@
                     setButtonText('.translations-submit-order.submit', 'Update order');
                 }
 
-                if (validateForm() && isOrderChanged({all: "all"})) {
+                if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
                     setSubmitButtonStatus(true);
                 } else {
                     setSubmitButtonStatus(false);

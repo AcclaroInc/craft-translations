@@ -256,6 +256,26 @@ class FileRepository
     }
 
     /**
+     * Check if content in file's source column is in Xml or Json format
+     *
+     * @param string $sourceContent
+     * @return string
+     */
+    public function getFileSourceFormat(string $sourceContent)
+    {
+        // Check if source is valid xml
+        if(substr(trim($sourceContent), 0, 5) == "<?xml") {
+            return Constants::FILE_FORMAT_XML;
+        }
+
+        // Check for a valid json source
+        json_decode($string);
+        if (json_last_error() === JSON_ERROR_NONE) return Constants::FILE_FORMAT_JSON;
+
+        return null;
+    }
+
+    /**
      * @return \acclaro\translations\models\FileModel
      */
     public function makeNewFile()

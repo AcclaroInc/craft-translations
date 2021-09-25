@@ -21,7 +21,7 @@ use acclaro\translations\Translations;
 
 class ElementToFileConverter
 {
-    public function toXml(Element $element, $draftId, $sourceSite, $targetSite, $previewUrl, $orderId)
+    public function toXml(Element $element, $draftId, $sourceSite, $targetSite, $previewUrl, $orderId, $wordCount)
     {
         $dom = new DOMDocument('1.0', 'utf-8');
 
@@ -43,9 +43,8 @@ class ElementToFileConverter
 
         $elementIdMeta = $head->appendChild($dom->createElement('meta'));
         $elementIdMeta->setAttribute('elementId', $element->id);
-        if ($orderId) {
-            $elementIdMeta->setAttribute('orderId', $orderId);
-        }
+        $elementIdMeta->setAttribute('orderId', $orderId);
+        $elementIdMeta->setAttribute('wordCount', $wordCount);
 
         $body = $xml->appendChild($dom->createElement('body'));
 
@@ -141,7 +140,7 @@ class ElementToFileConverter
             $previewUrl = $data['previewUrl'] ?? null;
             $orderId = $data['orderId'] ?? 0;
 
-            return $this->toXml($element, $draftId, $sourceSite, $targetSite, $previewUrl, $orderId);
+            return $this->toXml($element, $draftId, $sourceSite, $targetSite, $previewUrl, $orderId, $wordCount);
         } elseif ($format == Constants::FILE_FORMAT_CSV) {
             $sourceSite = $data['sourceSite'] ?? null;
             $targetSite = $data['targetSite'] ?? null;
@@ -242,25 +241,42 @@ class ElementToFileConverter
         
     }
 
+    /**
+     * Report and Validate XML imported files
+     * @return string
+     */
+    private function reportXmlErrors()
+    {
+    	$errors = array();
+    	$libErros = libxml_get_errors();
+    	
+    	$msg = false;
+    	if ($libErros && isset($libErros[0]))
+    	{
+    		$msg = $libErros[0]->code . ": " .$libErros[0]->message;
+    	}
+    	return $msg;
+    }
+
     private function csvToJson($file_content)
     {
         $jsonData = [];
-        $contentArray = explode("\n", $file_content);
+        $contentArray = explode("\n", $file_content, 2);
 
         if (count($contentArray) != 2) {
-            $this->order->logActivity(
+            Craft::error(
                 Translations::$plugin->translator->translate(
-                    'app', $asset->getFilename()." file you are trying to import has invalid content."
+                    'app', "file you are trying to import has invalid content."
                 )
             );
             return false;
         }
 
-        $keys = explode(",", $contentArray[0]);
-        $values = explode(",", $contentArray[1]);
+        $keys = explode('","', $contentArray[0]);
+        $values = explode('","', $contentArray[1]);
 
         if (count($keys) != count($values)) {
-            $this->order->logActivity(
+            Craft::error(
                 Translations::$plugin->translator->translate(
                     'app', "csv file you are trying to import has header and value mismatch."
                 )
@@ -275,6 +291,7 @@ class ElementToFileConverter
             'target-language',
             'elementId',
             'wordCount',
+            'orderId',
         ];
 
         foreach ($keys as $i => $key) {
@@ -317,5 +334,51 @@ class ElementToFileConverter
         }
 
         return $dom->saveXML();
+    }
+
+    public function xmlToJson($sourceContent) {
+        return json_encode($this->csvToJson($this->xmlToCsv($sourceContent)));
+    }
+
+    public function jsonToCsv($sourceContent) {
+        return $this->xmlToCsv($this->jsonToXml($sourceContent));
+    }
+
+    public function xmlToCsv($sourceContent) {
+        $objDOM = new \DOMDocument('1.0', 'utf-8');
+
+        $objDOM->loadXML($sourceContent);
+
+        $head = $objDOM->getElementsByTagName("head")[0];
+        $body = $objDOM->getElementsByTagName("body");
+
+        $sites  = $head->getElementsByTagName("sites")[0];
+        $langs  = $head->getElementsByTagName("langs")[0];
+        $meta   = $head->getElementsByTagName("meta")[0];
+
+        $orderId    = $meta->getAttribute('orderId') ?? '';
+        $elementId  = $meta->getAttribute('elementId');
+        $wordCount  = $meta->getAttribute('wordCount') ?? '';
+
+        $sourceSite      = $sites->getAttribute('source-site');
+        $targetSite      = $sites->getAttribute('target-site');
+        $sourceLanguage  = $langs->getAttribute('source-language');
+        $targetLanguage  = $langs->getAttribute('target-language');
+
+        $headers = '"orderId","elementId","source-site","target-site","source-language","target-language","wordCount"';
+        $content = "\"$orderId\",\"$elementId\",\"$sourceSite\",\"$targetSite\",\"$sourceLanguage\",\"$targetLanguage\",\"$wordCount\"";
+
+        //looping in body for content
+        foreach ($body as $node) {
+            foreach ($node->getElementsByTagName('content') as $child) {
+                $key    = $child->getAttribute('resname');
+                $value  = $child->childNodes[0]->nodeValue;
+
+                $headers .= ",\"$key\"";
+                $content .= ",\"$value\"";
+            }
+        }
+
+        return $headers."\n".$content;
     }
 }

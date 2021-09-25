@@ -18,6 +18,7 @@ use craft\base\Element;
 use craft\elements\Asset;
 use craft\queue\BaseJob;
 use acclaro\translations\Translations;
+use XMLReader;
 
 class ImportFiles extends BaseJob
 {
@@ -225,7 +226,7 @@ class ImportFiles extends BaseJob
                 $errors = $this->reportXmlErrors();
                 if($errors)
                 {
-                    $this->order->logActivity(Translations::$plugin->translator->translate('app', "We found errors on $asset->getFilename() : "  . $errors));
+                    $this->logError("We found errors on " . $asset->getFilename() . ": "  . $errors);
                     Translations::$plugin->orderRepository->saveOrder($this->order);
                     return false;
                 }
@@ -233,28 +234,43 @@ class ImportFiles extends BaseJob
         } catch(Exception $e) {
             $this->order->logActivity(Translations::$plugin->translator->translate('app', $e->getMessage()));
             Translations::$plugin->orderRepository->saveOrder($this->order);
+            return false;
         }
 
         // Source & Target Sites
         $sites = $dom->getElementsByTagName('sites');
+        if ($sites->length == 0) {
+            $this->logError($asset->getFilename()." is missing sites key.");
+            return false;
+        }
         $sites = isset($sites[0]) ? $sites[0] : $sites;
         $sourceSite = (string)$sites->getAttribute('source-site');
         $targetSite = (string)$sites->getAttribute('target-site');
 
         // Source & Target Languages
         $langs = $dom->getElementsByTagName('langs');
+        if ($langs->length == 0) {
+            $this->logError($asset->getFilename()." is missing langs key.");
+            return false;
+        }
         $langs = isset($langs[0]) ? $langs[0] : $langs;
         $sourceLanguage = (string)$langs->getAttribute('source-language');
         $targetLanguage = (string)$langs->getAttribute('target-language');
         
         // Meta ElementId
         $element = $dom->getElementsByTagName('meta');
+        if ($element->length == 0) {
+            $this->logError($asset->getFilename()." is missing meta key.");
+            return false;
+        }
         $element = isset($element[0]) ? $element[0] : $element;
         $elementId = (string)$element->getAttribute('elementId');
+        $orderId = (string)$element->getAttribute('orderId');
 
         foreach ($this->order->files as $file)
         {
             if (
+                $orderId == $file->orderId &&
                 $elementId == $file->elementId &&
                 $sourceSite == $file->sourceSite &&
                 $targetSite == $file->targetSite
@@ -616,5 +632,13 @@ class ImportFiles extends BaseJob
         }
 
         return array_diff($data['target'], $data['source']);
+    }
+
+    private function logError($message)
+    {
+        $this->order->logActivity(
+            Translations::$plugin->translator->translate('app', $message)
+        );
+        Translations::$plugin->orderRepository->saveOrder($this->order);
     }
 }
