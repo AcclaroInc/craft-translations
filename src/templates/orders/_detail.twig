@@ -159,13 +159,14 @@
                                         <td>{% include "_elements/element" with {'element': element} only %}
                                             {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
                                                 <span class="warning duplicate-warning">
-                                                    {{ 'This entry exists in ' }}
-                                                    {% for orderId in duplicateEntries[element.id] %}
-                                                        <a href="{{ url('translations/orders/detail/'~orderId) }}"
-                                                            target="_blank">#{{ orderId }}
-                                                            {{ (orderId != duplicateEntries[element.id]|last)
-                                                            ? ', ' : '' }}</a>
-                                                    {% endfor %}
+                                                    {{ 'This entry is included<br>in the following orders:' }}
+                                                    <ul style="list-style:disc;padding:5px 0 0 15px;">
+                                                        {% for orderId in duplicateEntries[element.id] %}
+                                                        <li>
+                                                            <a href="{{ url('translations/orders/detail/'~orderId) }}" target="_blank">#{{ orderId }}</a>
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
                                                     </span>
                                             {% endif %}
                                         </td>
