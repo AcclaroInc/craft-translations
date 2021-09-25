@@ -159,7 +159,7 @@
                                         <td>{% include "_elements/element" with {'element': element} only %}
                                             {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
                                                 <span class="warning duplicate-warning">
-                                                    {{ 'This entry is included in the following orders:' }}
+                                                    {{ 'This entry is included'~<br>~'in the following orders:' }}
                                                     <ul style="list-style:disc;padding:5px 0 0 15px;">
                                                         {% for orderId in duplicateEntries[element.id] %}
                                                         <li>
