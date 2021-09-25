@@ -241,6 +241,23 @@ class ElementToFileConverter
         
     }
 
+    /**
+     * Report and Validate XML imported files
+     * @return string
+     */
+    private function reportXmlErrors()
+    {
+    	$errors = array();
+    	$libErros = libxml_get_errors();
+    	
+    	$msg = false;
+    	if ($libErros && isset($libErros[0]))
+    	{
+    		$msg = $libErros[0]->code . ": " .$libErros[0]->message;
+    	}
+    	return $msg;
+    }
+
     private function csvToJson($file_content)
     {
         $jsonData = [];
