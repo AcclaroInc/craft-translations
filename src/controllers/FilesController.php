@@ -108,6 +108,10 @@ class FilesController extends Controller
                 if ($element instanceof GlobalSet) {
                     $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
                         '-' . $targetSite . '.' . $fileFormat;
+                } else if ($element instanceof Asset) {
+                    $assetFilename = $element->getFilename();
+                    $fileInfo = pathinfo($element->getFilename());
+                    $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
                 } else {
                     $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
                 }

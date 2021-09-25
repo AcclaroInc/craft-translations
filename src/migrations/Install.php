@@ -215,6 +215,25 @@ class Install extends Migration
                 ]
             );
         }
+        
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_assetdrafts}}');
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                '{{%translations_assetdrafts}}',
+                [
+                    'id'            => $this->primaryKey(),
+                    'name'          => $this->string()->notNull(),
+                    'title'         => $this->string()->notNull(),
+                    'assetId'    => $this->integer()->notNull(),
+                    'site'          => $this->integer()->notNull(),
+                    'data'          => $this->mediumText()->notNull(),
+                    'dateCreated'   => $this->dateTime()->notNull(),
+                    'dateUpdated'   => $this->dateTime()->notNull(),
+                    'uid'           => $this->uid()
+                ]
+            );
+        }
 
         return $tablesCreated;
     }
@@ -269,6 +288,10 @@ class Install extends Migration
         $this->dropTableIfExists('{{%translations_files}}');
 
         $this->dropTableIfExists('{{%translations_globalsetdrafts}}');
+        
+        $this->dropTableIfExists('{{%translations_categorydrafts}}');
+        
+        $this->dropTableIfExists('{{%translations_assetdrafts}}');
 
         $this->dropTableIfExists('{{%translations_orders}}');
 

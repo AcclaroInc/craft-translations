@@ -46,6 +46,7 @@ Craft.Translations.AssetsTranslations = {
         this.assets = unique(entries);
 
         $(this.$btn[0]).toggleClass('disabled', this.assets.length === 0);
+        $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.assets.length === 0);
         $(this.$menubtn[0]).toggleClass('disabled', this.assets.length === 0);
 
         this.updateCreateNewLink();
@@ -109,20 +110,21 @@ Craft.Translations.AssetsTranslations = {
 
 
         this.$btn = $('<a>', {
-            'class': 'btn submit icon',
+            'class': 'btn icon',
             'href': '#',
             'data-icon': "language",
         });
 
-        this.$btn.html("<span>" + Craft.t('app', 'New Translation') + "</span>");
+        this.$btn.html("<span class='btn-text'>" + Craft.t('app', 'New Translation') + "</span>");
 
         this.$menubtn = $('<div>', {
-            'class': 'btn submit menubtn'
+            'class': 'btn menubtn'
         });
 
         if (!this.isEditAssetScreen()) {
             this.$btn.addClass('disabled');
             this.$menubtn.addClass('disabled');
+            this.$btn.find(".btn-text").addClass('display-none');
         }
 
         this.$btn.appendTo($btngroup);
