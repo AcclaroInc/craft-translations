@@ -151,9 +151,9 @@ class AssetDraftRepository
             'benf\neo\Field'
         ];
 
-        $asset = $this->getAssetById($record->assetId, $draft->site);
+        // $asset = $this->getAssetById($record->assetId, $draft->site);
 
-        foreach ($asset->getFieldLayout()->getFields() as $layoutField) {
+        foreach ($draft->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
