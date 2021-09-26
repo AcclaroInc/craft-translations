@@ -63,14 +63,14 @@ class AssetController extends BaseController
         $this->requirePostRequest();
 
         $draftId = Craft::$app->getRequest()->getParam('draftId');
-        $assetId = Craft::$app->getRequest()->getParam('sourceId');
+        $assetId = Craft::$app->getRequest()->getParam('elementId');
         $siteId = Craft::$app->getRequest()->getParam('site');
         
         $siteService = Craft::$app->getSites();
         $site = $siteService->getSiteByHandle($siteId ?? $siteService->getCurrentSite()->handle);
 
         if (empty($assetId)) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'sourceId')));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'elementId')));
             return;
         }
 
@@ -103,7 +103,7 @@ class AssetController extends BaseController
     {
         $this->requirePostRequest();
 
-        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        $draftId = Craft::$app->getRequest()->getParam('sourceId');
         $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
