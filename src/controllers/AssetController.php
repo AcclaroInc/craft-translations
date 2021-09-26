@@ -98,21 +98,27 @@ class AssetController extends BaseController
      */
     public function actionPublishDraft()
     {
-        $data = Craft::$app->getRequest()->resolve()[1];
-        $assetId = $this->request->getBodyParam('sourceId') ?? $this->request->getRequiredParam('assetId');
-        $siteService = Craft::$app->getSites();
+        $this->requirePostRequest();
 
-        $site = $siteService->getSiteByHandle($data['site'] ?? $siteService->getCurrentSite()->handle);
+        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
+
+        if (!$draft) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            return;
+        }
+
+        // $data = Craft::$app->getRequest()->resolve()[1];
+        // $assetId = $this->request->getBodyParam('sourceId') ?? $this->request->getRequiredParam('assetId');
+        // $siteService = Craft::$app->getSites();
+
+        // $site = $siteService->getSiteByHandle($data['site'] ?? $siteService->getCurrentSite()->handle);
         $assetVariable = $this->request->getValidatedBodyParam('assetVariable') ?? 'asset';
 
-        /** @var Asset|null $asset */
-        $asset = Asset::find()
-            ->id($assetId)
-            ->siteId($site->id)
-            ->one();
+        $asset = Translations::$plugin->assetRepository->getSetById($draft->assetId, $draft->site);
 
-        if ($asset === null) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn\'t find the asset.'));
+        if (!$asset) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No asset exists with the ID “{id}”.', array('id' => $draft->assetId)));
             return;
         }
 
@@ -120,24 +126,68 @@ class AssetController extends BaseController
         $asset->newFilename = $this->request->getParam('filename');
 
         $fieldsLocation = $this->request->getParam('fieldsLocation') ?? 'fields';
+        
         $asset->setFieldValuesFromRequest($fieldsLocation);
+        
+        // restore the original name
+        $draft->name = $asset->title;
 
-        // Save the asset
-        $asset->setScenario(Element::SCENARIO_LIVE);
+        $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $asset->id);
 
-        if (!Craft::$app->getElements()->saveElement($asset)) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft could not be published.'));
+        if ($file) {
+            $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
 
-            // Send the asset back to the template
-            Craft::$app->getUrlManager()->setRouteParams([
-                $assetVariable => $asset,
-            ]);
+            $file->status = 'published';
 
-            return null;
+            Translations::$plugin->fileRepository->saveFile($file);
+
+            $areAllFilesPublished = true;
+
+            foreach ($order->files as $file) {
+                if ($file->status !== 'published') {
+                    $areAllFilesPublished = false;
+                    break;
+                }
+            }
+
+            if ($areAllFilesPublished) {
+                $order->status = 'published';
+
+                Translations::$plugin->orderRepository->saveOrder($order);
+            }
         }
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
-        $this->redirect($asset->getCpEditUrl(), 302, true);
+        if (Translations::$plugin->assetDraftRepository->publishDraft($draft)) {
+            $this->redirect($asset->getCpEditUrl(), 302, true);
+
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+
+            return Translations::$plugin->assetDraftRepository->deleteDraft($draft);
+        } else {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+
+            // Send the draft back to the template
+            Craft::$app->urlManager->setRouteParams(array(
+                $assetVariable => $draft
+            ));
+        }
+
+        // Save the asset
+        // $asset->setScenario(Element::SCENARIO_LIVE);
+
+        // if (!Craft::$app->getElements()->saveElement($asset)) {
+        //     Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft could not be published.'));
+
+        //     // Send the asset back to the template
+        //     Craft::$app->getUrlManager()->setRouteParams([
+        //         $assetVariable => $asset,
+        //     ]);
+
+        //     return null;
+        // }
+
+        // Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+        // $this->redirect($asset->getCpEditUrl(), 302, true);
     }
 
     /**
