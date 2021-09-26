@@ -62,20 +62,23 @@ class AssetController extends BaseController
     {
         $this->requirePostRequest();
 
-        $data = Craft::$app->getRequest()->resolve()[1];
+        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        $assetId = Craft::$app->getRequest()->getParam('sourceId');
+        $siteId = Craft::$app->getRequest()->getParam('site');
+        
         $siteService = Craft::$app->getSites();
+        $site = $siteService->getSiteByHandle($siteId ?? $siteService->getCurrentSite()->handle);
 
-        $site = $siteService->getSiteByHandle($data['site'] ?? $siteService->getCurrentSite()->handle);
-
-        if (empty($data['elementId'])) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'elementId')));
+        if (empty($assetId)) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'sourceId')));
             return;
         }
 
-        $asset = Craft::$app->assets->getAssetById($data['elementId'], $site->id);
-        $draft = Translations::$plugin->assetDraftRepository->getDraftById($data['draftId']);
+        $asset = Craft::$app->assets->getAssetById($assetId, $site->id);
+        $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
         $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
+        
         $draft->setFieldValuesFromRequest($fieldsLocation);
 
         if (Translations::$plugin->assetDraftRepository->saveDraft($draft)) {
