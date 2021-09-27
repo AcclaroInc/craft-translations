@@ -606,20 +606,9 @@ class Translations extends Plugin
 
         self::$plugin->fileRepository->saveFile($currentFile);
 
-        $areAllFilesPublished = true;
+        $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
 
-        foreach ($order->files as $file) {
-            if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
-                $areAllFilesPublished = false;
-                break;
-            }
-        }
-
-        if ($areAllFilesPublished) {
-            $order->status = Constants::ORDER_STATUS_PUBLISHED;
-
-            Craft::$app->elements->saveElement($order);
-        }
+        Craft::$app->elements->saveElement($order);
     }
 
     private function _onDeleteElement(Event $event)
