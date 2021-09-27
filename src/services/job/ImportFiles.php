@@ -333,12 +333,8 @@ class ImportFiles extends BaseJob
                 ), $asset->getFilename())
             );
 
-            //Verify All files on this order were successfully imported.
-            if ($this->isOrderReady())
-            {
-                //Save Order with status complete
-                $translationService->updateOrder($this->order);
-            }
+            //Save Order with new status
+            $translationService->updateOrder($this->order);
 
             Translations::$plugin->orderRepository->saveOrder($this->order);
 

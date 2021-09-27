@@ -347,7 +347,7 @@ class FilesController extends Controller
 
                     $totalWordCount = Translations::$plugin->fileRepository->getUploadedFilesWordCount($asset, $file->extension);
 
-                    // Process files via job or directly based on order "size"
+                    // Process files via job or directly based on file "size"
                     if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                         $job = Craft::$app->queue->push(new ImportFiles([
                             'description' => 'Importing translation files',

@@ -58,13 +58,14 @@ class Export_ImportTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
-        if ($order->status !== Constants::ORDER_STATUS_REVIEW_READY) {
+        $newStatus = Translations::$plugin->orderRepository->getNewStatus($order);
+        if ($order->status !== $newStatus) {
             $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), Constants::ORDER_STATUS_REVIEW_READY)
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $newStatus)
             );
-        }
 
-        $order->status = Constants::ORDER_STATUS_REVIEW_READY;
+        }
+        $order->status = $newStatus;
     }
 
     /**

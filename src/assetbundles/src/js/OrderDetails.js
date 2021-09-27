@@ -359,7 +359,11 @@
                 } else {
                     var $all = $(':checkbox[name="targetSites[]"]');
                     var $checkboxes = $(':checkbox[name="targetSites[]"]:checked');
-                    if ($all.length == $checkboxes.length) {
+                    var $sourceSite = $("#sourceSiteSelect").val();
+                    if ($sourceSite == '') {
+                        $sourceSite = 0;
+                    }
+                    if (($all.length - $sourceSite) == $checkboxes.length) {
                         $(':checkbox[name=targetSites]').prop('checked', true);
                         $(':checkbox[name="targetSites[]"]').prop('disabled', true);
                     }

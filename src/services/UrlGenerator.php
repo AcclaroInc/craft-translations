@@ -98,7 +98,9 @@ class UrlGenerator
         if ($file->draftId) {
             $data['draftId'] = $file->draftId;
         }
-
+        if ($file->status == Constants::FILE_STATUS_PUBLISHED) {
+            $element = $element->getIsDraft() ? $element->getCanonical(true) : $element;
+        }
         return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), $data);
     }
 

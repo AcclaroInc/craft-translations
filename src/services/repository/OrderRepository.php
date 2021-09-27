@@ -470,4 +470,36 @@ class OrderRepository
 
         return $orderIds;
     }
+
+    public function getNewStatus($order)
+    {
+        $fileStatuses = [];
+        $files = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
+        $publishedFiles = 0;
+
+        foreach ($files as $file) {
+            if ($file->status === Constants::FILE_STATUS_PUBLISHED) $publishedFiles++;
+
+            if (! in_array($file->status, $fileStatuses)) {
+                array_push($fileStatuses, $file->getStatusLabel());
+            }
+        }
+
+        if ($publishedFiles == count(($files))) {
+            return Constants::ORDER_STATUS_PUBLISHED;
+        } else if (in_array('Ready to apply', $fileStatuses)) {
+            return Constants::ORDER_STATUS_COMPLETE;
+        } else if (in_array('Ready for review', $fileStatuses)) {
+            return Constants::ORDER_STATUS_REVIEW_READY;
+        } else if (in_array('In progress', $fileStatuses)) {
+            return Constants::ORDER_STATUS_IN_PROGRESS;
+        } else if (in_array('Failed', $fileStatuses)) {
+            return Constants::ORDER_STATUS_FAILED;
+        } else if (in_array('Canceled', $fileStatuses)) {
+            return Constants::ORDER_STATUS_CANCELED;
+        } else {
+            // Default Status in case of any issue
+            return Constants::ORDER_STATUS_IN_PROGRESS;
+        }
+    }
 }

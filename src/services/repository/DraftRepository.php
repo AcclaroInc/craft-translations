@@ -249,15 +249,9 @@ class DraftRepository
         $this->allSitesHandle = $this->getAllSitesHandle();
         
         $orderFiles = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
-        $totalFiles = count($orderFiles);
-        $completedFiles = 0;
 
         foreach ($orderFiles as $file) {
             if (! in_array($file->id, $fileIds)) {
-                if (
-                    $file->status === Constants::FILE_STATUS_COMPLETE ||
-                    $file->status === Constants::FILE_STATUS_PUBLISHED
-                ) $completedFiles++;
                 continue;
             }
 
@@ -295,26 +289,19 @@ class DraftRepository
                     ->makeTranslationService($translation_service, $order->translator->getSettings());
 
                 $translationService->updateIOFile($order, $file);
-                $completedFiles++;
             } catch(Exception $e) {
                 $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not update draft Error: ' .$e->getMessage()));
             }
         }
 
-        if ($completedFiles == $totalFiles) {
-            $order->status = Constants::ORDER_STATUS_COMPLETE;
-
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
-
-            Translations::$plugin->orderRepository->saveOrder($order);
-        } else {
-            $order->status = Constants::ORDER_STATUS_REVIEW_READY;
-
-            Translations::$plugin->orderRepository->saveOrder($order);
-        }
-
         if ($publish) {
             $this->applyDrafts($order->id, $elementIds, $fileIds, $queue);
+        } else {
+            $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
+    
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
+    
+            Translations::$plugin->orderRepository->saveOrder($order);
         }
     }
 
@@ -474,11 +461,8 @@ class DraftRepository
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
         $files = $order->getFiles();
 
-        $filesCount = count($files);
-
         $totalElements = (count($elementIds) * count($order->getTargetSitesArray()));
         $currentElement = 0;
-        $publishedFilesCount = 0;
 
         $applyDraft = new ApplyDrafts();
 
@@ -488,7 +472,6 @@ class DraftRepository
                     ! in_array($file->id, $fileIds) ||
                     $file->status !== Constants::FILE_STATUS_COMPLETE
                 ) {
-                    if ($file->status == Constants::FILE_STATUS_PUBLISHED) $publishedFilesCount++;
                     continue;
                 }
     
@@ -579,8 +562,7 @@ class DraftRepository
     
                 $file->draftId = 0;
                 $file->status = Constants::FILE_STATUS_PUBLISHED;
-                $publishedFilesCount++;
-    
+
                 Translations::$plugin->fileRepository->saveFile($file);
             }
         } catch(Exception $e) {
@@ -588,14 +570,11 @@ class DraftRepository
             Craft::error('Could not publish draft Error: ' .$e->getMessage());
         }
 
-        if ($publishedFilesCount === $filesCount) {
-            $order->status = Constants::ORDER_STATUS_PUBLISHED;
+        $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts applied'));
+        $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts applied'));
 
-            Translations::$plugin->orderRepository->saveOrder($order);
-        }
-
+        Translations::$plugin->orderRepository->saveOrder($order);
     }
     
     /**
