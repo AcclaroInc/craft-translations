@@ -117,12 +117,11 @@ class OrderController extends Controller
             $submitAction = Craft::$app->getRequest()->getParam('submit');
             if ($submitAction == "draft" || $submitAction == "publish") {
                 $variables['isProcessing'] = $submitAction;
+            }
+            if (Craft::$app->getSession()->get('importQueued')) {
+                Craft::$app->getSession()->set('importQueued', "0");
             } else {
-                if (Craft::$app->getSession()->get('importQueued')) {
-                    Craft::$app->getSession()->set('importQueued', "0");
-                } else {
-                    $variables['isProcessing'] = null;
-                }
+                $variables['isProcessing'] = null;
             }
         }
 
@@ -297,7 +296,7 @@ class OrderController extends Controller
         foreach ($variables['order']->getElements() as $element) {
             $drafts = Craft::$app->getDrafts()->getEditableDrafts($element);
             $tempElement = $element;
-            $element = $element->getIsDraft() ? $element->getCanonical() : $element;
+            $element = $element->getIsDraft() ? $element->getCanonical(true) : $element;
             $tempDraftNames = [];
             foreach ($drafts as $draft) {
                 if (Translations::$plugin->draftRepository->isTranslationDraft($draft->draftId)) {
@@ -373,7 +372,6 @@ class OrderController extends Controller
                     }
                     $variables['isElementPublished'][$element->id] = $isElementPublished;
                 }
-
             }
         }
 
@@ -1091,7 +1089,7 @@ class OrderController extends Controller
                 }
             }
         }
-        // Craft::debug($elementVersions, "bhu123");die;
+
         $orderTags = Craft::$app->getRequest()->getParam('tags');
 
         if (!$currentUser->can('translations:orders:create')) {
@@ -1107,10 +1105,6 @@ class OrderController extends Controller
         
         if (!$order) {
             return $this->asJson(["success" => false, "message" => "Invalid Order."]);
-        }
-
-        if (in_array($order->status, $resetStatuses)) {
-            $resetStatus = true;
         }
 
         $sourceSite = $sourceSite ?: $order->sourceSite;
@@ -1190,7 +1184,18 @@ class OrderController extends Controller
                     }
                 }
                 if ($field == "targetSites") {
-                    $updated = json_encode($newData[$field]);
+                    $targetSites = $newData[$field];
+                    if ($targetSites === '*') {
+                        $targetSites = Craft::$app->getSites()->getAllSiteIds();
+        
+                        $source_site = Craft::$app->getRequest()->getParam('sourceSite');
+                        if (($key = array_search($source_site, $targetSites)) !== false) {
+                            unset($targetSites[$key]);
+                            $targetSites = array_values($targetSites);
+                        }
+                    }
+                    $newData['targetSites'] = $targetSites;
+                    $updated = json_encode($targetSites);
                     $oldData['targetSites'] = $order->targetSites;
                 }
                 $order->$field = $updated;
@@ -1208,6 +1213,7 @@ class OrderController extends Controller
             // }
 
             if (! empty($oldData)) {
+                $resetStatus = true;
                 if ($oldData['elements'] ?? null) {
                     $oldElementIds = json_decode($oldData['elements'] ?? null);
                     $added = array_diff($elementIds, $oldElementIds);
@@ -1272,11 +1278,7 @@ class OrderController extends Controller
 
             // Update Order and File Status
             if ($resetStatus) {
-                $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
-                foreach ($order->files as $file) {
-                    $file->status = Constants::FILE_STATUS_IN_PROGRESS;
-                    Translations::$plugin->fileRepository->saveFile($file);
-                }
+                $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
             }
         } catch (Exception $e) {
             return $this->asJson(["success" => false, "message" => $e->getMessage()]);
@@ -1354,6 +1356,7 @@ class OrderController extends Controller
 
                 $queueOrders = Craft::$app->getSession()->get('queueOrders');
                 $queueOrders[$job] = $order->id;
+                Craft::$app->getSession()->set('importQueued', 1);
                 Craft::$app->getSession()->set('queueOrders', $queueOrders);
             } else {
                 $job =  null;
