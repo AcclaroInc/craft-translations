@@ -51,6 +51,12 @@
                 'id': 'import-formId'
             });
 
+            $file.css({
+                'width': '100%',
+                'text-overflow': 'clip',
+                'overflow': 'hidden'
+            });
+            
             $file.appendTo($divFile);
             $divFile.appendTo($form);
 
