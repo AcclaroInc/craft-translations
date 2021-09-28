@@ -15,6 +15,10 @@
     <button class="btn big submit save-static-translation">{{ 'Save'|t }}</button>
 {% endblock %}
 
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations') }
+] %}
+
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\StaticTranslationsAssets") %}
 
 {% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}

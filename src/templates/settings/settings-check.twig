@@ -3,9 +3,14 @@
 
 {% set title = 'Settings Check'|t %}
 
-{% block actionButton %}
-<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+{% block header %}
+    {{ parent() }}
+    {{ include('translations/_components/app-info') }}
 {% endblock %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations') }
+] %}
 
 {% block content %}
 <div class="readable">

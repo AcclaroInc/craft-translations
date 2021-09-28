@@ -18,7 +18,7 @@
     {% set isEditable = "noClick" %}
 {% endif %}
 
-{% set title = 'Translations'|t %}
+{% set title = (isSubmitted) ? order.title : 'Create a new order' %}
 
 {% block actionButton %}
     {% if not isProcessing %}
@@ -40,29 +40,6 @@
     { label: 'Translations'|t, url: url('translations') },
     { label: 'Orders'|t, url: url('translations/orders') },
 ] %}
-
-{% if isSubmitted %}
-    {% set crumbs = crumbs|merge([
-        { label: order.title, url: 'javascript:void(0)' },
-    ]) %}
-    {% if not isProcessing %}
-        {% if not isChanged %}
-            {% set selectedTab = "files" %}
-        {% endif %}
-        {% set tabs = {
-            "order": {label: "Order settings"|t, url: "#order"},
-            "files": {label: "Order details"|t, url: "#files"},
-        } %}
-    {% endif %}
-{% elseif orderId %}
-    {% set crumbs = crumbs|merge([
-        { label: 'Edit order'|t, url: 'javascript:void(0)' },
-    ]) %}
-{% else %}
-    {% set crumbs = crumbs|merge([
-        { label: 'New order'|t, url: 'javascript:void(0)' },
-    ]) %}
-{% endif %}
 
 {% block content %}
     {% if isProcessing %}
