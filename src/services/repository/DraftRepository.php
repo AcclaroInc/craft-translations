@@ -528,7 +528,7 @@ class DraftRepository
                 } else if ($element instanceof Asset) {
                     $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
     
-                    // keep original category name
+                    // keep original asset name
                     $draft->name = $element->title;
                     $draft->site = $file->targetSite;
     

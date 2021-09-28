@@ -137,14 +137,20 @@ class CategoryDraftRepository
             'fields' => array(),
         );
 
+        $category = Craft::$app->getCategories()->getCategoryById($record->categoryId, $draft->site);
         if (empty($draft->groupId)) {
-            $category = Craft::$app->getCategories()->getCategoryById($draft->id, $draft->site);
             $draft->groupId = $category->groupId;
         }
 
         $draft->siteId = $draft->site;
         
-        $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
+        $content = $content ?? [];
+
+        if (empty($content)) {
+            foreach ($draft->getDirtyFields() as $key => $fieldHandle) {
+                $content[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
+            }
+        }
 
         $nestedFieldType = [
             'craft\fields\Matrix',

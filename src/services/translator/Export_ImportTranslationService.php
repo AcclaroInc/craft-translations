@@ -174,9 +174,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 break;
             // Update Asset Drafts
             case $draft instanceof Asset:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->siteId = $targetSite;
                
-                // $element->siteId = $targetSite;
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
 
                 $draft->setFieldValues($post);

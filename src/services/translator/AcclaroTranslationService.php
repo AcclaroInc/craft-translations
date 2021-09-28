@@ -215,7 +215,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             case $draft instanceof Asset:
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->siteId = $targetSite;
-                
+               
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
 
                 $draft->setFieldValues($post);

@@ -24,7 +24,7 @@ Craft.Translations.CategoryTranslations = {
     },
 
     getEditCategoryId: function() {
-        return $('form#main-form input[type=hidden][name=categoryId]').val();
+        return $('form#main-form input[type=hidden][name=sourceId]').val();
     },
 
     updateSelectedCategories: function() {
@@ -38,7 +38,7 @@ Craft.Translations.CategoryTranslations = {
 
         $(this.$btn[0]).toggleClass('disabled', this.categories.length === 0);
         $(this.$menubtn[0]).toggleClass('disabled', this.categories.length === 0);
-        $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.assets.length === 0);
+        $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.categories.length === 0);
 
         this.updateCreateNewLink();
     },

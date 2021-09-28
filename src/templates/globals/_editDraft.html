@@ -70,16 +70,5 @@
             {% endfor %}
         </div>
         {% endif %}
-
-        {#{% if draft.getFieldLayout().getFields() | length %}
-            <div>
-                {% include "_includes/fields" with {
-                    fields:  draft.getFieldLayout().getFields(),
-                    element: draft
-                } only %}
-            </div>
-        {% else %}
-            {{ "This global set doesn’t have any fields assigned to it in its field layout."|t }}
-            {% endif %}#}
     </form>
 {% endblock %}
