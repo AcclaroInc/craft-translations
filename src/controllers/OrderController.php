@@ -329,17 +329,17 @@ class OrderController extends Controller
                 $isElementPublished = true;
 
                 foreach ($variables['files'][$element->id] as $file) {
-                    $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
+                    $translatedElement = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
 
                     if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
                         $isElementPublished = false;
                     }
+                    if ($file->status === Constants::FILE_STATUS_COMPLETE) {
+                        $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+                        $variables['translatedFiles'][$file->id] = $draft->title;
+                    } else if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
 
-                    if ($file->status === Constants::FILE_STATUS_PUBLISHED ||
-                        $file->status === Constants::FILE_STATUS_COMPLETE) {
-                        if ($file->draftId || $file->status === Constants::FILE_STATUS_PUBLISHED) {
-                            $variables['translatedFiles'][$file->id] = $translatedElement->title ?? $element->title;
-                        }
+                        $variables['translatedFiles'][$file->id] = $translatedElement->title ?? $element->title;
                     }
 
                     if ($element instanceof Entry) {
