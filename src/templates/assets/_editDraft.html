@@ -1,10 +1,12 @@
 {% extends "_layouts/element" %}
 {% import "_includes/forms" as forms %}
 
-{% set saveSourceAction = 'translations/asset/save-draft' %}
-{% set publishSourceAction = 'translations/asset/publish-draft' %}
-{% set deleteSourceAction = 'translations/asset/delete-draft' %}
 {% set canEdit = true %}
+{% set canUpdateSource = canEdit %}
+{% set saveSourceAction = 'translations/asset/save-draft' %}
+{% set deleteSourceAction = 'translations/asset/delete-draft' %}
+{% set publishSourceAction = 'translations/asset/publish-draft' %}
+{% do view.setIsDeltaRegistrationActive(true) %}
 
 {% hook "cp.assets.edit" %}
 
@@ -27,15 +29,8 @@
 {% endblock %}
 
 {% block actionButton %}
-    <div class="btngroup">
-        {% if assetUrl %}
-            <a class="btn" href="{{ assetUrl }}" target="_blank" data-icon="preview">{{ 'View'|t('app') }}</a>
-        {% endif %}
-        <button type="button" id="download-btn" class="btn" data-icon="download">{{ 'Download'|t('app') }}</button>
-    </div>
-
-    {% if canReplaceFile %}
-        <button type="button" id="replace-btn" class="btn" data-icon="upload">{{ 'Replace file'|t('app') }}</button>
+    {% if assetUrl %}
+        <a class="btn" href="{{ assetUrl }}" target="_blank" data-icon="preview">{{ 'View'|t('app') }}</a>
     {% endif %}
 
     <div class="btngroup">
@@ -56,34 +51,13 @@
 {% endblock %}
 
 {% block content %}
-    {{ hiddenInput('sourceId', asset.id) }}
+    {{ hiddenInput('assetId', asset.id) }}
     {{ hiddenInput('draftId', element.id) }}
+    {{ hiddenInput('site', element.site) }}
     {{ actionInput(saveSourceAction) }}
+    {{ csrfInput() }}
+    {{ parent() }}
 
-    <div id="fields">
-        {{ forms.textField({
-            label: "Title"|t('app'),
-            siteId: asset.siteId,
-            id: 'title',
-            name: 'title',
-            value: element.title,
-            errors: asset.getErrors('title'),
-            first: true,
-            autofocus: true,
-            required: true,
-            maxlength: 255
-        }) }}
-
-        {% for tab in asset.getFieldLayout().getTabs() %}
-            <div id="{{ tab.getHtmlId() }}"{% if not loop.first %} class="hidden"{% endif %}>
-                {% include "_includes/fields" with {
-                    fields:  tab.getFields(),
-                    element: asset,
-                    registerDeltas: true,
-                } only %}
-            </div>
-        {% endfor %}
-    </div>
 {% endblock %}
 
 {% block details %}
@@ -96,12 +70,12 @@
         label: 'Filename'|t('app'),
         id: 'filename',
         name: 'filename',
-        value: element.filename,
-        errors: element.getErrors('newLocation'),
+        value: asset.filename,
+        errors: asset.getErrors('newLocation'),
     }) }}
 {% endblock %}
 
-{% block meta %}
+{# {% block meta %}
     <div class="data">
         <h5 class="heading">{{ 'Location'|t('app') }}</h5>
         <div class="value">
@@ -150,10 +124,10 @@
     {% endif %}
 
     {{ parent() }}
-{% endblock %}
+{% endblock %} #}
 
-{% js on ready %}
-    var assetId = {{ element.id|json_encode|raw }};
+{# {% js on ready %}
+    var assetId = {{ asset.id|json_encode|raw }};
     var $previewThumbContainer = $('#preview-thumb-container');
 
     function updatePreviewThumb() {
@@ -263,4 +237,4 @@
         var url = (window.location.href).split("?")[0];
         window.location.href = url+"?site="+site;
     });
-{% endjs %}
+{% endjs %} #}

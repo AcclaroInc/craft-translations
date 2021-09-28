@@ -17,6 +17,7 @@ use Exception;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
+use craft\elements\Asset;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
@@ -210,6 +211,25 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 }
                 break;
             
+            // Update Asset Drafts
+            case $draft instanceof Asset:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->siteId = $targetSite;
+               
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+                $draft->setFieldValues($post);
+
+                $res = Translations::$plugin->assetDraftRepository->saveDraft($draft, $post);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
+
+                    return false;
+                }
+                break;
+            
             // Update GlobalSet Drafts
             case $draft instanceof GlobalSet:
                 $draft->siteId = $targetSite;
@@ -317,8 +337,12 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
-            if ($element instanceof GlobalSetModel) {
+            if ($element instanceof GlobalSet) {
                 $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
+            } else if ($element instanceof Asset) {
+                $assetFilename = $element->getFilename();
+                $fileInfo = pathinfo($element->getFilename());
+                $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
             } else {
                 $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             }

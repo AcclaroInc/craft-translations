@@ -47,7 +47,7 @@ class CategoryController extends Controller
 
         $draft = Translations::$plugin->categoryDraftRepository->getDraftById($variables['draftId']);
 
-        $variables['draft'] = $draft;
+        $variables['element'] = $draft;
 
         $variables['file'] = Translations::$plugin->fileRepository->getFileByDraftId($draft->draftId, $categoryId);
 
@@ -70,9 +70,9 @@ class CategoryController extends Controller
     {
         $this->requirePostRequest();
 
-        $site = Craft::$app->getRequest()->getParam('site', Craft::$app->sites->getPrimarySite()->id);
+        $site = $this->request->getParam('site', Craft::$app->sites->getPrimarySite()->id);
 
-        $categoryId = Craft::$app->getRequest()->getParam('categoryId');
+        $categoryId = $this->request->getParam('categoryId');
 
         $category = Translations::$plugin->categoryRepository->getCategoryById($categoryId, $site);
 
@@ -81,7 +81,7 @@ class CategoryController extends Controller
             return;
         }
 
-        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        $draftId = $this->request->getParam('draftId');
 
         if ($draftId) {
             $draft = Translations::$plugin->categoryDraftRepository->getDraftById($draftId);
@@ -92,7 +92,7 @@ class CategoryController extends Controller
             }
         } else {
             $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
-            $draft->id = $categoryId;
+            $draft->id = $category->id;
             $draft->site = $site;
         }
 
@@ -123,28 +123,37 @@ class CategoryController extends Controller
     {
         $this->requirePostRequest();
 
-        $draftId = Craft::$app->getRequest()->getParam('draftId');
-
-        $draft = Translations::$plugin->categoryDraftRepository->getDraftById($draftId);
-
-        if (!$draft) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
-            return;
-        }
-
-        $category = Translations::$plugin->categoryRepository->getCategoryById($draft->categoryId, $draft->site);
+        $categoryId = Craft::$app->getRequest()->getParam('categoryId');
+        $siteId = Craft::$app->getRequest()->getParam('site');
+        $category = Translations::$plugin->categoryRepository->getCategoryById($categoryId, $siteId);
 
         if (!$category) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No category exists with the ID “{id}”.', array('id' => $draft->id)));
             return;
         }
 
+        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        if ($draftId) {
+            $draft = Translations::$plugin->categoryDraftRepository->getDraftById($draftId);
+
+            if (!$draft) {
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+                return;
+            }
+        } else {
+            $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
+        }
+
         $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
 
         $draft->setFieldValuesFromRequest($fieldsLocation);
 
+        $draft->id = $category->id;
+        $draft->categoryId = $category->id;
         // restore the original name
         $draft->name = $category->title;
+        $draft->title = $this->request->getParam('title') ?? $category->title;
+        $draft->site = $siteId;
 
         $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $category->id);
 

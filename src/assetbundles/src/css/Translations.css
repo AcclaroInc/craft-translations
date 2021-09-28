@@ -900,3 +900,7 @@ select[name="version"] {
 .align-center {
     align-items: center;
 }
+
+.display-none {
+    display: none;
+}

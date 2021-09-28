@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Element;
 use craft\elements\Asset;
 use acclaro\translations\Translations;
+use acclaro\translations\Constants;
 
 class AssetController extends BaseController
 {
@@ -61,24 +62,41 @@ class AssetController extends BaseController
     public function actionSaveDraft()
     {
         $this->requirePostRequest();
+        
+        $assetId = $this->request->getParam('assetId');
+        $siteId = $this->request->getParam('site');
+        $asset = Craft::$app->assets->getAssetById($assetId, $siteId);
 
-        $data = Craft::$app->getRequest()->resolve()[1];
-        $siteService = Craft::$app->getSites();
-
-        $site = $siteService->getSiteByHandle($data['site'] ?? $siteService->getCurrentSite()->handle);
-
-        if (empty($data['elementId'])) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'elementId')));
+        if (!$asset) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No Asset exists with the ID “{id}”.', array('id' => $assetId)));
             return;
         }
 
-        $asset = Craft::$app->assets->getAssetById($data['elementId'], $site->id);
-        $draft = Translations::$plugin->assetDraftRepository->getDraftById($data['draftId']);
+        $draftId = $this->request->getParam('draftId');
+        if ($draftId) {
+            $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
-        $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+            if (!$draft) {
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+                return;
+            }
+        } else {
+            $draft = Translations::$plugin->assetDraftRepository->makeNewDraft();
+        }
+        
+        $draft->id = $asset->id;
+        $draft->title = $this->request->getParam('title') ?? $asset->title;
+        $draft->site = $siteId;
 
-        if (Translations::$plugin->assetDraftRepository->saveDraft($draft)) {
+        $fields = $this->request->getParam('fields') ?? [];
+
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
+        
+        Craft::$app->getElements()->saveElement($draft);
+        
+        if (Translations::$plugin->assetDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
 
             $this->redirect($draft->getCpEditUrl(), 302, true);
@@ -98,46 +116,73 @@ class AssetController extends BaseController
      */
     public function actionPublishDraft()
     {
-        $data = Craft::$app->getRequest()->resolve()[1];
-        $assetId = $this->request->getBodyParam('sourceId') ?? $this->request->getRequiredParam('assetId');
-        $siteService = Craft::$app->getSites();
+        $this->requirePostRequest();
 
-        $site = $siteService->getSiteByHandle($data['site'] ?? $siteService->getCurrentSite()->handle);
-        $assetVariable = $this->request->getValidatedBodyParam('assetVariable') ?? 'asset';
+        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        $assetId = Craft::$app->getRequest()->getParam('assetId');
+        $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
-        /** @var Asset|null $asset */
-        $asset = Asset::find()
-            ->id($assetId)
-            ->siteId($site->id)
-            ->one();
-
-        if ($asset === null) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn\'t find the asset.'));
+        if (!$draft) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
             return;
         }
 
-        $asset->title = $this->request->getParam('title') ?? $asset->title;
-        $asset->newFilename = $this->request->getParam('filename');
+        $asset = Craft::$app->assets->getAssetById($assetId, $draft->site);
 
-        $fieldsLocation = $this->request->getParam('fieldsLocation') ?? 'fields';
-        $asset->setFieldValuesFromRequest($fieldsLocation);
-
-        // Save the asset
-        $asset->setScenario(Element::SCENARIO_LIVE);
-
-        if (!Craft::$app->getElements()->saveElement($asset)) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft could not be published.'));
-
-            // Send the asset back to the template
-            Craft::$app->getUrlManager()->setRouteParams([
-                $assetVariable => $asset,
-            ]);
-
-            return null;
+        if (!$asset) {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No asset exists with the ID “{id}”.', array('id' => $draft->assetId)));
+            return;
         }
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
-        $this->redirect($asset->getCpEditUrl(), 302, true);
+        $draft->title = $this->request->getParam('title') ?? $asset->title;
+        $draft->newFilename = $this->request->getParam('filename');
+
+        $fieldsLocation = $this->request->getParam('fieldsLocation') ?? 'fields';
+        
+        $draft->setFieldValuesFromRequest($fieldsLocation);
+        
+        // restore the original name
+        $draft->name = $asset->title;
+
+        $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $asset->id);
+
+        if ($file) {
+            $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+
+            $file->status = Constants::ORDER_STATUS_PUBLISHED;
+
+            Translations::$plugin->fileRepository->saveFile($file);
+
+            $areAllFilesPublished = true;
+
+            foreach ($order->files as $file) {
+                if ($file->status !== Constants::ORDER_STATUS_PUBLISHED) {
+                    $areAllFilesPublished = false;
+                    break;
+                }
+            }
+
+            if ($areAllFilesPublished) {
+                $order->status = Constants::ORDER_STATUS_PUBLISHED;
+
+                Translations::$plugin->orderRepository->saveOrder($order);
+            }
+        }
+
+        if (Translations::$plugin->assetDraftRepository->publishDraft($draft)) {
+            $this->redirect($asset->getCpEditUrl(), 302, true);
+
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+
+            return Translations::$plugin->assetDraftRepository->deleteDraft($draft);
+        } else {
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+
+            // Send the draft back to the template
+            Craft::$app->urlManager->setRouteParams(array(
+                'asset' => $draft
+            ));
+        }
     }
 
     /**

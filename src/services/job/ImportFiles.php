@@ -281,7 +281,7 @@ class ImportFiles extends BaseJob
         }
 
         //Validate If the file was found
-        if (is_null($draft_file)) {
+        if (!isset($draft_file) || is_null($draft_file)) {
             $this->order->logActivity(
                 Translations::$plugin->translator->translate(
                     'app', $asset->getFilename() ." does not match any known entries."

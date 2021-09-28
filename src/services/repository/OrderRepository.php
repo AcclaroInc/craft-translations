@@ -18,6 +18,7 @@ use craft\db\Query;
 use craft\helpers\Db;
 use craft\records\Element;
 use craft\helpers\UrlHelper;
+use craft\elements\Asset;
 use craft\elements\GlobalSet;
 use craft\elements\db\ElementQuery;
 use acclaro\translations\Translations;
@@ -360,6 +361,10 @@ class OrderRepository
 
             if ($element instanceof GlobalSetModel) {
                 $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
+            } else if ($element instanceof Asset) {
+                $assetFilename = $element->getFilename();
+                $fileInfo = pathinfo($element->getFilename());
+                $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
             } else {
                 $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             }

@@ -26,7 +26,7 @@ class GlobalSetController extends Controller
      */
     public function actionEditDraft(array $variables = array())
     {
-        $variables = Craft::$app->getRequest()->resolve()[1];
+        $variables = $this->request->resolve()[1];
 
         if (empty($variables['globalSetHandle'])) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'globalSetHandle')));
@@ -81,9 +81,9 @@ class GlobalSetController extends Controller
     {
         $this->requirePostRequest();
 
-        $site = Craft::$app->getRequest()->getParam('site', Craft::$app->sites->getPrimarySite()->id);
+        $site = $this->request->getParam('site', Craft::$app->sites->getPrimarySite()->id);
 
-        $globalSetId = Craft::$app->getRequest()->getParam('globalSetId');
+        $globalSetId = $this->request->getParam('globalSetId');
 
         $globalSet = Translations::$plugin->globalSetRepository->getSetById($globalSetId, $site);
 
@@ -92,7 +92,7 @@ class GlobalSetController extends Controller
             return;
         }
 
-        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        $draftId = $this->request->getParam('draftId');
 
         if ($draftId) {
             $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
@@ -109,10 +109,10 @@ class GlobalSetController extends Controller
 
         // @TODO Make sure they have permission to be editing this
         $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
-        
+
         $draft->setFieldValuesFromRequest($fieldsLocation);
         
-        if (Translations::$plugin->globalSetDraftRepository->saveDraft($draft)) {
+        if (Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
 
             $this->redirect($draft->getCpEditUrl(), 302, true);
@@ -135,7 +135,7 @@ class GlobalSetController extends Controller
     {
         $this->requirePostRequest();
 
-        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        $draftId = $this->request->getParam('draftId');
 
         $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
 
@@ -153,7 +153,7 @@ class GlobalSetController extends Controller
 
         //@TODO $this->enforceEditEntryPermissions($entry);
 
-        $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
+        $fieldsLocation = $this->request->getParam('fieldsLocation', 'fields');
 
         $draft->setFieldValuesFromRequest($fieldsLocation);
 
@@ -211,7 +211,7 @@ class GlobalSetController extends Controller
     {
         $this->requirePostRequest();
 
-        $draftId = Craft::$app->getRequest()->getParam('draftId');
+        $draftId = $this->request->getParam('draftId');
 
         $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
 

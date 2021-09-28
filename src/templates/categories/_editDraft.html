@@ -1,8 +1,8 @@
-{% extends "_layouts/cp" %}
+{% extends "_layouts/element" %}
 {% import "_includes/forms" as forms %}
 
-{% set fullPageForm = true %}
 {% set saveShortcutRedirect = continueEditingUrl %}
+{% set saveSourceAction = 'translations/category/save-draft' %}
 {% do view.setIsDeltaRegistrationActive(true) %}
 
 {% set groupHandle = group.handle %}
@@ -25,7 +25,7 @@
 <div class="select">
     <select onchange="document.location.href='{{ url('categories/'~groupHandle ~'/'~slug~'?site={locale}') }}'.replace('{locale}', this.value);">
         {% for site in craft.app.sites.getAllSites() %}
-        <option value="{{ site.handle }}"{% if site.id == draft.site %} selected{% endif %}>{{ site.name }}</option>
+        <option value="{{ site.handle }}"{% if site.id == element.site %} selected{% endif %}>{{ site.name }}</option>
         {% endfor %}
     </select>
 </div>
@@ -51,61 +51,28 @@
 {% endblock %}
 
 {% block content %}
-{{ actionInput('categories/save-category') }}
-{{ redirectInput('categories/'~groupHandle) }}
-
-{{ hiddenInput('groupId', group.id) }}
-{% if category.id %}{{ hiddenInput('categoryId', category.id) }}{% endif %}
-{% if craft.app.getIsMultiSite() %}{{ hiddenInput('siteId', category.siteId) }}{% endif %}
-
-<form id="globalSetDraft" method="post" accept-charset="UTF-8" data-saveshortcut data-confirm-unload>
-    <input type="hidden" name="action" value="translations/category/save-draft">
-    <input type="hidden" name="draftId" value="{{ draft.draftId }}">
-    <input type="hidden" name="site" value="{{ draft.site }}">
-    <input type="hidden" name="categoryId" value="{{ category.id }}">
+    {{ redirectInput('categories/'~groupHandle) }}
+    {{ hiddenInput('groupId', group.id) }}
+    {{ hiddenInput('categoryId', category.id) }}
+    {{ hiddenInput('draftId', element.draftId) }}
+    {{ hiddenInput('site', element.site) }}
+    {{ actionInput(saveSourceAction) }}
     {{ csrfInput() }}
-
-    <div id="fields">
-        {{ forms.textField({
-        label: "Title"|t('app'),
-        siteId: category.siteId,
-        id: 'title',
-        name: 'title',
-        value: draft.title,
-        errors: category.getErrors('title'),
-        first: true,
-        autofocus: true,
-        required: true,
-        maxlength: 255
-        }) }}
-
-        <div>
-            {% for tab in draft.getFieldLayout().getTabs() %}
-            <div id="{{ tab.getHtmlId() }}"{% if not loop.first %} class="hidden"{% endif %}>
-                {% include "_includes/fields" with {
-                fields:  tab.getFields(),
-                element: draft,
-                registerDeltas: true,
-                } only %}
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</form>
+    {{ parent() }}
 
 {% endblock %}
 
 {% block details %}
 
-{% if draft.id %}
+{% if element.id %}
 <div class="meta read-only">
     <div class="data">
         <h5 class="heading">{{ "Date Created"|t('app') }}</h5>
-        <div class="value">{{ draft.dateCreated|datetime('short') }}</div>
+        <div class="value">{{ element.dateCreated|datetime('short') }}</div>
     </div>
     <div class="data">
         <h5 class="heading">{{ "Date Updated"|t('app') }}</h5>
-        <div class="value">{{ draft.dateUpdated|datetime('short') }}</div>
+        <div class="value">{{ element.dateUpdated|datetime('short') }}</div>
     </div>
 </div>
 {% endif %}

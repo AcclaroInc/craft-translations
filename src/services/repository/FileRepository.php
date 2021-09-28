@@ -269,7 +269,7 @@ class FileRepository
         }
 
         // Check for a valid json source
-        json_decode($string);
+        json_decode($sourceContent);
         if (json_last_error() === JSON_ERROR_NONE) return Constants::FILE_FORMAT_JSON;
 
         return null;
