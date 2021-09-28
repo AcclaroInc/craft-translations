@@ -336,7 +336,7 @@ class OrderController extends Controller
                     }
                     if ($file->status === Constants::FILE_STATUS_COMPLETE) {
                         $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-                        $variables['translatedFiles'][$file->id] = $draft->title;
+                        $variables['translatedFiles'][$file->id] = $element->title;
                     } else if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
 
                         $variables['translatedFiles'][$file->id] = $translatedElement->title ?? $element->title;
