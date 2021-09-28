@@ -306,7 +306,7 @@
         var updatedVersions = [];
         $.each(elementVersions, function(key, value) {
             elementId = value.split('_')[0];
-            if ($.inArray(elementId, currentElementIds)) {
+            if ($.inArray(elementId, currentElementIds) > -1) {
                 updatedVersions.push(value);
             }
         });

@@ -372,7 +372,7 @@ class ElementToFileConverter
         foreach ($body as $node) {
             foreach ($node->getElementsByTagName('content') as $child) {
                 $key    = $child->getAttribute('resname');
-                $value  = $child->childNodes[0]->nodeValue;
+                $value  = $child->childNodes[0] ? $child->childNodes[0]->nodeValue : '';
 
                 $headers .= ",\"$key\"";
                 $content .= ",\"$value\"";
