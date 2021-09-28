@@ -22,10 +22,13 @@
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
                             <span class="status"></span>{{order.statusLabel}}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_NEEDS_APPROVAL') %}
+                            <span class="status orange"></span>{{order.statusLabel}}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PREPARATION') %}
+                            <span class="status orange"></span>{{order.statusLabel}}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PROGRESS') %}
                             <span class="status orange"></span>{{order.statusLabel}}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_REVIEW') %}
+                            <span class="status yellow"></span>{{order.statusLabel}}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_REVIEW_READY') %}
                             <span class="status yellow"></span>{{order.statusLabel}}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') %}
