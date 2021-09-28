@@ -53,6 +53,7 @@ class AssetDraftRepository
         $asset = Craft::$app->assets->getAssetById($assetDraft->assetId);
 
         $assetDraft->draftId = $assetDraft->id;
+        $assetDraft->folderId = $asset->folderId;
         
         $assetData = json_decode($record['data'], true);
         $fieldContent = isset($assetData['fields']) ? $assetData['fields'] : null;
@@ -69,6 +70,7 @@ class AssetDraftRepository
             }
 
             $assetDraft->setFieldValues($post);
+            Craft::$app->getElements()->saveElement($assetDraft);
         }
 
         return $assetDraft;
@@ -141,9 +143,15 @@ class AssetDraftRepository
         );
 
         $draft->siteId = $draft->site;
-        
-        $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
 
+        $content = $content ?? [];
+
+        if (empty($content)) {
+            foreach ($draft->getDirtyFields() as $key => $fieldHandle) {
+                $content[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
+            }
+        }
+        
         $nestedFieldType = [
             'craft\fields\Matrix',
             'craft\fields\Assets',
@@ -199,7 +207,9 @@ class AssetDraftRepository
         $asset = Craft::$app->assets->getAssetById($draft->assetId, $draft->site);
         $asset->title = $draft->title;
         $asset->setFieldValues($post);
-        
+
+        $asset->setScenario(Element::SCENARIO_LIVE);
+
         $success = Craft::$app->elements->saveElement($asset);
         
         if (!$success) {

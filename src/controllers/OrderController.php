@@ -235,8 +235,10 @@ class OrderController extends Controller
         $variables['elements'] = [];
         $variables['elementVersionMap'] = array();
         $originalElementIds = [];
+        $finalElements = [];
 
         foreach ($variables['order']->getElements() as $element) {
+            $finalElements[$element->id] = $element;
             if ($element->getIsDraft()) {
                 $variables['elementVersionMap'][$element->getCanonicalId()] = $element->draftId;
                 array_push($originalElementIds, $element->getCanonicalId());
@@ -253,6 +255,7 @@ class OrderController extends Controller
 
                 if ($element) {
                     $variables['elements'][] = $element;
+                    if (! in_array($element->id, $finalElements)) $finalElements[$element->id] = $element;
                     if (! isset($variables['elementVersionMap'][$element->id])) {
                         $variables['elementVersionMap'][$element->id] = 'current';
                     }
@@ -293,7 +296,7 @@ class OrderController extends Controller
         $variables['entriesCountByElementCompleted'] = 0;
         $variables['translatedFiles'] = [];
 
-        foreach ($variables['order']->getElements() as $element) {
+        foreach ($finalElements as $key => $element) {
             $drafts = Craft::$app->getDrafts()->getEditableDrafts($element);
             $tempElement = $element;
             $element = $element->getIsDraft() ? $element->getCanonical(true) : $element;
@@ -329,17 +332,18 @@ class OrderController extends Controller
                 $isElementPublished = true;
 
                 foreach ($variables['files'][$element->id] as $file) {
-                    $translatedElement = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
-
+                    $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
                     if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
                         $isElementPublished = false;
                     }
-                    if ($file->status === Constants::FILE_STATUS_COMPLETE) {
-                        $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-                        $variables['translatedFiles'][$file->id] = $draft->title;
-                    } else if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
 
-                        $variables['translatedFiles'][$file->id] = $translatedElement->title ?? $element->title;
+                    if ($file->status === Constants::FILE_STATUS_COMPLETE) {
+                        $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+                        $variables['translatedFiles'][$file->id] = $draftElement->title;
+                    } else if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+                        $variables['translatedFiles'][$file->id] = $translatedElement->title;
+                    } else {
+                        $variables['translatedFiles'][$file->id] = $tempElement->title;
                     }
 
                     if ($element instanceof Entry) {
@@ -473,10 +477,14 @@ class OrderController extends Controller
             if ($variables['order']->status == Constants::ORDER_STATUS_CANCELED) {
                 $variables['isEditable'] = false;
             }
-            if (
-                $orderStatus === Constants::ORDER_STATUS_COMPLETE ||
-                $variables['order']->status == Constants::ORDER_STATUS_CANCELED
-            ) $variables['isEditable'] = false;
+            if ($orderStatus === Constants::ORDER_STATUS_COMPLETE) {
+                $variables['isEditable'] = false;
+                if ($variables['order']->status === Constants::ORDER_STATUS_PUBLISHED) {
+                    $variables['orderRecentStatus'] = Constants::ORDER_STATUS_PUBLISHED;
+                } else {
+                    $variables['orderRecentStatus'] = $orderStatus;
+                }
+            }
         }
 
         $variables['isSubmitted'] = ($variables['order']->status !== Constants::ORDER_STATUS_NEW &&

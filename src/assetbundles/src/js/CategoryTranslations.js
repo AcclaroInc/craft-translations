@@ -24,7 +24,7 @@ Craft.Translations.CategoryTranslations = {
     },
 
     getEditCategoryId: function() {
-        return $('form#main-form input[type=hidden][name=categoryId]').val();
+        return $('form#main-form input[type=hidden][name=sourceId]').val();
     },
 
     updateSelectedCategories: function() {
@@ -38,6 +38,7 @@ Craft.Translations.CategoryTranslations = {
 
         $(this.$btn[0]).toggleClass('disabled', this.categories.length === 0);
         $(this.$menubtn[0]).toggleClass('disabled', this.categories.length === 0);
+        $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.categories.length === 0);
 
         this.updateCreateNewLink();
     },
@@ -105,7 +106,7 @@ Craft.Translations.CategoryTranslations = {
             'data-icon': "language",
         });
 
-        this.$btn.html("<span>" + Craft.t('app', 'New translation') + "</span>");
+        this.$btn.html("<span class='btn-text'>" + Craft.t('app', 'New Translation') + "</span>");
 
         this.$menubtn = $('<div>', {
             'class': 'btn menubtn'
@@ -114,6 +115,7 @@ Craft.Translations.CategoryTranslations = {
         if (!this.isEditCategoryScreen()) {
             this.$btn.addClass('disabled');
             this.$menubtn.addClass('disabled');
+            this.$btn.find(".btn-text").addClass('display-none');
         }
 
         this.$btn.appendTo($btngroup);
