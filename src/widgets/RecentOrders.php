@@ -115,7 +115,9 @@ RecentOrders extends Widget
      */
     private function _getOrders(): array
     {
-        $query = Order::find()->limit($this->limit);
+        $query = Order::find()
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->limit($this->limit);
         
         return $query->all();
     }
