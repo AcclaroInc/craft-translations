@@ -85,6 +85,7 @@ class SettingsController extends Controller
             'craft\fields\Date',
             'craft\fields\Email',
             'craft\fields\Lightswitch',
+            'craft\fields\Time',
             'craft\fields\Url',
             'craft\fields\Users'
         ];
