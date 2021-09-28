@@ -21,6 +21,8 @@
                             <span class="status red"></span>{{order.statusLabel}}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
                             <span class="status"></span>{{order.statusLabel}}
+                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_NEEDS_APPROVAL') %}
+                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PREPARATION') %}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PROGRESS') %}
                             <span class="status orange"></span>{{order.statusLabel}}
                         {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_REVIEW') %}
