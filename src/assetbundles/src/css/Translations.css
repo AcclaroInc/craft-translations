@@ -239,36 +239,6 @@
     margin: 5px auto 30px;
 }
 
-.translations-order-reporting {
-    background-image: linear-gradient(#f7f7f8, #f4f5f6);
-    padding: 2em;
-    margin: 0 0 2em;
-    display: inline-block;
-}
-
-.translations-order-reporting .btn {
-    display: inline-block;
-}
-
-.translations-order-reporting table {
-    margin: 0 0 1em;
-}
-
-.translations-order-reporting table label {
-    padding: 1em 1em 1em 0;
-    display: block;
-}
-
-.translations-order-reporting table td {
-    vertical-align: middle;
-}
-
-.translations-order-reporting table .datewrapper,
-.translations-order-reporting table .select,
-.translations-order-reporting table select {
-    width: 100%;
-}
-
 .translations-complete-orders-indicator {
     float: right;
     display: inline-block;
