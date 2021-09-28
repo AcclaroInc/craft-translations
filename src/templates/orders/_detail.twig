@@ -41,6 +41,18 @@
     { label: 'Orders'|t, url: url('translations/orders') },
 ] %}
 
+{% if isSubmitted %}
+    {% if not isProcessing %}
+        {% if not isChanged %}
+            {% set selectedTab = "files" %}
+        {% endif %}
+        {% set tabs = {
+            "order": {label: "Order settings"|t, url: "#order"},
+            "files": {label: "Order details"|t, url: "#files"},
+        } %}
+    {% endif %}
+{% endif %}
+
 {% block content %}
     {% if isProcessing %}
         {% if isProcessing == "draft" %}
