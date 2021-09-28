@@ -5,8 +5,7 @@
     }
     // Defaults to open file tab on detail page
     var isSubmitted = $("#order-attr").data("submitted");
-    var isNew = $("#order-attr").data("status") === "new";
-    var isFailed = $("#order-attr").data("status") === "failed";
+    var isNew = $("#order-attr").data("status") === "new" || $("#order-attr").data("status") === "failed";
     var isCompleted = $("#order-attr").data("status") === "complete";
     var isCanceled = $("#order-attr").data("status") === "canceled";
     var isPublished = $("#order-attr").data("status") === "published";
@@ -193,8 +192,7 @@
     }
 
     function setButtonText($button, $value) {
-        var $isSubmittedOrder = $('#order-attr').data('submitted');
-        if (! $isSubmittedOrder) {
+        if (! isSubmitted) {
             return;
         }
         $($button).text($value);
@@ -202,6 +200,7 @@
 
     function getFieldValuesAsUrlParams() {
         title = $('#title').val();
+        tags = $('input[name="tags[]"]');
         translatorId = $('#translatorId').val();
         targetSites = '';
         var $all = $(':checkbox[name="targetSites"]');
@@ -228,6 +227,11 @@
         }
         if (targetSites !== '') {
             url += targetSites
+        }
+        if (tags.length > 0) {
+            tags.each(function() {
+                url += "&tags[]="+$(this).val()
+            });
         }
         return url
     }
@@ -348,7 +352,7 @@
                 this._createNewOrderButtonGroup();
             }
 
-            if (validateForm() && (isNew || isFailed || isOrderChanged({all: "all"}))) {
+            if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
                 setSubmitButtonStatus(true);
             }
 
@@ -636,14 +640,13 @@
                 }
             });
 
-            // ! NOTE: need to work on this
-            // $('#elementTags').on('DOMNodeRemoved', function() {
-            //     if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
-            //         setSubmitButtonStatus(true);
-            //     } else {
-            //         setSubmitButtonStatus(false);
-            //     }
-            // });
+            $('#elementTags').on('DOMNodeRemoved', function() {
+                if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+                    setSubmitButtonStatus(true);
+                } else {
+                    setSubmitButtonStatus(false);
+                }
+            });
 
             $('#cancel-order-link').on('click', function() {
                 var $cancelTab = $('#cancel-order-tab');
