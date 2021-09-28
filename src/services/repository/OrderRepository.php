@@ -12,6 +12,7 @@ namespace acclaro\translations\services\repository;
 
 use acclaro\translations\Constants;
 use Craft;
+use craft\elements\Category;
 use DateTime;
 use Exception;
 use craft\db\Query;
@@ -506,5 +507,26 @@ class OrderRepository
             // Default Status in case of any issue
             return Constants::ORDER_STATUS_IN_PROGRESS;
         }
+    }
+
+    /**
+     * @param $file
+     * @return string|null
+     */
+    public function getFileTitle($file) {
+
+        $element = Craft::$app->getElements()->getElementById($file->elementId);
+
+        if ($element instanceof GlobalSet) {
+            $draftElement = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+        } else if ($element instanceof Category) {
+            $draftElement = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+        } else if ($element instanceof Asset) {
+            $draftElement = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+        } else {
+            $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+        }
+
+        return $draftElement->title ?? '';
     }
 }

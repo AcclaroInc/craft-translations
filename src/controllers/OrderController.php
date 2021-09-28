@@ -19,10 +19,7 @@ use craft\queue\Queue;
 use craft\web\Controller;
 use craft\elements\Entry;
 use yii\web\HttpException;
-use craft\elements\Category;
 use craft\helpers\UrlHelper;
-use craft\elements\GlobalSet;
-use SebastianBergmann\Diff\Differ;
 use acclaro\translations\services\App;
 use acclaro\translations\services\job\acclaro\SendOrder;
 use acclaro\translations\Translations;
@@ -32,10 +29,7 @@ use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
 use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\DeleteDrafts;
-use acclaro\translations\services\job\RegeneratePreviewUrls;
 use acclaro\translations\services\translator\AcclaroTranslationService;
-use craft\elements\Asset;
-use craft\elements\Tag;
 use Dotenv\Regex\Success;
 use Error;
 
@@ -187,6 +181,10 @@ class OrderController extends Controller
                 $newOrder->elementIds = json_encode($orderElements);
             }
 
+            if ($orderTags= Craft::$app->getRequest()->getQueryParam('tags') ?? Craft::$app->getRequest()->getParam('tags')) {
+                $newOrder->tags = json_encode($orderTags);
+            }
+
             if ($orderDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
                 $newOrder->orderDueDate = $orderDueDate;
             }
@@ -221,6 +219,7 @@ class OrderController extends Controller
         $variables['hasTags'] = false;
         if (! empty(json_decode($variables['order']->tags, true))) {
             $variables['hasTags'] = true;
+            $variables['tags'] = [];
 
             foreach (json_decode($variables['order']->tags, true) as $tagId) {
                 $variables['tags'][] = Craft::$app->getTags()->getTagById($tagId);
@@ -255,7 +254,7 @@ class OrderController extends Controller
 
                 if ($element) {
                     $variables['elements'][] = $element;
-                    if (! in_array($element->id, $finalElements)) $finalElements[$element->id] = $element;
+                    if (! array_key_exists($element->id, $finalElements)) $finalElements[$element->id] = $element;
                     if (! isset($variables['elementVersionMap'][$element->id])) {
                         $variables['elementVersionMap'][$element->id] = 'current';
                     }
@@ -338,8 +337,7 @@ class OrderController extends Controller
                     }
 
                     if ($file->status === Constants::FILE_STATUS_COMPLETE) {
-                        $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-                        $variables['translatedFiles'][$file->id] = $draftElement->title;
+                        $variables['translatedFiles'][$file->id] = Translations::$plugin->orderRepository->getFileTitle($file);
                     } else if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
                         $variables['translatedFiles'][$file->id] = $translatedElement->title;
                     } else {
@@ -1187,7 +1185,7 @@ class OrderController extends Controller
                         $updated = !empty($updatedTagIds) ? json_encode($updatedTagIds) : '';
                         // Make Api Request to update tags
                         if (! $isDefaultTranslator) {
-                            $translatorService->editOrderTags($order, $settings, implode(',',$updatedTags));
+                            $translatorService->editOrderTags($order, $settings, $updatedTags);
                         }
                     }
                 }
