@@ -733,7 +733,7 @@
             </ul>
         </div>
         <hr>
-        {% if order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+        {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
             <form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
                 {{ csrfInput() }}
                 {{ forms.hidden({
