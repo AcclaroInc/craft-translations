@@ -227,6 +227,16 @@ class Order extends Element
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'canceled',
+                'label' => Translations::$plugin->translator->translate('app', 'Canceled'),
+                'criteria' => [
+                    'status' => [
+                        'canceled'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
             ]
         ];
 
