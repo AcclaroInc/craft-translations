@@ -239,36 +239,6 @@
     margin: 5px auto 30px;
 }
 
-.translations-order-reporting {
-    background-image: linear-gradient(#f7f7f8, #f4f5f6);
-    padding: 2em;
-    margin: 0 0 2em;
-    display: inline-block;
-}
-
-.translations-order-reporting .btn {
-    display: inline-block;
-}
-
-.translations-order-reporting table {
-    margin: 0 0 1em;
-}
-
-.translations-order-reporting table label {
-    padding: 1em 1em 1em 0;
-    display: block;
-}
-
-.translations-order-reporting table td {
-    vertical-align: middle;
-}
-
-.translations-order-reporting table .datewrapper,
-.translations-order-reporting table .select,
-.translations-order-reporting table select {
-    width: 100%;
-}
-
 .translations-complete-orders-indicator {
     float: right;
     display: inline-block;
@@ -857,20 +827,31 @@ select[name="version"] {
     font-size: 10px;
 }
 
+.diff-copy {
+    cursor: pointer;
+    fill: #3f4d5a;
+    padding: 10px;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
 .target {
+    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
     width: 50%;
-    border-bottom: 1px solid lightgray;
 }
 
 .source {
+    border-right: 1px solid rgba(51, 64, 77, 0.1);
+    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
     width: 50%;
-    border-bottom: 1px solid lightgray;
-    border-right: 3px solid lightgray;
 }
 
 #diffTable {
+    border-radius: 0 0 5px 5px;
+    border-top: 0px !important;
+    border: 1px solid rgba(51, 64, 77, 0.1);
     width: 100%;
-    border: 1px solid lightgray;
 }
 
 .bg-none {

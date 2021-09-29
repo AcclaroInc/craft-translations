@@ -2,9 +2,15 @@
 {% import "_includes/forms" as forms %}
 
 {% set title = 'Clear Orders'|t %}
-{% block actionButton %}
-<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+
+{% block header %}
+    {{ parent() }}
+    {{ include('translations/_components/app-info') }}
 {% endblock %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations') }
+] %}
 
 {% block content %}
 <form id="delete-all-orders" class="utility" method="post" accept-charset="UTF-8">

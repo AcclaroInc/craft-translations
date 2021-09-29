@@ -351,7 +351,7 @@ class BaseController extends Controller
         $settings = $translator->getSettings();
         $authenticate = AcclaroService::authenticateService($service, $settings);
         
-        if (!$authenticate && $service == 'acclaro') {
+        if (!$authenticate && $service === Constants::TRANSLATOR_ACCLARO) {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
             Craft::$app->getSession()->setError($message);
             return;
@@ -370,7 +370,7 @@ class BaseController extends Controller
                 if ($job) {
                     $params = [
                         'id' => (int) $job,
-                        'notice' => 'Done regenerating preview urls for '. $order->title,
+                        'notice' => 'Done building draft previews',
                         'url' => 'translations/orders/detail/'. $order->id
                     ];
                     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
@@ -379,7 +379,7 @@ class BaseController extends Controller
                 }
             } else {
                 Translations::$plugin->fileRepository->regeneratePreviewUrls($order);
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done regenerating preview urls for '. $order->title));
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done building draft previews'));
             }
         }
     }
@@ -392,7 +392,7 @@ class BaseController extends Controller
         $file = Translations::$plugin->fileRepository->getFileById($fileId);
         $data = [];
 
-        if ($file && ($file->status == 'complete' || $file->status == 'published')) {
+        if ($file && ($file->status === Constants::FILE_STATUS_COMPLETE || $file->status === Constants::FILE_STATUS_PUBLISHED)) {
             // Current entries XML
             $currentXML = $file->target;
             $currentXML = simplexml_load_string($currentXML)->body->asXML();
@@ -407,30 +407,45 @@ class BaseController extends Controller
             $element = Craft::$app->getElements()->getElementById($file->elementId);
 
             $countElement = $element;
-            if ($element instanceof Entry) {
-                // Now we can get the element
-                if ($file->status == 'complete') {
-                    $element = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-                } else {
-                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
-                }
-                $countElement = $element;
-                $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
-            } else if ($element instanceof GlobalSet) {
-                if ($file->status == 'complete') {
-                    $element = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
-                } else {
-                    $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId, $file->targetSite);
-                }
-
-                $data['entryName'] = $element->name;
-            } else if ($element instanceof Category) {
-                if ($file->status == 'complete') {
-                    $element = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
-                } else {
-                    $element = Translations::$plugin->categoryRepository->getCategoryById($file->elementId, $file->targetSite);
-                }
-                $data['entryName'] = $element->title;
+            
+            switch (get_class($element)) {
+                case Asset::class:
+                    if ($file->status === Constants::FILE_STATUS_COMPLETE) {
+                        $element = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+                    } else {
+                        $element = Translations::$plugin->assetDraftRepository->getAssetById($file->elementId, $file->targetSite);
+                    }
+    
+                    $data['entryName'] = $element->name;
+                    break;
+                case GlobalSet::class:
+                    if ($file->status === Constants::FILE_STATUS_COMPLETE) {
+                        $element = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+                    } else {
+                        $element = Translations::$plugin->globalSetRepository->getSetById($file->elementId, $file->targetSite);
+                    }
+    
+                    $data['entryName'] = $element->name;
+                    break;
+                case Category::class:
+                    if ($file->status === Constants::FILE_STATUS_COMPLETE) {
+                        $element = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+                    } else {
+                        $element = Translations::$plugin->categoryRepository->getCategoryById($file->elementId, $file->targetSite);
+                    }
+                    $data['entryName'] = $element->title;
+                    break;
+                
+                default:
+                    // Now we can get the element
+                    if ($file->status === Constants::FILE_STATUS_COMPLETE) {
+                        $element = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+                    } else {
+                        $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->targetSite);
+                    }
+                    $countElement = $element;
+                    $data['entryName'] = Craft::$app->getEntries()->getEntryById($element->id) ? Craft::$app->getEntries()->getEntryById($element->id)->title : '';
+                    break;
             }
 
             $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
@@ -443,7 +458,7 @@ class BaseController extends Controller
             $data['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
             $handle = isset($element->section) ? $element->section->handle : '';
             $data['entryUrl'] = UrlHelper::cpUrl('entries/'.$handle.'/'.$element->id.'/'.Craft::$app->sites->getSiteById($element->siteId)->handle);
-            $data['dateApplied'] = ($file->status == 'published') ? $element->dateUpdated->format('M j, Y g:i a') : '--' ;
+            $data['dateApplied'] = ($file->status === Constants::FILE_STATUS_PUBLISHED) ? $element->dateUpdated->format('M j, Y g:i a') : '--' ;
             $dateDelivered = new DateTime($file->dateDelivered);
             $data['dateDelivered'] = ($dateDelivered) ? $dateDelivered->format('M j, Y g:i a') : '';
             $data['fileStatus'] = $file->status;
@@ -466,7 +481,7 @@ class BaseController extends Controller
         $file = Translations::$plugin->fileRepository->getFileById($fileId);
         $data = [];
 
-        if ($file && ($file->status == 'complete' || $file->status == 'published')) {
+        if ($file && ($file->status === Constants::FILE_STATUS_COMPLETE || $file->status === Constants::FILE_STATUS_PUBLISHED)) {
 
             $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
@@ -571,10 +586,10 @@ class BaseController extends Controller
                             }
                             $file = $file[0];
 
-                            if ($file->status == 'complete' || $file->status == 'published') {
+                            if ($file->status === Constants::FILE_STATUS_COMPLETE || $file->status === Constants::FILE_STATUS_PUBLISHED) {
                                 continue;
-                            } else if($file->status == 'canceled' || $file->status == 'failed') {
-                                $file->status = 'in progress';
+                            } else if($file->status === Constants::FILE_STATUS_CANCELED || $file->status === Constants::FILE_STATUS_FAILED) {
+                                $file->status === Constants::FILE_STATUS_IN_PROGRESS;
                             }
 
                             $file = Translations::$plugin->draftRepository->createDrafts($element, $order, $site, $wordCounts, $file);
@@ -585,7 +600,7 @@ class BaseController extends Controller
                         $newAddElement[] = $element->id;
                     }
 
-                    if ($order->translator->service !== 'export_import') {
+                    if ($order->translator->service !== Constants::TRANSLATOR_DEFAULT) {
                         $translator = $order->getTranslator();
 
                         $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());

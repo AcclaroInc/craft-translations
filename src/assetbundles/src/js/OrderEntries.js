@@ -132,6 +132,14 @@ if (typeof Craft.Translations === 'undefined') {
             }
         });
     },
+    copyTextToClipboard: function(event) {
+        var txt = $( event.currentTarget ).parent().children('.diff-bl').text();
+        navigator.clipboard.writeText(txt).then(function() {
+            Craft.cp.displayNotice(Craft.t('app', 'Copied to clipboard.'));
+        }, function(err) {
+            Craft.cp.displayError(Craft.t('app', 'Could not copy text: ', err));
+        });
+    },
     init: function() {
         self = this;
         this.$publishSelectedBtn = $('#draft-publish');
@@ -155,6 +163,7 @@ if (typeof Craft.Translations === 'undefined') {
                 closeOtherModals : false
             });
             self.showFirstTdComparison();
+            
             // Destroy the modal that is being hided as a new modal will be created every time
             $modal.on('hide', function() {
                 $('.modal.scroll-y-auto, .modal-shade').remove();
@@ -313,6 +322,11 @@ if (typeof Craft.Translations === 'undefined') {
             } else {
                 Craft.cp.displayNotice(Craft.t('app', response.error));
             }
+            // Copy text to clipboard
+            var $copyBtn = $('.diff-copy');
+            $($copyBtn).on('click', function(event) {
+                self.copyTextToClipboard(event);
+            });
         });
     },
     createDiffHtmlView: function(data) {
@@ -326,6 +340,7 @@ if (typeof Craft.Translations === 'undefined') {
             id: "diffTable"
         });
         $mainTd = $('<td colspan=8>');
+        $mainTd.css("padding", "0");
         $diffTable.appendTo($mainTd);
         $mainTd.appendTo($mainContent);
 
@@ -337,6 +352,10 @@ if (typeof Craft.Translations === 'undefined') {
                 html: key+" :",
                 class: "diff-tl"
             }).appendTo($td);
+            $("<div>", {
+                html: '<svg height="1em" viewBox="0 0 24 24" width="1em"><path d="M0 0h24v24H0z" fill="none"></path><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>',
+                class: 'diff-copy'
+            }).appendTo($td);
             $('<br>').appendTo($td);
             $("<span>", {
                 html: value.source,
@@ -347,6 +366,10 @@ if (typeof Craft.Translations === 'undefined') {
             $("<label>", {
                 html: key+" :",
                 class: "diff-tl"
+            }).appendTo($td);
+            $("<div>", {
+                html: '<svg height="1em" viewBox="0 0 24 24" width="1em"><path d="M0 0h24v24H0z" fill="none"></path><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>',
+                class: 'diff-copy'
             }).appendTo($td);
             $('<br>').appendTo($td);
             $("<span>", {

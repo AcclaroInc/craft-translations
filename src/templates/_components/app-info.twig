@@ -1,0 +1,20 @@
+{% set licenseStatus = craft.app.plugins.getPluginLicenseKeyStatus('translations') %}
+{% set edition = (licenseStatus == 'valid') ? 'Paid' : 'Free trial' %}
+{% set emailSubject = 'Hello Acclaro' %}
+{% set emailBody = 'I’m interested in learning more about your professional translation services and how you can help with the launch of global Craft sites.%0D%0A%0D%0AThank you,%0D%0AYour Name%0D%0AYour Company%0D%0AYour Phone Number' %}
+
+<ul id="app-info">
+    {% if licenseStatus == 'valid' %}
+        <li><a class="go" href="https://info.acclaro.com/translation-plugin-for-craft3-support-info">{{ 'Premium Support'|t('app') }}</a></li>
+    {% else %}
+        <li><a class="go" href="https://plugins.craftcms.com/translations">{{ 'Upgrade to Paid'|t('app') }}</a></li>
+    {% endif %}
+    <li><a class="go" href="mailto:support@acclaro.com?subject={{emailSubject}}&body={{emailBody}}" style="">{{ 'Get Translations'|t('app') }}</a></li>
+    <li><a class="go" href="https://www.surveymonkey.com/r/translationsplugin">{{ 'Submit Feedback'|t('app') }}</a></li>
+    <li>
+        <div id="edition-logo" title="Translations ({{ edition }})" aria-label="Translations ({{ edition }})" style="margin-left:15px;">
+            <div class="edition-name">{{ edition }}</div>
+            <div class="edition-trial">{{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</div>
+        </div>
+    </li>
+</ul>

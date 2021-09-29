@@ -4,6 +4,7 @@ namespace acclaro\translations;
 
 class Constants
 {
+    const CRAFT_MIN_VERSION = '3.7.9';
     const WORD_COUNT_LIMIT = 2000;
 
     // Licenses

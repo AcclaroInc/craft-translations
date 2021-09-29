@@ -3,8 +3,13 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}
 
-{% set title = translator.label|default("New Translation Service") %}
-{% set defaultLabel = "" %}
+{% set title = translator.label|default("Create a new translator") %}
+
+{% if (translatorId) %}
+    {% set defaultLabel = (translator.label) ? translator.label : "Export/Import" %}
+{% else %}
+    {% set defaultLabel = null %}
+{% endif %}
 
 {% block actionButton %}
     {# ! NOTE: hidden button we don't support draft as of now #}
@@ -20,19 +25,6 @@
     { label: 'Translations'|t, url: url('translations') },
     { label: 'Translators'|t, url: url('translations/translators') },
 ] %}
-
-{% if translatorId %}
-    {% set crumbs = crumbs|merge([
-        { label: 'Edit Translation Service'|t, url: 'javascript:void(0)' },
-    ])%}
-    {% if translator.label == "" %}
-        {% set defaultLabel = "Export/Import" %}
-    {% endif %}
-{% else %}
-    {% set crumbs = crumbs|merge([
-        { label: 'Add New Translation Service'|t, url: 'javascript:void(0)' },
-    ])%}
-{% endif %}
 
 {% block content %}
     <form method="post" class="translations-translator-form" data-confirm-unload accept-charset="UTF-8">

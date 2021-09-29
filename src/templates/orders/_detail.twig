@@ -18,7 +18,7 @@
     {% set isEditable = "noClick" %}
 {% endif %}
 
-{% set title = 'Translations'|t %}
+{% set title = (isSubmitted) ? order.title : 'Create a new order' %}
 
 {% block actionButton %}
     {% if not isProcessing %}
@@ -42,9 +42,6 @@
 ] %}
 
 {% if isSubmitted %}
-    {% set crumbs = crumbs|merge([
-        { label: order.title, url: 'javascript:void(0)' },
-    ]) %}
     {% if not isProcessing %}
         {% if not isChanged %}
             {% set selectedTab = "files" %}
@@ -54,14 +51,6 @@
             "files": {label: "Order details"|t, url: "#files"},
         } %}
     {% endif %}
-{% elseif orderId %}
-    {% set crumbs = crumbs|merge([
-        { label: 'Edit order'|t, url: 'javascript:void(0)' },
-    ]) %}
-{% else %}
-    {% set crumbs = crumbs|merge([
-        { label: 'New order'|t, url: 'javascript:void(0)' },
-    ]) %}
 {% endif %}
 
 {% block content %}
@@ -731,8 +720,8 @@
             </div>
         </div>
         <hr>
+        <h3 class="heading"><b>{{ "Activity Log"|t('app') }}</b></h3>
         <div class="data meta read-only activity-log">
-            <h3 class="heading"><b>{{ "Activity Log"|t('app') }}</b></h3>
             <ul class="bullets">
                 {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
                     <li> {{ 'Pending submission'|t }} </li>
@@ -743,6 +732,27 @@
                 {% endif %}
             </ul>
         </div>
+        <hr>
+        {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') or
+              order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
+              order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
+            <a class="btn w-100 disabled">{{ "Rebuild draft previews"|t('app') }}</a>
+        {% else %}
+            <form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
+                {{ csrfInput() }}
+                {{ forms.hidden({
+                    name: 'action',
+                    value: 'translations/base/regenerate-preview-urls',
+                }) }}
+
+                {{ forms.hidden({
+                    name: 'orderId',
+                    value: order.id
+                }) }}
+
+                <a class="btn w-100" onclick="this.closest('form').submit();return false;">{{ "Rebuild draft previews"|t('app') }}</a>
+            </form>
+        {% endif %}
     {# {% endif %} #}
 {% endblock %}
 
