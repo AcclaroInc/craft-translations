@@ -25,6 +25,8 @@ class TranslatorRepository
     public function getTranslatorById($translatorId)
     {
         $record = TranslatorRecord::findOne($translatorId);
+
+        if (! $record) return null;
         
         $translator = new TranslatorModel($record->toArray([
             'id',

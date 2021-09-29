@@ -566,6 +566,7 @@ class OrderController extends Controller
         }
 
         $job = '';
+        $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {
             $targetSites = Craft::$app->getRequest()->getParam('targetSites');
@@ -657,6 +658,7 @@ class OrderController extends Controller
 
             if (!$authenticate && $service == Constants::TRANSLATOR_ACCLARO) {
                 $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
+                $transaction->rollBack();
                 return $this->asJson(["success" => false, "message" => $message]);
             }
 
@@ -686,7 +688,7 @@ class OrderController extends Controller
                             $element->title,
                             $element->section->name
                         );
-
+                        $transaction->rollBack();
                         return $this->asJson(["success" => false, "message" => $message]);
                     }
                 }
@@ -700,7 +702,7 @@ class OrderController extends Controller
 
             if (!$success) {
                 Craft::error('[' . __METHOD__ . '] Couldn’t save the order', 'translations');
-                $order->logActivity(Translations::$plugin->translator->translate('app', "Couldn’t save the order"));
+                $transaction->rollBack();
                 return $this->asJson(["success" => false, "message" => "Error saving Order."]);
             } else {
                 if (Craft::$app->getRequest()->getParam('submit') || Craft::$app->getRequest()->getParam('flow')) {
@@ -746,12 +748,7 @@ class OrderController extends Controller
                             }
 
                             if ($unsupported || !empty($unsupportedLangs)) {
-                                $order->status = Constants::ORDER_STATUS_FAILED;
-                                $success = Craft::$app->getElements()->saveElement($order);
-                                if (!$success) {
-                                    Craft::error('[' . __METHOD__ . '] Couldn’t save the order', 'translations');
-                                }
-
+                                $transaction->rollBack();
                                 return $this->asJson(
                                     ["success" => false,
                                     "message" => "The following language pair(s) are not supported by "
@@ -771,7 +768,7 @@ class OrderController extends Controller
 
                         if (! $success) {
                             Craft::error('[' . __METHOD__ . '] Couldn’t create the order file', 'translations');
-                            $order->logActivity(Translations::$plugin->translator->translate('app', "Couldn’t create the order file"));
+                            $transaction->rollBack();
 
                             return $this->asJson(["success" => false, "message" => "Error saving order."]);
                         } else {
@@ -782,18 +779,14 @@ class OrderController extends Controller
 
                             if (! $success) {
                                 Craft::error('[' . __METHOD__ . '] Couldn’t save the order', 'translations');
-                                $order->logActivity(Translations::$plugin->translator->translate('app', "Couldn’t save the order"));
+                                $transaction->rollBack();
                                 return $this->asJson(["success" => false, "message" => "Couldn’t save the order."]);
-                            } else {
-                                Craft::$app->getSession()->setNotice(
-                                    Translations::$plugin->translator->translate('app', 'Order Saved.')
-                                );
                             }
                         }
                     }
 
+                    // Sending Order To Acclaro
                     if ($order->getTranslator()->service !== Constants::TRANSLATOR_DEFAULT) {
-                        // Sending Order To Acclaro
                         $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
                             $order->getTranslator()->service,
                             $order->getTranslator()->getSettings()
@@ -811,6 +804,7 @@ class OrderController extends Controller
     
                             $queueOrders = Craft::$app->getSession()->get('queueOrders');
                             $queueOrders[$job] = $order->id;
+                            Craft::$app->getSession()->set('importQueued', 1);
                             Craft::$app->getSession()->set('queueOrders', $queueOrders);
                         } else {
                             $job =  null;
@@ -825,47 +819,30 @@ class OrderController extends Controller
                         Translations::$plugin->translator->translate('app', 'Order Submitted to %s'),
                         $order->translator->getName()
                     ));
-                } else {
-                    Craft::$app->getSession()->setNotice(
-                        Translations::$plugin->translator->translate('app', 'Order Saved.')
-                    );
                 }
             }
+            $transaction->commit();
         } catch (Exception $e) {
             Craft::error('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), 'translations');
-            $order->logActivity(Translations::$plugin->translator->translate('app', $e->getMessage()));
-            $order->status = Constants::ORDER_STATUS_FAILED;
-            Craft::$app->getElements()->saveElement($order);
+            $transaction->rollBack();
             return $this->asJson(["success" => false, "message" => "Couldn’t save the order. Error: ".$e->getMessage()]);
         }
 
         $redirectUrl = $backToNew ? Constants::URL_ORDER_CREATE : null;
 
         if ($job) {
-            if ($order->getTranslator()->service == Constants::TRANSLATOR_DEFAULT) {
-                $params = [
-                    'id' => (int) $job,
-                    'notice' => 'Done creating translation drafts',
-                    'url' => $redirectUrl ?: Constants::URL_ORDER_DETAIL . $order->id
-                ];
-                return $this->asJson(["success" => true, "message" => "", "url" => "", "job" => json_encode($params)]);
-            } else {
-                Craft::$app->getSession()->setNotice(
-                    Translations::$plugin->translator->translate(
-                        'app',
-                        'Sending order to Acclaro, please refresh your Orders once complete'
-                    )
-                );
-                $url = Translations::$plugin->urlHelper->cpUrl($redirectUrl ?: Constants::URL_ORDER_DETAIL . $order->id);
-                return $this->asJson(["success" => true, "message" => "", "url" => $url]);
-            }
-        } elseif (is_null($job)) {
             Craft::$app->getSession()->setNotice(
-                Translations::$plugin->translator->translate('app', 'New order created: ' . $order->title)
+                Translations::$plugin->translator->translate(
+                    'app',
+                    'Sending order to Acclaro, refer queue for updates'
+                )
             );
             $url = Translations::$plugin->urlHelper->cpUrl($redirectUrl ?: Constants::URL_ORDER_DETAIL . $order->id);
             return $this->asJson(["success" => true, "message" => "", "url" => $url]);
         } else {
+            Craft::$app->getSession()->setNotice(
+                Translations::$plugin->translator->translate('app', 'New order created: ' . $order->title)
+            );
             $url = Translations::$plugin->urlHelper->cpUrl($redirectUrl ?: Constants::URL_ORDER_DETAIL . $order->id);
             return $this->asJson(["success" => true, "message" => "", "url" => $url]);
         }
