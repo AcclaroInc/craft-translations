@@ -746,9 +746,7 @@
                     value: order.id
                 }) }}
 
-                <div class="buttons" style="margin-left: 40%">
-                    <a onclick="this.closest('form').submit();return false;">{{ "Regenerate Preview Urls"|t('app') }}</a>
-                </div>
+                <a class="btn w-100" onclick="this.closest('form').submit();return false;">{{ "Rebuild draft previews"|t('app') }}</a>
             </form>
         {% endif %}
     {# {% endif %} #}
