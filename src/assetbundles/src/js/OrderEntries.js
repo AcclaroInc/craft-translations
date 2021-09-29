@@ -132,6 +132,14 @@ if (typeof Craft.Translations === 'undefined') {
             }
         });
     },
+    copyTextToClipboard: function(event) {
+        var txt = $( event.currentTarget ).parent().children('.diff-bl').text();
+        navigator.clipboard.writeText(txt).then(function() {
+            Craft.cp.displayNotice(Craft.t('app', 'Copied to clipboard.'));
+        }, function(err) {
+            Craft.cp.displayError(Craft.t('app', 'Could not copy text: ', err));
+        });
+    },
     init: function() {
         self = this;
         this.$publishSelectedBtn = $('#draft-publish');
@@ -139,17 +147,6 @@ if (typeof Craft.Translations === 'undefined') {
         this.$form = $('#' + this.$formId);
         this.$selectAllCheckbox = $('thead .translations-checkbox-cell :checkbox');
         this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
-        this.$copyBtn = $('.diff-copy');
-
-        // Copy text to clipboard
-        this.$copyBtn.on('click', function(event) {
-            var txt = $( event.currentTarget ).parent().children('.diff-bl').text();
-            navigator.clipboard.writeText(txt).then(function() {
-                Craft.cp.displayNotice(Craft.t('app', 'Copied to clipboard.'));
-            }, function(err) {
-                Craft.cp.displayError(Craft.t('app', 'Could not copy text: ', err));
-            });
-        });
 
         this.$selectAllCheckbox.on('change', function() {
             self.toggleSelected($(this).is(':checked'));
@@ -166,6 +163,7 @@ if (typeof Craft.Translations === 'undefined') {
                 closeOtherModals : false
             });
             self.showFirstTdComparison();
+            
             // Destroy the modal that is being hided as a new modal will be created every time
             $modal.on('hide', function() {
                 $('.modal.scroll-y-auto, .modal-shade').remove();
@@ -324,6 +322,11 @@ if (typeof Craft.Translations === 'undefined') {
             } else {
                 Craft.cp.displayNotice(Craft.t('app', response.error));
             }
+            // Copy text to clipboard
+            var $copyBtn = $('.diff-copy');
+            $($copyBtn).on('click', function(event) {
+                self.copyTextToClipboard(event);
+            });
         });
     },
     createDiffHtmlView: function(data) {
