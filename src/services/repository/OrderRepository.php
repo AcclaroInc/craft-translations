@@ -311,11 +311,12 @@ class OrderRepository
         $orderUrl = UrlHelper::baseSiteUrl() .'admin/translations/orders/detail/'.$order->id;
         $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
+        $dueDate = $order->requestedDueDate;
 
         $orderResponse = $acclaroApiClient->createOrder(
             $order->title,
             $comments,
-            $order->requestedDueDate,
+            $dueDate->format('Y-m-d'),
             $order->id,
             $order->wordCount
         );

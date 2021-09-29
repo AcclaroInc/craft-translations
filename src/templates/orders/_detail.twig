@@ -637,9 +637,28 @@
                 order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
                 <div class="field" style="justify-content: space-between;">
                     <div class="heading">
+                        <label id="translated-files">Translated files</label>
+                    </div>
+                    <button type="button" class="btn icon" data-icon="upload" value="submit" id="import-tool" style="width: 125px;">{{ "Upload"|t('app') }}
+                        <div class="utility-status"></div>
+                    </button>
+                </div>
+                <div class="hud-wrapper hidden">
+                    <div id="translations-import-form" class="form meta">
+                        {{ forms.hidden({
+                            name: 'orderId',
+                            id: 'order_id',
+                            value: orderId,
+                        }) }}
+                    </div>
+                </div>
+                
+                <div class="field" style="justify-content: space-between;">
+                    <div class="heading">
                         <label id="acclaro-sync">My Acclaro</label>
                     </div>
-                    {% if not isCancellable %}
+                    {% if not isCancellable and 
+                        order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
                         <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
                     {% else %}
                         <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
