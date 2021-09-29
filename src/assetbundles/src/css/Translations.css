@@ -847,6 +847,14 @@ select[name="version"] {
     width: 50%;
 }
 
+td.source{
+    vertical-align: top;
+}
+
+td.target{
+    vertical-align: top;
+}
+
 #diffTable {
     border-radius: 0 0 5px 5px;
     border-top: 0px !important;
@@ -856,7 +864,10 @@ select[name="version"] {
 
 .bg-none {
     background: none !important;
+    cursor: pointer !important;
 }
+
+
 
 .processing {
     background-color: #ced8e5 !important;

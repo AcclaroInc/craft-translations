@@ -403,7 +403,7 @@ class OrderController extends Controller
             $user->id => $user->getRememberedUsername(),
         );
 
-        $variables['author'] = $user->getRememberedUsername();
+        $variables['author'] = $user->identity->firstName.' '.$user->identity->lastName;
 
         $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
 

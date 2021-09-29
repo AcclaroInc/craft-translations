@@ -311,12 +311,15 @@ class OrderRepository
         $orderUrl = UrlHelper::baseSiteUrl() .'admin/translations/orders/detail/'.$order->id;
         $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
-        $dueDate = $order->requestedDueDate;
+
+        if($dueDate = $order->requestedDueDate){
+            $dueDate = $dueDate->format('Y-m-d');
+        }
 
         $orderResponse = $acclaroApiClient->createOrder(
             $order->title,
             $comments,
-            $dueDate->format('Y-m-d'),
+            $dueDate,
             $order->id,
             $order->wordCount
         );
@@ -366,7 +369,7 @@ class OrderRepository
             } else if ($element instanceof Asset) {
                 $assetFilename = $element->getFilename();
                 $fileInfo = pathinfo($element->getFilename());
-                $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
+                $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' .Constants::FILE_FORMAT_XML;
             } else {
                 $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             }
