@@ -827,20 +827,31 @@ select[name="version"] {
     font-size: 10px;
 }
 
+.diff-copy {
+    cursor: pointer;
+    fill: #3f4d5a;
+    padding: 10px;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
 .target {
+    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
     width: 50%;
-    border-bottom: 1px solid lightgray;
 }
 
 .source {
+    border-right: 1px solid rgba(51, 64, 77, 0.1);
+    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
     width: 50%;
-    border-bottom: 1px solid lightgray;
-    border-right: 3px solid lightgray;
 }
 
 #diffTable {
+    border-radius: 0 0 5px 5px;
+    border-top: 0px;
+    border: 1px solid rgba(51, 64, 77, 0.1);
     width: 100%;
-    border: 1px solid lightgray;
 }
 
 .bg-none {
