@@ -370,7 +370,7 @@ class BaseController extends Controller
                 if ($job) {
                     $params = [
                         'id' => (int) $job,
-                        'notice' => 'Done regenerating preview urls for '. $order->title,
+                        'notice' => 'Done building draft previews',
                         'url' => 'translations/orders/detail/'. $order->id
                     ];
                     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
@@ -379,7 +379,7 @@ class BaseController extends Controller
                 }
             } else {
                 Translations::$plugin->fileRepository->regeneratePreviewUrls($order);
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done regenerating preview urls for '. $order->title));
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done building draft previews'));
             }
         }
     }
