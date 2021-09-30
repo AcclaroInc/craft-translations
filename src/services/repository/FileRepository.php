@@ -562,6 +562,8 @@ class FileRepository
 
         $element = Craft::$app->getElements()->getElementById($elementId);
 
+        if (! $element) return 0;
+
         return Translations::$plugin->elementTranslator->getWordCount($element);
     }
 }

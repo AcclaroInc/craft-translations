@@ -397,13 +397,14 @@ class OrderController extends Controller
             }
         }
 
-        $user = Craft::$app->getUser();
+        $userId = $variables['order']->ownerId ?? Craft::$app->getUser()->id;
+        $user = Craft::$app->getUsers()->getUserById($userId);
 
         $variables['owners'] = array(
-            $user->id => $user->getRememberedUsername(),
+            $user->id => $user->username,
         );
 
-        $variables['author'] = $user->identity->firstName.' '.$user->identity->lastName;
+        $variables['author'] = $user;
 
         $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
 
@@ -1551,6 +1552,7 @@ class OrderController extends Controller
                         'notice' => 'Done syncing order '. $order->title,
                         'url' => Constants::URL_ORDER_DETAIL . $order->id
                     ];
+                    Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  "Order is being synced via queue."));
                     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                 } else {
                     Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app',  'Cannot sync order '. $order->title));
@@ -1576,7 +1578,7 @@ class OrderController extends Controller
         $orders = Translations::$plugin->orderRepository->getInProgressOrders();
         $allFileCounts = $totalWordCount = 0;
         foreach ($orders as $order) {
-            if ($order->translator->service === 'export_import') {
+            if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
                 continue;
             }
             $totalWordCount += ($order->wordCount * count($order->getTargetSitesArray()));
@@ -1584,11 +1586,12 @@ class OrderController extends Controller
         }
 
         $job = '';
-        $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
+        $url = Craft::$app->getRequest()->absoluteUrl;
+
         try {
             foreach ($orders as $order) {
                 // Don't update manual orders
-                if ($order->translator->service === 'export_import') {
+                if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
                     continue;
                 }
     
@@ -1612,6 +1615,7 @@ class OrderController extends Controller
                 'notice' => 'Done syncing orders',
                 'url' => $url
             ];
+            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Order\'s are being synced via queue.'));
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
         } else {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Order sync complete.'));
