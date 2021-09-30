@@ -10,6 +10,35 @@ if (typeof Craft.Translations === 'undefined') {
 Craft.Translations.OrderIndex = Garnish.Base.extend(
 {
     init: function() {
+        if ($('#sidebar-container').length) {
+            $(document).on('click', '#toolbar button', function() {
+                $selected = $('tbody').find('.sel');
+                $existingElements = $("ul[class=menu]");
+                if ($existingElements.length > 1) {
+                    $existingElements.each(function() {
+                        if ($(this).find("ul").length > 1) {
+                            $(this).remove();
+                        }
+                    });
+                }
+                if ($('ul[class=menu] ul').length == 1) {
+                    $('ul[class=menu]').prepend("<ul><li><a class=disabled>Edit Order</a></li></ul>");
+                }
+
+                if ($selected.length == 1) {
+                    $url = $selected.find('span[class=title] a').prop('href');
+                    $edit = $('ul[class=menu] li:first a');
+                    $edit.removeClass('disabled');
+                    $edit.attr('disabled', false);
+                    $edit.prop('href', $url);
+                } else {
+                    $edit = $('ul[class=menu] li:first a');
+                    $edit.addClass('disabled');
+                    $edit.attr('disabled', true);
+                }
+            });
+        }
+
         $(document).on("click", ".translations-delete-order", function() {
             var $button = $(this);
 
@@ -22,7 +51,7 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
 
             if (confirm(Craft.t('app', 'Are you sure you want to '+conf_msg+' this order?'))) {
                 var data = {
-                    action: 'translations/base/delete-order',
+                    action: 'translations/order/delete-order',
                     orderId: $button.data('order-id'),
                     hardDelete: $button.data('hard-delete'),
                 };
@@ -72,7 +101,7 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
 
             if (confirm(Craft.t('app', 'Are you sure you want to restore this order?'))) {
                 var data = {
-                    action: 'translations/base/delete-order',
+                    action: 'translations/order/delete-order',
                     orderId: $button.data('order-id'),
                     restore: 1
                 };

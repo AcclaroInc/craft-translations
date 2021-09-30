@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services;
 
+use acclaro\translations\Constants;
 use Craft;
 use craft\base\Element;
 use craft\elements\Category;
@@ -21,7 +22,7 @@ use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\models\GlobalSetDraftModel;
-
+use craft\elements\Asset;
 use DOMDocument;
 use DateTime;
 
@@ -58,34 +59,49 @@ class UrlGenerator
 
     public function generateFileUrl(Element $element, FileModel $file)
     {
-        if ($file->status === 'published') {
-            if ($element instanceof GlobalSet OR $element instanceof Category) {
-                return preg_replace(
-                    '/(\/'.Craft::$app->sites->getSiteById($element->siteId)->handle.')/',
-                    '/'.Craft::$app->sites->getSiteById($file->targetSite)->handle,
-                    $element->getCpEditUrl($element)
-                );
-            }
-    
-            return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), [
-                'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle
-            ]);
-        }
-
         if ($element instanceof GlobalSet) {
-            return Translations::$plugin->urlHelper->cpUrl('translations/globals/'.$element->handle.'/drafts/'.$file->draftId);
+            if ($file->draftId) {
+                return Translations::$plugin->urlHelper->cpUrl('translations/globals/'.$element->handle.'/drafts/'.$file->draftId);
+            }
+            return preg_replace(
+                '/(\/'.Craft::$app->sites->getSiteById($element->siteId)->handle.')/',
+                '/'.Craft::$app->sites->getSiteById($file->targetSite)->handle,
+                $element->getCpEditUrl($element)
+            );
         }
 
         if ($element instanceof Category) {
-
             $catUri = $element->id.'-'.$element->slug;
-            return Translations::$plugin->urlHelper->cpUrl('translations/categories/'.$element->getGroup()->handle.'/'.$catUri.'/drafts/'.$file->draftId);
+
+            if ($file->draftId) {
+                return Translations::$plugin->urlHelper->cpUrl("translations/categories/".$element->getGroup()->handle."/".$catUri."/drafts/".$file->draftId);
+            }
+            return Translations::$plugin->urlHelper->url(
+                $element->getCpEditUrl($element),
+                ['site' => Craft::$app->sites->getSiteById($file->targetSite)->handle]
+            );
         }
 
-        return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), [
+        if ($element instanceof Asset) {
+            if ($file->draftId) {
+                return Translations::$plugin->urlHelper->cpUrl('translations/assets/'.$element->id.'/drafts/'.$file->draftId);
+            }
+            return Translations::$plugin->urlHelper->url($element->getCpEditUrl(),
+                ['site' => Craft::$app->sites->getSiteById($file->targetSite)->handle]
+            );
+        }
+
+        $data = [
             'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle,
-            'draftId' => $file->draftId
-        ]);
+        ];
+
+        if ($file->draftId) {
+            $data['draftId'] = $file->draftId;
+        }
+        if ($file->status == Constants::FILE_STATUS_PUBLISHED) {
+            $element = $element->getIsDraft() ? $element->getCanonical(true) : $element;
+        }
+        return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), $data);
     }
 
     public function generateFileWebUrl(Element $element, FileModel $file)
@@ -122,7 +138,7 @@ class UrlGenerator
             $route = [
                 'preview/preview', [
                     'elementType' => $className,
-                    'sourceId' => $element->sourceId,
+                    'sourceId' => $element->getCanonicalId(),
                     'siteId' => $siteId ? $siteId : $element->siteId,
                     'draftId' => $element->draftId,
                     'revisionId' => $element->revisionId

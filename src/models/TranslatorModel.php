@@ -41,6 +41,10 @@ class TranslatorModel extends Model
     
     public $attributes;
 
+    public $dateCreated;
+    
+    public $dateUpdated;
+
     public function rules()
     {
         return [

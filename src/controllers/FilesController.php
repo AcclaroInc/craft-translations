@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use Craft;
 use DateTime;
 use ZipArchive;
@@ -30,9 +31,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\services\job\ImportFiles;
 use acclaro\translations\services\repository\SiteRepository;
 use craft\elements\Asset;
-use craft\errors\UploadFailedException;
 use craft\helpers\ArrayHelper;
-use yii\base\ErrorException;
 
 /**
  * @author    Acclaro
@@ -49,24 +48,24 @@ class FilesController extends Controller
     protected $pluginVersion;
 
     /**
-    * @var Order
-    */
+     * @var Order
+     */
     protected $order;
 
     protected $variables;
-
-    const WORDCOUNT_LIMIT = 2000;
 
     /**
 	 * Allowed types of site images.
 	 *
 	 * @var array
 	 */
-	private $_allowedTypes = array('zip', 'xml');
+	private $_allowedTypes = array('zip', 'xml', 'json', 'csv');
 
     public function actionCreateExportZip()
     {
         $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
+        
+        $fileFormat = $params['format'] ?? Constants::FILE_FORMAT_XML;
 
         $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
         $files = Translations::$plugin->fileRepository->getFilesByOrderId($params['orderId'], null);
@@ -81,11 +80,10 @@ class FilesController extends Controller
         $zipName = $this->getZipName($orderAttributes);
         
         // Set destination zip
-        $zipDest = Craft::$app->path->getTempPath().'/'.$zipName.'.zip';
+        $zipDest = Craft::$app->path->getTempPath() . '/' . $zipName . '.zip';
         
         // Create zip
         $zip = new ZipArchive();
-
 
         // Open zip
         if ($zip->open($zipDest, $zip::CREATE) !== true)
@@ -101,30 +99,54 @@ class FilesController extends Controller
             foreach ($order->files as $file)
             {
                 // skip failed files
-                if ($file->status == 'canceled' ) continue;
+                if ($file->status === Constants::FILE_STATUS_CANCELED) continue;
 
                 $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
                 $targetSite = $file->targetSite;
 
-                if ($element instanceof GlobalSet)
-                {
-                    $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
-                } else
-                {
-                    $filename = $file->elementId . '-' . $element->slug.'-'.$targetSite.'.xml';
+                if ($element instanceof GlobalSet) {
+                    $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
+                        '-' . $targetSite . '.' . $fileFormat;
+                } else if ($element instanceof Asset) {
+                    $assetFilename = $element->getFilename();
+                    $fileInfo = pathinfo($element->getFilename());
+                    $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
+                } else {
+                    $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
                 }
 
-                $path = $tempPath.$filename;
-
+                $path = $tempPath . $filename;
                 
-                // $fileContent = new \SimpleXMLElement($file->source);
+                $sourceFormat = Translations::$plugin->fileRepository->getFileSourceFormat($file->source);
+                if (in_array($sourceFormat, [Constants::FILE_FORMAT_JSON, Constants::FILE_FORMAT_XML])) {
 
-                
-                if (!$zip->addFromString($filename, $file->source))
-                {
-                    $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
-                    Craft::log( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, LogLevel::Error, 'translations' );
+                    if ($fileFormat === Constants::FILE_FORMAT_JSON) {
+                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
+                            $fileContent = Translations::$plugin->elementToFileConverter->xmlToJson($file->source);
+                        } else {
+                            $fileContent = $file->source;
+                        }
+                    } else if ($fileFormat === Constants::FILE_FORMAT_CSV) {
+                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
+                            $fileContent = Translations::$plugin->elementToFileConverter->xmlToCsv($file->source);
+                        } else {
+                            $fileContent = Translations::$plugin->elementToFileConverter->jsonToCsv($file->source);
+                        }
+                    } else {
+                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
+                            $fileContent = $file->source;
+                        } else {
+                            $fileContent = Translations::$plugin->elementToFileConverter->jsonToXml($file->source);
+                        }
+                    }
+
+                    if (! $fileContent || !$zip->addFromString($filename, $fileContent)) {
+                        $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
+                        Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
+                    }
+                } else {
+                    Craft::error('The File Source is not of valid xml/json format.');
                 }
             }
         }
@@ -143,10 +165,10 @@ class FilesController extends Controller
         ]);
     }
 
-     /**
-    * Export Functionlity
-	* Sends the zip file created to the user
-    */
+    /**
+     * Export Functionlity
+	 * Sends the zip file created to the user
+     */
     public function actionExportFile()
     {
         $filename = Craft::$app->getRequest()->getRequiredQueryParam('filename');
@@ -160,7 +182,6 @@ class FilesController extends Controller
 
         return FileHelper::unlink($filename);
     }
-
 
     public function actionImportFile()
     {
@@ -192,11 +213,12 @@ class FilesController extends Controller
             // Make sure a file was uploaded
             if ($file && $file->size > 0) {
                 if (!in_array($file->extension, $this->_allowedTypes)) {
-                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
+                    Craft::$app->getSession()->set('fileImportError', 1);
+                    $this->showUserMessages("Invalid extension: The plugin only support [ZIP, XML, JSON, CSV] files.");
                 }
 
                 //If is a Zip File
-                if ($file->extension === 'zip') {
+                if ($file->extension === Constants::FILE_FORMAT_ZIP) {
                     //Unzip File ZipArchive
                     $zip = new \ZipArchive();
 
@@ -212,6 +234,7 @@ class FilesController extends Controller
                         $files = FileHelper::findFiles($assetPath.$orderId);
 
                         $assetIds = [];
+                        $fileInfo = null;
 
                         foreach ($files as $key => $file) {
                             if (! is_bool(strpos($file, '__MACOSX'))) {
@@ -221,6 +244,10 @@ class FilesController extends Controller
                             }
 
                             $filename = Assets::prepareAssetName($file);
+
+                            if (! $fileInfo) {
+                                $fileInfo = pathinfo($filename);
+                            }
 
                             $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
 
@@ -255,37 +282,48 @@ class FilesController extends Controller
                         $zip->close();
 
                         // Process files via job or directly based on order "size"
-                        if ($totalWordCount > self::WORDCOUNT_LIMIT) {
+                        if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                             $job = Craft::$app->queue->push(new ImportFiles([
-                                'description' => 'Updating translation drafts',
+                                'description' => 'Importing translation files',
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,
                                 'assets' => $assetIds,
+                                'fileFormat' => $fileInfo['extension']
                             ]));
 
                             if ($job) {
+                                $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                                $queueOrders[$job] = $orderId;
+                                Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                                Craft::$app->getSession()->set('importQueued', "1");
                                 $params = [
                                     'id' => (int) $job,
                                     'notice' => 'Done updating translation drafts',
-                                    'url' => 'translations/orders/detail/'. $orderId
+                                    'url' => Constants::URL_ORDER_DETAIL . $orderId
                                 ];
                                 Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                             }
+                            $this->showUserMessages("File queued for import. Check activity log for any errors.", true);
                         } else {
                             $fileSvc = new ImportFiles();
+                            $success = true;
                             foreach ($assetIds as $key => $id) {
                                 $a = Craft::$app->getAssets()->getAssetById($id);
-                                $fileSvc->processFile($a, $this->order);
+                                $res = $fileSvc->processFile($a, $this->order, $fileInfo['extension']);
                                 Craft::$app->getElements()->deleteElement($a);
+                                if ($res === false) $success = false;
+                            }
+                            if (! $success) {
+                                $this->showUserMessages("Error importing file. Please check activity log for details.");
+                            } else {
+                                $this->showUserMessages("File uploaded successfully", true);
                             }
                         }
-
-                        // $this->redirect('translations/orders/detail/'. $orderId, 302, true);
-                        $this->showUserMessages("File uploaded successfully: $fileName", true);
                     } else {
+                        Craft::$app->getSession()->set('fileImportError', 1);
                         $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
                     }
-                } elseif ($file->extension === 'xml') {
+                } else {
                     $filename = Assets::prepareAssetName($file->name);
 
                     $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
@@ -311,42 +349,47 @@ class FilesController extends Controller
                         return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                     }
 
-                    // Process files via job or directly based on order "size"
-                    if ($totalWordCount > self::WORDCOUNT_LIMIT) {
+                    $totalWordCount = Translations::$plugin->fileRepository->getUploadedFilesWordCount($asset, $file->extension);
+
+                    // Process files via job or directly based on file "size"
+                    if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                         $job = Craft::$app->queue->push(new ImportFiles([
-                            'description' => 'Updating translation drafts',
+                            'description' => 'Importing translation files',
                             'orderId' => $orderId,
                             'totalFiles' => $total_files,
                             'assets' => [$asset->id],
+                            'fileFormat' => $file->extension
                         ]));
 
                         if ($job) {
+                            $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                            $queueOrders[$job] = $orderId;
+                            Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                            Craft::$app->getSession()->set('importQueued', "1");
                             $params = [
                                 'id' => (int) $job,
                                 'notice' => 'Done updating translation drafts',
-                                'url' => 'translations/orders/detail/'. $orderId
+                                'url' => Constants::URL_ORDER_DETAIL . $orderId
                             ];
                             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                         }
-                        $this->showUserMessages("File uploaded successfully: {$file->name}", true);
+                        $this->showUserMessages("File: {$file->name} queued for import. Check activity log for any errors.", true);
                     } else {
                         $fileSvc = new ImportFiles();
                         $a = Craft::$app->getAssets()->getAssetById($asset->id);
-                        $res = $fileSvc->processFile($a, $this->order);
+                        $res = $fileSvc->processFile($a, $this->order, $file->extension);
                         Craft::$app->getElements()->deleteElement($a);
 
                         if($res !== false){
                             $this->showUserMessages("File uploaded successfully: {$file->name}", true);
                         } else {
+                            Craft::$app->getSession()->set('fileImportError', 1);
                             $this->showUserMessages("File import error. Please check the order activity log for details.");
                         }
                     }
-
-
-                } else {
-                    $this->showUserMessages("Invalid extention: The plugin only support [ZIP, XML] files.");
                 }
             } else {
+                Craft::$app->getSession()->set('fileImportError', 1);
                 $this->showUserMessages("The file you are trying to import is empty.");
             }
         }
@@ -356,142 +399,61 @@ class FilesController extends Controller
         }
     }
 
-    public function actionApplyTranslationDraft()
+    /**
+     * Get Difference in File source and target
+     *
+     * @return void
+     */
+    public function actionGetFileDiff()
     {
-        $this->requirePostRequest();
-        $request = Craft::$app->getRequest();
-        
-        // Get the fileId param
+        $variables = Craft::$app->getRequest()->resolve()[1];
+        $success = false;
+        $error = null;
+        $data = [];
+
         $fileId = Craft::$app->getRequest()->getParam('fileId');
         if (!$fileId) {
-            $this->showUserMessages("File not found.");
-            return;
-        }
-
-        // Get the file
-        $file = Translations::$plugin->fileRepository->getFileById($fileId);
-        if (!$file) {
-            $this->showUserMessages("File not found.");
-            return;
-        }
-
-        // Get the element
-        $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-        if (!$element) {
-            $this->showUserMessages("Entry not found for file.");
-            return;
-        }
-
-        $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
-        if (!$order) {
-            $this->showUserMessages("Order not found.");
-            return;
-        }
-
-        if ($element instanceof GlobalSet) {
-            $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
-            
-            $draft->name = $element->name;
-            $draft->site = $file->targetSite;
-
-            if ($draft) {
-                $response = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
-                $message = 'Draft applied for '. '"'. $draft->name .'"';
-            } else {
-                $response = false;
-            }
-
-            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-        } else if ($element instanceof Category) {
-            $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
-
-            $draft->name = $element->title;
-            $draft->site = $file->targetSite;
-
-            if ($draft) {
-                $response = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
-                $message = 'Draft applied for '. '"'. $draft->name .'"';
-            } else {
-                $response = false;
-            }
-
-            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+            $error = "FileId not found.";
         } else {
-            $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+            $file = Translations::$plugin->fileRepository->getFileById($fileId);
+            $error = "File not found.";
+            if ($file && ($file->status == 'complete' || $file->status == 'published' || $file->status == 'ready for review')) {
+                try {
+                    // Current entries XML
+                    $sourceContent = Translations::$plugin->elementTranslator->getTargetData($file->source, true);
+    
+                    // Translated file XML
+                    $targetContent = Translations::$plugin->elementTranslator->getTargetData($file->target, true);
 
-            if ($draft) {
-                $response = Translations::$plugin->draftRepository->applyTranslationDraft($file->id, $file, $draft);
-                $message = 'Draft applied for '. '"'. $element->title .'"';
-            } else {
-                $response = false;
-            }
+                    foreach ($sourceContent as $key => $value) {
+                        if ($value != $targetContent[$key] ?? '') {
+                            $data['diff'][$key] = [
+                                'source' => $value ?? '',
+                                'target' => $targetContent[$key] ?? '',
+                            ];
+                        }
+                    }
 
-            $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-        }
-
-        if ($response) {
-            $order->logActivity(Translations::$plugin->translator->translate('app', $message));
-
-            $oldTokenRoute = json_encode(array(
-                'action' => 'entries/view-shared-entry',
-                'params' => array(
-                    'draftId' => $file->draftId,
-                ),
-            ));
-
-            $newTokenRoute = json_encode(array(
-                'action' => 'entries/view-shared-entry',
-                'params' => array(
-                    'entryId' => $draft->id,
-                    'locale' => $file->targetSite,
-                ),
-            ));
-
-            Craft::$app->db->createCommand()->update(
-                'tokens',
-                array('route' => $newTokenRoute),
-                'route = :oldTokenRoute',
-                array(':oldTokenRoute' => $oldTokenRoute)
-            );
-        } else {
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t apply draft for '. '"'. $element->title .'"'));
-            Translations::$plugin->orderRepository->saveOrder($order);
-        }
-
-        $file->draftId = 0;
-        $file->status = 'published';
-
-        Translations::$plugin->fileRepository->saveFile($file);
-
-        $files = $order->getFiles();
-        $filesCount = count($files);
-        $publishedFilesCount = 0;
-
-        foreach ($files as $key => $f) {
-            if ($f->status === 'published') {
-                $publishedFilesCount++;
+                    $data['source'] = $sourceContent;
+                    $data['target'] = $targetContent;
+                    $error = null;
+                    $success = true;
+                } catch(Exception $e) {
+                    $error = $e->getMessage();
+                }
             }
         }
 
-        if ($publishedFilesCount === $filesCount) {
-            $order->status = 'published';
-        }
-
-        Translations::$plugin->orderRepository->saveOrder($order);
-
-        if (
-            $response &&
-            $request->getAcceptsJson()
-        ) {
-            return $this->asJson([
-                'success' => true,
-            ]);
-        }
+        return $this->asJson([
+            'success' => $success,
+            'data' => $data,
+            'error' => $error
+        ]);
     }
 
 	/**
-    * Show Flash Notificaitons and Erros to the trasnlator
-	*/
+     * Show Flash Notifications and Errors to the translator
+	 */
     public function showUserMessages($message, $isSuccess = false)
     {
     	if ($isSuccess)
@@ -502,24 +464,6 @@ class FilesController extends Controller
     	{
     		Craft::$app->session->setError(Craft::t('app', $message));
     	}	
-    }
-
-    /**
-    * Report and Validate XML imported files
-	* @return string
-    */
-    public function reportXmlErrors()
-    {
-    	$errors = array();
-    	$libErros = libxml_get_errors();
-    	
-    	$msg = false;
-    	if ($libErros && isset($libErros[0]))
-    	{
-    		$msg = $libErros[0]->code . ": " .$libErros[0]->message;
-    	}
-
-    	return $msg;
     }
 
     /**

@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.0.0 - 2021-09-29
+
+### Added
+
+- Support for Craft 3.7.9+ ([AcclaroInc/#306](https://github.com/AcclaroInc/pm-craft-translations/issues/306))
+- Enhanced "Review and publish" workflow with simplified source and target comparison, "Ready for review" statuses, copy text to clipboard, and more intuitive publishing actions. ([AcclaroInc/#351](https://github.com/AcclaroInc/pm-craft-translations/issues/351))
+- Ability to select specific Entry Drafts for translation ([AcclaroInc/#298](https://github.com/AcclaroInc/pm-craft-translations/issues/298))
+- Support for selecting Asset Elements for translations ([#168](https://github.com/AcclaroInc/craft-translations/issues/168)), ([AcclaroInc/#297](https://github.com/AcclaroInc/pm-craft-translations/issues/297))
+- Orders now support JSON and CSV filetypes for download and upload actions
+- Added "Update order" and "Create new order" actions making post-submission order updates (i.e., adding a file, language, etc.) much easier
+- It's now possible to export Order Elements (CSV, JSON, and XML) ([AcclaroInc/#233](https://github.com/AcclaroInc/pm-craft-translations/issues/233))
+- API orders now support manual file uploads ([AcclaroInc/#377](https://github.com/AcclaroInc/pm-craft-translations/issues/377))
+- For API orders, it's now possible to cancel specific files or the entire order
+- API orders now support custom tags ([AcclaroInc/#320](https://github.com/AcclaroInc/pm-craft-translations/issues/320))
+- Include Order ID parameters in XML meta tags ([AcclaroInc/#352](https://github.com/AcclaroInc/pm-craft-translations/issues/352))
+
+### Changed
+
+- Translation drafts are now created when translations are approved and applied instead of order creation, reducing the likelihood of outdated drafts
+- Orders now use a familiar single-page view for creating, reviewing, updating, and applying translations ([AcclaroInc/#10](https://github.com/AcclaroInc/pm-craft-translations/issues/10))
+
+### Updated
+
+- Translator archive and details pages now use a more familiar layout ([AcclaroInc/#322](https://github.com/AcclaroInc/pm-craft-translations/issues/322))
+- "Recent Orders" widget now sorts by `dateUpdated`
+- Acclaro API order-endpoint URL pattern ([AcclaroInc/#317](https://github.com/AcclaroInc/pm-craft-translations/issues/317))
+- Application information indicators (i.e., app version, support links, etc.)
+
+### Fixed
+- Matrix block merge issue 'Attempting to merge source changes for a draft in an unsupported site.' ([AcclaroInc/#329](https://github.com/AcclaroInc/pm-craft-translations/issues/329))
+- Matrix block merge issues 'Attempting to duplicate/save an element in an unsupported site.' ([AcclaroInc/#321](https://github.com/AcclaroInc/pm-craft-translations/issues/321))
+- Matrix block merge issue 'Invalid owner ID' ([#211](https://github.com/AcclaroInc/craft-translations/issues/211))
+- Neo block merge issue 'Invalid owner ID' ([AcclaroInc/#330](https://github.com/AcclaroInc/pm-craft-translations/issues/330))
+- Other nested fields (Matrix, Neo, Super Table) draft merging issues introduced in Craft 3.7.9+ ([AcclaroInc/#215](https://github.com/AcclaroInc/pm-craft-translations/issues/215))
+- Deprecated `getSourceId()` method. Now using `getCanonicalId()` ([#202](https://github.com/AcclaroInc/craft-translations/issues/202)), ([AcclaroInc/#319](https://github.com/AcclaroInc/pm-craft-translations/issues/319))
+- "Modified Source Entries" widget loading issue ([AcclaroInc/#334](https://github.com/AcclaroInc/pm-craft-translations/issues/334))
+- Order status not updating for Categories ([AcclaroInc/#308](https://github.com/AcclaroInc/pm-craft-translations/issues/308))
+- Misc. bugs ([AcclaroInc/#314](https://github.com/AcclaroInc/pm-craft-translations/issues/314)), ([AcclaroInc/#335](https://github.com/AcclaroInc/pm-craft-translations/issues/335)), ([AcclaroInc/#284](https://github.com/AcclaroInc/pm-craft-translations/issues/284)), ([AcclaroInc/#349](https://github.com/AcclaroInc/pm-craft-translations/issues/349)), ([AcclaroInc/#324](https://github.com/AcclaroInc/pm-craft-translations/issues/324)), ([AcclaroInc/#345](https://github.com/AcclaroInc/pm-craft-translations/issues/345))
+
+### Removed
+- Deletion of auto-propagated drafts when applying translation drafts as it is no longer necessary as of Craft 3.7.9+
+
 ## 1.10.6 - 2021-06-24
 
 ### Fixed

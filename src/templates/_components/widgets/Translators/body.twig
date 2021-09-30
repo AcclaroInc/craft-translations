@@ -39,13 +39,9 @@
                 </tr>
             {% endfor %}
         </table>
-        {% if translators|length == '1' %}
-            <p style="float:left;"><a class="" href="{{ url('translations/translators') }}" >{{ translators|length }} </a> service enabled</p>
-        {% else %}
-            <p style="float:left;"><a class="" href="{{ url('translations/translators') }}" >{{ translators|length }} </a> services enabled</p>
-        {% endif %}
+        
         <div class="" style="float:right;">
-            <a class="btn icon add" href="{{ url('translations/translators/new') }}" style="margin-top:1em;">Add New</a>
+            <a class="btn icon add" href="{{ url('translations/translators/new') }}" style="margin-top:1em;">Add new</a>
         </div>
     {% else %}
         <table class="data fullwidth table">

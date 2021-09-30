@@ -24,12 +24,12 @@ class OrderAssets extends AssetBundle
         ];
 
         $this->js = [
-            'js/OrderDetail.js',
             'js/OrderEntries.js',
             'js/OrderIndex.js',
             'js/ExportFiles.js',
             'js/ImportFiles.js',
             'js/diff2html.min.js',
+            'js/CustomExporters.js',
         ];
 
         $this->css = [

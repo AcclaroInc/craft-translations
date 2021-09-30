@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services;
 
+use acclaro\translations\Constants;
 use Craft;
 use Exception;
 use DOMDocument;
@@ -53,7 +54,50 @@ class ElementTranslator
         return $source;
     }
 
-    public function getTargetDataFromXml($xml)
+    private function getDataFormat($data) {
+        if (strpos($data, "<xml>") !== false) {
+            return Constants::FILE_FORMAT_XML;
+        }
+        return Constants::FILE_FORMAT_JSON;
+    }
+
+    public function getTargetData($content, $nonNested = false) {
+        if ($this->getDataFormat($content) === Constants::FILE_FORMAT_XML) {
+            return $this->getTargetDataFromXml($content, $nonNested);
+        } else {
+            $targetData = [];
+            $content = json_decode($content, true);
+
+            if ($nonNested) {
+                return $content['content'];
+            }
+
+            foreach ($content['content'] as $name => $value) {
+                if (strpos($name, '.') !== false) {
+                    $parts = explode('.', $name);
+                    $container =& $targetData;
+
+                    while ($parts) {
+                        $key = array_shift($parts);
+    
+                        if (!isset($container[$key])) {
+                            $container[$key] = array();
+                        }
+    
+                        $container =& $container[$key];
+                    }
+    
+                    $container = $value;
+                } else {
+                    $targetData[$name] = $value;
+                }
+            }
+
+            return $targetData;
+        }
+    }
+
+    public function getTargetDataFromXml($xml, $nonNested = false)
     {
         $dom = new DOMDocument('1.0', 'utf-8');
 
@@ -67,6 +111,11 @@ class ElementTranslator
         foreach ($contents as $content) {
             $name = (string) $content->getAttribute('resname');
             $value = (string) $content->nodeValue;
+
+            if ($nonNested) {
+                $targetData[$name] = $value;
+                continue;
+            }
             
             if (strpos($name, '.') !== false) {
                 $parts = explode('.', $name);
@@ -97,18 +146,17 @@ class ElementTranslator
 
         foreach($element->getFieldLayout()->getFields() as $key => $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-
             $fieldHandle = $field->handle;
             
             $fieldType = $field;
-            
+
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             if (!$translator) {
                 if ($includeNonTranslatable) {
                     $post[$fieldHandle] = $element->$fieldHandle;
                 }
-                
+
                 continue;
             }
 
@@ -119,19 +167,12 @@ class ElementTranslator
                 $fieldPost = $translator->toPostArray($this, $element, $field, $sourceSite);
             }
 
-            
             if (!is_array($fieldPost)) {
                 $fieldPost = array($fieldHandle => $fieldPost);
             }
-            
+
             $post = array_merge($post, $fieldPost);
         }
-
-        // echo '<pre>';
-        // echo "//======================================================================<br>// post ElementTranslator<br>//======================================================================<br>";
-        // var_dump($post);
-        // echo '</pre>';
-        // die;
 
         return $post;
     }

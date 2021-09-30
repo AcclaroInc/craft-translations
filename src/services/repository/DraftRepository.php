@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\repository;
 
+use acclaro\translations\Constants;
 use Craft;
 use DateTime;
 use Exception;
@@ -26,6 +27,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\CreateDrafts;
+use craft\elements\Asset;
 
 class DraftRepository
 {
@@ -183,7 +185,7 @@ class DraftRepository
             }
 
             // Let's remove the auto-propagated drafts
-            Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
+            //Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
 
             // Apply the draft to the entry
             $newEntry = Craft::$app->getDrafts()->publishDraft($draft);
@@ -204,6 +206,7 @@ class DraftRepository
     public function enableForAllSupportedSites($file)
     {
         $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+        $element = $element->getIsDraft() ? $element->getCanonical() : $element;
 
         $supportedSites = array_column($element->getSupportedSites(), 'siteId');
 
@@ -228,13 +231,11 @@ class DraftRepository
         }
     }
 
-    public function createOrderDrafts($orderId, $wordCounts, $queue=null)
+    public function createOrderDrafts($orderId, $wordCounts, $queue=null, $publish = true, $elementIds = null, $fileIds = null)
     {
-
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
-        $elements = ($order->getElements() instanceof Element) ? $order->getElements()->all() : (array) $order->getElements();
-        $totalElements = (count($elements) * count($order->getTargetSitesArray()));
+        $totalElements = (count($elementIds) * count($order->getTargetSitesArray()));
         $currentElement = 0;
 
         $createDrafts = new CreateDrafts();
@@ -242,48 +243,70 @@ class DraftRepository
                 ->admin()
                 ->orderBy(['elements.id' => SORT_ASC])
                 ->one();
-            
+
         $this->creatorId = $creator->id;
 
         $this->allSitesHandle = $this->getAllSitesHandle();
+        
+        $orderFiles = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
 
-        foreach ($order->getTargetSitesArray() as $key => $site) {
-            foreach ($elements as $element) {
+        foreach ($orderFiles as $file) {
+            if (! in_array($file->id, $fileIds)) {
+                continue;
+            }
 
-                if ($queue) {
-                    $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
+            if (! $file) {
+                Craft::$app->getSession()->setError(Craft::t('app', 'File Not Found.'));
+                continue;
+            }
+
+            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $order->siteId);
+            if ($queue) {
+                $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
+            }
+
+            if ($element->getIsDraft()) {
+                $element = $element->getCanonical();
+            }
+            
+            // Create draft only if not already exist
+            if (! $file->draftId) {
+                $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+            } else {
+                $file->status = Constants::FILE_STATUS_COMPLETE;
+                Translations::$plugin->fileRepository->saveFile($file);
+
+            }
+
+            try {
+                $translation_service = $order->translator->service;
+                if ($translation_service === Translations::ACCLARO) {
+                    $translation_service = Translations::EXPORT_IMPORT;
                 }
 
-                $this->createDrafts($element, $order, $site, $wordCounts);
+                //Translation Service
+                $translationService = Translations::$plugin->translatorFactory
+                    ->makeTranslationService($translation_service, $order->translator->getSettings());
+
+                $translationService->updateIOFile($order, $file);
+            } catch(Exception $e) {
+                $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not update draft Error: ' .$e->getMessage()));
             }
         }
 
-        // Only send order to translation service when not Manual
-        if ($order->translator->service !== 'export_import') {
-            $translator = $order->getTranslator();
-
-            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
-
-            if ($queue) {
-                $translationService->sendOrder($order);
-            } else {
-                Translations::$plugin->orderRepository->sendAcclaroOrder($order, $translator->getSettings());
-            }
+        if ($publish) {
+            $this->applyDrafts($order->id, $elementIds, $fileIds, $queue);
         } else {
-            $order->status = 'in progress';
-            $order->dateOrdered = new DateTime();
-            //echo ' status '.$order->status; die;
-
-            $success = Craft::$app->getElements()->saveElement($order, true, true, false);
-            if (!$success) {
-                Craft::warning( '['. __METHOD__ .'] Couldn’t save the order :: '.$orderId, 'translations' );
-            }
+            $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
+    
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
+    
+            Translations::$plugin->orderRepository->saveOrder($order);
         }
     }
 
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
     {
-
         switch (get_class($element)) {
             case Entry::class:
                 $draft = $this->createEntryDraft($element, $site, $order->title);
@@ -294,19 +317,21 @@ class DraftRepository
             case Category::class:
                 $draft = $this->createCategoryDraft($element, $site, $order->title, $order->sourceSite);
                 break;
+            case Asset::class:
+                $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
+                break;
         }
 
-        if (!($file instanceof FileModel)){
+        if (!($file instanceof FileModel)) {
             $file = Translations::$plugin->fileRepository->makeNewFile();
         }
 
-
         if (empty($draft)) {
-
             Craft::error(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), 'translations' );
             return false;
         }
-        if ($draft instanceof GlobalSet || $draft instanceof Category) {
+
+        if ($draft instanceof GlobalSet || $draft instanceof Category || $draft instanceof Asset) {
             $targetSite = $draft->site;
         } else {
             $targetSite = $draft->siteId;
@@ -314,27 +339,16 @@ class DraftRepository
 
         try {
             // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->sourceId);
+            $isExistingFile = $this->isTranslationDraft($draft->draftId, $draft->getCanonicalId());
             if (!empty($isExistingFile)) {
                 return;
             }
 
-            $element = Craft::$app->getElements()->getElementById($draft->sourceId, null, $order->sourceSite);
+            // $element = Craft::$app->getElements()->getElementById($draft->getCanonicalId(), null, $order->sourceSite);
 
-            $file->orderId = $order->id;
-            $file->elementId = $draft->sourceId;
             $file->draftId = $draft->draftId;
-            $file->sourceSite = $order->sourceSite;
-            $file->targetSite = $targetSite;
             $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
-            $file->source = Translations::$plugin->elementToXmlConverter->toXml(
-                ($draft instanceof Entry) ? $draft : $element, // Send the element for custom drafts (GlobalSets, Categories)
-                $draft->draftId,
-                $order->sourceSite,
-                $targetSite,
-                $file->previewUrl
-            );
-            $file->wordCount = isset($wordCounts[$element->id]) ? $wordCounts[$element->id] : 0;
+            $file->status = Constants::FILE_STATUS_COMPLETE;
             
             Translations::$plugin->fileRepository->saveFile($file);
             
@@ -343,9 +357,9 @@ class DraftRepository
             
             return $file;
         } catch (Exception $e) {
-            
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not create draft Error: ' .$e->getMessage()));
             $file->orderId = $order->id;
-            $file->elementId = $draft->sourceId;
+            $file->elementId = $draft->getCanonicalId();
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
@@ -356,7 +370,6 @@ class DraftRepository
             
             return false;
         }
-
     }
 
     public function createEntryDraft(Entry $entry, $site, $orderName)
@@ -443,118 +456,125 @@ class DraftRepository
      * @param null $queue
      * @throws NotFoundHttpException
      */
-    public function applyDrafts($orderId, $elementIds, $queue=null)
+    public function applyDrafts($orderId, $elementIds, $fileIds, $queue=null)
     {
-
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
         $files = $order->getFiles();
 
-        $filesCount = count($files);
-
         $totalElements = (count($elementIds) * count($order->getTargetSitesArray()));
         $currentElement = 0;
-        $publishedFilesCount = 0;
 
         $applyDraft = new ApplyDrafts();
 
-        foreach ($files as $file) {
-            if (!in_array($file->elementId, $elementIds)) {
-                continue;
-            }
-
-            if ($file->status !== 'complete') {
-                continue;
-            }
-
-            if ($queue) {
-                $applyDraft->updateProgress($queue, $currentElement++ / $totalElements);
-            }
-
-            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-
-            if ($element instanceof GlobalSet) {
-                $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
-
-                // keep original global set name
-                $draft->name = $element->name;
-
-                if ($draft) {
-                    $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
-                } else {
-                    $success = false;
+        try {
+            foreach ($files as $file) {
+                if (
+                    ! in_array($file->id, $fileIds) ||
+                    $file->status !== Constants::FILE_STATUS_COMPLETE
+                ) {
+                    continue;
                 }
-
-                $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-            } else if ($element instanceof Category) {
-                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
-
-                // keep original category name
-                $draft->name = $element->title;
-                $draft->site = $file->targetSite;
-
-                if ($draft) {
-                    $success = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
-                } else {
-                    $success = false;
+    
+                if ($queue) {
+                    $applyDraft->updateProgress($queue, $currentElement++ / $totalElements);
                 }
-
-                $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
-            } else {
-                $draft = $this->getDraftById($file->draftId, $file->targetSite);
-
-                if ($draft) {
-                    $success = $this->applyTranslationDraft($file->id, $file, $draft);
+    
+                $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+    
+                if ($element instanceof GlobalSet) {
+                    $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+    
+                    // keep original global set name
+                    $draft->name = $element->name;
+    
+                    if ($draft) {
+                        $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+                    } else {
+                        $success = false;
+                    }
+    
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                } else if ($element instanceof Category) {
+                    $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+    
+                    // keep original category name
+                    $draft->name = $element->title;
+                    $draft->site = $file->targetSite;
+    
+                    if ($draft) {
+                        $success = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
+                    } else {
+                        $success = false;
+                    }
+    
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                } else if ($element instanceof Asset) {
+                    $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+    
+                    // keep original asset name
+                    $draft->name = $element->title;
+                    $draft->site = $file->targetSite;
+    
+                    if ($draft) {
+                        $success = Translations::$plugin->assetDraftRepository->publishDraft($draft);
+                    } else {
+                        $success = false;
+                    }
+    
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
                 } else {
-                    $success = false;
+                    $draft = $this->getDraftById($file->draftId, $file->targetSite);
+    
+                    if ($draft) {
+                        $success = $this->applyTranslationDraft($file->id, $file, $draft);
+                    } else {
+                        $success = false;
+                    }
                 }
+                if ($success) {
+                    $oldTokenRoute = json_encode(array(
+                        'action' => 'entries/view-shared-entry',
+                        'params' => array(
+                            'draftId' => $file->draftId,
+                        ),
+                    ));
+    
+                    $newTokenRoute = json_encode(array(
+                        'action' => 'entries/view-shared-entry',
+                        'params' => array(
+                            'entryId' => $draft->id,
+                            'locale' => $file->targetSite,
+                        ),
+                    ));
+    
+                    Craft::$app->db->createCommand()->update(
+                        'tokens',
+                        array('route' => $newTokenRoute),
+                        'route = :oldTokenRoute',
+                        array(':oldTokenRoute' => $oldTokenRoute)
+                    );
+                } else {
+                    $order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t apply draft for '. '"'. $element->title .'"'));
+                    Translations::$plugin->orderRepository->saveOrder($order);
+    
+                    continue;
+                }
+    
+                $file->draftId = 0;
+                $file->status = Constants::FILE_STATUS_PUBLISHED;
 
-                $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                Translations::$plugin->fileRepository->saveFile($file);
             }
-
-            if ($success) {
-                $oldTokenRoute = json_encode(array(
-                    'action' => 'entries/view-shared-entry',
-                    'params' => array(
-                        'draftId' => $file->draftId,
-                    ),
-                ));
-
-                $newTokenRoute = json_encode(array(
-                    'action' => 'entries/view-shared-entry',
-                    'params' => array(
-                        'entryId' => $draft->id,
-                        'locale' => $file->targetSite,
-                    ),
-                ));
-
-                Craft::$app->db->createCommand()->update(
-                    'tokens',
-                    array('route' => $newTokenRoute),
-                    'route = :oldTokenRoute',
-                    array(':oldTokenRoute' => $oldTokenRoute)
-                );
-            } else {
-                $order->logActivity(Translations::$plugin->translator->translate('app', 'Couldn’t apply draft for '. '"'. $element->title .'"'));
-                Translations::$plugin->orderRepository->saveOrder($order);
-
-                continue;
-            }
-
-            $file->draftId = 0;
-            $file->status = 'published';
-            $publishedFilesCount++;
-
-            Translations::$plugin->fileRepository->saveFile($file);
+        } catch(Exception $e) {
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not publish draft Error: ' .$e->getMessage()));
+            Craft::error('Could not publish draft Error: ' .$e->getMessage());
         }
 
-        if ($publishedFilesCount === $filesCount) {
-            $order->status = 'published';
+        $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts applied'));
+        $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts applied'));
 
-            Translations::$plugin->orderRepository->saveOrder($order);
-        }
-
+        Translations::$plugin->orderRepository->saveOrder($order);
     }
     
     /**

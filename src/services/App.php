@@ -56,6 +56,11 @@ class App extends Component
     public $categoryDraftRepository;
 
     /**
+     * @var repository\AssetDraftRepository
+     */
+    public $assetDraftRepository;
+
+    /**
      * @var repository\TagRepository
      */
     public $tagRepository;
@@ -69,6 +74,11 @@ class App extends Component
      * @var repository\EntryRepository
      */
     public $entryRepository;
+
+    /**
+     * @var repository\ElementRepository
+     */
+    public $elementRepository;
     
     /**
      * @var repository\FileRepository
@@ -131,9 +141,14 @@ class App extends Component
     public $elementTranslator;
     
     /**
-     * @var ElementToXmlConverter
+     * @var ElementToFileConverter
      */
-    public $elementToXmlConverter;
+    public $elementToFileConverter;
+    
+    /**
+     * @var AcclaroService
+     */
+    public $acclaroService;
     
     /**
      * @var OrderSearchParams
@@ -142,6 +157,7 @@ class App extends Component
     
     public function init()
     {
+        $this->acclaroService = new AcclaroService();
         $this->urlHelper = new UrlHelper();
         $this->urlGenerator = new UrlGenerator();
         $this->translator = new Translator();
@@ -149,9 +165,11 @@ class App extends Component
         $this->translationRepository = new repository\TranslationRepository();
         $this->categoryRepository = new repository\CategoryRepository();
         $this->categoryDraftRepository = new repository\CategoryDraftRepository();
+        $this->assetDraftRepository = new repository\AssetDraftRepository();
         $this->tagRepository = new repository\TagRepository();
         $this->draftRepository = new repository\DraftRepository();
         $this->entryRepository = new repository\EntryRepository();
+        $this->elementRepository = new repository\ElementRepository();
         $this->fileRepository = new repository\FileRepository();
         $this->globalSetRepository = new repository\GlobalSetRepository();
         $this->globalSetDraftRepository = new repository\GlobalSetDraftRepository();
@@ -164,7 +182,7 @@ class App extends Component
         $this->fieldTranslatorFactory = new fieldtranslator\Factory();
         $this->translatorFactory = new translator\Factory();
         $this->elementTranslator = new ElementTranslator();
-        $this->elementToXmlConverter = new ElementToXmlConverter();
+        $this->elementToFileConverter = new ElementToFileConverter();
         $this->orderSearchParams = new OrderSearchParams();
     }
 }

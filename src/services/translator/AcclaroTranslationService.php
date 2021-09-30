@@ -10,12 +10,14 @@
 
 namespace acclaro\translations\services\translator;
 
+use acclaro\translations\Constants;
 use Craft;
 use DateTime;
 use Exception;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
+use craft\elements\Asset;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
@@ -79,15 +81,20 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
+        if ($order->status === Constants::ORDER_STATUS_CANCELED) return;
+
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
         if (empty($orderResponse->status)) {
             return;
         }
 
-        if ($order->status !== $orderResponse->status) {
+        $orderStatus = $orderResponse->status === Constants::ORDER_STATUS_COMPLETE ?
+            Constants::ORDER_STATUS_REVIEW_READY : $orderResponse->status;
+
+        if ($order->status !== $orderStatus) {
             $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderResponse->status)
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderStatus)
             );
         }
         
@@ -95,7 +102,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             Translations::$plugin->orderRepository->saveOrderName($order->id, $orderResponse->name);
         }
         
-        $order->status = $orderResponse->status;
+        $order->status = $orderStatus;
         // check if due date set then update it
         if($orderResponse->duedate){
             $dueDate = new DateTime($orderResponse->duedate);
@@ -109,6 +116,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
     public function updateFile(Order $order, FileModel $file)
     {
         try {
+            if ($file->status === Constants::FILE_STATUS_CANCELED) return;
+
             $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
             
             if (!is_array($fileInfoResponse)) {
@@ -131,7 +140,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
     
             $fileStatusResponse = $this->acclaroApiClient->getFileStatus($order->serviceOrderId, $targetFileId);
     
-            $file->status = $fileStatusResponse->status;
+            $file->status = $fileStatusResponse->status == Constants::FILE_STATUS_COMPLETE ? 
+                Constants::FILE_STATUS_REVIEW_READY : $fileStatusResponse->status;
             $file->dateDelivered = new \DateTime();
     
             // download the file
@@ -139,21 +149,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
     
             if ($target) {
                 $file->target = $target;
-    
-                $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-    
-                if ($element instanceof GlobalSet) {
-                    $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
-                } else if ($element instanceof Category) {
-                    $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
-    
-                    $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
-                    $draft->groupId = $category->groupId;
-                } else {
-                    $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-                }
-    
-                $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite, $order);
             }
         } catch (Exception $e) {
             Craft::error(  '['. __METHOD__ .'] Couldn’t update file. Error: '.$e->getMessage(), 'translations' );
@@ -216,6 +211,25 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 }
                 break;
             
+            // Update Asset Drafts
+            case $draft instanceof Asset:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->siteId = $targetSite;
+               
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+                $draft->setFieldValues($post);
+
+                $res = Translations::$plugin->assetDraftRepository->saveDraft($draft, $post);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
+
+                    return false;
+                }
+                break;
+            
             // Update GlobalSet Drafts
             case $draft instanceof GlobalSet:
                 $draft->siteId = $targetSite;
@@ -238,6 +252,18 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 break;
         }
     }
+
+    /**
+     * Get order status on acclaro
+     *
+     * @param [type] $order
+     * @return void
+     */
+    public function getOrderStatus($order)
+    {
+        $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
+        return ! empty($orderResponse) ? $orderResponse->status : null;
+    }
  
     /**
      * {@inheritdoc}
@@ -250,6 +276,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
             'sandboxMode' => $this->sandboxMode,
             'settings' => $this->settings
         ]));
+
+        return $job;
     }
     
     /**
@@ -269,7 +297,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $subdomain = $this->sandboxMode ? 'apisandbox' : 'my';
 
-        return sprintf('https://%s.acclaro.com/portal/vieworder.php?id=%s', $subdomain, $order->serviceOrderId);
+        return sprintf('https://%s.acclaro.com/orders/details/%s', $subdomain, $order->serviceOrderId);
     }
 
     public function getLanguages()
@@ -295,17 +323,28 @@ class AcclaroTranslationService implements TranslationServiceInterface
             !empty($settings['sandboxMode'])
         );
 
+        $orderData = [
+            'acclaroOrderId'    => $order->serviceOrderId,
+            'orderId'      => $order->id
+        ];
+
         if ($file) {
 
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
+            $file->source = Translations::$plugin->elementToFileConverter->addDataToSourceXML($file->source, $orderData);
+
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
-            if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
+            if ($element instanceof GlobalSet) {
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
+            } else if ($element instanceof Asset) {
+                $assetFilename = $element->getFilename();
+                $fileInfo = pathinfo($element->getFilename());
+                $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . Constants::FILE_FORMAT_XML;
             } else {
-                $filename = $element->slug.'-'.$targetSite.'.xml';
+                $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             }
 
             $path = $tempPath .'/'. $file->elementId .'-'. $filename;
@@ -344,5 +383,76 @@ class AcclaroTranslationService implements TranslationServiceInterface
             unlink($path);
         }
 
+    }
+
+    /**
+     * Update Order details on Acclaro
+     *
+     * @return void
+     */
+    public function editOrder($order, $settings, $data)
+    {
+        $res = $this->acclaroApiClient->editOrder(
+            $order->serviceOrderId,
+            $data['title'] ?? $order->title,
+            $data['comment'] ?? null,
+            $data['requestedDueDate'] ?? null
+        );
+
+        if (empty($res)) {
+            throw new Exception('Error updating order', 1);
+        }
+    }
+
+    /**
+     * Cancel an Acclaro order.
+     *
+     * @return void
+     */
+    public function cancelOrder($order, $settings)
+    {
+        return $this->acclaroApiClient->addOrderComment($order->serviceOrderId, "CANCEL ORDER");
+    }
+
+    /**
+     * Add comment to Acclaro order.
+     *
+     * @return void
+     */
+    public function addFileComment($order, $settings, $file, $comment)
+    {
+        $this->acclaroApiClient->addFileComment($order->serviceOrderId, $file->serviceFileId, $comment);
+    }
+
+    /**
+     * Cancel an Acclaro order.
+     *
+     * @return void
+     */
+    public function editOrderTags($order, $settings, $newTags)
+    {
+        $oldTags = [];
+
+        foreach (json_decode($order->tags, true) as $tagId) {
+            $tag = Craft::$app->getTags()->getTagById($tagId);
+            if ($tag) {
+                array_push($oldTags, $tag->title);
+            }
+        }
+
+        $remove = array_diff($oldTags, $newTags);
+        $add = array_diff($newTags, $oldTags);
+
+        if (! empty($remove)) {
+            foreach ($remove as $title) {
+                $this->acclaroApiClient->removeOrderTags($order->serviceOrderId, $title);
+            }
+        }
+
+        if (! empty($add)) {
+            foreach ($add as $title) {
+                $this->acclaroApiClient->addOrderTags($order->serviceOrderId, $title);
+            }
+        }
     }
 }

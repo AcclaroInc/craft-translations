@@ -1,82 +1,94 @@
 {% extends '_layouts/cp' %}
-{% import '_includes/forms' as forms %}
+{% import 'translations/_macros' as macros %}
 
 {% set title = 'Translators'|t %}
+{% set elementType = 'acclaro\\translations\\elements\\\Translator' %}
+
+{% set elementInstance = craft.app.elements.createElement(elementType) %}
+{% set context = 'index' %}
+
+{% if not elementInstance %}
+    {% exit 404 %}
+{% endif %}
+
 {% block actionButton %}
-<a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New Translator'|t }}</a>
-<a class="btn big submit add icon btn-create-new-order" href="{{ url('translations/orders/new') }}" style="margin-left:5px;">{{ 'Create New Order'|t }}</a>
+    <div class="btn menubtn settings icon"></div>
+    <div class="menu">
+        <ul>
+            <li><a class="edit-translator disabled" title="{{ 'Edit translator service'|t }}"> Edit</a></li>
+        </ul>
+        <hr>
+        <ul>
+            <li><a class="error delete-translator disabled" title="{{ 'Delete translator service'|t }}" data-confirm="{{ 'Are you sure you want to delete selected translators?'|t }}">Delete</a></li>
+        </ul>
+    </div>
+    <a class="btn big icon btn-create-new-order" href="{{ url('translations/orders/create') }}" data-icon="language" style="margin-left:5px;">{{ 'New order'|t }}</a>
+    <a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New translator'|t }}</a>
 {% endblock %}
+
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}
 
 {% set crumbs = [
     { label: 'Translations'|t, url: url('translations') },
-    { label: 'Translators'|t, url: 'javascript:void(0)' },
 ] %}
 
-{% block content %}
-<div class="translations-element-index">
-    {% if translators is not empty %}
-    <table class="data">
-        <thead>
-            <tr>
-                <th>{{ 'Name'|t }}</th>
-                <th>{{ 'Status'|t }}</th>
-                <th>{{ 'Service'|t }}</th>
-                <th style="text-align:right;">{{ 'Actions'|t }}</th>
-                <th>&nbsp;</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for translator in translators %}
-            <tr>
-                <td><a href="{{ url('translations/translators/detail/'~translator.id) }}">{{ translator.name }}</a></td>
-                <td>
-                    {% switch translator.status %}
-                    {% case "active" %}
-                        <span class="status green"></span>{{ translator.status|title }}
-                    {% case "inactive" %}
-                        <span class="status red"></span>{{ translator.status|title }}
-                    {% endswitch %}
-                </td>
-                <td>
-                    {% switch translator.service %}
-                    {% case "export_import" %}
-                        {{ 'Export/Import' }}
-                    {% case "acclaro" %}
-                        {{ 'Acclaro' }}
-                    {% endswitch %}
-                </td>
+{% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}
+{% set customizableSources = (sources is not empty and context == 'index' and currentUser.can('customizeSources')) %}
 
-                <td style="text-align:right;">
-                    <form method="post" accept-charset="UTF-8">
-                        {{ csrfInput() }}
-
-                        {{ forms.hidden({
-                            name: 'action',
-                            value: 'translations/base/delete-translator',
-                        }) }}
-
-                        {{ forms.hidden({
-                            name: 'translatorId',
-                            value: translator.id,
-                        }) }}
-                        <div class="btn menubtn settings icon"></div>
-                        <div class="menu">
-                            <ul>
-                                <li><a class="" href="{{ url('translations/translators/detail/'~translator.id) }}"> Edit</a></li>
-                            </ul>
-                            <hr>
-                            <ul>
-                                <li><a class="formsubmit error" title="{{ 'Delete Translator Service'|t }}" data-confirm="{{ 'Are you sure you want to delete this translator?'|t }}">Delete</a></li>
-                            </ul>
-                        </div>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No Translators available.</p>
+{% block sidebar %}
+    {% if sources is not empty %}
+        <nav>
+            {% include "_elements/sources" %}
+        </nav>
     {% endif %}
-</div>
+{% endblock %}
+
+{% block content %}
+    <div class="translations-element-index">
+        {% if translators is not empty %}
+        <table class="data">
+            <thead>
+                <tr>
+                    <th class="checkbox-cell selectallcontainer orderable" role="checkbox">
+                        <input type="checkbox" class="thin" title="select all" id="translator-0"/>
+                        <label for="translator-0"></label>
+                    </th>
+                    <th>{{ 'Name'|t }}</th>
+                    <th>{{ 'Status'|t }}</th>
+                    <th>{{ 'Service'|t }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for translator in translators %}
+                <tr>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" title="select" id="{{ 'translator-'~translator.id }}"
+                            data-url="{{ url('translations/translators/detail/'~translator.id) }}" data-id="{{ translator.id }}"/>
+                        <label for="{{ 'translator-'~translator.id }}"></label>
+                    </td>
+                    <td><a href="{{ url('translations/translators/detail/'~translator.id) }}">{{ translator.name }}</a></td>
+                    <td>
+                        {% switch translator.status %}
+                        {% case "active" %}
+                            <span class="status green"></span>{{ translator.status|title }}
+                        {% case "inactive" %}
+                            <span class="status red"></span>{{ translator.status|title }}
+                        {% endswitch %}
+                    </td>
+                    <td>
+                        {% switch translator.service %}
+                        {% case "export_import" %}
+                            {{ 'Export/Import' }}
+                        {% case "acclaro" %}
+                            {{ 'Acclaro' }}
+                        {% endswitch %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No Translators available.</p>
+        {% endif %}
+    </div>
 {% endblock %}

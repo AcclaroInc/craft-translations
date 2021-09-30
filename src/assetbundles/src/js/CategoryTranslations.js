@@ -24,7 +24,7 @@ Craft.Translations.CategoryTranslations = {
     },
 
     getEditCategoryId: function() {
-        return $('form#main-form input[type=hidden][name=categoryId]').val();
+        return $('form#main-form input[type=hidden][name=sourceId]').val();
     },
 
     updateSelectedCategories: function() {
@@ -38,6 +38,7 @@ Craft.Translations.CategoryTranslations = {
 
         $(this.$btn[0]).toggleClass('disabled', this.categories.length === 0);
         $(this.$menubtn[0]).toggleClass('disabled', this.categories.length === 0);
+        $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.categories.length === 0);
 
         this.updateCreateNewLink();
     },
@@ -100,20 +101,21 @@ Craft.Translations.CategoryTranslations = {
 
 
         this.$btn = $('<a>', {
-            'class': 'btn submit icon',
+            'class': 'btn icon',
             'href': '#',
             'data-icon': "language",
         });
 
-        this.$btn.html("<span>" + Craft.t('app', 'New Translation') + "</span>");
+        this.$btn.html("<span class='btn-text'>" + Craft.t('app', 'New Translation') + "</span>");
 
         this.$menubtn = $('<div>', {
-            'class': 'btn submit menubtn'
+            'class': 'btn menubtn'
         });
 
         if (!this.isEditCategoryScreen()) {
             this.$btn.addClass('disabled');
             this.$menubtn.addClass('disabled');
+            this.$btn.find(".btn-text").addClass('display-none');
         }
 
         this.$btn.appendTo($btngroup);
@@ -218,7 +220,7 @@ Craft.Translations.CategoryTranslations = {
             });
         }
 
-        var $link = Craft.getUrl('translations/orders/new', {'elements[]': categoryId, 'sourceSite': self.getSourceSite()});
+        var $link = Craft.getUrl('translations/orders/create', {'elements[]': categoryId, 'sourceSite': self.getSourceSite()});
 
         this.$btn.attr('href', $link);
 
@@ -241,7 +243,7 @@ Craft.Translations.CategoryTranslations = {
 
             var $form = $('<form>', {
                 'method': 'POST',
-                'action': Craft.getUrl('translations/orders/new')
+                'action': Craft.getUrl('translations/orders/create')
             });
 
             $form.hide();

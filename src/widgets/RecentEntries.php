@@ -151,7 +151,6 @@ class RecentEntries extends Widget
             $entries[$i]['id'] = $element->id;
             $i++;
         }
-        //echo '<pre>'; print_r($entries); die;
 
         return $entries;
     }

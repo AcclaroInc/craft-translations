@@ -25,6 +25,8 @@ class TranslatorRepository
     public function getTranslatorById($translatorId)
     {
         $record = TranslatorRecord::findOne($translatorId);
+
+        if (! $record) return null;
         
         $translator = new TranslatorModel($record->toArray([
             'id',
@@ -32,9 +34,35 @@ class TranslatorRepository
             'service',
             'status',
             'settings',
+            'dateCreated',
+            'dateUpdated',
         ]));
 
         return $translator;
+    }
+    
+    /**
+     * @param  int|string $service
+     * @return \acclaro\translations\models\TranslatorModel
+     */
+    public function getTranslatorByService($service)
+    {
+        $records = TranslatorRecord::find()->all();
+        $translators = array();
+        
+        foreach ($records as $key => $record) {
+            $translators[$key] = new TranslatorModel($record->toArray([
+                'id',
+                'label',
+                'service',
+                'status'
+            ]));
+            if ($translators[$key]['service'] !== $service) {
+                unset($translators[$key]);
+            }
+        }
+
+        return $translators;
     }
     
     /**
@@ -56,6 +84,22 @@ class TranslatorRepository
         }
 
         return $translators;
+    }
+
+    public function getTranslatorServices()
+    {
+        $records = TranslatorRecord::find()->all();
+        $translatorServices = array();
+
+        foreach ($records as $key => $record) {
+            $translatorServices[$record->service] = new TranslatorModel($record->toArray([
+                'id',
+                'label',
+                'service',
+            ]));
+        }
+        ksort($translatorServices);
+        return $translatorServices;
     }
 
     /**

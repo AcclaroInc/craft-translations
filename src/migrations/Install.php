@@ -10,11 +10,13 @@
 
 namespace acclaro\translations\migrations;
 
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 
 use Craft;
 use craft\config\DbConfig;
 use craft\db\Migration;
+use craft\db\Query;
 
 /**
  * @author    Acclaro
@@ -54,6 +56,7 @@ class Install extends Migration
     public function safeDown()
     {
         $this->driver = Craft::$app->getConfig()->getDb()->driver;
+        $this->removePluginData();
         $this->removeTables();
 
         return true;
@@ -75,10 +78,10 @@ class Install extends Migration
                     'id'                => $this->primaryKey(),
                     'orderId'           => $this->integer()->notNull(),
                     'elementId'         => $this->integer()->notNull(),
-                    'draftId'           => $this->integer()->notNull(),
+                    'draftId'           => $this->integer(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSite'        => $this->integer()->notNull(),
-                    'status'            => $this->enum('status', ['new','in progress','preview','complete','canceled','published', 'failed'])->defaultValue('new'),
+                    'status'            => $this->enum('status', Constants::FILE_STATUSES)->defaultValue('new'),
                     'wordCount'         => $this->integer(),
                     'source'            => $this->longText(),
                     'target'            => $this->longText(),
@@ -122,16 +125,19 @@ class Install extends Migration
                     'ownerId'           => $this->integer()->notNull(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSites'       => $this->string(1020)->notNull()->defaultValue(''),
-                    'status'            => $this->enum('status', ['new','getting quote','needs approval','in preparation','in review','in progress','complete','canceled','published','failed'])->defaultValue('new'),
+                    'status'            => $this->enum('status', Constants::ORDER_STATUSES)->defaultValue('new'),
                     'requestedDueDate'  => $this->dateTime(),
                     'orderDueDate'      => $this->dateTime(),
                     'comments'          => $this->text(),
-                    'activityLog'       => $this->text(),
+                    'activityLog'       => $this->longText(),
                     'dateOrdered'       => $this->dateTime(),
                     'serviceOrderId'    => $this->string()->defaultValue(''),
                     'entriesCount'      => $this->integer()->notNull(),
                     'wordCount'         => $this->integer()->notNull(),
                     'elementIds'        => $this->string(8160)->notNull()->defaultValue(''),
+                    'tags'              => $this->string(8160)->notNull()->defaultValue(''),
+                    'trackChanges'      => $this->integer()->defaultValue(0),
+                    'asynchronousPublishing' => $this->integer()->defaultValue(0),
                     'dateCreated'       => $this->dateTime()->notNull(),
                     'dateUpdated'       => $this->dateTime()->notNull(),
                     'uid'               => $this->uid(),
@@ -214,6 +220,25 @@ class Install extends Migration
                 ]
             );
         }
+        
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_assetdrafts}}');
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                '{{%translations_assetdrafts}}',
+                [
+                    'id'            => $this->primaryKey(),
+                    'name'          => $this->string()->notNull(),
+                    'title'         => $this->string()->notNull(),
+                    'assetId'       => $this->integer()->notNull(),
+                    'site'          => $this->integer()->notNull(),
+                    'data'          => $this->mediumText()->notNull(),
+                    'dateCreated'   => $this->dateTime()->notNull(),
+                    'dateUpdated'   => $this->dateTime()->notNull(),
+                    'uid'           => $this->uid()
+                ]
+            );
+        }
 
         return $tablesCreated;
     }
@@ -251,6 +276,21 @@ class Install extends Migration
      */
     protected function insertDefaultData()
     {
+        // Default Translator details
+        $defaultTranslator = [
+            "label" => "Export Import",
+            "service" => "export_import",
+            "status" => "active",
+            "settings" => "[]"
+        ];
+        $this->upsert('{{%translations_translators}}', $defaultTranslator);
+
+        // Default Tag group
+        $data = [
+            'name'      => 'Craft Translations',
+            'handle'    => 'craftTranslations',
+        ];
+        $this->upsert('{{%taggroups}}', $data);
     }
 
     /**
@@ -261,6 +301,10 @@ class Install extends Migration
         $this->dropTableIfExists('{{%translations_files}}');
 
         $this->dropTableIfExists('{{%translations_globalsetdrafts}}');
+        
+        $this->dropTableIfExists('{{%translations_categorydrafts}}');
+        
+        $this->dropTableIfExists('{{%translations_assetdrafts}}');
 
         $this->dropTableIfExists('{{%translations_orders}}');
 
@@ -271,4 +315,35 @@ class Install extends Migration
         $this->dropTableIfExists('{{%translations_widgets}}');
     }
 
+    /**
+     * @return void
+     */
+    protected function removePluginData()
+    {
+        $tagHandle = 'craftTranslations';
+
+        // Remove translation drafts
+        $translationDraftIds = (new Query())
+            ->select(['draftId'])
+            ->from(['{{%translations_files}}'])
+            ->where(['!=', 'draftId', null])
+            ->column();
+
+        if (! empty($translationDraftIds)) {
+            $this->delete('{{%drafts}}', array('IN', 'id', $translationDraftIds));
+        }
+
+        // Remove Tags data
+        $tagGroupIds = (new Query())
+            ->select(['id'])
+            ->from(['{{%taggroups}}'])
+            ->where(['handle' => $tagHandle])
+            ->column();
+
+        if (! empty($tagGroupIds)) {
+            $this->delete('{{%tags}}', array('IN', 'groupId', $tagGroupIds));
+        }
+
+        $this->delete('{{%taggroups}}', array('handle' => $tagHandle));
+    }
 }

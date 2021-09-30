@@ -44,13 +44,13 @@ Craft.Translations.GlobalSetEdit = {
 
         var $buttons = $form.find('> .buttons');
 
-        var $btngroup = $('<div>', {'class': 'btngroup'})
+        var $btngroup = $('<div>', {'class': 'group'})
             .appendTo($buttons);
 
         var $submit = $buttons.find('.submit:first')
             .appendTo($btngroup);
 
-        var $btn = $('<div>', {'class': 'btn submit menubtn'})
+        var $btn = $('<div>', {'class': 'btn menubtn'})
             .appendTo($btngroup);
 
         var $menu = $('<div>', {'class': 'menu'})
@@ -63,7 +63,7 @@ Craft.Translations.GlobalSetEdit = {
         var $formsubmit = $('<a>', {
             'class': 'formsubmit',
             'text': Craft.t('app', 'Save as a draft'),
-            'data-action': 'translations/base/save-global-set-draft'
+            'data-action': 'translations/global-set/save-draft'
         }).appendTo($item);
 
         $btn.menubtn();
@@ -76,25 +76,25 @@ Craft.Translations.GlobalSetEdit = {
 
         var sourceSite = $('form#main-form input[type=hidden][name=siteId]').val();
 
-        var $btngroup = $('<div>', {'class': 'btngroup submit right translations-dropdown'});
+        var $btngroup = $('<div>', {'class': 'btngroup right translations-dropdown'});
 
         var submitBtn = $('#header > .submit').length;
 
         if (submitBtn > 0) {
-            $btngroup.insertBefore('#header > .submit');
+            $btngroup.insertBefore('#header > .btngroup');
         } else {
-            $btngroup.insertBefore('#header .submit');
+            $btngroup.insertBefore('#header .btngroup');
         }
 
         var $btn = $('<a>', {
-            'class': 'btn submit icon',
+            'class': 'btn icon',
             'href': '#',
             'data-icon': "language",
-            'text': Craft.t('app', 'New Translation')
+            'text': Craft.t('app', 'New translation')
         });
 
         var $menubtn = $('<div>', {
-            'class': 'btn submit menubtn'
+            'class': 'btn menubtn'
         });
 
         $btn.appendTo($btngroup);
@@ -199,7 +199,7 @@ Craft.Translations.GlobalSetEdit = {
             });
         }
 
-        var $link = Craft.getUrl('translations/orders/new', {'elements[]': globalSetId, 'sourceSite': sourceSite});
+        var $link = Craft.getUrl('translations/orders/create', {'elements[]': globalSetId, 'sourceSite': sourceSite});
 
         $btn.attr('href', $link);
 

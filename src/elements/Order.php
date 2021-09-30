@@ -28,7 +28,10 @@ use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\db\OrderQuery;
-
+use craft\controllers\ElementIndexesController;
+use craft\elements\actions\Delete;
+use craft\elements\Entry;
+use craft\models\Section;
 
 /**
  * @author    Acclaro
@@ -80,6 +83,12 @@ class Order extends Element
     public $elementIds;
     
     public $siteId;
+
+    public $trackChanges;
+
+    public $asynchronousPublishing;
+
+    public $tags;
 
     /**
      * Properties
@@ -145,6 +154,11 @@ class Order extends Element
     //     ];
     // }
 
+    protected static function defineActions(string $source = null): array
+    {
+        return [Delete::class];
+    }
+
     protected static function defineSources(string $context = null): array
     {
         $sources = [
@@ -155,11 +169,71 @@ class Order extends Element
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
-                'key' => 'in-progress',
-                'label' => Translations::$plugin->translator->translate('app', 'Orders in progress'),
+                'key' => 'pending',
+                'label' => Translations::$plugin->translator->translate('app', 'Pending'),
                 'criteria' => [
                     'status' => [
-                        'new', 'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval', 'complete'
+                        'new'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'in-progress',
+                'label' => Translations::$plugin->translator->translate('app', 'In progress'),
+                'criteria' => [
+                    'status' => [
+                        'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'ready-for-review',
+                'label' => Translations::$plugin->translator->translate('app', 'Ready for review'),
+                'criteria' => [
+                    'status' => [
+                        'ready for review'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'ready-to-apply',
+                'label' => Translations::$plugin->translator->translate('app', 'Ready to apply'),
+                'criteria' => [
+                    'status' => [
+                        'complete'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'applied',
+                'label' => Translations::$plugin->translator->translate('app', 'Applied'),
+                'criteria' => [
+                    'status' => [
+                        'published'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'failed',
+                'label' => Translations::$plugin->translator->translate('app', 'Failed'),
+                'criteria' => [
+                    'status' => [
+                        'failed'
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'canceled',
+                'label' => Translations::$plugin->translator->translate('app', 'Canceled'),
+                'criteria' => [
+                    'status' => [
+                        'canceled'
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -250,22 +324,7 @@ class Order extends Element
                 return sprintf('<a href="%s" target="_blank">#%s</a>', $translationService->getOrderUrl($this), $value);
 
             case 'status':
-            switch ($this->statusLabel) {
-                case 'Order failed':
-                    return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Pending submission':
-                    return '<span class="status"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'In progress':
-                    return '<span class="status orange"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'In review':
-                    return '<span class="status yellow"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Ready to apply':
-                    return '<span class="status blue"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Cancelled':
-                    return '<span class="status red"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-                case 'Applied':
-                    return '<span class="status green"></span>'.Translations::$plugin->translator->translate('app', $this->statusLabel);
-            }
+                return "<span class='status $this->statusColour'></span>".Translations::$plugin->translator->translate('app', $this->statusLabel);
 
             case 'orderDueDate':
             case 'requestedDueDate':
@@ -308,16 +367,16 @@ class Order extends Element
     {
         $attributes = [
             'title' => ['label' => Translations::$plugin->translator->translate('app', 'Name')],
-            'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
-            'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
-            'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
-            'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
-            'translatorId' => ['label' => Translations::$plugin->translator->translate('app', 'Translator')],
-            'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
+            // 'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
+            // 'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
+            // 'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
+            // 'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
             'status' => ['label' => Translations::$plugin->translator->translate('app', 'Status')],
+            'translatorId' => ['label' => Translations::$plugin->translator->translate('app', 'Translator')],
+            // 'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
             'dateOrdered' => ['label' => Translations::$plugin->translator->translate('app', 'Created')],
             'dateUpdated' => ['label' => Translations::$plugin->translator->translate('app', 'Updated')],
-            'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
+            // 'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
         ];
 
         return $attributes;
@@ -360,19 +419,15 @@ class Order extends Element
     {
         $elementIds = $this->elementIds ? json_decode($this->elementIds) : array();
 
-        $elements = array();
-        
         foreach ($elementIds as $key => $elementId) {
             if (!array_key_exists($elementId, $this->_elements)) {
-                $this->_elements[$elementId] = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
-            }
+                $element = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
 
-            if ($this->_elements[$elementId]) {
-                $elements[] = $this->_elements[$elementId];
+                $element ? $this->_elements[$elementId] = $element : '';
             }
         }
 
-        return $elements;
+        return $this->_elements;
     }
 
     public function getFiles()
@@ -436,17 +491,41 @@ class Order extends Element
             case 'needs approval':
             case 'in preparation':
             case 'in progress':
-                return 'In progress';
             case 'in review':
-                return 'In review';
+                return 'In progress';
+            case 'ready for review':
+                return 'Ready for review';
             case 'complete':
                 return 'Ready to apply';
             case 'canceled':
-                return 'Cancelled';
+                return 'Canceled';
             case 'published':
                 return 'Applied';
             case 'failed':
-                return 'Order failed';
+                return 'Failed';
+        }
+    }
+
+    public function getStatusColour()
+    {
+        switch ($this->status) {
+            case 'new':
+                return '';
+            case 'getting quote':
+            case 'needs approval':
+            case 'in preparation':
+            case 'in review':
+            case 'in progress':
+                return 'orange';
+            case 'ready for review':
+                return 'yellow';
+            case 'complete':
+                return 'blue';
+            case 'published':
+                return 'green';
+            case 'canceled':
+            case 'failed':
+                return 'red';
         }
     }
 
@@ -484,6 +563,7 @@ class Order extends Element
         $record->entriesCount =  $this->entriesCount;
         $record->wordCount =  $this->wordCount;
         $record->elementIds =  $this->elementIds;
+        $record->tags =  $this->tags;
         
         $record->save(false);
         

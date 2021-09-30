@@ -114,9 +114,6 @@
 
 .translations-translator-settings {
     background-image: linear-gradient(#f7f7f8, #f4f5f6);
-    padding: 2em 1em;
-    margin: 0 0 2em;
-    max-width: 720px;
     display: none;
 }
 
@@ -203,36 +200,28 @@
     margin: 0 0 2em;
 }
 
-.translations-order-detail-button-wrapper {
-    flex-direction: row;
-    position: relative;
-    float: right;
-    padding-bottom: 10px;
-    margin: 0;
-}
-
-.translations-order-detail-button-wrapper #import-tool {
+/* #import-tool {
     margin-left: 10px;
-}
+} */
 
 .margin-right-10{
     margin-right: 10px;
 }
 
-.translations-order-detail-button-wrapper .utility-status {
+.utility-status {
     display: flex;
     align-self: center;
 }
 
-.translations-order-detail-button-wrapper .utility-status .progressbar {
-    left: 50%;
-    top: calc(50% - 5px);
-    width: 60%;
+.utility-status .progressbar {
+    left: 75%;
+    width: 25%;
     transform: translateX(-50%) translateY(-50%);
 }
 
 .translations-order-confirmation .readable{
-    margin: 30px 0;
+    margin: 30px auto;
+    max-width: 400px;
 }
 
 .translations-order-confirmation .readable{
@@ -248,36 +237,6 @@
     font-size: 14px;
     max-width: 450px;
     margin: 5px auto 30px;
-}
-
-.translations-order-reporting {
-    background-image: linear-gradient(#f7f7f8, #f4f5f6);
-    padding: 2em;
-    margin: 0 0 2em;
-    display: inline-block;
-}
-
-.translations-order-reporting .btn {
-    display: inline-block;
-}
-
-.translations-order-reporting table {
-    margin: 0 0 1em;
-}
-
-.translations-order-reporting table label {
-    padding: 1em 1em 1em 0;
-    display: block;
-}
-
-.translations-order-reporting table td {
-    vertical-align: middle;
-}
-
-.translations-order-reporting table .datewrapper,
-.translations-order-reporting table .select,
-.translations-order-reporting table select {
-    width: 100%;
 }
 
 .translations-complete-orders-indicator {
@@ -315,6 +274,10 @@
     bottom: 0;
     opacity: 0;
     z-index: 99999999;
+}
+
+.noClick {
+    pointer-events: none;
 }
 
 ins {
@@ -378,6 +341,11 @@ del {
     line-height: 26px;
     text-align: center;
     color: #8f98a3;
+}
+
+.activity-log {
+    overflow-y: auto;
+    max-height: 250px;
 }
 
 .translations-order-detail-activity-log {
@@ -473,8 +441,8 @@ del {
     line-height: 2em;
 }
 
-#duplicate-modal .main {
-    padding: 20px;
+#duplicate-modal .main, .p-20 {
+    padding: 20px !important;
 }
 
 #duplicate-modal .footer {
@@ -740,4 +708,191 @@ del {
 .footer-order-navigation a:hover,
 .top-order-navigation a:hover{
     color: #0B69A3;
+}
+
+/* CSS Used in Order Create and Details page */
+
+.publish-row {
+    background-color: lightgray;
+    height: 3em;
+    padding: 10px;
+}
+
+.close-publish-modal {
+    font-size: 20px;
+}
+
+.float-right {
+    float: right !important;
+}
+
+.pl-10 {
+    padding-left: 10px;
+}
+
+.pt-10 {
+    padding-top: 10px !important;
+}
+
+.pt-5 {
+    padding-top: 5px !important;
+}
+
+.w-300 {
+    width: 300px;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.fw-400 {
+    font-weight: 400;
+}
+
+.ml-auto {
+    margin-left: auto;
+}
+
+.mr-auto {
+    margin-right: auto !important;
+}
+
+.h-6 {
+    height: 6em;
+}
+
+.h-10 {
+    height: 10em;
+}
+
+.h-8 {
+    height: 8em;
+}
+
+.h-7 {
+    height: 7em;
+}
+
+.pr-10 {
+    padding-right: 10em;
+}
+
+.mb-1 {
+    margin-bottom: 1em;
+}
+
+.p-0 {
+    padding: 0 !important;
+}
+
+.ml-10 {
+    margin-left: 10px;
+}
+
+.df {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.scroll-x-auto {
+    overflow-x: auto;
+    align-items: center;
+}
+
+.clone-modal-tr {
+    cursor: pointer;
+}
+
+.scroll-y-auto {
+    overflow-y: auto;
+    height: 90%;
+}
+
+.position-fixed {
+    position: fixed;
+    width: 65%;
+}
+
+.mt-4 {
+    margin-top: 4em;
+}
+
+select[name="version"] {
+    width: 120px;
+}
+
+.diff-tl {
+    font-size: 10px;
+}
+
+.diff-copy {
+    cursor: pointer;
+    fill: #3f4d5a;
+    padding: 10px;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.target {
+    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
+    width: 50%;
+}
+
+.source {
+    border-right: 1px solid rgba(51, 64, 77, 0.1);
+    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
+    width: 50%;
+}
+
+td.source{
+    vertical-align: top;
+}
+
+td.target{
+    vertical-align: top;
+}
+
+#diffTable {
+    border-radius: 0 0 5px 5px;
+    border-top: 0px !important;
+    border: 1px solid rgba(51, 64, 77, 0.1);
+    width: 100%;
+}
+
+.bg-none {
+    background: none !important;
+    cursor: pointer !important;
+}
+
+
+
+.processing {
+    background-color: #ced8e5 !important;
+}
+
+.color-red {
+    color: red;
+}
+
+.mr--10 {
+    margin-right: -10px;
+}
+
+.bg-white {
+    background: white;
+}
+
+.inline-flex {
+    display: inline-flex;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.display-none {
+    display: none;
 }

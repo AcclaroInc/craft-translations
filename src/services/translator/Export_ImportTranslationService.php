@@ -16,11 +16,13 @@ use Exception;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
+use acclaro\translations\Constants;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
+use craft\elements\Asset;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
@@ -56,59 +58,52 @@ class Export_ImportTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
-        if ($order->status !== 'complete') {
+        $newStatus = Translations::$plugin->orderRepository->getNewStatus($order);
+        if ($order->status !== $newStatus) {
             $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), 'complete')
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $newStatus)
             );
-        }
 
-        $order->status = 'complete';
+        }
+        $order->status = $newStatus;
     }
 
-     /**
+    /**
      * {@inheritdoc}
      */
-
     public function updateFile(Order $order, FileModel $file){
         return;
     }
 
-    public function updateIOFile(Order $order, FileModel $file, $target, $file_name)
-    { 
-        if (empty($target)) 
-        {
-            return;
-        }
-
-        $file->status = 'complete';
+    public function updateIOFile(Order $order, FileModel $file)
+    {
+        $target = $file->target;
         $file->dateDelivered = new \DateTime();
-       
-        if ($target) 
-        {
-            $file->target = $target;
 
-            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+        $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
-            if ($element instanceof GlobalSet) {
-                $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
-            } else if ($element instanceof Category) {
-                $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
+        if ($element->getIsDraft()) $element = $element->getCanonical();
 
-                $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
-                $draft->groupId = $category->groupId;
+        if ($element instanceof GlobalSet) {
+            $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+        } else if ($element instanceof Category) {
+            $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId, $file->targetSite);
 
-            } else {
-                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-            }
-
-            return $this->updateDraftFromXml($element, $draft, $target, $file->sourceSite, $file->targetSite, $order, $file_name);
+            $category = Craft::$app->getCategories()->getCategoryById($draft->categoryId, $draft->site);
+            $draft->groupId = $category->groupId;
+        } else if ($element instanceof Asset) {
+            $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId, $file->targetSite);
+        }else {
+            $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
+
+        return $this->updateDraft($element, $draft, $target, $file->sourceSite, $file->targetSite, $order);
     }
 
-    public function updateDraftFromXml($element, $draft, $xml, $sourceSite, $targetSite, $order, $file_name)
+    public function updateDraft($element, $draft, $translatedContent, $sourceSite, $targetSite, $order)
     {
         // Get the data from the XML files
-        $targetData = Translations::$plugin->elementTranslator->getTargetDataFromXml($xml);
+        $targetData = Translations::$plugin->elementTranslator->getTargetData($translatedContent);
 
         switch (true) {
             // Update Entry Drafts
@@ -117,9 +112,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
 
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
-
                 $draft->setFieldValues($post);
-                
                 $draft->siteId = $targetSite;
 
                 $res = Translations::$plugin->draftRepository->saveDraft($draft);
@@ -180,13 +173,30 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     return false;
                 }
                 break;
+            // Update Asset Drafts
+            case $draft instanceof Asset:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->siteId = $targetSite;
+               
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+
+                $draft->setFieldValues($post);
+
+                $res = Translations::$plugin->assetDraftRepository->saveDraft($draft, $post);
+                if (!$res) {
+                    $order->logActivity(
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                    );
+
+                    return false;
+                }
+                break;
             default:
                 break;
         }
         
         return true;
     }
-
 
     /**
      * {@inheritdoc}

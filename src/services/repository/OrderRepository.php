@@ -10,13 +10,16 @@
 
 namespace acclaro\translations\services\repository;
 
+use acclaro\translations\Constants;
 use Craft;
+use craft\elements\Category;
 use DateTime;
 use Exception;
 use craft\db\Query;
 use craft\helpers\Db;
 use craft\records\Element;
 use craft\helpers\UrlHelper;
+use craft\elements\Asset;
 use craft\elements\GlobalSet;
 use craft\elements\db\ElementQuery;
 use acclaro\translations\Translations;
@@ -25,6 +28,8 @@ use acclaro\translations\records\OrderRecord;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
+use craft\db\Table;
+use craft\elements\Tag;
 use craft\helpers\App;
 
 class OrderRepository
@@ -141,7 +146,7 @@ class OrderRepository
             'in preparation' => 'in preparation',
             'in progress' => 'in progress',
             'complete' => 'complete',
-            'canceled' => 'cancelled',
+            'canceled' => 'canceled',
             'published' => 'published',
         );
     }
@@ -273,6 +278,19 @@ class OrderRepository
         }
     }
 
+    public function deleteOrderTags($order, $settings, $tagIds) {
+        $acclaroApiClient = new AcclaroApiClient(
+            $settings['apiToken'],
+            !empty($settings['sandboxMode'])
+        );
+        foreach ($tagIds as $tagId) {
+            $tag = Craft::$app->getTags()->getTagById($tagId);
+            if ($tag) {
+                $acclaroApiClient->removeOrderTags($order->id, $tag->title);
+            }
+        }
+    }
+
     /**
      * @param $order
      * @param $settings
@@ -294,21 +312,42 @@ class OrderRepository
         $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
 
+        if($dueDate = $order->requestedDueDate){
+            $dueDate = $dueDate->format('Y-m-d');
+        }
+
         $orderResponse = $acclaroApiClient->createOrder(
             $order->title,
             $comments,
-            $order->requestedDueDate,
+            $dueDate,
             $order->id,
             $order->wordCount
         );
 
-        $order->serviceOrderId = (!is_null($orderResponse)) ? $orderResponse->orderid : '';
+        $orderData = [
+            'acclaroOrderId'    => (!is_null($orderResponse)) ? $orderResponse->orderid : '',
+            'orderId'      => $order->id
+        ];
+
+        $order->serviceOrderId = $orderData['acclaroOrderId'];
         $order->status = (!is_null($orderResponse)) ? $orderResponse->status : '';
 
         $orderCallbackResponse = $acclaroApiClient->requestOrderCallback(
             $order->serviceOrderId,
             Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
         );
+        if ($order->tags) {
+            $tags = [];
+            foreach (json_decode($order->tags, true) as $tagId) {
+                $tag = Craft::$app->getTags()->getTagById($tagId);
+                if ($tag) {
+                    array_push($tags, $tag->title);
+                }
+            }
+            if (! empty($tags)) {
+                $res = $acclaroApiClient->addOrderTags($orderResponse->orderid, implode(",", $tags));
+            }
+        }
 
         $tempPath = Craft::$app->path->getTempPath();
 
@@ -318,15 +357,21 @@ class OrderRepository
                 $sendOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
             }
 
+            $file->source = Translations::$plugin->elementToFileConverter->addDataToSourceXML($file->source, $orderData);
+
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
             if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.xml';
+                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
+            } else if ($element instanceof Asset) {
+                $assetFilename = $element->getFilename();
+                $fileInfo = pathinfo($element->getFilename());
+                $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' .Constants::FILE_FORMAT_XML;
             } else {
-                $filename = $element->slug.'-'.$targetSite.'.xml';
+                $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             }
 
             $path = $tempPath .'/'. $file->elementId .'-'. $filename;
@@ -357,7 +402,6 @@ class OrderRepository
                 $file->serviceFileId,
                 $file->previewUrl
             );
-            // }
 
             fclose($stream);
 
@@ -391,5 +435,102 @@ class OrderRepository
         Craft::$app->getElements()->saveElement($order);
 
         return true;
+    }
+
+    public function getAllOrderTags() {
+        $allOrderTags = [];
+
+        $orderTags = (new Query())
+            ->select(['id'])
+            ->from([Table::ELEMENTS])
+            ->where(['type' => Tag::class, 'fieldLayoutId' => null])
+            ->column();
+
+        foreach ($orderTags as $tagId) {
+            $allOrderTags[] = Craft::$app->getTags()->getTagById($tagId);
+        }
+
+        return $allOrderTags;
+    }
+
+    public function orderTagExists($title) {
+        $allOrderTags = $this->getAllOrderTags();
+
+        foreach ($allOrderTags as $tag) {
+            if (strtolower($tag->title) == strtolower($title)) {
+                return $tag;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param $elements
+     * @return array
+     */
+    public function checkOrderDuplicates($elements)
+    {
+        $orderIds = [];
+        foreach ($elements as $element) {
+            $orders = Translations::$plugin->fileRepository->getOrdersByElement($element->id);
+            if ($orders) {
+                $orderIds[$element->id] = $orders;
+            }
+        }
+
+        return $orderIds;
+    }
+
+    public function getNewStatus($order)
+    {
+        $fileStatuses = [];
+        $files = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
+        $publishedFiles = 0;
+
+        foreach ($files as $file) {
+            if ($file->status === Constants::FILE_STATUS_PUBLISHED) $publishedFiles++;
+
+            if (! in_array($file->status, $fileStatuses)) {
+                array_push($fileStatuses, $file->getStatusLabel());
+            }
+        }
+
+        if ($publishedFiles == count(($files))) {
+            return Constants::ORDER_STATUS_PUBLISHED;
+        } else if (in_array('Ready to apply', $fileStatuses)) {
+            return Constants::ORDER_STATUS_COMPLETE;
+        } else if (in_array('Ready for review', $fileStatuses)) {
+            return Constants::ORDER_STATUS_REVIEW_READY;
+        } else if (in_array('In progress', $fileStatuses)) {
+            return Constants::ORDER_STATUS_IN_PROGRESS;
+        } else if (in_array('Failed', $fileStatuses)) {
+            return Constants::ORDER_STATUS_FAILED;
+        } else if (in_array('Canceled', $fileStatuses)) {
+            return Constants::ORDER_STATUS_CANCELED;
+        } else {
+            // Default Status in case of any issue
+            return Constants::ORDER_STATUS_IN_PROGRESS;
+        }
+    }
+
+    /**
+     * @param $file
+     * @return string|null
+     */
+    public function getFileTitle($file) {
+
+        $element = Craft::$app->getElements()->getElementById($file->elementId);
+
+        if ($element instanceof GlobalSet) {
+            $draftElement = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+        } else if ($element instanceof Category) {
+            $draftElement = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+        } else if ($element instanceof Asset) {
+            $draftElement = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+        } else {
+            $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+        }
+
+        return $draftElement->title ?? '';
     }
 }

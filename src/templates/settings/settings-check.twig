@@ -3,9 +3,14 @@
 
 {% set title = 'Settings Check'|t %}
 
-{% block actionButton %}
-<small class="translations-version-header">{{'Version'|t}} {{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</small>
+{% block header %}
+    {{ parent() }}
+    {{ include('translations/_components/app-info') }}
 {% endblock %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations') }
+] %}
 
 {% block content %}
 <div class="readable">
@@ -15,13 +20,13 @@
         <tbody>
             <tr>
                 <td class="thin centeralign">
-                    {% if settings.craftVersion < '3.6.0' %}
+                    {% if settings.craftVersion|number_format < constant('acclaro\\translations\\Constants::CRAFT_MIN_VERSION')|number_format %}
                         <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
                     {% endif %}
                 </td>
-                <td>Craft CMS 3.6+ <span class="info">{{ 'Craft 3.6 or higher is required.' }}</span></td>
+                <td>Craft CMS {{constant('acclaro\\translations\\Constants::CRAFT_MIN_VERSION')}}+ <span class="info">{{ 'Craft '~ constant('acclaro\\translations\\Constants::CRAFT_MIN_VERSION') ~'+ or higher is required.' }}</span></td>
             </tr>
             <tr>
                 <td class="thin centeralign">

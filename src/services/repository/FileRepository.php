@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\repository;
 
+use acclaro\translations\Constants;
 use Craft;
 use Exception;
 use acclaro\translations\Translations;
@@ -179,6 +180,47 @@ class FileRepository
     }
 
     /**
+     * @param  int|string $elementId
+     * @return \acclaro\translations\models\FileModel
+     */
+    public function getFilesByElementId(int $elementId, $orderId = null)
+    {
+        $attributes = array(
+            'elementId' => $elementId,
+            'dateDeleted' => null
+        );
+
+        if ($orderId) {
+            $attributes['orderId'] = $orderId;
+        }
+
+        $records = FileRecord::find()->where($attributes)->all();
+
+        $files = array();
+
+        foreach ($records as $key => $record) {
+            $files[$key] = new FileModel($record->toArray([
+                'id',
+                'orderId',
+                'elementId',
+                'draftId',
+                'sourceSite',
+                'targetSite',
+                'status',
+                'wordCount',
+                'source',
+                'target',
+                'previewUrl',
+                'serviceFileId',
+                'dateDelivered',
+                'dateDeleted',
+            ]));
+        }
+
+        return $files;
+    }
+
+    /**
      * @param  int|string $orderId
      * @return \acclaro\translations\models\FileModel
      */
@@ -214,6 +256,26 @@ class FileRepository
     }
 
     /**
+     * Check if content in file's source column is in Xml or Json format
+     *
+     * @param string $sourceContent
+     * @return string
+     */
+    public function getFileSourceFormat(string $sourceContent)
+    {
+        // Check if source is valid xml
+        if(substr(trim($sourceContent), 0, 5) == "<?xml") {
+            return Constants::FILE_FORMAT_XML;
+        }
+
+        // Check for a valid json source
+        json_decode($sourceContent);
+        if (json_last_error() === JSON_ERROR_NONE) return Constants::FILE_FORMAT_JSON;
+
+        return null;
+    }
+
+    /**
      * @return \acclaro\translations\models\FileModel
      */
     public function makeNewFile()
@@ -231,14 +293,7 @@ class FileRepository
         $isNew = !$file->id;
 
         if (!$isNew) {
-            // echo '<pre>';
-            // var_dump($file->id);
-            // echo '</pre>';
             $record = FileRecord::findOne($file->id);
-            // echo '<pre>';
-            // var_dump($record);
-            // echo '</pre>';
-            // die;
 
             if (!$record) {
                 throw new Exception('No file exists with that ID.');
@@ -284,6 +339,31 @@ class FileRepository
         return false;
     }
 
+    public function cancelOrderFile($file)
+    {
+        $file->status = Constants::FILE_STATUS_CANCELED;
+        Translations::$plugin->fileRepository->saveFile($file);
+    }
+
+    /**
+     * @param $fileId
+     * @return false|int
+     * @throws \Throwable
+     */
+    public function deleteById($fileId)
+    {
+        $attributes = ['id' => (int) $fileId];
+
+        $record = FileRecord::findOne($attributes);
+
+        if ($record && $record->draftId) {
+            $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
+            Craft::$app->getElements()->deleteElement($element);
+        }
+
+        return $record->delete();
+    }
+
     /**
      * @param $draftId
      * @return false|int
@@ -296,7 +376,33 @@ class FileRepository
             $attributes['elementId'] = $elementId;
         }
 
-        return FileRecord::findOne($attributes)->delete();
+        $record = FileRecord::findOne($attributes);
+
+        if ($record && $record->draftId) {
+            $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
+            Craft::$app->getElements()->deleteElement($element);
+        }
+
+        return $record->delete();
+    }
+
+    public function deleteByOrderId($orderId, $targetSite = null)
+    {
+        $attributes = ['orderId' => (int) $orderId];
+
+        if ($targetSite) $attributes['targetSite'] = (int) $targetSite;
+
+        $records = FileRecord::find()->where($attributes)->all();
+
+        foreach($records as $record) {
+            if ($record && $record->draftId) {
+                $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
+                Craft::$app->getElements()->deleteElement($element);
+            }
+            $record->delete();
+        }
+        
+        return true;
     }
 
     /**
@@ -323,12 +429,15 @@ class FileRepository
                 if ($draft) {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
                     $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
-                    $file->source = Translations::$plugin->elementToXmlConverter->toXml(
+                    $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        $file->draftId,
-                        $file->sourceSite,
-                        $file->targetSite,
-                        $file->previewUrl
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    => $file->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'previewUrl'    => $file->previewUrl,
+                            'orderId'       => $file->orderId,
+                        ]
                     );
                 }
 
@@ -340,7 +449,7 @@ class FileRepository
             }
         }
 
-        if ($order->translator->service !== 'export_import') {
+        if ($order->translator->service !== Constants::TRANSLATOR_DEFAULT) {
             $translator = $order->getTranslator();
 
             $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
@@ -375,5 +484,84 @@ class FileRepository
         }
 
         return $orderIds;
+    }
+
+    /**
+     * @param $order
+     * @param array $wordcounts
+     * @return bool
+     */
+    public function createOrderFiles($order, $wordCounts)
+    {
+        // ? Create File for each element per target language
+        foreach ($order->getTargetSitesArray() as $key => $targetSite) {
+            foreach ($order->getElements(false) as $element) {
+                $wordCount = $wordCounts[$element->id] ?? 0;
+
+                $file = $this->makeNewFile();
+
+                $file->orderId = $order->id;
+                $file->elementId = $element->id;
+                $file->sourceSite = $order->sourceSite;
+                $file->targetSite = $targetSite;
+                
+                $file->source = Translations::$plugin->elementToFileConverter->convert(
+                    $element,
+                    Constants::FILE_FORMAT_XML,
+                    [
+                        'sourceSite'    => $order->sourceSite,
+                        'targetSite'    => $targetSite,
+                        'wordCount'     => $wordCount,
+                        'orderId'       => $order->id
+                    ]
+                );
+                $file->wordCount = $wordCount;
+
+                Translations::$plugin->fileRepository->saveFile($file);
+            }
+        }
+        return true;
+    }
+
+    public function createOrderFile($order, $elementId, $targetSite)
+    {
+        $element = Craft::$app->getElements()->getElementById($elementId);
+        $wordCount = Translations::$plugin->elementTranslator->getWordCount($element) ?? 0;
+
+        $file = $this->makeNewFile();
+
+        $file->orderId = $order->id;
+        $file->elementId = $element->id;
+        $file->sourceSite = $order->sourceSite;
+        $file->targetSite = $targetSite;
+        $file->source = Translations::$plugin->elementToFileConverter->convert(
+            $element,
+            Constants::FILE_FORMAT_XML,
+            [
+                'sourceSite'    => $order->sourceSite,
+                'targetSite'    => $targetSite,
+                'wordCount'     => $wordCount,
+                'orderId'       => $order->id,
+            ]
+        );
+        $file->wordCount = $wordCount;
+
+        // return without saving as acclaro order files are created later
+        // Translations::$plugin->fileRepository->saveFile($file);
+        return $file;
+    }
+
+    public function getUploadedFilesWordCount($asset, $format)
+    {
+        $fileContents = $asset->getContents();
+        
+        $elementId = Translations::$plugin->elementToFileConverter->getElementIdFromData($fileContents, $format);
+        if (! $elementId) {
+            return 0;
+        }
+
+        $element = Craft::$app->getElements()->getElementById($elementId);
+
+        return Translations::$plugin->elementTranslator->getWordCount($element);
     }
 }
