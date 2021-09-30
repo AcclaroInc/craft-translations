@@ -128,32 +128,6 @@ class Order extends Element
         return false;
     }
 
-    /**
-     * Transition to this instead of custom statuses
-     */
-    // public static function statuses(): array
-    // {
-    //     return [
-    //         'new' => Translations::$plugin->translator->translate('app', 'Pending submission'),
-    //         'in progress' => [
-    //             'label' => Translations::$plugin->translator->translate('app', 'In progress'),
-    //             'color' => 'orange'
-    //         ],
-    //         'complete' => [
-    //             'label' => Translations::$plugin->translator->translate('app', 'Ready to update'),
-    //             'color' => 'blue'
-    //         ],
-    //         'canceled' => [
-    //             'label' => Translations::$plugin->translator->translate('app', 'Canceled'),
-    //             'color' => 'red'
-    //         ],
-    //         'published' => [
-    //             'label' => Translations::$plugin->translator->translate('app', 'Complete'),
-    //             'color' => 'green'
-    //         ],
-    //     ];
-    // }
-
     protected static function defineActions(string $source = null): array
     {
         return [Delete::class];
@@ -268,7 +242,6 @@ class Order extends Element
         ];
     }
 
-
     public function getTableAttributeHtml(string $attribute): string
     {
         $value = $this->$attribute;
@@ -325,7 +298,6 @@ class Order extends Element
 
             case 'status':
                 return "<span class='status $this->statusColour'></span>".Translations::$plugin->translator->translate('app', $this->statusLabel);
-
             case 'orderDueDate':
             case 'requestedDueDate':
             case 'dateOrdered':
@@ -367,19 +339,29 @@ class Order extends Element
     {
         $attributes = [
             'title' => ['label' => Translations::$plugin->translator->translate('app', 'Name')],
-            // 'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
-            // 'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
-            // 'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
-            // 'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
+            'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
+            'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
+            'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
+            'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
             'status' => ['label' => Translations::$plugin->translator->translate('app', 'Status')],
             'translatorId' => ['label' => Translations::$plugin->translator->translate('app', 'Translator')],
-            // 'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
+            'targetSites' => ['label' => Translations::$plugin->translator->translate('app', 'Sites')],
             'dateOrdered' => ['label' => Translations::$plugin->translator->translate('app', 'Created')],
             'dateUpdated' => ['label' => Translations::$plugin->translator->translate('app', 'Updated')],
-            // 'actionButton' => ['label' => Translations::$plugin->translator->translate('app', 'Actions')]
         ];
 
         return $attributes;
+    }
+
+    protected static function defineDefaultTableAttributes(string $source): array
+    {
+        return [
+            'title',
+            'status',
+            'translatorId',
+            'dateOrdered',
+            'dateUpdated'
+        ];
     }
 
     public function criteriaAttributes()
@@ -387,7 +369,7 @@ class Order extends Element
         return [
             'sourceSite'    => $this->string()->notNull()->defaultValue(''),
             'targetSites'   => $this->string()->notNull()->defaultValue(''),
-            'status' => $this->enum('values', ['new','getting quote','needs approval','in preparation','in progress','complete','canceled','published'])->defaultValue('new'),
+            'status' => $this->enum('values', ['new','getting quote','needs approval','in preparation','in progress','ready for review','complete','canceled','published'])->defaultValue('new'),
         ];
     }
 
@@ -564,7 +546,7 @@ class Order extends Element
         $record->wordCount =  $this->wordCount;
         $record->elementIds =  $this->elementIds;
         $record->tags =  $this->tags;
-        
+
         $record->save(false);
         
         parent::afterSave($isNew);

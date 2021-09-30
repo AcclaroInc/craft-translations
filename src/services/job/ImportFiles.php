@@ -28,6 +28,13 @@ class ImportFiles extends BaseJob
     public $totalFiles;
     public $fileFormat;
 
+    /**
+     * Map of assetId v/s file name
+     *
+     * @var array [assetId => uploaded file's original name]
+     */
+    public $fileNames;
+
     public function execute($queue)
     {
         $this->order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
@@ -38,7 +45,7 @@ class ImportFiles extends BaseJob
 
             $this->setProgress($queue, $currentFile++ / $this->totalFiles);
             //Process Files
-            $this->processFile($asset);
+            $this->processFile($asset, $this->order, $this->fileFormat, $this->fileNames);
 
             Craft::$app->getElements()->deleteElement($asset);
         }
@@ -50,13 +57,17 @@ class ImportFiles extends BaseJob
     }
 
     /**
-     * Process each file entry per orden
+     * Process each file entry per order
      * Validates
      */
-    public function processFile( Asset $asset, $order = null , $fileFormat = null)
+    public function processFile( Asset $asset, $order = null , $fileFormat = null, $fileNames = null)
     {
         if (empty($this->order)) {
             $this->order = $order;
+        }
+
+        if (empty($this->fileNames)) {
+            $this->fileNames = $fileNames;
         }
 
         if (! $this->fileFormat) {
@@ -72,22 +83,27 @@ class ImportFiles extends BaseJob
 
             // check if the file is empty
             if (empty($file_content)) {
-                $this->order->logActivity(Translations::$plugin->translator->translate('app', $asset->getFilename()." file you are trying to import is empty."));
+                $this->order->logActivity(Translations::$plugin->translator->translate('app', ($this->fileNames[$asset->id] ?? $asset->getFilename())." file you are trying to import is empty."));
                 Translations::$plugin->orderRepository->saveOrder($this->order);
                 return false;
             }
 
             if ($this->fileFormat === Constants::FILE_FORMAT_JSON) {
                 return $this->processJsonFile($asset, $file_content);
-            } elseif ($this->fileFormat == Constants::FILE_FORMAT_CSV) {
+            } else if ($this->fileFormat === Constants::FILE_FORMAT_CSV) {
                 return $this->processCsvFile($asset, $file_content);
-            } else {
+            } else if ($this->fileFormat === Constants::FILE_FORMAT_XML) {
                 return $this->processXmlFile($asset, $file_content);
+            } else {
+                $this->order->logActivity(Translations::$plugin->translator->translate('app', "File {($this->fileNames[$asset->id] ?? $asset->getFilename())} is invalid, please try again with a valid zip/xml/json/csv file."));
+                Translations::$plugin->orderRepository->saveOrder($this->order);
+                return false;
             }
         } else {
             //Invalid
-            $this->order->logActivity(Translations::$plugin->translator->translate('app', "File {$asset->getFilename()} is invalid, please try again with a valid xml/json/csv file."));
+            $this->order->logActivity(Translations::$plugin->translator->translate('app', "File {($this->fileNames[$asset->id] ?? $asset->getFilename())} is invalid, please try again with a valid zip/xml/json/csv file."));
             Translations::$plugin->orderRepository->saveOrder($this->order);
+            return false;
         }
     }
 
@@ -105,7 +121,7 @@ class ImportFiles extends BaseJob
         if (! is_array($file_content)) {
             $this->order->logActivity(
                 Translations::$plugin->translator->translate(
-                    'app', $asset->getFilename()." file you are trying to import has invalid content."
+                    'app', ($this->fileNames[$asset->id] ?? $asset->getFilename())." file you are trying to import has invalid content."
                 )
             );
             Translations::$plugin->orderRepository->saveOrder($this->order);
@@ -141,16 +157,16 @@ class ImportFiles extends BaseJob
         {
             $this->order->logActivity(
                 Translations::$plugin->translator->translate(
-                    'app', $asset->getFilename() ." does not match any known entries."
+                    'app', ($this->fileNames[$asset->id] ?? $asset->getFilename()) ." does not match any known entries."
                 )
             );
             Translations::$plugin->orderRepository->saveOrder($this->order);
-            return;
+            return false;
         }
 
         if ($this->verifyJsonKeysMismatch($file_content, $order_file->source)) {
             $this->order->logActivity(Translations::$plugin->translator->translate(
-                'app', "Failed to import due to the keys mismatches in the file."
+                'app', "File ".($this->fileNames[$asset->id] ?? $asset->getFilename()) . " failed to import due to the keys mismatches in the file."
             ));
             Translations::$plugin->orderRepository->saveOrder($this->order);
             $order_file->status = Constants::FILE_STATUS_FAILED;
@@ -189,7 +205,7 @@ class ImportFiles extends BaseJob
             $this->order->logActivity(
                 sprintf(Translations::$plugin->translator->translate(
                     'app', "File %s imported successfully!"
-                ), $asset->getFilename())
+                ), ($this->fileNames[$asset->id] ?? $asset->getFilename()))
             );
 
             //Verify All files on this order were successfully imported.
@@ -226,7 +242,7 @@ class ImportFiles extends BaseJob
                 $errors = $this->reportXmlErrors();
                 if($errors)
                 {
-                    $this->logError("We found errors on " . $asset->getFilename() . ": "  . $errors);
+                    $this->logError("We found errors on " . ($this->fileNames[$asset->id] ?? $asset->getFilename()) . ": "  . $errors);
                     Translations::$plugin->orderRepository->saveOrder($this->order);
                     return false;
                 }
@@ -240,7 +256,7 @@ class ImportFiles extends BaseJob
         // Source & Target Sites
         $sites = $dom->getElementsByTagName('sites');
         if ($sites->length == 0) {
-            $this->logError($asset->getFilename()." is missing sites key.");
+            $this->logError(($this->fileNames[$asset->id] ?? $asset->getFilename())." is missing sites key.");
             return false;
         }
         $sites = isset($sites[0]) ? $sites[0] : $sites;
@@ -250,7 +266,7 @@ class ImportFiles extends BaseJob
         // Source & Target Languages
         $langs = $dom->getElementsByTagName('langs');
         if ($langs->length == 0) {
-            $this->logError($asset->getFilename()." is missing langs key.");
+            $this->logError(($this->fileNames[$asset->id] ?? $asset->getFilename())." is missing langs key.");
             return false;
         }
         $langs = isset($langs[0]) ? $langs[0] : $langs;
@@ -260,7 +276,7 @@ class ImportFiles extends BaseJob
         // Meta ElementId
         $element = $dom->getElementsByTagName('meta');
         if ($element->length == 0) {
-            $this->logError($asset->getFilename()." is missing meta key.");
+            $this->logError(($this->fileNames[$asset->id] ?? $asset->getFilename())." is missing meta key.");
             return false;
         }
         $element = isset($element[0]) ? $element[0] : $element;
@@ -284,16 +300,16 @@ class ImportFiles extends BaseJob
         if (!isset($draft_file) || is_null($draft_file)) {
             $this->order->logActivity(
                 Translations::$plugin->translator->translate(
-                    'app', $asset->getFilename() ." does not match any known entries."
+                    'app', ($this->fileNames[$asset->id] ?? $asset->getFilename()) ." does not match any known entries."
                 )
             );
             Translations::$plugin->orderRepository->saveOrder($this->order);
-            return;
+            return false;
         }
 
         if ($this->matchXmlKeys($dom, $draft_file)) {
             $this->order->logActivity(Translations::$plugin->translator->translate(
-                'app', "File failed to import due to the resname mismatches in the XML."
+                'app', "File ".($this->fileNames[$asset->id] ?? $asset->getFilename())." failed to import due to the resname mismatches in the XML."
             ));
             Translations::$plugin->orderRepository->saveOrder($this->order);
             $draft_file->status = Constants::FILE_STATUS_FAILED;
@@ -330,7 +346,7 @@ class ImportFiles extends BaseJob
             $this->order->logActivity(
                 sprintf(Translations::$plugin->translator->translate(
                     'app', "File %s imported successfully!"
-                ), $asset->getFilename())
+                ), ($this->fileNames[$asset->id] ?? $asset->getFilename()))
             );
 
             //Save Order with new status
@@ -388,7 +404,7 @@ class ImportFiles extends BaseJob
         {
             $this->order->logActivity(
                 Translations::$plugin->translator->translate(
-                    'app', $asset->getFilename() ." does not match any known entries."
+                    'app', ($this->fileNames[$asset->id] ?? $asset->getFilename()) ." does not match any known entries."
                 )
             );
             Translations::$plugin->orderRepository->saveOrder($this->order);
@@ -397,7 +413,7 @@ class ImportFiles extends BaseJob
 
         if ($this->verifyJsonKeysMismatch($file_content, $order_file->source)) {
             $this->order->logActivity(Translations::$plugin->translator->translate(
-                'app', "Failed to import due to the keys mismatches in the file."
+                'app', "File ".($this->fileNames[$asset->id] ?? $asset->getFilename())." failed to import due to the keys mismatches in the file."
             ));
             Translations::$plugin->orderRepository->saveOrder($this->order);
             $order_file->status = Constants::FILE_STATUS_FAILED;
@@ -436,7 +452,7 @@ class ImportFiles extends BaseJob
             $this->order->logActivity(
                 sprintf(Translations::$plugin->translator->translate(
                     'app', "File %s imported successfully!"
-                ), $asset->getFilename())
+                ), ($this->fileNames[$asset->id] ?? $asset->getFilename()))
             );
 
             //Verify All files on this order were successfully imported.
