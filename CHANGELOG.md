@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.0.1 - 2021-09-30
+
+### Fixed
+
+- Bug triggered when applying drafts
+- Display notice for "Sync order" action
+
+### Changed
+
+- Display author name and image on create order form
+
 ## 2.0.0 - 2021-09-29
 
 ### Added
