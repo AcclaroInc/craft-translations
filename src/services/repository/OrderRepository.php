@@ -254,21 +254,21 @@ class OrderRepository
         $translationService = Translations::$plugin->translatorFactory->makeTranslationService($order->translator->service, $order->translator->getSettings());
 
         // Don't update manual orders
-        if ($order->translator->service === 'export_import') {
+        if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
             return;
         }
-
-        $translationService->updateOrder($order);
-
-        Translations::$plugin->orderRepository->saveOrder($order);
 
         $syncOrderSvc = new SyncOrder();
         foreach ($order->files as $file) {
             if ($queue) {
                 $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
             }
-            // Let's make sure we're not updating published files
-            if ($file->status == 'published' || $file->status == 'canceled') {
+            // Let's make sure we're not updating canceled/complete/published files
+            if (in_array($file->status, [
+                Constants::FILE_STATUS_CANCELED,
+                Constants::FILE_STATUS_COMPLETE,
+                Constants::FILE_STATUS_PUBLISHED
+            ])) {
                 continue;
             }
 
@@ -276,6 +276,10 @@ class OrderRepository
 
             Translations::$plugin->fileRepository->saveFile($file);
         }
+
+        $translationService->updateOrder($order);
+
+        Translations::$plugin->orderRepository->saveOrder($order);
     }
 
     public function deleteOrderTags($order, $settings, $tagIds) {
@@ -311,6 +315,11 @@ class OrderRepository
         $orderUrl = UrlHelper::baseSiteUrl() .'admin/translations/orders/detail/'.$order->id;
         $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
+        $dueDate = $order->requestedDueDate;
+
+        if($order->requestedDueDate){
+            $dueDate = $dueDate->format('Y-m-d');
+        }
 
         if($dueDate = $order->requestedDueDate){
             $dueDate = $dueDate->format('Y-m-d');

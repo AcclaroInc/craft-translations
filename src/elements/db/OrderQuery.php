@@ -34,7 +34,7 @@ class OrderQuery extends ElementQuery
     {
         switch ($name) {
             case 'status':
-                $this->elementIds($value);
+                $this->status($value);
                 break;
             case 'elementIds':
                 $this->elementIds($value);
