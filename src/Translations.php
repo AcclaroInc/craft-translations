@@ -601,6 +601,10 @@ class Translations extends Plugin
 
         $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
+        if (!$order) {
+            return;
+        }
+
         $currentFile->status = Constants::FILE_STATUS_PUBLISHED;
         $currentFile->draftId = 0;
 
