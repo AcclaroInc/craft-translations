@@ -1,14 +1,28 @@
-# Translations plugin for Craft CMS 3.x
+# Translations for Craft CMS
 
 ![repo-img](./resources/img/image.jpg)
 
-## System Requirements
+The Translations plugin provides a simple way to translate your content from start to finish without leaving Craft CMS. With support for Export/Import and and professional Acclaro translation services, the plugin makes it easy to submit, track, review, and publish content using your own translators or Acclaro’s.
+
+## ✨ Features
+- Eliminate error-prone and time-consuming copy/paste workflows.
+- Work with [Acclaro’s professional linguists](https://www.acclaro.com/services/?utm_campaign=Craft%20Plugin%20Store&utm_source=Craft%20Plugin%20Store%20Listing%20-%20Human%20Translation%20Services&utm_medium=Listing) or use your own translation provider.
+- Intuitive review, approval, and publishing workflows.
+- Easily submit source content from your Entries, Categories, Globals, and Assets.
+- Manage your [Static Message Translations](https://craftcms.com/docs/3.x/sites.html#static-message-translations) with ease.
+- Supports many 3rd party plugins including SEOmatic, Neo, Super Table, and more!
+
+  *Need support for a specific plugin? [Contact us](http://www.acclaro.com/translation-services-cost/?utm_campaign=Craft%20Plugin%20Store&utm_source=Craft%20Plugin%20Store%20Listing%20-%20Third%20Party%20Plugins%20Quote&utm_medium=Listing) for a quote.*
+
+## ⚠️ System Requirements
 - Craft CMS 3.7.9 or later.
 - PHP 7.2+
 - PHP [DOM](https://docs.craftcms.com/v3/requirements.html#optional-php-extensions) Extension
+- Craft [Multi-site](https://craftcms.com/docs/3.x/sites.html) configuration
 
-## Installation
-**Reminder:** Before installing the Translation Plugin or making any changes to support your Craft multisite settings, it’s recommended to ensure your Craft site backups are current. It is also recommended to try out all settings and multisite configuration changes on a staging site prior to implementation in a production environment.
+## 🔌 Installation
+
+> **🔔 Reminder:** Before installing the plugin, it’s recommended you back up your site. We also recommend testing multisite settings and configuration changes on a staging site prior to implementing in a production environment.
 
 To install the plugin, follow these instructions.
 
@@ -22,33 +36,25 @@ To install the plugin, follow these instructions.
 
 3. In the Control Panel, go to Settings → Plugins and click the “Install” button for Translations.
 
-You can also install Translations via the Plugin Store in the Craft Control Panel.
+You can also [install Translations via the Plugin Store](https://plugins.craftcms.com/translations) or from the Craft Control Panel.
 
-## Translation Plugin Key Benefits 
+## 🚀 Gettings Started
 
-**Launch multilingual Craft 3 content fast** Eliminate error-prone and cumbersome copy/paste processes. Simply select entries or globals, target languages, submit for translation and receive translations back into Craft 3 for review and publishing.
+Please refer to the [Getting Started Guide](https://github.com/AcclaroInc/craft-translations/wiki/Getting-Started) for detailed plugin setup. For recommended workflows, FAQs, and additional documentation, visit our plugin [Wiki](https://github.com/AcclaroInc/craft-translations/wiki).
 
-**Work with Acclaro translators or any other translators and service providers** Want to use Acclaro translators or your own translators? No problem. The plugin’s export/import feature makes it easy to work with independent translators and translation agencies. When using the export/import translation option, you'll be able to export your site content as XML files that can then be re-imported once translated.
-
-**Fully automated translation workflow** If you need high quality translations and prefer to have entries and globals translated and synced with your Craft install, select the Acclaro service option in the Translators tab. Acclaro uses [human in-country linguists](https://www.acclaro.com/services/?utm_campaign=Craft%20Plugin%20Store&utm_source=Craft%20Plugin%20Store%20Listing%20-%20Human%20Translation%20Services&utm_medium=Listing) and a dedicated project manager to ensure the success of your multilingual Craft 3 website.
-
-**3rd party plugin support** Includes translation support for Neo, Linkit, SEOmatic, Redactor and Supertable. Use additional 3rd party plugins that need translating? [Contact us](http://www.acclaro.com/translation-services-cost/?utm_campaign=Craft%20Plugin%20Store&utm_source=Craft%20Plugin%20Store%20Listing%20-%20Third%20Party%20Plugins%20Quote&utm_medium=Listing) for a quote.
-
-**Community developer friendly** Want to extend the Translations plugin with your own developed code? If it’s functionality that other plugin users can also take advantage of, let us know and we’ll guide you on how to submit a Git PR.  We’ll review, test and integrate as fast as we can.
-
-**Updates & support** Purchasing the plugin includes 12 months of updates and API connectivity access. Additional license renewals are $399/yr. [Advanced standalone product and multisite consulting support](https://info.acclaro.com/translation-plugin-for-craft3-support-info) for the Translation plugin can be purchased separately from Acclaro.
-
-**Craft 2 support**  We offer similar features and functionality for Craft 2. [Click here](https://info.acclaro.com/translation-plugin-for-craft?utm_campaign=Craft%20Plugin%20Store&utm_source=Craft%20Plugin%20Store%20Listing%20-%20Craft%202%20Page&utm_medium=Listing) for more information.
-
-**Our Guarantee** We offer a 30-day money back guarantee for the software plugin purchase if you are not satisfied.
-
-## Getting Started With Your Translations 
-
-For detailed plugin setup, FAQs, and additional documentation -- please visit our [Translations Plugin Wiki](https://github.com/AcclaroInc/craft-translations/wiki)
-
-## Additional Information
+## ℹ️ Additional Information
+### Pricing
 The license fee for this plugin is $999.00 via the Craft Plugin Store. Annual license renewals can be purchased for $399.00. (Pricing is subject to change without prior notice)
 
+We offer a 30-day money back guarantee for the software plugin purchase if you are not satisfied.
+
+### Terms
 Prior to download, installation and use of the Translation Plugin for Craft on a public site, site owners are required to purchase the plugin from the Craft plugin store or submit payment directly to Acclaro for purchases outside of the store. 
 
 Any usage of the plugin either on production or in a sandbox environment indicates your acceptance of the legal terms described in the [Craft Software License](https://craftcms.github.io/license/). Any usage of Acclaro Translation Service API integrations indicates acceptance of the terms and conditions as set forth in the [Acclaro User Agreement](https://my.acclaro.com/p.php/useragreement) and [Privacy Policy](https://www.acclaro.com/privacy-policy/).
+
+### Updates & support
+Purchasing the plugin includes 12 months of updates and API connectivity access. Additional license renewals are $399/yr. [Advanced standalone product and multisite consulting support](https://info.acclaro.com/translation-plugin-for-craft3-support-info) for the Translation plugin can be purchased separately from Acclaro.
+
+### Contributing
+Want to extend the Translations plugin with your own developed code? If it’s functionality that other plugin users can also take advantage of, let us know and we’ll guide you on how to submit a Git PR.  We’ll review, test and integrate as fast as we can.
