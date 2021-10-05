@@ -119,17 +119,17 @@ class OrderController extends Controller
             }
         }
 
-        $variables['isChanged'] = Craft::$app->getRequest()->getQueryParam('changed') ?? null;
+        $variables['isChanged'] = Craft::$app->getRequest()->getParam('changed') ?? null;
 
         $variables['orderId'] = $variables['orderId'] ?? null;
         $variables['tagGroup'] = Craft::$app->getTags()->getTagGroupByHandle(Constants::ORDER_TAG_GROUP_HANDLE);
 
-        $variables['inputSourceSite'] = Craft::$app->getRequest()->getQueryParam('sourceSite');
+        $variables['inputSourceSite'] = Craft::$app->getRequest()->getParam('sourceSite');
 
         $variables['elementIds'] = Craft::$app->getRequest()->getParam('elements');
 
-        if (empty($variables['inputSourceSite'])) {
-            $variables['inputSourceSite'] = Craft::$app->getRequest()->getParam('sourceSite');
+        if (empty($variables['inputSourceSite']) && $variables['isChanged']) {
+            $variables['inputSourceSite'] = Craft::$app->getSites()->getPrimarySite()->id;
         }
 
         if (!empty($variables['inputSourceSite'])) {
@@ -169,36 +169,39 @@ class OrderController extends Controller
             }
         } else {
             $newOrder = Translations::$plugin->orderRepository->makeNewOrder($variables['inputSourceSite']);
-            if ($orderTitle= Craft::$app->getRequest()->getQueryParam('title')) {
+            if ($orderTitle= Craft::$app->getRequest()->getParam('title')) {
                 $newOrder->title = $orderTitle;
             }
 
-            if ($orderTargetSites= Craft::$app->getRequest()->getQueryParam('targetSite')) {
+            if ($orderTargetSites= Craft::$app->getRequest()->getParam('targetSite')) {
                 $newOrder->targetSites = json_encode($orderTargetSites);
             }
 
-            if ($orderElements= Craft::$app->getRequest()->getQueryParam('elements') ?? Craft::$app->getRequest()->getParam('elements')) {
+            if ($orderElements= Craft::$app->getRequest()->getParam('elements')) {
                 $newOrder->elementIds = json_encode($orderElements);
             }
 
-            if ($orderTags= Craft::$app->getRequest()->getQueryParam('tags') ?? Craft::$app->getRequest()->getParam('tags')) {
+            if ($orderTags= Craft::$app->getRequest()->getParam('tags')) {
+                if (! is_array($orderTags)) {
+                    $orderTags = explode(',', $orderTags);
+                }
                 $newOrder->tags = json_encode($orderTags);
             }
 
-            if ($orderDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
-                $newOrder->orderDueDate = $orderDueDate;
+            if ($requestedDueDate= Craft::$app->getRequest()->getParam('dueDate')) {
+                $newOrder->requestedDueDate = $requestedDueDate;
             }
 
-            if ($orderComments= Craft::$app->getRequest()->getQueryParam('comments')) {
+            if ($orderComments= Craft::$app->getRequest()->getParam('comments')) {
                 $newOrder->comments = $orderComments;
             }
 
-            if ($orderTranslatorId= Craft::$app->getRequest()->getQueryParam('translatorId')) {
+            if ($orderTranslatorId= Craft::$app->getRequest()->getParam('translatorId')) {
                 $newOrder->translatorId = $orderTranslatorId;
             }
 
             $variables['order'] = $newOrder;
-            $variables['inputElements'] = Craft::$app->getRequest()->getQueryParam('elements');
+            $variables['inputElements'] = Craft::$app->getRequest()->getParam('elements');
 
             if (empty($variables['inputElements'])) {
                 $variables['inputElements'] = Craft::$app->getRequest()->getParam('elements');

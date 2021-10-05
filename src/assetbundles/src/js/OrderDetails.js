@@ -5,6 +5,7 @@
     }
     // Defaults to open file tab on detail page
     var isSubmitted = $("#order-attr").data("submitted");
+    var hasOrderId = $("input[type=hidden][name=id]").val() != '';
     var isNew = $("#order-attr").data("status") === "new" || $("#order-attr").data("status") === "failed";
     var isCompleted = $("#order-attr").data("status") === "complete";
     var isCanceled = $("#order-attr").data("status") === "canceled";
@@ -14,6 +15,7 @@
 
     function validateForm() {
         var buttonStatus = true;
+        setUnloadEvent();
         var $entries = $('#currentElementIds').val().split(',');
         if ($entries[0] == "") {
             $entries.splice(0);
@@ -198,42 +200,49 @@
         $($button).text($value);
     }
 
-    function getFieldValuesAsUrlParams() {
+    function getFieldValuesData() {
+        let data = {};
         title = $('#title').val();
         tags = $('input[name="tags[]"]');
         translatorId = $('#translatorId').val();
-        targetSites = '';
+        sourceId = $('#sourceSiteSelect').val();
+        targetSites = [];
         var $all = $(':checkbox[name="targetSites"]');
         var $checkboxes = $all.is(':checked') ? $(':checkbox[name="targetSites[]"]') : $(':checkbox[name="targetSites[]"]:checked');
         $checkboxes.each(function() {
             var $el = $(this);
             var val = $el.attr('value');
-            targetSites += '&targetSite[]='+val;
+            targetSites.push(val);
         });
+
         dueDate = $('#requestedDueDate-date').val();
         comments = $('#comments').val();
-        url = '';
+
         if (typeof title !== undefined && title !== '') {
-            url += '&title='+title
+            data.title = title
         }
         if (typeof dueDate !== undefined && dueDate != undefined) {
-            url += '&dueDate='+dueDate
+            data.dueDate = dueDate
         }
         if (typeof comments !== undefined && comments!== '') {
-            url += '&comments='+comments
+            data.comments = comments
         }
         if (typeof translatorId !== undefined && translatorId!== '') {
-            url += '&translatorId='+translatorId
+            data.translatorId = translatorId
+        }
+        if (typeof sourceId !== undefined && sourceId!== '') {
+            data.sourceSite = sourceId
         }
         if (targetSites !== '') {
-            url += targetSites
+            data.targetSite = targetSites;
         }
         if (tags.length > 0) {
+            data.tags = [];
             tags.each(function() {
-                url += "&tags[]="+$(this).val()
+                data.tags.push($(this).val());
             });
         }
-        return url
+        return data;
     }
 
     function sendingOrderStatus($status, $btnStatus = false) {
@@ -299,6 +308,16 @@
     function toggleTranslatorBasedFields(status = false) {
         if (status) {
             $('#extra-fields').removeClass('hidden');
+            if (isNew) {
+                $('#comments').removeAttr('disabled');
+                $('#comments').removeClass('non-editable disabled');
+                $('#requestedDueDate-field').find('.non-editable').removeAttr('disabled');
+                $('#requestedDueDate-field').find('.non-editable').removeClass('non-editable disabled');
+            } else {
+                $('#comments').prop('title', 'This field can not be changed!');
+                $('#requestedDueDate-date').parent().addClass('disabled');
+                $('#requestedDueDate-date').prop('title', 'This field can not be changed!');
+            }
         } else {
             $('#extra-fields').addClass('hidden');
         }
@@ -317,13 +336,13 @@
         $('#elementVersions').val(updatedVersions.join(','));
     }
 
-    function syncSites() {
+    function syncSites($all = false) {
         var source = $("#sourceSiteSelect").val();
         var targetCheckboxes = $(':checkbox[name="targetSites[]"]');
         targetCheckboxes.each(function() {
             siteId = $(this).val();
             if ($(this).closest('div').hasClass('hidden')) {
-                if (! $('input[type=hidden][name=targetSites]').prop('disabled')) {
+                if (! $(':checkbox[name=targetSites]').is(':checked')) {
                     $(this).prop('disabled', false);
                 }
                 $(this).closest('div').removeClass('hidden');
@@ -333,6 +352,71 @@
                 $(this).closest('div').addClass('hidden');
             }
         });
+        if ($all) {
+            let $all = $(':checkbox[name="targetSites[]"]').length;
+            let $checked = $(':checkbox[name="targetSites[]"]:checked').not(':disabled').length;
+            let $source = $("#sourceSiteSelect").val() == '' ? 0 : 1;
+            if (($all-$source) == $checked) {
+                $(':checkbox[name=targetSites]').prop('checked', true);
+                $(':checkbox[name="targetSites[]"]').prop('disabled', true);
+            }
+        }
+    }
+
+    function setUnloadEvent(status = true) {
+        if (status) {
+            $orderHasInputs = false;
+    
+            title = $('#title').val();
+            tags = $('input[name="tags[]"]');
+            // translatorId = $('#translatorId').val();
+            // sourceId = $('#sourceSiteSelect').val();
+            elementIds = $('#currentElementIds').val();
+            elementIds = elementIds != '' ? elementIds.split(',') : [];
+
+            targetSites = [];
+            var $all = $(':checkbox[name="targetSites"]');
+            var $checkboxes = $all.is(':checked') ? $(':checkbox[name="targetSites[]"]') : $(':checkbox[name="targetSites[]"]:checked');
+            $checkboxes.each(function() {
+                var $el = $(this);
+                var val = $el.attr('value');
+                targetSites.push(val);
+            });
+    
+            dueDate = $('#requestedDueDate-date').val();
+            comments = $('#comments').val();
+
+            if (typeof title !== undefined && title !== '') {
+                $orderHasInputs = true;
+            }
+            if (typeof dueDate !== undefined && dueDate != undefined && dueDate != '') {
+                $orderHasInputs = true;
+            }
+            if (typeof comments !== undefined && comments!== '') {
+                $orderHasInputs = true;
+            }
+
+            if (targetSites.length > 0) {
+                $orderHasInputs = true;
+            }
+            if (elementIds.length > 0) {
+                $orderHasInputs = true;
+            }
+
+            if (tags.length > 0) {
+                $orderHasInputs = true;
+            }
+
+            if ($orderHasInputs && ((isNew && ! hasOrderId) || isOrderChanged({all: 'all'}))) {
+                window.onbeforeunload = function(e) {
+                    return "All changes will be lost!";
+                };
+            } else {
+                window.onbeforeunload = null;
+            }
+        } else {
+            window.onbeforeunload = null;
+        }
     }
 
     Craft.Translations.OrderDetails = {
@@ -341,9 +425,11 @@
 
             if (isDefaultTranslator) {
                 toggleTranslatorBasedFields();
+            } else {
+                toggleTranslatorBasedFields(true);
             }
 
-            syncSites();
+            syncSites(true);
 
             if (isSubmitted) {
                 this._createUpdateOrderButtonGroup();
@@ -356,6 +442,8 @@
                 setSubmitButtonStatus(true);
             }
 
+            setUnloadEvent();
+
             // Target lang Ajax
             $(':checkbox[name="targetSites[]"], :checkbox[name="targetSites"]').on('change', function() {
                 if ($(this).attr('name') == "targetSites") {
@@ -364,9 +452,8 @@
                     var $all = $(':checkbox[name="targetSites[]"]');
                     var $checkboxes = $(':checkbox[name="targetSites[]"]:checked');
                     var $sourceSite = $("#sourceSiteSelect").val();
-                    if ($sourceSite == '') {
-                        $sourceSite = 0;
-                    }
+                    $sourceSite = $sourceSite == '' ? 0 : 1;
+
                     if (($all.length - $sourceSite) == $checkboxes.length) {
                         $(':checkbox[name=targetSites]').prop('checked', true);
                         $(':checkbox[name="targetSites[]"]').prop('disabled', true);
@@ -528,25 +615,8 @@
             // Source Site Ajax
             $("#sourceSiteSelect").change(function (e) {
                 $(window).off('beforeunload.windowReload');
-                var site = $("#sourceSiteSelect").val();
-                var url = window.location.href.split('?')[0];
     
-                var currentElementIds = [];
-                if (typeof $('#currentElementIds').val() !== 'undefined') {
-                    currentElementIds = $('#currentElementIds').val().split(',');
-                }
-
-                if (site != "") {
-                    url += '?sourceSite='+site;
-                }
-
                 syncSites();
-                
-                if (currentElementIds.length > 1) {
-                    currentElementIds.forEach(function (element) {
-                        url += '&elements[]='+element;
-                    })
-                }
 
                 if (shouldCreateNewOrder()) {
                     setButtonText('.translations-submit-order.submit', 'Create new order');
@@ -559,14 +629,13 @@
                 } else {
                     setSubmitButtonStatus(false);
                 }
-
-                window.history.pushState("", "", url);
             });
 
             $('.translations-order-form').on('submit', function(e) {
                 if (! validateForm()) {
                     return false;
                 }
+                setUnloadEvent(false);
             });
 
             $("input[id^=requestedDueDate]").datepicker('option', 'minDate', +1);
@@ -575,16 +644,12 @@
     
                 elementIds = currentElementIds = [];
     
-                var site = $("#sourceSiteSelect").val();
-    
                 var currentElementIds = [];
 
                 if (typeof $('#currentElementIds').val() !== 'undefined') {
                     currentElementIds = $('#currentElementIds').val().split(',');
                 }
-
-                var $url = removeParams(window.location.href);
-    
+                setUnloadEvent(false);
                 this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
                     storageKey: null,
                     sources: null,
@@ -592,7 +657,7 @@
                     criteria: {siteId: this.elementSiteId},
                     multiSelect: 1,
                     disabledElementIds: currentElementIds,
-    
+
                     onSelect: $.proxy(function(elements) {
                         $('#content').addClass('elements busy');
                         if (elements.length) {
@@ -600,7 +665,6 @@
                             for (var i = 0; i < elements.length; i++) {
                                 var element = elements[i];
                                 elementIds.push((element.id).toString());
-                                elementUrl += '&elements[]='+element.id;
 
                                 if (Array.isArray(currentElementIds)) {
                                     index = currentElementIds.indexOf(element.id.toString());
@@ -612,20 +676,45 @@
 
                             for (var i = 0; i < currentElementIds.length; i++) {
                                 if (currentElementIds[i]) {
-                                    elementUrl += '&elements[]='+currentElementIds[i];
                                     elementIds.push(currentElementIds[i].toString());
                                 }
                             }
 
                             $originalElementIds = $('#originalElementIds').val().split(',');
 
-                            if (haveDifferences($originalElementIds, elementIds)) {
-                                elementUrl += "&changed=1";
-                            }
+                            newData = getFieldValuesData()
+                            newData['elements'] = elementIds;
+                            newData['orderId'] = $('#id').val();
+                            newData['changed'] = 1;
+                            newData['CRAFT_CSRF_TOKEN'] = $('input[name=CRAFT_CSRF_TOKEN]').val();
 
-                            fieldValues = getFieldValuesAsUrlParams()
+                            var $form = $('<form>', {
+                                id: 'add-entries-to-order',
+                                action: 'create',
+                                method: 'POST',
+                            });
 
-                            window.location.href = $url + '?sourceSite='+site+elementUrl+fieldValues;
+                            $.each(newData, function(key, value) {
+                                if (key == 'elements' || key == 'targetSite') {
+                                    $.each(value, function(k, val) {
+                                        let action = $('<input>', {
+                                            type: "hidden",
+                                            name: key+"[]",
+                                            value: val,
+                                        });
+                                        action.appendTo($form);
+                                    });
+                                } else {
+                                    let action = $('<input>', {
+                                        type: "hidden",
+                                        name: key,
+                                        value: value,
+                                    });
+                                    action.appendTo($form);
+                                }
+                            });
+                            $form.appendTo($('#global-container'));
+                            $form.submit();
                         }
                     }, this),
                     closeOtherModals: false,
@@ -843,6 +932,7 @@
             $(that).on('click', function(e) {
                 e.preventDefault();
                 sendingOrderStatus(true);
+                setUnloadEvent(false);
                 if ($(that).text() == "Create new order") {
                     var url = window.location.origin+"/admin/translations/orders/create";
                     $form.find("input[type=hidden][name=action]").val('translations/order/clone-order');
@@ -909,6 +999,7 @@
             var $form = $('#order-form');
             $(that).on('click', function(e) {
                 e.preventDefault();
+                setUnloadEvent(false);
                 window.history.replaceState(null, null, removeParams(window.location.href));
 
                 var $hiddenAction = $('<input>', {
@@ -927,6 +1018,7 @@
             $(that).on('click', function(e) {
                 e.preventDefault();
                 if (confirm(Craft.t('app', 'Are you sure you want to cancel this order?'))) {
+                    setUnloadEvent(false);
                     $form.find("input[type=hidden][name=action]").val('translations/order/cancel-order');
     
                     $form.submit();
@@ -939,6 +1031,7 @@
                 $proceed = true;
             }
             if ($proceed) {
+                setUnloadEvent(false);
                 $('li[data-id=order]').attr('title', 'This order is no longer editable. The corresponding My Acclaro order is complete.');
                 $('#tab-order').addClass('noClick');
             }
