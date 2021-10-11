@@ -481,8 +481,7 @@
                                                         <td class="inline-flex align-center">
                                                             <span class="status {{ file.statusColor }}" 
                                                                 style="position: absolute;left: -10px;"
-                                                                data-status="{{ file.status == 'complete' 
-                                                                or file.status == 'published' or file.status == 'ready for review' ? 1 : 0 }}">
+                                                                data-status="{{ attribute(fileDifference,file.id)|default(0) }}">
                                                                 </span>{{ file.statusLabel }}
                                                         </td>
                                                     </tr>

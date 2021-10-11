@@ -89,10 +89,7 @@
                     $('.view-diff-entry').on('click', function(e) {
                         e.preventDefault();
 
-                        var diffHtml = Diff2Html.getPrettyHtml(
-                            content[$(e.target).attr('data-id')].diff,
-                            {inputFormat: 'diff', showFiles: false, matching: 'lines', outputFormat: 'line-by-line'}
-                        );
+                        var diffHtml = content[$(e.target).attr('data-id')].diff;
 
                         var classNames = [
                             'entryId',
@@ -113,6 +110,10 @@
 
                         // Add the diff html
                         document.getElementById("modal-body-entry").innerHTML = diffHtml;
+
+                        $('#modal-body-entry').on('click', 'div.diff-copy', function(event) {
+                            Craft.Translations.OrderEntries.copyTextToClipboard(event);
+                        });
 
                         $('#close-diff-modal-entry').on('click', function(e) {
                             e.preventDefault();

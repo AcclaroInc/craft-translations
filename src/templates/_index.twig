@@ -26,9 +26,10 @@
                 <ul>
                     {% for type, info in widgetTypes if info.selectable %}
                         <li>
-                            <a data-type="{{ type }}" data-name="{{ info.name }}">
+                            <a data-type="{{ type }}" 
+                                data-name="{{ info.name }}">
                                 <span class="icon">{{ info.iconSvg|raw }}</span>
-                                {{ info.name }}
+                                {{ info.name == 'Modified Source Entries' ? 'New & Modified Entries' : info.name }}
                             </a>
                         </li>
                     {% endfor %}
@@ -80,7 +81,57 @@
 
     <div id="translations-dashboard" style="visibility:hidden;">
         {% for widget in widgets %}
-            {% if widget %}
+            {% if widget and widget.name == 'New Source Entries' %}
+                {% for widget in widgetTabs %}
+                    {% set tabClass = 'mt--14' %}
+                    {% if widget.name != 'New Source Entries' %}
+                        {% set tabClass = 'hidden' %}
+                    {% endif %}
+                    <div class="item" data-colspan="{{ widget.colspan }}">
+                        {% if tabClass == 'hidden' %}
+                            {% set widgetTitle = "New Source Entries" %}
+                            <nav class="preview pane-tabs" style='padding: 10px 24px 0px;'>
+                                <ul>
+                                    <li>
+                                        <a id="recentEntries" data-widget-id="widget{{ widget.id }}" class="tab tab-visual sel" title="New Source Entries">New Entries</a>
+                                    </li>
+                                    <li>
+                                        <a id="modifiedEntries" data-widget-id="widget{{ attribute(widgetTabs, widgetTitle).id }}" class="tab tab-visual" title="Modified Source Entries">Modified Entries</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        {% endif %}
+                        <div id="widget{{ widget.id }}" class="widget {{ tabClass }} {{ widget.type|lower }}" data-id="{{ widget.id }}" data-type="{{ widget.type }}" data-title="{{ widget.title }}">
+                            <div class="front">
+                                <div class="pane">
+                                    <div class="spinner body-loading"></div>
+                                    <div class="settings icon hidden"></div>
+{#                                    <h2>{{ widget.title }}</h2>#}
+                                    {% if widget.name == "Modified Source Entries" %}
+                                        <h5 style="margin-bottom:10px;">Primary site entries that have been modified since being translated.</h5>
+                                    {% endif %}
+                                    <div class="body">
+                                        {{ widget.bodyHtml|raw }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="back">
+                                <form class="pane">
+                                    <input type="hidden" name="widgetId" value="{{ widget.id }}">
+                                    <h2>{{ "{type} Settings"|t('app', { type: widget.name }) }}</h2>
+                                    <div class="settings"></div>
+                                    <hr>
+                                    <div class="buttons clearafter">
+                                        <input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
+                                        <div class="btn" role="button">{{ 'Cancel'|t('app') }}</div>
+                                        <div class="spinner hidden"></div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% elseif widget %}
                 <div class="item" data-colspan="{{ widget.colspan }}">
                     <div id="widget{{ widget.id }}" class="widget {{ widget.type|lower }}" data-id="{{ widget.id }}" data-type="{{ widget.type }}" data-title="{{ widget.title }}">
                         <div class="front">
@@ -88,9 +139,7 @@
                                 <div class="spinner body-loading"></div>
                                 <div class="settings icon hidden"></div>
                                 <h2>{{ widget.title }}</h2>
-                                {% if widget.name == "Modified Source Entries" %}
-                                    <h5 style="margin-bottom:10px;">Primary site entries that have been modified since being translated.</h5>
-                                {% elseif widget.name == "Translation Coverage by Site" %}
+                                {% if widget.name == "Translation Coverage by Site" %}
                                     <h5 style="margin-bottom:10px;">Coverage information for target site entries.</h5>
                                 {% endif %}
                                 <div class="body">

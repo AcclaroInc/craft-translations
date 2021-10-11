@@ -358,6 +358,10 @@ class OrderController extends Controller
                         $file->status === Constants::FILE_STATUS_REVIEW_READY ||
                         $file->status === Constants::FILE_STATUS_PUBLISHED
                     ) {
+                        $variables['fileDifference'][$file->id] =
+                            ! empty(Translations::$plugin->fileRepository->getSourceTargetDifferences(
+                                $file->source, $file->target
+                            )) ? 1 : 0;
                         $variables['entriesCountByElementCompleted']++;
                     }
 

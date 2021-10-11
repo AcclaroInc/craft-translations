@@ -411,7 +411,7 @@ class FilesController extends Controller
         $variables = Craft::$app->getRequest()->resolve()[1];
         $success = false;
         $error = null;
-        $data = [];
+        $data = ['previewClass' => 'disabled', 'originalUrl' => '', 'newUrl' => ''];
 
         $fileId = Craft::$app->getRequest()->getParam('fileId');
         if (!$fileId) {
@@ -421,23 +421,17 @@ class FilesController extends Controller
             $error = "File not found.";
             if ($file && ($file->status == 'complete' || $file->status == 'published' || $file->status == 'ready for review')) {
                 try {
-                    // Current entries XML
-                    $sourceContent = Translations::$plugin->elementTranslator->getTargetData($file->source, true);
-    
-                    // Translated file XML
-                    $targetContent = Translations::$plugin->elementTranslator->getTargetData($file->target, true);
+                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
-                    foreach ($sourceContent as $key => $value) {
-                        if ($value != $targetContent[$key] ?? '') {
-                            $data['diff'][$key] = [
-                                'source' => $value ?? '',
-                                'target' => $targetContent[$key] ?? '',
-                            ];
-                        }
+                    $data['diff'] = Translations::$plugin->fileRepository->getSourceTargetDifferences($file->source, $file->target);
+
+                    if ($file->status == Constants::FILE_STATUS_COMPLETE || $file->status == Constants::FILE_STATUS_PUBLISHED) {
+                        $data['previewClass'] = '';
+                        $data['originalUrl'] = $element->url;
+                        $data['newUrl'] = $file->previewUrl;
                     }
+                    $data['fileId'] = $file->id;
 
-                    $data['source'] = $sourceContent;
-                    $data['target'] = $targetContent;
                     $error = null;
                     $success = true;
                 } catch(Exception $e) {

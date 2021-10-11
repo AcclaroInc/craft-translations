@@ -91,13 +91,32 @@
                         Craft.Translations.RecentlyModified.prototype.updateSelected();
                     });
 
+                    var modified = $('#modifiedEntries');
+                    var recent = $('#recentEntries');
+
+                    $('#modifiedEntries').on('click', function() {
+                        if ($(this).hasClass('sel')) return;
+
+                        recent.removeClass('sel');
+                        modified.addClass('sel');
+                        $("#"+modified.data('widget-id')).addClass('hidden');
+                        $("#"+recent.data('widget-id')).removeClass('hidden');
+
+                    });
+                    
+                    $('#recentEntries').on('click', function() {
+                        if ($(this).hasClass('sel')) return;
+
+                        recent.addClass('sel');
+                        modified.removeClass('sel');
+                        $("#"+modified.data('widget-id')).removeClass('hidden');
+                        $("#"+recent.data('widget-id')).addClass('hidden');
+                    });
+
                     $('.view-diff').on('click', function(e) {
                         e.preventDefault();
 
-                        var diffHtml = Diff2Html.getPrettyHtml(
-                            content[$(e.target).attr('data-id')].diff,
-                            {inputFormat: 'diff', showFiles: false, matching: 'lines', outputFormat: 'side-by-side'}
-                        );
+                        var diffHtml = content[$(e.target).attr('data-id')].diff;
 
                         var classNames = [
                             'entryId',
@@ -120,7 +139,11 @@
                         }
 
                         // Add the diff html
-                        document.getElementById("modal-body").innerHTML = diffHtml; 
+                        document.getElementById("modal-body").innerHTML = diffHtml;
+
+                        $('#modal-body').on('click', 'div.diff-copy', function(event) {
+                            Craft.Translations.OrderEntries.copyTextToClipboard(event);
+                        });
                         
                         $('#close-diff-modal').on('click', function(e) {
                             e.preventDefault();

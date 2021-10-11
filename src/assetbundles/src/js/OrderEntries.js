@@ -140,6 +140,7 @@ if (typeof Craft.Translations === 'undefined') {
             Craft.cp.displayError(Craft.t('app', 'Could not copy text: ', err));
         });
     },
+
     init: function() {
         self = this;
         this.$publishSelectedBtn = $('#draft-publish');
@@ -332,16 +333,41 @@ if (typeof Craft.Translations === 'undefined') {
     createDiffHtmlView: function(data) {
         var diffData = data.diff;
 
+        let tabBarClass = diffData == undefined ? 'hidden' : '';
+
+        let previewClass = data.previewClass;
+        let previewTitle = previewClass == 'disabled' ? "Preview not available" : 'Preview';
+        let previewTabStyle = previewClass == 'disabled' ? 'style="cursor: default;"' : '';
+
         $mainContent = $('<tr>', {
             id: "main-container"
         });
 
+        $previewTab = $('<nav id="acc-tabs" class="preview pane-tabs '+tabBarClass+'">\
+            <ul>\
+                <li data-id="xml">\
+                    <a id="xml-'+data.fileId+'" class="tab sel tab-xml" title="XML">Text</a>\
+                </li>\
+                <li data-id="preview" class='+previewClass+' '+previewClass+'>\
+                    <a id="preview-'+data.fileId+'" class="tab tab-visual" title="'+previewTitle+'" '+previewTabStyle+'">Preview</a>\
+                </li>\
+            </ul>\
+        </nav>');
+
         $diffTable = $('<table>', {
-            id: "diffTable"
+            id: "diffTable-"+data.fileId,
+            class: "diffTable"
         });
         $mainTd = $('<td colspan=8>');
         $mainTd.css("padding", "0");
+        $previewTab.appendTo($mainTd);
         $diffTable.appendTo($mainTd);
+        $previewContent = $('<div id="visual-'+data.fileId+'" class="visual" style="display: none; position: relative;">\
+            <span class="iframe-line"> </span>\
+            <iframe class="original" id="original-url" src="'+data.originalUrl+'"></iframe>\
+            <iframe style="float: right" class="new" id="new-url" src="'+data.newUrl+'"></iframe>\
+        </div>');
+        $previewContent.appendTo($mainTd);
         $mainTd.appendTo($mainContent);
 
         $.each(diffData, function(key, value) {
@@ -377,6 +403,28 @@ if (typeof Craft.Translations === 'undefined') {
                 class: "diff-bl"
             }).appendTo($td);
             $tr.appendTo($diffTable);
+        });
+
+        $previewTab.on('click', 'li', function() {
+            let tab = $(this);
+            let tabName = tab.data('id');
+            let tabAnchor = tab.find('a');
+            let tabFileId = tabAnchor.prop('id').split('-')[1];
+            if (tabAnchor.hasClass('sel') || tab.hasClass('disabled')) {
+                return;
+            }
+
+            if (tabName == 'xml') {
+                $('#xml-'+tabFileId).addClass('sel');
+                $('#preview-'+tabFileId).removeClass('sel');
+                $('#visual-'+tabFileId).hide();
+                $('#diffTable-'+tabFileId).show();
+            } else {
+                $('#xml-'+tabFileId).removeClass('sel');
+                $('#preview-'+tabFileId).addClass('sel');
+                $('#diffTable-'+tabFileId).hide();
+                $('#visual-'+tabFileId).show();
+            }
         });
 
         return $mainContent;

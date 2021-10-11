@@ -113,7 +113,7 @@ class News extends Widget
     private function _getArticles(): array
     {
         $articles = [];
-        
+
         $client = Craft::createGuzzleClient(array(
             'base_uri' => 'https://www.acclaro.com/',
             'timeout' => 2.0,

@@ -566,4 +566,63 @@ class FileRepository
 
         return Translations::$plugin->elementTranslator->getWordCount($element);
     }
+
+    public function getSourceTargetDifferences($source, $target)
+    {
+        $data = [];
+        // Current entries XML
+        $sourceContent = Translations::$plugin->elementTranslator->getTargetData($source, true);
+    
+        // Translated file XML
+        $targetContent = Translations::$plugin->elementTranslator->getTargetData($target, true);
+
+        foreach ($sourceContent as $key => $value) {
+            if ($value != $targetContent[$key] ?? '') {
+                $data[$key] = [
+                    'source' => $value ?? '',
+                    'target' => $targetContent[$key] ?? '',
+                ];
+            }
+        }
+        return $data;
+    }
+
+    public function getFileDiffHtml($data, $isDifference = null)
+    {
+        $copyIcon = '<svg height="1em" viewBox="0 0 24 24" width="1em"><path d="M0 0h24v24H0z" fill="none"></path><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>';
+        $mainContent = '';
+
+        if ($isDifference) {
+            foreach ($data as $key => $values) {
+                $content = '<tr>';
+                foreach ($values as $class => $value) {
+                    $content .= "<td class='$class'>";
+    
+                    $content .= "<label class='diff-tl'> $key : </label>";
+                    
+                    $content .= "<div class='diff-copy'> $copyIcon </div><br>";
+    
+                    $content .= "<span class='diff-bl'> $value </span></td>";
+                }
+
+                $mainContent .= $content . '</tr>';
+            }
+        } else {
+            $sourceContent = Translations::$plugin->elementTranslator->getTargetData($data, true);
+
+            foreach ($sourceContent as $key => $value) {
+                $content = '<tr><td class="source">';
+
+                $content .= "<label class='diff-tl'> $key : </label>";
+                
+                $content .= "<div class='diff-copy'> $copyIcon </div><br>";
+
+                $content .= "<span class='diff-bl'> $value </span>";
+
+                $mainContent .= $content . '</td></tr>';
+            }
+        }
+
+        return '<table class="diffTable data"><tbody>' . $mainContent . '</tbody></table>';
+    }
 }

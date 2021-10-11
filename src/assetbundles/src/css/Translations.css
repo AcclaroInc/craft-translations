@@ -548,7 +548,7 @@ del {
     transform: translateX(-50%);
 }
 
-#visual iframe {
+.visual iframe {
     width: calc(50% - 2px);
     min-height: 1000px;
 }
@@ -855,7 +855,7 @@ td.target{
     vertical-align: top;
 }
 
-#diffTable {
+.diffTable {
     border-radius: 0 0 5px 5px;
     border-top: 0px !important;
     border: 1px solid rgba(51, 64, 77, 0.1);
@@ -871,6 +871,11 @@ td.target{
 
 .processing {
     background-color: #ced8e5 !important;
+}
+
+.preview {
+    margin: 0px !important;
+    background-color: #f3f7fc !important;
 }
 
 .color-red {
