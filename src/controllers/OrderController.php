@@ -345,11 +345,12 @@ class OrderController extends Controller
                     }
 
                     if ($element instanceof Entry) {
-                        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+                        $previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($tempElement, $file);
 
-                            $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
+                        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+                            $variables['webUrls'][$file->id] = $previewUrl;
                         } else {
-                            $variables['webUrls'][$file->id] = $file->previewUrl ?? ($translatedElement ? $translatedElement->url : $element->url);
+                            $variables['webUrls'][$file->id] = $file->previewUrl ?? $previewUrl;
                         }
                     }
 

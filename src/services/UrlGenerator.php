@@ -25,7 +25,7 @@ use acclaro\translations\models\GlobalSetDraftModel;
 use craft\elements\Asset;
 use DOMDocument;
 use DateTime;
-
+use yii\log\Target;
 
 class UrlGenerator
 {
@@ -121,19 +121,19 @@ class UrlGenerator
     {
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
-    
+
     public function generateElementPreviewUrl(Element $element, $siteId = null)
     {
         $params = array();
-        
+
         if ($element instanceof GlobalSet || $element instanceof Category ) {
             return '';
         }
-        
+
         $className = get_class($element);
-        
+
         if ($className === Entry::class && !$element->getIsDraft()) {
-            $previewUrl = $element->getUrl();
+            $previewUrl = $this->getPrimaryPreviewTargetUrl($element);
         } else {
             $route = [
                 'preview/preview', [
@@ -153,12 +153,27 @@ class UrlGenerator
             }
 
             if ($element->getUrl()) {
-                $previewUrl = Translations::$plugin->urlHelper->urlWithToken($element->getUrl(), $token);
+                $previewUrl = Translations::$plugin->urlHelper->urlWithToken($this->getPrimaryPreviewTargetUrl($element), $token);
             } else {
                 $previewUrl = '';
             }
         }
 
         return $previewUrl;
+    }
+
+    private function getPrimaryPreviewTargetUrl($element)
+    {
+        $targets = $element->getPreviewTargets();
+        $url = $element->url;
+
+        foreach ($targets as $target) {
+            if ($target['label'] == "Primary entry page") {
+                $url = str_replace('@baseUrl/@baseUrl/', '@baseUrl/', $target['url']);
+                return $url;
+            }
+        }
+
+        return $url;
     }
 }
