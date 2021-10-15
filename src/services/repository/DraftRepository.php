@@ -289,20 +289,27 @@ class DraftRepository
                     ->makeTranslationService($translation_service, $order->translator->getSettings());
 
                 $translationService->updateIOFile($order, $file);
+
+                // ToDo: Remove applyDrafts code if this bug fixed: https://github.com/craftcms/cms/issues/9966
+                if ($publish) {
+                    $this->applyDrafts($order->id, $elementIds, $fileIds, $queue);
+                }
+
             } catch(Exception $e) {
                 $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not update draft Error: ' .$e->getMessage()));
             }
         }
 
-        if ($publish) {
-            $this->applyDrafts($order->id, $elementIds, $fileIds, $queue);
-        } else {
+//        ToDo: Uncomment the applyDrafts code if this one fixed: https://github.com/craftcms/cms/issues/9966
+//        if ($publish) {
+//            $this->applyDrafts($order->id, $elementIds, $fileIds, $queue);
+//        } else {
             $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
     
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
     
             Translations::$plugin->orderRepository->saveOrder($order);
-        }
+//        }
     }
 
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
