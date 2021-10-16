@@ -3,7 +3,6 @@
 namespace acclaro\translations\migrations;
 
 use Craft;
-use craft\helpers\App;
 use craft\db\Migration;
 use craft\db\Connection;
 use acclaro\translations\Constants;
