@@ -5,6 +5,7 @@ namespace acclaro\translations\migrations;
 use Craft;
 use craft\helpers\App;
 use craft\db\Migration;
+use craft\db\Connection;
 use acclaro\translations\Constants;
 
 /**
@@ -17,7 +18,7 @@ class m210922_095949_add_ready_for_review_status extends Migration
      */
     public function safeUp()
     {
-        if (App::env('DB_DRIVER') == 'pgsql') {
+        if (Craft::$app->getDb()->getDriverName() === Connection::DRIVER_PGSQL) {
             echo "Dropping existing constraints...\n";
             $this->dropConstraint('translations_files_status_check', 'translations_files');
             $this->dropConstraint('translations_orders_status_check', 'translations_orders');
