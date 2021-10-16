@@ -32,7 +32,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             
             $new = 0;
             foreach ($blocks as $block) {
-                $blockId = $block->fieldId . "_" . $block->typeId ?? 'new' . ++$new;
+                $blockId = $block->fieldId . "_" . $block->canonicalId ?? 'new' . ++$new;
                 $blockSource = $elementTranslator->toTranslationSource($block);
 
                 foreach ($blockSource as $key => $value) {
@@ -93,7 +93,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         $new = 0;
         foreach ($blocks as $i => $block) {
             $blockId = $block->id ?? 'new' . ++$new;
-            $i = $block->fieldId . "_" . $block->typeId ?? 'new' . ++$new;
+            $i = $block->fieldId . "_" . $block->canonicalId ?? 'new' . ++$new;
             // $blockData = isset($fieldData[$blockId]) ? $fieldData[$blockId] : array();
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
 
