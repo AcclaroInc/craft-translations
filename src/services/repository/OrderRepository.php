@@ -317,10 +317,6 @@ class OrderRepository
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
         $dueDate = $order->requestedDueDate;
 
-        if($order->requestedDueDate){
-            $dueDate = $dueDate->format('Y-m-d');
-        }
-
         if($dueDate = $order->requestedDueDate){
             $dueDate = $dueDate->format('Y-m-d');
         }

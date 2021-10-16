@@ -95,6 +95,8 @@ class OrderController extends Controller
 
         $variables['selectedSubnavItem'] = 'orders';
 
+        $variables['context'] = 'index';
+
         $this->renderTemplate('translations/orders/_index', $variables);
     }
 
@@ -908,13 +910,16 @@ class OrderController extends Controller
 
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['sourceSite']);
         $variables['translatorId'] = $variables['order']['translatorId'];
-        $user = Craft::$app->getUser();
-        $variables['author'] = $user->getRememberedUsername();
         $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
+        
+        $userId = Craft::$app->getUser()->id;
+        $user = Craft::$app->getUsers()->getUserById($userId);
 
         $variables['owners'] = array(
-            $user->id => $user->getRememberedUsername(),
+            $user->id => $user->username,
         );
+
+        $variables['author'] = $user;
 
         $variables['elements'] = [];
         $variables['elementVersionMap'] = array();

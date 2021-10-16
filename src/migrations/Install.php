@@ -279,7 +279,7 @@ class Install extends Migration
         // Default Translator details
         $defaultTranslator = [
             "label" => "Export Import",
-            "service" => "export_import",
+            "service" => Constants::TRANSLATOR_DEFAULT,
             "status" => "active",
             "settings" => "[]"
         ];
@@ -288,7 +288,7 @@ class Install extends Migration
         // Default Tag group
         $data = [
             'name'      => 'Craft Translations',
-            'handle'    => 'craftTranslations',
+            'handle'    => Constants::ORDER_TAG_GROUP_HANDLE,
         ];
         $this->upsert('{{%taggroups}}', $data);
     }
@@ -320,30 +320,17 @@ class Install extends Migration
      */
     protected function removePluginData()
     {
-        $tagHandle = 'craftTranslations';
-
-        // Remove translation drafts
-        $translationDraftIds = (new Query())
-            ->select(['draftId'])
-            ->from(['{{%translations_files}}'])
-            ->where(['!=', 'draftId', null])
-            ->column();
-
-        if (! empty($translationDraftIds)) {
-            $this->delete('{{%drafts}}', array('IN', 'id', $translationDraftIds));
-        }
-
-        // Remove Tags data
+        // Remove translations tags
         $tagGroupIds = (new Query())
             ->select(['id'])
             ->from(['{{%taggroups}}'])
-            ->where(['handle' => $tagHandle])
+            ->where(['handle' => Constants::ORDER_TAG_GROUP_HANDLE])
             ->column();
 
         if (! empty($tagGroupIds)) {
             $this->delete('{{%tags}}', array('IN', 'groupId', $tagGroupIds));
         }
 
-        $this->delete('{{%taggroups}}', array('handle' => $tagHandle));
+        $this->delete('{{%taggroups}}', array('handle' => Constants::ORDER_TAG_GROUP_HANDLE));
     }
 }
