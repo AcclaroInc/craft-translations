@@ -638,10 +638,10 @@ class OrderController extends Controller
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
             if ($requestedDueDate) {
-                if (!is_array($requestedDueDate)) {
-                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
+                if (is_array($requestedDueDate)) {
+                    $requestedDueDate = array_key_exists('date', $requestedDueDate) ? DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']): null;
                 } else {
-                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
+                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
                 }
             }
             $order->requestedDueDate = $requestedDueDate ?: null;
