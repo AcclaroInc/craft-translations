@@ -292,7 +292,7 @@ class DraftRepository
 
                 // ToDo: Remove applyDrafts code if this bug fixed: https://github.com/craftcms/cms/issues/9966
                 if ($publish) {
-                    $this->applyDrafts($order->id, $elementIds, $fileIds, $queue);
+                    $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
                 }
 
             } catch(Exception $e) {
