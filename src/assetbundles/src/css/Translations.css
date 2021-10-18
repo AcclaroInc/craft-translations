@@ -867,7 +867,11 @@ td.target{
     cursor: pointer !important;
 }
 
-
+.non-editable {
+    /* background-color: #E8E8E8 !important; */
+    background-color: rgb(179, 179, 179) !important;
+    cursor: default;
+}
 
 .processing {
     background-color: #ced8e5 !important;

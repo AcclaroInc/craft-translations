@@ -280,8 +280,8 @@ class DraftRepository
 
             try {
                 $translation_service = $order->translator->service;
-                if ($translation_service === Translations::ACCLARO) {
-                    $translation_service = Translations::EXPORT_IMPORT;
+                if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+                    $translation_service = Constants::TRANSLATOR_DEFAULT;
                 }
 
                 //Translation Service

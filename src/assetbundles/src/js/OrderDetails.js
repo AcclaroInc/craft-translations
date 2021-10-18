@@ -5,6 +5,7 @@
     }
     // Defaults to open file tab on detail page
     var isSubmitted = $("#order-attr").data("submitted");
+    var hasOrderId = $("input[type=hidden][name=id]").val() != '';
     var isNew = $("#order-attr").data("status") === "new" || $("#order-attr").data("status") === "failed";
     var isCompleted = $("#order-attr").data("status") === "complete";
     var isCanceled = $("#order-attr").data("status") === "canceled";
@@ -14,6 +15,7 @@
 
     function validateForm() {
         var buttonStatus = true;
+        setUnloadEvent();
         var $entries = $('#currentElementIds').val().split(',');
         if ($entries[0] == "") {
             $entries.splice(0);
@@ -84,7 +86,9 @@
                 $checkboxes.each(function() {
                     var $el = $(this);
                     var val = $el.attr('value');
-                    targetSites.push(val);
+                    if (!$el.parent('div').hasClass("hidden")) {
+                        targetSites.push(val);
+                    }
                 });
                 if (haveDifferences($originalTargetSiteIds.split(","), targetSites)) {
                     if (!$needData) return true;
@@ -299,6 +303,18 @@
     function toggleTranslatorBasedFields(status = false) {
         if (status) {
             $('#extra-fields').removeClass('hidden');
+            if (isNew) {
+                $('#comments').removeAttr('disabled');
+                $('#comments').removeClass('non-editable disabled');
+                $('#requestedDueDate-field').find('input').removeAttr('disabled').removeClass('disabled');
+                $('#requestedDueDate-field').find('.non-editable').removeClass('non-editable disabled');
+            } else {
+                $('#comments').attr('disabled', true);
+                $('#comments').addClass('non-editable disabled');
+                $('#comments').prop('title', 'This field can not be changed!');
+                $('#requestedDueDate-date').parent().addClass('disabled');
+                $('#requestedDueDate-date').prop('title', 'This field can not be changed!');
+            }
         } else {
             $('#extra-fields').addClass('hidden');
         }
@@ -317,13 +333,13 @@
         $('#elementVersions').val(updatedVersions.join(','));
     }
 
-    function syncSites() {
+    function syncSites($all = false) {
         var source = $("#sourceSiteSelect").val();
         var targetCheckboxes = $(':checkbox[name="targetSites[]"]');
         targetCheckboxes.each(function() {
             siteId = $(this).val();
             if ($(this).closest('div').hasClass('hidden')) {
-                if (! $('input[type=hidden][name=targetSites]').prop('disabled')) {
+                if (! $(':checkbox[name=targetSites]').is(':checked')) {
                     $(this).prop('disabled', false);
                 }
                 $(this).closest('div').removeClass('hidden');
@@ -333,6 +349,70 @@
                 $(this).closest('div').addClass('hidden');
             }
         });
+
+        if ($all) {
+            let $all = $(':checkbox[name="targetSites[]"]').length;
+            let $checked = $(':checkbox[name="targetSites[]"]:checked').not(':disabled').length;
+            let $source = $("#sourceSiteSelect").val() == '' ? 0 : 1;
+            if (($all-$source) == $checked) {
+                $(':checkbox[name=targetSites]').prop('checked', true);
+                $(':checkbox[name="targetSites[]"]').prop('disabled', true);
+            }
+        }
+    }
+
+    function setUnloadEvent(status = true) {
+        if (status) {
+            $orderHasInputs = false;
+
+            title = $('#title').val();
+            tags = $('input[name="tags[]"]');
+            elementIds = $('#currentElementIds').val();
+            elementIds = elementIds != '' ? elementIds.split(',') : [];
+
+            targetSites = [];
+            var $all = $(':checkbox[name="targetSites"]');
+            var $checkboxes = $all.is(':checked') ? $(':checkbox[name="targetSites[]"]') : $(':checkbox[name="targetSites[]"]:checked');
+            $checkboxes.each(function() {
+                var $el = $(this);
+                var val = $el.attr('value');
+                targetSites.push(val);
+            });
+
+            dueDate = $('#requestedDueDate-date').val();
+            comments = $('#comments').val();
+
+            if (typeof title !== undefined && title !== '') {
+                $orderHasInputs = true;
+            }
+            if (typeof dueDate !== undefined && dueDate != undefined && dueDate != '') {
+                $orderHasInputs = true;
+            }
+            if (typeof comments !== undefined && comments!== '') {
+                $orderHasInputs = true;
+            }
+
+            if (targetSites.length > 0) {
+                $orderHasInputs = true;
+            }
+            if (elementIds.length > 0) {
+                $orderHasInputs = true;
+            }
+
+            if (tags.length > 0) {
+                $orderHasInputs = true;
+            }
+
+            if ($orderHasInputs && ((isNew && ! hasOrderId) || isOrderChanged({all: 'all'}))) {
+                window.onbeforeunload = function(e) {
+                    return "All changes will be lost!";
+                };
+            } else {
+                window.onbeforeunload = null;
+            }
+        } else {
+            window.onbeforeunload = null;
+        }
     }
 
     Craft.Translations.OrderDetails = {
@@ -341,9 +421,11 @@
 
             if (isDefaultTranslator) {
                 toggleTranslatorBasedFields();
+            } else {
+                toggleTranslatorBasedFields(true);
             }
 
-            syncSites();
+            syncSites(true);
 
             if (isSubmitted) {
                 this._createUpdateOrderButtonGroup();
@@ -356,6 +438,8 @@
                 setSubmitButtonStatus(true);
             }
 
+            setUnloadEvent();
+
             // Target lang Ajax
             $(':checkbox[name="targetSites[]"], :checkbox[name="targetSites"]').on('change', function() {
                 if ($(this).attr('name') == "targetSites") {
@@ -364,9 +448,8 @@
                     var $all = $(':checkbox[name="targetSites[]"]');
                     var $checkboxes = $(':checkbox[name="targetSites[]"]:checked');
                     var $sourceSite = $("#sourceSiteSelect").val();
-                    if ($sourceSite == '') {
-                        $sourceSite = 0;
-                    }
+                    $sourceSite = $sourceSite == '' ? 0 : 1;
+
                     if (($all.length - $sourceSite) == $checkboxes.length) {
                         $(':checkbox[name=targetSites]').prop('checked', true);
                         $(':checkbox[name="targetSites[]"]').prop('disabled', true);
@@ -567,6 +650,8 @@
                 if (! validateForm()) {
                     return false;
                 }
+
+                setUnloadEvent(false);
             });
 
             $("input[id^=requestedDueDate]").datepicker('option', 'minDate', +1);
@@ -584,6 +669,7 @@
                 }
 
                 var $url = removeParams(window.location.href);
+                setUnloadEvent(false);
     
                 this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
                     storageKey: null,
@@ -843,6 +929,7 @@
             $(that).on('click', function(e) {
                 e.preventDefault();
                 sendingOrderStatus(true);
+                setUnloadEvent(false);
                 if ($(that).text() == "Create new order") {
                     var url = window.location.origin+"/admin/translations/orders/create";
                     $form.find("input[type=hidden][name=action]").val('translations/order/clone-order');
@@ -909,6 +996,7 @@
             var $form = $('#order-form');
             $(that).on('click', function(e) {
                 e.preventDefault();
+                setUnloadEvent(false);
                 window.history.replaceState(null, null, removeParams(window.location.href));
 
                 var $hiddenAction = $('<input>', {
@@ -926,6 +1014,7 @@
             var $form = $('#order-form');
             $(that).on('click', function(e) {
                 e.preventDefault();
+                setUnloadEvent(false);
                 if (confirm(Craft.t('app', 'Are you sure you want to cancel this order?'))) {
                     $form.find("input[type=hidden][name=action]").val('translations/order/cancel-order');
     
@@ -939,6 +1028,7 @@
                 $proceed = true;
             }
             if ($proceed) {
+                setUnloadEvent(false);
                 $('li[data-id=order]').attr('title', 'This order is no longer editable. The corresponding My Acclaro order is complete.');
                 $('#tab-order').addClass('noClick');
             }

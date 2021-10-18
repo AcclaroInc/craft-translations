@@ -318,7 +318,8 @@
                         id: 'requestedDueDate',
                         size: 20,
                         placeholder: 'Optional',
-                        class: isEditable
+                        class: "non-editable",
+                        disabled: "disabled"
                     }) }}
                     <input type="hidden" id="originalRequestedDueDate" value="{{ date(order.requestedDueDate) | date('m/d/Y') }}">
 
@@ -328,7 +329,7 @@
                         name: 'comments',
                         placeholder: 'Additional comments and instructions',
                         id: 'comments',
-                        class: isEditable,
+                        class: "non-editable",
                         maxlength: 2000,
                         size: 20
                     }) }}

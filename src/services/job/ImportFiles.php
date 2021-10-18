@@ -184,8 +184,8 @@ class ImportFiles extends BaseJob
         }
 
         $translation_service = $this->order->translator->service;
-        if ($translation_service === Translations::ACCLARO) {
-            $translation_service = Translations::EXPORT_IMPORT;
+        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+            $translation_service = Constants::TRANSLATOR_DEFAULT;
         }
 
         //Translation Service
@@ -327,8 +327,8 @@ class ImportFiles extends BaseJob
         }
 
         $translation_service = $this->order->translator->service;
-        if ($translation_service === Translations::ACCLARO) {
-            $translation_service = Translations::EXPORT_IMPORT;
+        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+            $translation_service = Constants::TRANSLATOR_DEFAULT;
         }
 
         //Translation Service
@@ -431,8 +431,8 @@ class ImportFiles extends BaseJob
         }
 
         $translation_service = $this->order->translator->service;
-        if ($translation_service === Translations::ACCLARO) {
-            $translation_service = Translations::EXPORT_IMPORT;
+        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+            $translation_service = Constants::TRANSLATOR_DEFAULT;
         }
 
         //Translation Service
@@ -652,5 +652,7 @@ class ImportFiles extends BaseJob
             Translations::$plugin->translator->translate('app', $message)
         );
         Translations::$plugin->orderRepository->saveOrder($this->order);
+    }
+}
     }
 }
