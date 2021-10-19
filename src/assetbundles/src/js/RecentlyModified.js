@@ -17,7 +17,7 @@
             init: function(widgetId, params) {
                 this.params = params;
                 this.$widget = $('#widget' + widgetId);
-                this.$body = this.$widget.find('.body:first');
+                this.$body = this.$widget.find('#recently-modified-entries');
                 this.$container = this.$widget.find('.recentlymodified-container:first');
                 this.$tbody = this.$container.find('tbody:first');
                 this.hasEntries = !!this.$tbody.length;
@@ -32,6 +32,27 @@
                     if ($(this).hasClass('disabled')) {
                         e.preventDefault();
                     }
+                });
+
+                var modified = $('#modifiedEntries');
+                var recent = $('#recentEntries');
+
+                $('#modifiedEntries').on('click', function() {
+                    if ($(this).hasClass('sel')) return;
+
+                    recent.removeClass('sel');
+                    modified.addClass('sel');
+                    $("#"+modified.data('widget-id')).removeClass('hidden');
+                    $("#"+recent.data('widget-id')).addClass('hidden');
+                });
+                
+                $('#recentEntries').on('click', function() {
+                    if ($(this).hasClass('sel')) return;
+                    
+                    recent.addClass('sel');
+                    modified.removeClass('sel');
+                    $("#"+modified.data('widget-id')).addClass('hidden');
+                    $("#"+recent.data('widget-id')).removeClass('hidden');
                 });
 
                 var data = {
@@ -49,6 +70,7 @@
                         var content = [];
 
                         if (response.data.length) {
+                            this.$widget.find('#recently-modified-widget .tableview').prepend('<h5 style="padding: 20px;margin-bottom: -20px;">Primary site entries that have been modified since being translated.</h5>');
                             for (var i = 0; i < response.data.length; i++) {
                                 var item = response.data[i],
                                     $container = $('#item-'+ (i + 1));
@@ -76,7 +98,7 @@
                             }
                         } else {
                             var widgetHtml = `
-                            <td style="text-align:center;">Translated source entries are up to date.</td>
+                            <td style="text-align:center;padding-top:15px;">Translated source entries are up to date.</td>
                             `;
 
                             this.$body.html(widgetHtml);

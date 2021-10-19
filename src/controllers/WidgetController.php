@@ -57,6 +57,7 @@ use acclaro\translations\widgets\RecentOrders;
 use acclaro\translations\widgets\RecentEntries;
 use acclaro\translations\widgets\RecentlyModified;
 use acclaro\translations\widgets\LanguageCoverage;
+use acclaro\translations\widgets\NewAndModifiedEntries;
 
 /**
  * @author    Acclaro
@@ -156,7 +157,7 @@ class WidgetController extends Controller
         $variables = [];
         // Assemble the list of existing widgets
         $variables['widgets'] = [];
-        $variables['widgetTabs'] = [];
+
         /** @var Widget[] $widgets */
         $widgets = $this->getAllWidgets();
         $allWidgetJs = '';
@@ -178,15 +179,8 @@ class WidgetController extends Controller
                 ];
             }
 
-            if ($widget::displayName() === 'New Source Entries') {
-                $variables['widgetTabs']['New Source Entries'] = $info;
-            }
+            $variables['widgets'][] = $info;
 
-            if ($widget::displayName() === 'Modified Source Entries') {
-                $variables['widgetTabs']['Modified Source Entries'] = $info;
-            } else {
-                $variables['widgets'][] = $info;
-            }
             $allWidgetJs .= 'new Craft.Translations.Widget("#widget' . $widget->id . '", ' .
                 Json::encode($info['settingsHtml']) . ', ' .
                 'function(){' . $info['settingsJs'] . '}' .
@@ -196,8 +190,6 @@ class WidgetController extends Controller
                 $allWidgetJs .= $widgetJs . "\n";
             }
         }
-
-        ksort($variables['widgetTabs']);
 
         // Check For Plugin Updates
         $variables['updates'] = $this->checkForUpdate('translations');
@@ -623,8 +615,7 @@ class WidgetController extends Controller
             News::class,
             Translators::class,
             RecentOrders::class,
-            RecentEntries::class,
-            RecentlyModified::class,
+            NewAndModifiedEntries::class,
             LanguageCoverage::class,
         ];
         

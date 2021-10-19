@@ -577,7 +577,7 @@ class FileRepository
         $targetContent = Translations::$plugin->elementTranslator->getTargetData($target, true);
 
         foreach ($sourceContent as $key => $value) {
-            if ($value != $targetContent[$key] ?? '') {
+            if ($value != ($targetContent[$key] ?? '')) {
                 $data[$key] = [
                     'source' => $value ?? '',
                     'target' => $targetContent[$key] ?? '',

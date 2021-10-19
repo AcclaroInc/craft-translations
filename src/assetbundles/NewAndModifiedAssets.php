@@ -13,7 +13,7 @@ namespace acclaro\translations\assetbundles;
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
 
-class RecentEntryAssets extends AssetBundle
+class NewAndModifiedAssets extends AssetBundle
 {
     public function init()
     {
@@ -24,7 +24,13 @@ class RecentEntryAssets extends AssetBundle
         ];
 
         $this->js = [
+            'js/RecentlyModified.js',
+            'js/diff2html.min.js',
             'js/RecentEntries.js',
+        ];
+        
+        $this->css = [
+            'css/diff2html.min.css',
         ];
 
         parent::init();

@@ -17,7 +17,7 @@
             init: function(widgetId, params) {
                 this.params = params;
                 this.$widget = $('#widget' + widgetId);
-                this.$body = this.$widget.find('.body:first');
+                this.$body = this.$widget.find('#recent-entries-widget');
                 this.$container = this.$widget.find('.recententries-container:first');
                 this.$tbody = this.$container.find('tbody:first');
                 this.hasEntries = !!this.$tbody.length;
@@ -71,7 +71,7 @@
                             }
                         } else {
                             var widgetHtml = `
-                            <td style="text-align:center;">No new source entry found.</td>
+                            <td style="text-align:center;padding-top:15px;">No new source entry found.</td>
                             `;
 
                             this.$body.html(widgetHtml);
