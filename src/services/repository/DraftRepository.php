@@ -289,20 +289,27 @@ class DraftRepository
                     ->makeTranslationService($translation_service, $order->translator->getSettings());
 
                 $translationService->updateIOFile($order, $file);
+
+                /**
+                 * Updated applyDrafts logic to apply drafts individually v.s all at once
+                 * - https://github.com/AcclaroInc/pm-craft-translations/issues/388
+                 * - https://github.com/craftcms/cms/issues/9966
+                 * - https://github.com/AcclaroInc/craft-translations/pull/236/commits/813ef41548532ec41a5f53da6eb4194259f64071
+                 **/
+                if ($publish) {
+                    $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
+                }
+
             } catch(Exception $e) {
                 $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not update draft Error: ' .$e->getMessage()));
             }
         }
 
-        if ($publish) {
-            $this->applyDrafts($order->id, $elementIds, $fileIds, $queue);
-        } else {
-            $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
-    
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
-    
-            Translations::$plugin->orderRepository->saveOrder($order);
-        }
+        $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
+
+        $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
+
+        Translations::$plugin->orderRepository->saveOrder($order);
     }
 
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
