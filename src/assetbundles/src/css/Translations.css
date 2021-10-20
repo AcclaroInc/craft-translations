@@ -378,6 +378,10 @@ del {
     vertical-align: initial;
 }
 
+body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntries"] > .front > .pane > .icon.settings {
+    margin-top: -10px;
+}
+
 .recentlymodified-container > .body-loading {
     display: none;
 }

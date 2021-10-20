@@ -28,7 +28,7 @@ class NewAndModifiedEntries extends Widget
      */
     public static function displayName(): string
     {
-        return Craft::t('app', 'New And Modified Entries');
+        return Craft::t('app', 'New & Modified Source Entries');
     }
 
     /**
