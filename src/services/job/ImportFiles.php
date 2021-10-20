@@ -486,18 +486,11 @@ class ImportFiles extends BaseJob
             $targetFields[$node->getAttribute('resname')] = $node->getAttribute('resname');
         }
 
-        $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-
-        $xmlSource = Translations::$plugin->elementToFileConverter->convert(
-            $element,
-            Constants::FILE_FORMAT_XML,
-            [
-                'sourceSite'    => $file->sourceSite,
-                'targetSite'    => $file->targetSite,
-                'wordCount'     => $file->wordCount,
-                'orderId'       => $file->orderId,
-            ]
-        );
+        $xmlSource = $file->source;
+        $sourceFormat = Translations::$plugin->fileRepository->getFileSourceFormat($xmlSource);
+        if ($sourceFormat === Constants::FILE_FORMAT_JSON) {
+            $xmlSource = Translations::$plugin->elementToFileConverter->jsonToXml($file->source);
+        }
 
         try {
             if (!$dom->loadXML( $xmlSource )) {
