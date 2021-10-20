@@ -299,24 +299,23 @@
         $changedFields = $changedFields.length > 0 ? JSON.stringify($changedFields) : "";
         $('input[name=updatedFields]').val($changedFields);
     }
-
+    
     function toggleTranslatorBasedFields(status = false) {
         if (status) {
-            $('#extra-fields').removeClass('hidden');
-            if (isNew) {
-                $('#comments').removeAttr('disabled');
-                $('#comments').removeClass('non-editable disabled');
-                $('#requestedDueDate-field').find('input').removeAttr('disabled').removeClass('disabled');
-                $('#requestedDueDate-field').find('.non-editable').removeClass('non-editable disabled');
-            } else {
-                $('#comments').attr('disabled', true);
-                $('#comments').addClass('non-editable disabled');
-                $('#comments').prop('title', 'This field can not be changed!');
-                $('#requestedDueDate-date').parent().addClass('disabled');
-                $('#requestedDueDate-date').prop('title', 'This field can not be changed!');
+            $('#extra-fields').removeClass('hidden non-editable disabled');
+            
+            if (!isNew) {
+                // required these class else the input fields will not be disabled
+                $('#comments').addClass('non-editable noClick');
+                $('#requestedDueDate-date').addClass('non-editable noClick');
+                
+                $('#comments-field').addClass('disabled non-editable');
+                $('#comments-field').prop('title', 'This field cannot be edited.');
+                $('#requestedDueDate-field').addClass('disabled non-editable');
+                $('#requestedDueDate-field').prop('title', 'This field cannot be edited.');
             }
         } else {
-            $('#extra-fields').addClass('hidden');
+            $('#extra-fields').addClass('hidden non-editable disabled');
         }
     }
 
