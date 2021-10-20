@@ -148,7 +148,7 @@ if (typeof Craft.Translations === 'undefined') {
         this.$publishSelectedBtn = $('#draft-publish');
         this.$formId = 'publish-form';
         this.$form = $('#' + this.$formId);
-        this.$selectAllCheckbox = $('.footer :checkbox');
+        this.$selectAllCheckbox = $('.select-all-checkbox :checkbox');
         this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
 
         this.$selectAllCheckbox.on('change', function() {
@@ -228,7 +228,7 @@ if (typeof Craft.Translations === 'undefined') {
         $body = $('<div class="body pt-10" style="position: absolute; overflow: scroll;height: calc(100% - 132px);"></div>');
 
         var $header = $('<div class="header df"><h1 class="mr-auto">Review changes</h1></div>');
-        var $footer = $('<div class="footer"><div class="buttons right"></div></div>');
+        var $footer = $('<div class="footer"><div class="select-all-checkbox"></div><div class="buttons right"></div></div>');
         var $draftButton = $('<button type="submit" name="submit" class="btn apply-translation disabled" style="margin:0 5px;" disabled value="draft">Merge into draft</button>');
         var $selectAllCheckbox = $('<input class="checkbox clone" id="element-0-clone" type="checkbox"/><label class="checkbox" for="element-0-clone">Select all</label>');
         var $publishButton = $('<button type="submit" name="submit" class="btn submit apply-translation disabled" style="margin:0 5px;" disabled value="publish">Merge and apply draft</button>');
@@ -248,7 +248,7 @@ if (typeof Craft.Translations === 'undefined') {
             $publishButton.addClass('disabled').css('pointer-events', 'none');
         });
 
-        $selectAllCheckbox.appendTo($footer);
+        $selectAllCheckbox.appendTo($footer.find('.select-all-checkbox'));
         $draftButton.appendTo($footer.find('.buttons'));
         $publishButton.appendTo($footer.find('.buttons'));
         $closeIcon.appendTo($header);
