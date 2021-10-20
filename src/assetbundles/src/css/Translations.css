@@ -795,6 +795,11 @@ del {
     align-items: center;
 }
 
+#approve-publish-form .footer,
+.modal .resizehandle {
+    z-index: 9;
+}
+
 .scroll-x-auto {
     overflow-x: auto;
     align-items: center;

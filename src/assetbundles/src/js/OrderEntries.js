@@ -95,7 +95,7 @@ if (typeof Craft.Translations === 'undefined') {
 
         $clone.find('td:first').before($checkBoxCell);
 
-        $clone.wrapInner( "<td colspan='100%' style='padding: 0; border:none;'><table class='fullwidth'><tbody class='clone-modal-tbody'><tr></tr></tbody></table><td>" );
+        $clone.wrapInner( "<td colspan='100%' style='padding: 0; border:none;border-radius: 5px;'><table class='fullwidth'><tbody class='clone-modal-tbody'><tr></tr></tbody></table><td>" );
 
         return $clone;
     },
@@ -362,6 +362,7 @@ if (typeof Craft.Translations === 'undefined') {
         $mainTd = $('<td colspan=8>');
         $mainTd.css({
             "border": "none",
+            "border-radius": "5px",
             "padding": "0",
         });
         $previewTab.appendTo($mainTd);
