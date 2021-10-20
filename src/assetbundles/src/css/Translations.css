@@ -884,9 +884,6 @@ td.target{
 }
 
 .diffTable {
-    border-radius: 0 0 5px 5px;
-    border-top: 0px !important;
-    border: 1px solid rgba(51, 64, 77, 0.1);
     width: 100%;
 }
 
