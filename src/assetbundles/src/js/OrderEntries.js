@@ -95,7 +95,7 @@ if (typeof Craft.Translations === 'undefined') {
 
         $clone.find('td:first').before($checkBoxCell);
 
-        $clone.wrapInner( "<td colspan='12' style='padding: 0; border:none;'><table><tbody class='clone-modal-tbody'><tr></tr></tbody></table><td>" );
+        $clone.wrapInner( "<td colspan='100%' style='padding: 0; border:none;'><table class='fullwidth'><tbody class='clone-modal-tbody'><tr></tr></tbody></table><td>" );
 
         return $clone;
     },
