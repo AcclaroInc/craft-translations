@@ -800,6 +800,10 @@ del {
     z-index: 9;
 }
 
+.footer .select-all-checkbox {
+    float: left;
+}
+
 .scroll-x-auto {
     overflow-x: auto;
     align-items: center;
