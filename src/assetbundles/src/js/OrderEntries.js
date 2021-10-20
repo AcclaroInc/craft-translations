@@ -95,6 +95,8 @@ if (typeof Craft.Translations === 'undefined') {
 
         $clone.find('td:first').before($checkBoxCell);
 
+        $clone.wrapInner( "<td colspan='12' style='padding: 0; border:none;'><table><tbody class='clone-modal-tbody'><tr></tr></tbody></table><td>" );
+
         return $clone;
     },
     setFileIds: function() {
@@ -122,7 +124,7 @@ if (typeof Craft.Translations === 'undefined') {
         $("input[name=elementIds]").val($elementIds.join(",").replace(/^,|,$/g,''));
     },
     showFirstTdComparison: function() {
-        $row = $(".modal.scroll-y-auto").find("tr.clone-modal-tr");
+        $row = $(".modal.elementselectormodal").find("tr.clone-modal-tr");
         $row.each(function() {
             if ($(this).find(".status").data("status") == 1) {
                 self._addDiffViewEvent(this);
@@ -146,7 +148,7 @@ if (typeof Craft.Translations === 'undefined') {
         this.$publishSelectedBtn = $('#draft-publish');
         this.$formId = 'publish-form';
         this.$form = $('#' + this.$formId);
-        this.$selectAllCheckbox = $('thead .translations-checkbox-cell :checkbox');
+        this.$selectAllCheckbox = $('.footer :checkbox');
         this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
 
         this.$selectAllCheckbox.on('change', function() {
@@ -161,13 +163,14 @@ if (typeof Craft.Translations === 'undefined') {
         this.$publishSelectedBtn.on('click', function () {
             var form = self._buildPublishModal();
             var $modal = new Garnish.Modal(form, {
-                closeOtherModals : false
+                closeOtherModals : false,
+                resizable: true
             });
             self.showFirstTdComparison();
             
             // Destroy the modal that is being hided as a new modal will be created every time
             $modal.on('hide', function() {
-                $('.modal.scroll-y-auto, .modal-shade').remove();
+                $('.modal.elementselectormodal, .modal-shade').remove();
             });
         });
 
@@ -207,7 +210,7 @@ if (typeof Craft.Translations === 'undefined') {
         var $selections = self.getSelections();
 
         var $modal = $('<div/>', {
-            'class' : 'modal scroll-y-auto',
+            'class' : 'modal elementselectormodal',
         });
 
         var $form = $('<form/>', {
@@ -222,15 +225,17 @@ if (typeof Craft.Translations === 'undefined') {
         $hiddenFields.appendTo($form);
         $form.append(Craft.getCsrfInput());
 
-        $body = $('<div class="body pt-10"></div>');
+        $body = $('<div class="body pt-10" style="position: absolute; overflow: scroll;height: calc(100% - 132px);"></div>');
 
         var $header = $('<div class="header df"><h1 class="mr-auto">Review changes</h1></div>');
+        var $footer = $('<div class="footer"><div class="buttons right"></div></div>');
         var $draftButton = $('<button type="submit" name="submit" class="btn apply-translation disabled" style="margin:0 5px;" disabled value="draft">Merge into draft</button>');
+        var $selectAllCheckbox = $('<input class="checkbox clone" id="element-0-clone" type="checkbox"/><label class="checkbox" for="element-0-clone">Select all</label>');
         var $publishButton = $('<button type="submit" name="submit" class="btn submit apply-translation disabled" style="margin:0 5px;" disabled value="publish">Merge and apply draft</button>');
         var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal" style="margin-left:15px;"></a>');
         
         $($closeIcon).on('click', function() {
-            $('.modal.scroll-y-auto, .modal-shade').remove();
+            $('.modal.elementselectormodal, .modal-shade').remove();
         });
 
         $($draftButton).on('click', function() {
@@ -243,19 +248,15 @@ if (typeof Craft.Translations === 'undefined') {
             $publishButton.addClass('disabled').css('pointer-events', 'none');
         });
 
-        $draftButton.appendTo($header);
-        $publishButton.appendTo($header);
+        $selectAllCheckbox.appendTo($footer);
+        $draftButton.appendTo($footer.find('.buttons'));
+        $publishButton.appendTo($footer.find('.buttons'));
         $closeIcon.appendTo($header);
         $header.appendTo($form);
+        $footer.appendTo($form);
+        $('<div class="resizehandle"></div>').appendTo($form);
 
-        var $table = $('<table class="data fullwidth" dir="ltr"></table>');
-
-        var $tableHeader = $('<thead><tr>\
-            <th class="thin checkbox-cell translations-checkbox-cell">\
-            <input class="checkbox clone" id="element-0-clone" type="checkbox"/>\
-            <label class="checkbox" for="element-0-clone"></label></th>\
-            <th>Title</th><th>Target Site</th><th>Section</th><th>Status</th><th></th>\
-            </tr></thead>');
+        var $table = $('<table class="data fullwidth" dir="ltr" style="border-spacing: 0 1em;"></table>');
 
         var $tableContent = $('<tbody></tbody>');
 
@@ -263,8 +264,8 @@ if (typeof Craft.Translations === 'undefined') {
             $clone = self.createRowClone(this);
             $clone.appendTo($tableContent);
             $('<tr>', {
-                id: "data-"+$($clone).data("file-id"),
-            }).appendTo($tableContent);
+                id: "data-"+$($clone).data("file-id")
+            }).appendTo( $clone.find(".clone-modal-tbody") );
         });
 
         $($tableContent).on('click', '.diff-clone-row', function(e) {
@@ -294,7 +295,6 @@ if (typeof Craft.Translations === 'undefined') {
             }
         });
 
-        $tableHeader.appendTo($table);
         $tableContent.appendTo($table);
 
         $table.appendTo($body);
@@ -342,6 +342,7 @@ if (typeof Craft.Translations === 'undefined') {
         $mainContent = $('<tr>', {
             id: "main-container"
         });
+        $mainContent.addClass('file-diff-data');
 
         $previewTab = $('<nav id="acc-tabs" class="preview pane-tabs '+tabBarClass+'">\
             <ul>\
@@ -359,7 +360,10 @@ if (typeof Craft.Translations === 'undefined') {
             class: "diffTable"
         });
         $mainTd = $('<td colspan=8>');
-        $mainTd.css("padding", "0");
+        $mainTd.css({
+            "border": "none",
+            "padding": "0",
+        });
         $previewTab.appendTo($mainTd);
         $diffTable.appendTo($mainTd);
         $previewContent = $('<div id="visual-'+data.fileId+'" class="visual" style="display: none; position: relative;">\

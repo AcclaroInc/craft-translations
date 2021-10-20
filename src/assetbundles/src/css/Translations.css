@@ -491,11 +491,11 @@ del {
 }
 
 #acc-tabs {
-    margin: -10px -12px 0;
-    padding: 10px 12px 0;
-    overflow: hidden;
-    display: flex;
     align-items: center;
+    box-shadow: inset 0 -1px 0 0 rgba(154, 165, 177, 0.25);
+    display: flex;
+    overflow: hidden;
+    padding: 10px 12px 0;
 }
 
 #acc-tabs ul {
@@ -520,12 +520,11 @@ del {
     line-height: 1.2;
 }
 #acc-tabs ul li a.sel {
-    background: #fff;
-    z-index: 1;
-    color: #3f4d5a;
-    cursor: default;
     background-clip: padding-box;
-    box-shadow: 0 0 0 1px rgba(205, 216, 228, 0.25), 0 2px 12px rgba(205, 216, 228, 0.5);
+    background: #fff;
+    box-shadow: 0 0 0 1px #cdd8e4, 0 2px 12px rgba(205, 216, 228, 0.5);
+    color: #3f4d5a;
+    z-index: 1;
 }
 
 @media only screen and (max-width: 1070px) and (min-width: 975px) {
@@ -801,7 +800,14 @@ del {
     align-items: center;
 }
 
+tr.clone-modal-tr:not(.disabled):hover tr.file-diff-data th,
+tr.clone-modal-tr:not(.disabled):hover tr.file-diff-data td {
+    background-color: white !important;
+}
+
 .clone-modal-tr {
+    box-shadow: rgb(205, 216, 228) 0px 0px 0px 1px, rgba(205, 216, 228, 0.5) 0px 2px 12px;
+    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -837,13 +843,17 @@ select[name="version"] {
 }
 
 .target {
-    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
+    border-bottom: 1px solid rgba(51, 64, 77, 0.1) !important;
+    overflow-wrap: anywhere;
+    padding-right: 26px !important;
     width: 50%;
 }
 
 .source {
+    border-bottom: 1px solid rgba(51, 64, 77, 0.1) !important;
     border-right: 1px solid rgba(51, 64, 77, 0.1);
-    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
+    overflow-wrap: anywhere;
+    padding-right: 26px !important;
     width: 50%;
 }
 
@@ -856,9 +866,6 @@ td.target{
 }
 
 .diffTable {
-    border-radius: 0 0 5px 5px;
-    border-top: 0px !important;
-    border: 1px solid rgba(51, 64, 77, 0.1);
     width: 100%;
 }
 
@@ -866,8 +873,6 @@ td.target{
     background: none !important;
     cursor: pointer !important;
 }
-
-
 
 .processing {
     background-color: #ced8e5 !important;
