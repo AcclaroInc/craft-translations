@@ -487,10 +487,6 @@ class ImportFiles extends BaseJob
         }
 
         $xmlSource = $file->source;
-        $sourceFormat = Translations::$plugin->fileRepository->getFileSourceFormat($xmlSource);
-        if ($sourceFormat === Constants::FILE_FORMAT_JSON) {
-            $xmlSource = Translations::$plugin->elementToFileConverter->jsonToXml($file->source);
-        }
 
         try {
             if (!$dom->loadXML( $xmlSource )) {
