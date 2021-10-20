@@ -249,7 +249,7 @@ class WidgetController extends Controller
         $this->requirePostRequest();
         $this->requireAcceptsJson();
         $request = Craft::$app->getRequest();
-        $clone = null;
+
         $type = $request->getRequiredBodyParam('type');
         $settingsNamespace = $request->getBodyParam('settingsNamespace');
         if ($settingsNamespace) {
@@ -262,14 +262,6 @@ class WidgetController extends Controller
             'type' => $type,
             'settings' => $settings,
         ];
-
-        if ($type == "acclaro\\translations\\widgets\\RecentlyModified") {
-            $clone = $this->createWidget([
-                'type' => "acclaro\\translations\\widgets\\RecentEntries",
-                'settings' => $settings,
-            ]);
-            $this->_saveAndReturnWidget($clone);
-        }
 
         $widget = $this->createWidget($config);
         return $this->_saveAndReturnWidget($widget);
@@ -692,7 +684,7 @@ class WidgetController extends Controller
         return $result ? $this->createWidget($result) : null;
     }
 
-        /**
+    /**
      * Saves a widget for the current user.
      *
      * @param WidgetInterface $widget The widget to be saved
@@ -780,11 +772,6 @@ class WidgetController extends Controller
     {
         $widgets = [$widget];
 
-        if ($widget::displayName() == 'Modified Source Entries') {
-            $clone = $this->_getUserWidgetRecordByType('acclaro\translations\widgets\RecentEntries');
-            array_push($widgets, $this->getWidgetById($clone->id));
-        }
-
         foreach ($widgets as $widget) {
             /** @var Widget $widget */
             // Fire a 'beforeDeleteWidget' event
@@ -831,12 +818,6 @@ class WidgetController extends Controller
                 $widgetRecord = $this->_getUserWidgetRecordById($widgetId);
                 $widgetRecord->sortOrder = $widgetOrder + 1;
                 $widgetRecord->save();
-
-                if ($widgetRecord->type == 'acclaro\translations\widgets\RecentlyModified') {
-                    $clone = $this->_getUserWidgetRecordByType('acclaro\translations\widgets\RecentEntries');
-                    $clone->sortOrder = $widgetRecord->sortOrder;
-                    $clone->save();
-                }
             }
             $transaction->commit();
         } catch (\Throwable $e) {
@@ -870,8 +851,7 @@ class WidgetController extends Controller
     {
         $user = Craft::$app->getUser()->getIdentity();
         $this->saveWidget($this->createWidget(RecentOrders::class));
-        $this->saveWidget($this->createWidget(RecentlyModified::class));
-        $this->saveWidget($this->createWidget(RecentEntries::class));
+        $this->saveWidget($this->createWidget(NewAndModifiedEntries::class));
         $this->saveWidget($this->createWidget(LanguageCoverage::class));
         $this->saveWidget($this->createWidget(Translators::class));
         $this->saveWidget($this->createWidget(News::class));

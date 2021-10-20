@@ -24,6 +24,11 @@
 
                 this.$widget.addClass('loading');
 
+                $(window).resize(function() {
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
+                });
+
                 $modal_entry = new Garnish.Modal($('#diff-modal-entry').removeClass('hidden'), {
                     autoShow: false,
                 });
@@ -71,10 +76,10 @@
                             }
                         } else {
                             var widgetHtml = `
-                            <td style="text-align:center;padding-top:15px;">No new source entry found.</td>
+                            <td style="text-align:center;padding-top:15px;">There are no new source entries.</td>
                             `;
 
-                            this.$body.html(widgetHtml);
+                            this.$widget.find('#recent-entries-widget').html(widgetHtml);
                         }
                     }
 

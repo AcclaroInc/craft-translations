@@ -1,20 +1,22 @@
-<div class="tab-container">
-    <nav class="preview pane-tabs">
-        <ul>
-            <li>
-                <a id="recentEntries" data-widget-id="recent-entries-widget" class="tab tab-visual sel" title="New Source Entries">New Source Entries</a>
-            </li>
-            <li>
-                <a id="modifiedEntries" data-widget-id="recently-modified-widget" class="tab tab-visual" title="Modified Source Entries">Modified Source Entries</a>
-            </li>
-        </ul>
-    </nav>
+<div class="tab-container mt--30">
+    {% set tabs = {
+            "recent-entries-widget": {label: "New Source Entries"|t, url: 'javascript:void(0)'},
+            "recently-modified-widget": {label: "Modified Source Entries"|t, url: 'javascript:void(0)'},
+        }
+    %}
+    <header id="content-header" class="pane-header">
+        {% include "_includes/tabs" with {
+            containerAttributes: {
+                id: 'tabs',
+            },
+        } %}
+    </header>
 
     {# Recently modified tab data #}
-    <div id="recently-modified-widget" class="recentlymodified-container hidden scroll-x-auto">
+    <div id="recently-modified-widget" class="recentlymodified-container hidden">
         <div class="spinner body-loading"></div>
         <div class="elements hidden">
-            <div class="tableview">
+            <div class="tableview scroll-x-auto mt--30">
                 <table class="data fullwidth table">
                     <tr>
                         <td class="checkbox-cell"></td>
@@ -76,10 +78,9 @@
         </div>
     </div>
 
-    <div id="recent-entries-widget" class="recententries-container scroll-x-auto">
-        {#<div class="spinner body-loading"></div>#}
+    <div id="recent-entries-widget" class="recententries-container">
         <div class="elements hidden">
-            <div class="tableview">
+            <div class="tableview scroll-x-auto mt--30">
                 <table class="data fullwidth table">
                     <tr>
                         <td class="checkbox-cell"></td>

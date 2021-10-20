@@ -71,7 +71,7 @@ if (typeof Craft.Translations === 'undefined') {
 
         $status = $clone.find("td .status").data("status") == 1;
         $isReady = $.trim($clone.find("td .status").parent("td").text()) == "Ready for review";
-        $isComplete = $.trim($clone.find("td .status").parent("td").text()) == "Complete";
+        $isComplete = $.trim($clone.find("td .status").parent("td").text()) == "Ready to apply";
         $isApplied = $.trim($clone.find("td .status").parent("td").text()) == "Applied";
 
         if ($status) {
@@ -84,8 +84,8 @@ if (typeof Craft.Translations === 'undefined') {
         } else {
             this.$selectedFileIds = $fileId;
         }
-    
-        if (!($isApplied || $isReady || $isComplete)) {
+
+        if (!($isReady || $isComplete)) {
             $checkbox.attr("disabled", "disabled");
         }
         $checkbox.appendTo($checkBoxCell);
@@ -345,6 +345,17 @@ if (typeof Craft.Translations === 'undefined') {
             id: "main-container"
         });
         $mainContent.addClass('file-diff-data');
+
+        $previewTab = $('<nav id="acc-tabs" class="preview pane-tabs '+tabBarClass+'">\
+            <ul>\
+                <li data-id="xml">\
+                    <a id="xml-'+data.fileId+'" class="tab sel tab-xml" title="XML">Text</a>\
+                </li>\
+                <li data-id="preview" class='+previewClass+' '+previewClass+'>\
+                    <a id="preview-'+data.fileId+'" class="tab tab-visual" title="'+previewTitle+'" '+previewTabStyle+'">Preview</a>\
+                </li>\
+            </ul>\
+        </nav>');
 
         $previewTab = $('<nav id="acc-tabs" class="preview pane-tabs '+tabBarClass+'">\
             <ul>\

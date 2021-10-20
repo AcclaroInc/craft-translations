@@ -45,6 +45,15 @@ class NewAndModifiedEntries extends Widget
     /**
      * @inheritdoc
      */
+    public function getTitle(): string
+    {
+        // Default to the widget's display name
+        return static::displayName();
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function rules()
     {
         $rules = parent::rules();

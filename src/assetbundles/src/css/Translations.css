@@ -241,7 +241,7 @@
 
 .translations-complete-orders-indicator {
     float: right;
-    display: inline-block;
+    /* display: inline-block; */
     padding: 0;
     min-height: 22px;
     border: none;
@@ -603,6 +603,15 @@ del {
     z-index: 999;
 }
 
+.mt--30 {
+    margin-top: -30px !important;
+}
+
+.on-top {
+    position: relative;
+    z-index: 10;
+}
+
 .margin-left{
     margin-left: 24px;
 }
@@ -875,6 +884,9 @@ td.target{
 }
 
 .diffTable {
+    border-radius: 0 0 5px 5px;
+    border-top: 0px !important;
+    border: 1px solid rgba(51, 64, 77, 0.1);
     width: 100%;
 }
 

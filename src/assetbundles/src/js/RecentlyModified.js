@@ -21,7 +21,9 @@
                 this.$container = this.$widget.find('.recentlymodified-container:first');
                 this.$tbody = this.$container.find('tbody:first');
                 this.hasEntries = !!this.$tbody.length;
-
+                // Hide widget title
+                this.$widget.find('h2').html('');
+                this.$widget.find('div.settings.icon').addClass('on-top');
                 this.$widget.addClass('loading');
 
                 $modal = new Garnish.Modal($('#diff-modal').removeClass('hidden'), {
@@ -34,25 +36,43 @@
                     }
                 });
 
-                var modified = $('#modifiedEntries');
-                var recent = $('#recentEntries');
+                var modified = 'recently-modified-widget';
+                var recent = 'recent-entries-widget';
 
-                $('#modifiedEntries').on('click', function() {
+                $('#tab-'+modified).on('click', function() {
                     if ($(this).hasClass('sel')) return;
 
-                    recent.removeClass('sel');
-                    modified.addClass('sel');
-                    $("#"+modified.data('widget-id')).removeClass('hidden');
-                    $("#"+recent.data('widget-id')).addClass('hidden');
+                    $('#tab-'+recent).removeClass('sel');
+                    $('#tab-'+modified).addClass('sel');
+                    $('div.menu ul.padded li a[data-id="'+recent+'"]').removeClass('sel');
+                    $('div.menu ul.padded li a[data-id="'+modified+'"]').addClass('sel');
+                    $("#"+modified).removeClass('hidden');
+                    $("#"+recent).addClass('hidden');
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
                 });
                 
-                $('#recentEntries').on('click', function() {
+                $('#tab-'+recent).on('click', function() {
                     if ($(this).hasClass('sel')) return;
                     
-                    recent.addClass('sel');
-                    modified.removeClass('sel');
-                    $("#"+modified.data('widget-id')).addClass('hidden');
-                    $("#"+recent.data('widget-id')).removeClass('hidden');
+                    $('#tab-'+recent).addClass('sel');
+                    $('#tab-'+modified).removeClass('sel');
+                    $('div.menu ul.padded li a[data-id="'+recent+'"]').addClass('sel');
+                    $('div.menu ul.padded li a[data-id="'+modified+'"]').removeClass('sel');
+                    $("#"+modified).addClass('hidden');
+                    $("#"+recent).removeClass('hidden');
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
+                });
+
+                $(document).on('click', '#tabs .btn.menubtn', function() {
+                    if ($('#tab-'+modified).hasClass('sel')) {
+                        $('div.menu ul.padded li a[data-id="'+recent+'"]').removeClass('sel');
+                        $('div.menu ul.padded li a[data-id="'+modified+'"]').addClass('sel');
+                    } else {
+                        $('div.menu ul.padded li a[data-id="'+recent+'"]').addClass('sel');
+                        $('div.menu ul.padded li a[data-id="'+modified+'"]').removeClass('sel');
+                    }
                 });
 
                 var data = {
@@ -98,10 +118,10 @@
                             }
                         } else {
                             var widgetHtml = `
-                            <td style="text-align:center;padding-top:15px;">Translated source entries are up to date.</td>
+                            <td style="text-align:center;padding-top:15px;">There are no new modified source entries.</td>
                             `;
 
-                            this.$body.html(widgetHtml);
+                            this.$widget.find('#recently-modified-widget').html(widgetHtml);
                         }
                     }
                     
@@ -111,28 +131,6 @@
                     $('.entry-check .checkbox').on('click', function(e) {
                         $(e.target).closest('tr[id^=item-]').toggleClass('sel');
                         Craft.Translations.RecentlyModified.prototype.updateSelected();
-                    });
-
-                    var modified = $('#modifiedEntries');
-                    var recent = $('#recentEntries');
-
-                    $('#modifiedEntries').on('click', function() {
-                        if ($(this).hasClass('sel')) return;
-
-                        recent.removeClass('sel');
-                        modified.addClass('sel');
-                        $("#"+modified.data('widget-id')).addClass('hidden');
-                        $("#"+recent.data('widget-id')).removeClass('hidden');
-
-                    });
-                    
-                    $('#recentEntries').on('click', function() {
-                        if ($(this).hasClass('sel')) return;
-
-                        recent.addClass('sel');
-                        modified.removeClass('sel');
-                        $("#"+modified.data('widget-id')).removeClass('hidden');
-                        $("#"+recent.data('widget-id')).addClass('hidden');
                     });
 
                     $('.view-diff').on('click', function(e) {
