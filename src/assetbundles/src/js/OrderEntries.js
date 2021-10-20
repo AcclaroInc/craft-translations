@@ -70,6 +70,8 @@ if (typeof Craft.Translations === 'undefined') {
         $clone.addClass("clone-modal-tr");
 
         $status = $clone.find("td .status").data("status") == 1;
+        $isReady = $.trim($clone.find("td .status").parent("td").text()) == "Ready for review";
+        $isComplete = $.trim($clone.find("td .status").parent("td").text()) == "Complete";
         $isApplied = $.trim($clone.find("td .status").parent("td").text()) == "Applied";
 
         if ($status) {
@@ -82,8 +84,8 @@ if (typeof Craft.Translations === 'undefined') {
         } else {
             this.$selectedFileIds = $fileId;
         }
-
-        if (! $status || $isApplied) {
+    
+        if (!($isApplied || $isReady || $isComplete)) {
             $checkbox.attr("disabled", "disabled");
         }
         $checkbox.appendTo($checkBoxCell);
