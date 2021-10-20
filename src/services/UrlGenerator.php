@@ -165,15 +165,14 @@ class UrlGenerator
     private function getPrimaryPreviewTargetUrl($element)
     {
         $targets = $element->getPreviewTargets();
-        $url = $element->url;
 
         foreach ($targets as $target) {
-            if ($target['label'] == "Primary entry page") {
+            if (!empty($target['url'])) {
                 $url = str_replace('@baseUrl/@baseUrl/', '@baseUrl/', $target['url']);
                 return $url;
             }
         }
 
-        return $url;
+        return $element->getUrl();
     }
 }
