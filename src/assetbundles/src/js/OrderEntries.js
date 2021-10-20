@@ -326,7 +326,7 @@ if (typeof Craft.Translations === 'undefined') {
                 Craft.cp.displayNotice(Craft.t('app', response.error));
             }
             // Copy text to clipboard
-            var $copyBtn = $('.diff-copy');
+            var $copyBtn = $("#data-"+$fileId).find('.diff-copy');
             $($copyBtn).on('click', function(event) {
                 self.copyTextToClipboard(event);
             });
