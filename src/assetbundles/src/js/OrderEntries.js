@@ -225,7 +225,7 @@ if (typeof Craft.Translations === 'undefined') {
         $hiddenFields.appendTo($form);
         $form.append(Craft.getCsrfInput());
 
-        $body = $('<div class="body pt-10" style="position: absolute; overflow: scroll;height: calc(100% - 132px);"></div>');
+        $body = $('<div class="body pt-10" style="position: absolute; overflow: scroll; height: calc(100% - 132px); width: 100%;"></div>');
 
         var $header = $('<div class="header df"><h1 class="mr-auto">Review changes</h1></div>');
         var $footer = $('<div class="footer"><div class="select-all-checkbox"></div><div class="buttons right"></div></div>');
