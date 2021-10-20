@@ -10,31 +10,25 @@
 
 namespace acclaro\translations\widgets;
 
-use acclaro\translations\Translations;
 use Craft;
-use craft\db\Query;
-use craft\helpers\Db;
 use craft\base\Widget;
-use acclaro\translations\services\App;
-use acclaro\translations\elements\Order;
-use acclaro\translations\records\WidgetRecord;
-use craft\records\Entry;
 use craft\helpers\Json;
-use acclaro\translations\assetbundles\RecentEntryAssets as JS;
+use acclaro\translations\records\WidgetRecord;
+use acclaro\translations\assetbundles\NewAndModifiedAssets;
 
 /**
  * @author    Acclaro
  * @package   Translations
  * @since     1.0.2
  */
-class RecentEntries extends Widget
+class NewAndModifiedEntries extends Widget
 {
     /**
      * @inheritdoc
      */
     public static function displayName(): string
     {
-        return Craft::t('app', 'New Source Entries');
+        return Craft::t('app', 'New & Modified Source Entries');
     }
 
     /**
@@ -42,11 +36,20 @@ class RecentEntries extends Widget
      */
     public static function iconPath()
     {
-        return Craft::getAlias('@app/icons/mask.svg');
+        return Craft::getAlias('@app/icons/newspaper.svg');
     }
 
     public $limit = 10;
     public $days = 7;
+
+    /**
+     * @inheritdoc
+     */
+    public function getTitle(): string
+    {
+        // Default to the widget's display name
+        return static::displayName();
+    }
 
     /**
      * @inheritdoc
@@ -57,7 +60,7 @@ class RecentEntries extends Widget
         
         $rules[] = ['limit', 'number', 'integerOnly' => true];
         $rules[] = ['days', 'number', 'integerOnly' => true];
-
+        
         return $rules;
     }
 
@@ -74,7 +77,6 @@ class RecentEntries extends Widget
      */
     public function getSettingsHtml()
     {
-
         $options = [
             ['label' => 'Last 24 hours', 'value' => 1],
             ['label' => 'Last 7 Days', 'value' => 7],
@@ -82,12 +84,13 @@ class RecentEntries extends Widget
             ['label' => 'Last 90 Days', 'value' => 90],
         ];
 
-        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/RecentEntries/settings',
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/NewAndModifiedEntries/settings',
             [
                 'widget' => $this,
                 'options' => $options,
                 'settings' => $this->getSettings()
-            ]);
+            ]
+        );
     }
 
     /**
@@ -95,22 +98,22 @@ class RecentEntries extends Widget
      */
     public function getBodyHtml()
     {
-
         $params = [];
 
         $params['limit'] = (int)$this->limit;
         $params['days'] = (int)$this->days;
 
         $view = Craft::$app->getView();
-        $view->registerAssetBundle(JS::class);
-
+        $view->registerAssetBundle(NewAndModifiedAssets::class);
+        $view->registerJs(
+            'new Craft.Translations.RecentlyModified(' . $this->id . ', ' . Json::encode($params) . ');'
+        );
         $view->registerJs(
             'new Craft.Translations.RecentEntries(' . $this->id . ', ' . Json::encode($params) . ');'
         );
-
-        //$entries = $this->_getEntries();
-
-        return $view->renderTemplate('translations/_components/widgets/RecentEntries/body', ['limit' => $this->limit]);
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/NewAndModifiedEntries/body', [
+            'limit' => $this->limit,
+        ]);
     }
 
     public static function doesUserHaveWidget(string $type): bool
@@ -129,6 +132,16 @@ class RecentEntries extends Widget
     public static function isSelectable(): bool
     {
         return (static::allowMultipleInstances() || !static::doesUserHaveWidget(static::class));
+    }
+
+    /**
+     * Returns whether the widget can be selected more than once.
+     *
+     * @return bool Whether the widget can be selected more than once
+     */
+    protected static function allowMultipleInstances(): bool
+    {
+        return false;
     }
 
     /**
@@ -153,15 +166,5 @@ class RecentEntries extends Widget
         }
 
         return $entries;
-    }
-
-    /**
-     * Returns whether the widget can be selected more than once.
-     *
-     * @return bool Whether the widget can be selected more than once
-     */
-    protected static function allowMultipleInstances(): bool
-    {
-        return false;
     }
 }
