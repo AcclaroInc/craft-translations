@@ -70,6 +70,11 @@ class OrderRepository
         return $orderCount;
     }
 
+    public function isTranslationOrder($elementId)
+    {
+        return Order::findOne(['id' => $elementId]);
+    }
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
