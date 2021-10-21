@@ -106,12 +106,12 @@ class UrlGenerator
 
     public function generateFileWebUrl(Element $element, FileModel $file)
     {
-        if ($file->status === 'published') {
-            if ($element instanceof GlobalSet OR $element instanceof Category) {
+        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+            if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
                 return '';
             }
 
-            return $element->url;
+            return $element->getUrl();
         }
 
         return $this->generateElementPreviewUrl($element, $file->targetSite);
@@ -126,7 +126,7 @@ class UrlGenerator
     {
         $params = array();
 
-        if ($element instanceof GlobalSet || $element instanceof Category ) {
+        if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
             return '';
         }
 
@@ -153,7 +153,9 @@ class UrlGenerator
             }
 
             if ($element->getUrl()) {
-                $previewUrl = Translations::$plugin->urlHelper->urlWithToken($this->getPrimaryPreviewTargetUrl($element), $token);
+                $previewUrl = Translations::$plugin->urlHelper->urlWithParams($this->getPrimaryPreviewTargetUrl($element), [
+                    Craft::$app->getConfig()->getGeneral()->tokenParam => $token,
+                ]);
             } else {
                 $previewUrl = '';
             }
@@ -165,14 +167,6 @@ class UrlGenerator
     private function getPrimaryPreviewTargetUrl($element)
     {
         $targets = $element->getPreviewTargets();
-
-        foreach ($targets as $target) {
-            if (!empty($target['url'])) {
-                $url = str_replace('@baseUrl/@baseUrl/', '@baseUrl/', $target['url']);
-                return $url;
-            }
-        }
-
-        return $element->getUrl();
+        return ($targets[0]['url'] ? $targets[0]['url'] : $element->getUrl());
     }
 }
