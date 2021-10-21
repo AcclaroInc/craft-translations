@@ -90,7 +90,7 @@
                         var content = [];
 
                         if (response.data.length) {
-                            this.$widget.find('#recently-modified-widget .tableview').prepend('<h5 style="padding: 20px;margin-bottom: -20px;">Primary site entries that have been modified since being translated.</h5>');
+                            this.$widget.find('#recently-modified-widget .tableview').prepend('<h2 style="padding-top: 24px;">Modified Source Entries</h2><h5>Entries that have been modified post-translation.</h5>');
                             for (var i = 0; i < response.data.length; i++) {
                                 var item = response.data[i],
                                     $container = $('#item-'+ (i + 1));
