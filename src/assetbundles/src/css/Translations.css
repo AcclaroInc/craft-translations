@@ -241,7 +241,7 @@
 
 .translations-complete-orders-indicator {
     float: right;
-    display: inline-block;
+    /* display: inline-block; */
     padding: 0;
     min-height: 22px;
     border: none;
@@ -378,6 +378,10 @@ del {
     vertical-align: initial;
 }
 
+body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntries"] > .front > .pane > .icon.settings {
+    margin-top: -10px;
+}
+
 .recentlymodified-container > .body-loading {
     display: none;
 }
@@ -491,11 +495,11 @@ del {
 }
 
 #acc-tabs {
-    margin: -10px -12px 0;
-    padding: 10px 12px 0;
-    overflow: hidden;
-    display: flex;
     align-items: center;
+    box-shadow: inset 0 -1px 0 0 rgba(154, 165, 177, 0.25);
+    display: flex;
+    overflow: hidden;
+    padding: 10px 12px 0;
 }
 
 #acc-tabs ul {
@@ -520,12 +524,11 @@ del {
     line-height: 1.2;
 }
 #acc-tabs ul li a.sel {
-    background: #fff;
-    z-index: 1;
-    color: #3f4d5a;
-    cursor: default;
     background-clip: padding-box;
-    box-shadow: 0 0 0 1px rgba(205, 216, 228, 0.25), 0 2px 12px rgba(205, 216, 228, 0.5);
+    background: #fff;
+    box-shadow: 0 0 0 1px #cdd8e4, 0 2px 12px rgba(205, 216, 228, 0.5);
+    color: #3f4d5a;
+    z-index: 1;
 }
 
 @media only screen and (max-width: 1070px) and (min-width: 975px) {
@@ -548,7 +551,7 @@ del {
     transform: translateX(-50%);
 }
 
-#visual iframe {
+.visual iframe {
     width: calc(50% - 2px);
     min-height: 1000px;
 }
@@ -602,6 +605,15 @@ del {
     top: 50%;
     transform: translateY(-50%) translateX(-50%);
     z-index: 999;
+}
+
+.mt--30 {
+    margin-top: -30px !important;
+}
+
+.on-top {
+    position: relative;
+    z-index: 10;
 }
 
 .margin-left{
@@ -796,12 +808,28 @@ del {
     align-items: center;
 }
 
+#approve-publish-form .footer,
+.modal .resizehandle {
+    z-index: 9;
+}
+
+.footer .select-all-checkbox {
+    float: left;
+}
+
 .scroll-x-auto {
     overflow-x: auto;
     align-items: center;
 }
 
+tr.clone-modal-tr:not(.disabled):hover tr.file-diff-data th,
+tr.clone-modal-tr:not(.disabled):hover tr.file-diff-data td {
+    background-color: white !important;
+}
+
 .clone-modal-tr {
+    box-shadow: rgb(205, 216, 228) 0px 0px 0px 1px, rgba(205, 216, 228, 0.5) 0px 2px 12px;
+    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -837,13 +865,17 @@ select[name="version"] {
 }
 
 .target {
-    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
+    border-bottom: 1px solid rgba(51, 64, 77, 0.1) !important;
+    overflow-wrap: anywhere;
+    padding-right: 26px !important;
     width: 50%;
 }
 
 .source {
+    border-bottom: 1px solid rgba(51, 64, 77, 0.1) !important;
     border-right: 1px solid rgba(51, 64, 77, 0.1);
-    border-top: 1px solid rgba(51, 64, 77, 0.1) !important;
+    overflow-wrap: anywhere;
+    padding-right: 26px !important;
     width: 50%;
 }
 
@@ -855,10 +887,7 @@ td.target{
     vertical-align: top;
 }
 
-#diffTable {
-    border-radius: 0 0 5px 5px;
-    border-top: 0px !important;
-    border: 1px solid rgba(51, 64, 77, 0.1);
+.diffTable {
     width: 100%;
 }
 
@@ -873,6 +902,11 @@ td.target{
 
 .processing {
     background-color: #ced8e5 !important;
+}
+
+.preview {
+    margin: 0px !important;
+    background-color: #f3f7fc !important;
 }
 
 .color-red {

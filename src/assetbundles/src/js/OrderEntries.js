@@ -70,6 +70,8 @@ if (typeof Craft.Translations === 'undefined') {
         $clone.addClass("clone-modal-tr");
 
         $status = $clone.find("td .status").data("status") == 1;
+        $isReady = $.trim($clone.find("td .status").parent("td").text()) == "Ready for review";
+        $isComplete = $.trim($clone.find("td .status").parent("td").text()) == "Ready to apply";
         $isApplied = $.trim($clone.find("td .status").parent("td").text()) == "Applied";
 
         if ($status) {
@@ -83,7 +85,7 @@ if (typeof Craft.Translations === 'undefined') {
             this.$selectedFileIds = $fileId;
         }
 
-        if (! $status || $isApplied) {
+        if (!($isReady || $isComplete)) {
             $checkbox.attr("disabled", "disabled");
         }
         $checkbox.appendTo($checkBoxCell);
@@ -94,6 +96,8 @@ if (typeof Craft.Translations === 'undefined') {
         }).appendTo($checkBoxCell);
 
         $clone.find('td:first').before($checkBoxCell);
+
+        $clone.wrapInner( "<td colspan='100%' style='padding: 0; border:none;border-radius: 5px;'><table class='fullwidth'><tbody class='clone-modal-tbody'><tr></tr></tbody></table><td>" );
 
         return $clone;
     },
@@ -122,7 +126,7 @@ if (typeof Craft.Translations === 'undefined') {
         $("input[name=elementIds]").val($elementIds.join(",").replace(/^,|,$/g,''));
     },
     showFirstTdComparison: function() {
-        $row = $(".modal.scroll-y-auto").find("tr.clone-modal-tr");
+        $row = $(".modal.elementselectormodal").find("tr.clone-modal-tr");
         $row.each(function() {
             if ($(this).find(".status").data("status") == 1) {
                 self._addDiffViewEvent(this);
@@ -140,12 +144,13 @@ if (typeof Craft.Translations === 'undefined') {
             Craft.cp.displayError(Craft.t('app', 'Could not copy text: ', err));
         });
     },
+
     init: function() {
         self = this;
         this.$publishSelectedBtn = $('#draft-publish');
         this.$formId = 'publish-form';
         this.$form = $('#' + this.$formId);
-        this.$selectAllCheckbox = $('thead .translations-checkbox-cell :checkbox');
+        this.$selectAllCheckbox = $('.select-all-checkbox :checkbox');
         this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
 
         this.$selectAllCheckbox.on('change', function() {
@@ -160,13 +165,14 @@ if (typeof Craft.Translations === 'undefined') {
         this.$publishSelectedBtn.on('click', function () {
             var form = self._buildPublishModal();
             var $modal = new Garnish.Modal(form, {
-                closeOtherModals : false
+                closeOtherModals : false,
+                resizable: true
             });
             self.showFirstTdComparison();
             
             // Destroy the modal that is being hided as a new modal will be created every time
             $modal.on('hide', function() {
-                $('.modal.scroll-y-auto, .modal-shade').remove();
+                $('.modal.elementselectormodal, .modal-shade').remove();
             });
         });
 
@@ -206,7 +212,7 @@ if (typeof Craft.Translations === 'undefined') {
         var $selections = self.getSelections();
 
         var $modal = $('<div/>', {
-            'class' : 'modal scroll-y-auto',
+            'class' : 'modal elementselectormodal',
         });
 
         var $form = $('<form/>', {
@@ -221,15 +227,17 @@ if (typeof Craft.Translations === 'undefined') {
         $hiddenFields.appendTo($form);
         $form.append(Craft.getCsrfInput());
 
-        $body = $('<div class="body pt-10"></div>');
+        $body = $('<div class="body pt-10" style="position: absolute; overflow: scroll; height: calc(100% - 132px); width: 100%;"></div>');
 
         var $header = $('<div class="header df"><h1 class="mr-auto">Review changes</h1></div>');
+        var $footer = $('<div class="footer"><div class="select-all-checkbox"></div><div class="buttons right"></div></div>');
         var $draftButton = $('<button type="submit" name="submit" class="btn apply-translation disabled" style="margin:0 5px;" disabled value="draft">Merge into draft</button>');
+        var $selectAllCheckbox = $('<input class="checkbox clone" id="element-0-clone" type="checkbox"/><label class="checkbox" for="element-0-clone">Select all</label>');
         var $publishButton = $('<button type="submit" name="submit" class="btn submit apply-translation disabled" style="margin:0 5px;" disabled value="publish">Merge and apply draft</button>');
         var $closeIcon = $('<a class="icon delete close-publish-modal" id="close-publish-modal" style="margin-left:15px;"></a>');
         
         $($closeIcon).on('click', function() {
-            $('.modal.scroll-y-auto, .modal-shade').remove();
+            $('.modal.elementselectormodal, .modal-shade').remove();
         });
 
         $($draftButton).on('click', function() {
@@ -242,19 +250,15 @@ if (typeof Craft.Translations === 'undefined') {
             $publishButton.addClass('disabled').css('pointer-events', 'none');
         });
 
-        $draftButton.appendTo($header);
-        $publishButton.appendTo($header);
+        $selectAllCheckbox.appendTo($footer.find('.select-all-checkbox'));
+        $draftButton.appendTo($footer.find('.buttons'));
+        $publishButton.appendTo($footer.find('.buttons'));
         $closeIcon.appendTo($header);
         $header.appendTo($form);
+        $footer.appendTo($form);
+        $('<div class="resizehandle"></div>').appendTo($form);
 
-        var $table = $('<table class="data fullwidth" dir="ltr"></table>');
-
-        var $tableHeader = $('<thead><tr>\
-            <th class="thin checkbox-cell translations-checkbox-cell">\
-            <input class="checkbox clone" id="element-0-clone" type="checkbox"/>\
-            <label class="checkbox" for="element-0-clone"></label></th>\
-            <th>Title</th><th>Target Site</th><th>Section</th><th>Status</th><th></th>\
-            </tr></thead>');
+        var $table = $('<table class="data fullwidth" dir="ltr" style="border-spacing: 0 1em;"></table>');
 
         var $tableContent = $('<tbody></tbody>');
 
@@ -262,8 +266,8 @@ if (typeof Craft.Translations === 'undefined') {
             $clone = self.createRowClone(this);
             $clone.appendTo($tableContent);
             $('<tr>', {
-                id: "data-"+$($clone).data("file-id"),
-            }).appendTo($tableContent);
+                id: "data-"+$($clone).data("file-id")
+            }).appendTo( $clone.find(".clone-modal-tbody") );
         });
 
         $($tableContent).on('click', '.diff-clone-row', function(e) {
@@ -293,7 +297,6 @@ if (typeof Craft.Translations === 'undefined') {
             }
         });
 
-        $tableHeader.appendTo($table);
         $tableContent.appendTo($table);
 
         $table.appendTo($body);
@@ -323,7 +326,7 @@ if (typeof Craft.Translations === 'undefined') {
                 Craft.cp.displayNotice(Craft.t('app', response.error));
             }
             // Copy text to clipboard
-            var $copyBtn = $('.diff-copy');
+            var $copyBtn = $("#data-"+$fileId).find('.diff-copy');
             $($copyBtn).on('click', function(event) {
                 self.copyTextToClipboard(event);
             });
@@ -332,16 +335,57 @@ if (typeof Craft.Translations === 'undefined') {
     createDiffHtmlView: function(data) {
         var diffData = data.diff;
 
+        let tabBarClass = diffData == undefined ? 'hidden' : '';
+
+        let previewClass = data.previewClass;
+        let previewTitle = previewClass == 'disabled' ? "Preview not available" : 'Preview';
+        let previewTabStyle = previewClass == 'disabled' ? 'style="cursor: default;"' : '';
+
         $mainContent = $('<tr>', {
             id: "main-container"
         });
+        $mainContent.addClass('file-diff-data');
+
+        $previewTab = $('<nav id="acc-tabs" class="preview pane-tabs '+tabBarClass+'">\
+            <ul>\
+                <li data-id="xml">\
+                    <a id="xml-'+data.fileId+'" class="tab sel tab-xml" title="XML">Text</a>\
+                </li>\
+                <li data-id="preview" class='+previewClass+' '+previewClass+'>\
+                    <a id="preview-'+data.fileId+'" class="tab tab-visual" title="'+previewTitle+'" '+previewTabStyle+'">Preview</a>\
+                </li>\
+            </ul>\
+        </nav>');
+
+        $previewTab = $('<nav id="acc-tabs" class="preview pane-tabs '+tabBarClass+'">\
+            <ul>\
+                <li data-id="xml">\
+                    <a id="xml-'+data.fileId+'" class="tab sel tab-xml" title="XML">Text</a>\
+                </li>\
+                <li data-id="preview" class='+previewClass+' '+previewClass+'>\
+                    <a id="preview-'+data.fileId+'" class="tab tab-visual" title="'+previewTitle+'" '+previewTabStyle+'">Preview</a>\
+                </li>\
+            </ul>\
+        </nav>');
 
         $diffTable = $('<table>', {
-            id: "diffTable"
+            id: "diffTable-"+data.fileId,
+            class: "diffTable"
         });
         $mainTd = $('<td colspan=8>');
-        $mainTd.css("padding", "0");
+        $mainTd.css({
+            "border": "none",
+            "border-radius": "5px",
+            "padding": "0",
+        });
+        $previewTab.appendTo($mainTd);
         $diffTable.appendTo($mainTd);
+        $previewContent = $('<div id="visual-'+data.fileId+'" class="visual" style="display: none; position: relative;">\
+            <span class="iframe-line"> </span>\
+            <iframe class="original" id="original-url" src="'+data.originalUrl+'"></iframe>\
+            <iframe style="float: right" class="new" id="new-url" src="'+data.newUrl+'"></iframe>\
+        </div>');
+        $previewContent.appendTo($mainTd);
         $mainTd.appendTo($mainContent);
 
         $.each(diffData, function(key, value) {
@@ -377,6 +421,28 @@ if (typeof Craft.Translations === 'undefined') {
                 class: "diff-bl"
             }).appendTo($td);
             $tr.appendTo($diffTable);
+        });
+
+        $previewTab.on('click', 'li', function() {
+            let tab = $(this);
+            let tabName = tab.data('id');
+            let tabAnchor = tab.find('a');
+            let tabFileId = tabAnchor.prop('id').split('-')[1];
+            if (tabAnchor.hasClass('sel') || tab.hasClass('disabled')) {
+                return;
+            }
+
+            if (tabName == 'xml') {
+                $('#xml-'+tabFileId).addClass('sel');
+                $('#preview-'+tabFileId).removeClass('sel');
+                $('#visual-'+tabFileId).hide();
+                $('#diffTable-'+tabFileId).show();
+            } else {
+                $('#xml-'+tabFileId).removeClass('sel');
+                $('#preview-'+tabFileId).addClass('sel');
+                $('#diffTable-'+tabFileId).hide();
+                $('#visual-'+tabFileId).show();
+            }
         });
 
         return $mainContent;

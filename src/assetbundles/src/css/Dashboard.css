@@ -117,3 +117,12 @@ body.rtl .widgetmanagerhud .colspan-picker a.highlight.last { border-left: mediu
   flex-direction: row-reverse;
   justify-content: space-between;
 }
+
+.modal {
+  width: min-content;
+  min-width: 66%;
+}
+
+.mt--14 {
+  margin-top: -14px !important;
+}

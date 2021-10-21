@@ -48,42 +48,47 @@
             },
 
             handleNewWidgetOptionSelect: function(e) {
-                var $option = $(e.selectedOption),
-                    type = $option.data('type'),
-                    settingsNamespace = 'newwidget' + Math.floor(Math.random() * 1000000000) + '-settings',
-                    settingsHtml = this.getTypeInfo(type, 'settingsHtml', '').replace(/__NAMESPACE__/g, settingsNamespace),
-                    settingsJs = this.getTypeInfo(type, 'settingsJs', '').replace(/__NAMESPACE__/g, settingsNamespace),
-                    $gridItem = $('<div class="item" data-colspan="1" style="display: block">'),
-                    $container = $(
-                        '<div class="widget new loading-new scaleout ' + type.toLowerCase() + '" data-type="' + type + '">' +
-                        '<div class="front">' +
-                        '<div class="pane">' +
-                        '<div class="spinner body-loading"/>' +
-                        '<div class="settings icon hidden"/>' +
-                        '<h2/>' +
-                        '<div class="body"/>' +
-                        '</div>' +
-                        '</div>' +
-                        '<div class="back">' +
-                        '<form class="pane">' +
-                        '<input type="hidden" name="type" value="' + type + '"/>' +
-                        '<input type="hidden" name="settingsNamespace" value="' + settingsNamespace + '"/>' +
-                        '<h2>' + Craft.t('app', '{type} Settings', {type: Craft.escapeHtml($option.data('name'))}) + '</h2>' +
-                        '<div class="settings"/>' +
-                        '<hr/>' +
-                        '<div class="buttons clearafter">' +
-                        '<input type="submit" class="btn submit" value="' + Craft.t('app', 'Save') + '"/>' +
-                        '<div class="btn" role="button">' + Craft.t('app', 'Cancel') + '</div>' +
-                        '<div class="spinner hidden"/>' +
-                        '</div>' +
-                        '</form>' +
-                        '</div>' +
-                        '</div>').appendTo($gridItem);
+                var $option = $(e.selectedOption);
+                type = $option.data('type');
+                $title = $option.data('name');
+                if (type == 'acclaro\\translations\\widgets\\RecentlyModified') {
+                    $title = "New & Modified Entries";
+                }
+
+                settingsNamespace = 'newwidget' + Math.floor(Math.random() * 1000000000) + '-settings';
+                settingsHtml = this.getTypeInfo(type, 'settingsHtml', '').replace(/__NAMESPACE__/g, settingsNamespace);
+                settingsJs = this.getTypeInfo(type, 'settingsJs', '').replace(/__NAMESPACE__/g, settingsNamespace);
+                $gridItem = $('<div class="item" data-colspan="1" style="display: block">');
+                $container = $(
+                    '<div class="widget new loading-new scaleout ' + type.toLowerCase() + '" data-type="' + type + '">' +
+                    '<div class="front">' +
+                    '<div class="pane">' +
+                    '<div class="spinner body-loading"/>' +
+                    '<div class="settings icon hidden"/>' +
+                    '<h2/>' +
+                    '<div class="body"/>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="back">' +
+                    '<form class="pane">' +
+                    '<input type="hidden" name="type" value="' + type + '"/>' +
+                    '<input type="hidden" name="settingsNamespace" value="' + settingsNamespace + '"/>' +
+                    '<h2>' + Craft.t('app', '{title} Settings', {title: Craft.escapeHtml($title)}) + '</h2>' +
+                    '<div class="settings"/>' +
+                    '<hr/>' +
+                    '<div class="buttons clearafter">' +
+                    '<input type="submit" class="btn submit" value="' + Craft.t('app', 'Save') + '"/>' +
+                    '<div class="btn" role="button">' + Craft.t('app', 'Cancel') + '</div>' +
+                    '<div class="spinner hidden"/>' +
+                    '</div>' +
+                    '</form>' +
+                    '</div>' +
+                    '</div>'
+                ).appendTo($gridItem);
 
                 if (settingsHtml) {
                     $container.addClass('flipped');
-                }
-                else {
+                } else {
                     $container.addClass('loading');
                 }
 
@@ -93,8 +98,7 @@
 
                 if (this.grid.$items.length) {
                     $gridItem.insertAfter(this.grid.$items.last());
-                }
-                else {
+                } else {
                     $gridItem.prependTo(this.grid.$container);
                 }
 
@@ -137,7 +141,7 @@
                             widget = $widget.data('widget');
 
                         // Make sure it's actually saved
-                        if (!widget || !widget.id) {
+                        if (!widget || !widget.id || widget.title == 'New Source Entries') {
                             continue;
                         }
 
@@ -168,12 +172,17 @@
 
                                 if (!lastWidget) {
                                     widget.$gridItem.prependTo(this.$grid);
-                                }
-                                else {
+                                } else {
                                     widget.$gridItem.insertAfter(lastWidget.$gridItem);
                                 }
 
                                 lastWidget = widget;
+
+                                if (widget.title == 'Modified Source Entries') {
+                                    let clone = this.widgets[$('div[data-title="New Source Entries"]').data('id')];
+                                    clone.$gridItem.insertAfter(lastWidget.$gridItem);
+                                    lastWidget = clone;
+                                }
                             }
 
                             this.grid.resetItemOrder();
@@ -472,7 +481,9 @@
 
             getManagerRowLabel: function() {
                 var typeName = this.getTypeInfo('name');
-
+                if (typeName == 'Modified Source Entries') {
+                    return Craft.escapeHtml('New & Modified Entries');
+                }
                 return Craft.escapeHtml(this.title) + (this.title !== typeName ? ' <span class="light">(' + typeName + ')</span>' : '');
             },
 
@@ -588,15 +599,22 @@
                 this.widget.setColspan(newColspan);
                 window.translationsdashboard.grid.refreshCols(true);
 
+                let widgetIds = this.widget.id;
+
+                if (this.widget.title == 'Modified Source Entries') {
+                    widgetIds += ","+$('div[data-title="New Source Entries"]').data('id');
+                }
+
                 // Save the change
                 var data = {
-                    id: this.widget.id,
+                    id: widgetIds,
                     colspan: newColspan
                 };
 
                 Craft.postActionRequest('translations/widget/change-widget-colspan', data, function(response, textStatus) {
                     if (textStatus === 'success' && response.success) {
                         Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
+                        location.reload();
                     }
                     else {
                         Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));

@@ -349,12 +349,13 @@ class OrderController extends Controller
                         $variables['translatedFiles'][$file->id] = $tempElement->title;
                     }
 
-                    if ($element instanceof Entry) {
-                        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+                    if ($translatedElement && $element instanceof Entry) {
+                        $previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($translatedElement, $file);
 
-                            $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
+                        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+                            $variables['webUrls'][$file->id] = $previewUrl;
                         } else {
-                            $variables['webUrls'][$file->id] = $file->previewUrl ?? ($translatedElement ? $translatedElement->url : $element->url);
+                            $variables['webUrls'][$file->id] = $file->previewUrl ?? $previewUrl;
                         }
                     }
 
@@ -363,6 +364,10 @@ class OrderController extends Controller
                         $file->status === Constants::FILE_STATUS_REVIEW_READY ||
                         $file->status === Constants::FILE_STATUS_PUBLISHED
                     ) {
+                        $variables['fileDifference'][$file->id] =
+                            ! empty(Translations::$plugin->fileRepository->getSourceTargetDifferences(
+                                $file->source, $file->target
+                            )) ? 1 : 0;
                         $variables['entriesCountByElementCompleted']++;
                     }
 
