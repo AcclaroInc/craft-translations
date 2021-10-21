@@ -167,6 +167,6 @@ class UrlGenerator
     private function getPrimaryPreviewTargetUrl($element)
     {
         $targets = $element->getPreviewTargets();
-        return ($targets[0]['url'] ? $targets[0]['url'] : $element->getUrl());
+        return ($targets[0]['url'] ?? $element->getUrl());
     }
 }

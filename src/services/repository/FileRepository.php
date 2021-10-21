@@ -595,6 +595,7 @@ class FileRepository
         if ($isDifference) {
             foreach ($data as $key => $values) {
                 $content = '<tr>';
+                krsort($values);
                 foreach ($values as $class => $value) {
                     $content .= "<td class='$class'>";
     

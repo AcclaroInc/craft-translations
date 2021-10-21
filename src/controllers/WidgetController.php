@@ -443,31 +443,44 @@ class WidgetController extends Controller
             ->where(['status' => 'published'])
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->all();
+        // Get in progress Files and order
+        $inProgressRecords = FileRecord::find()
+            ->where(['status' => 'in progress'])
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->all();
 
         // Build file array
         foreach ($records as $key => $record) {
-            $files[$key]['id'] = $record->id;
-            $files[$key]['elementId'] = $record->elementId;
+            if (! array_key_exists($record->elementId, $files)) {
+                $files[$record->elementId] = $record;
+            }
         }
 
-        // Create a temporary array with $fileId => $elementId columns
-        $tmpArray = array_column($files, 'elementId', 'id');
-        
+        // Filter out published records which are also present in $inProgressRecords and are created after than published ones.
+        foreach ($inProgressRecords as $key => $record) {
+            if (array_key_exists($record->elementId, $files)) {
+                if ($record->dateCreated > $files[$record->elementId]->dateCreated) {
+                    unset($files[$record->elementId]);
+                }
+            }
+        }
+
         // Loop through entry IDs
         foreach ($entries as $id) {
             // Check to see if we have a file that meets the conditions
-            $fileId = array_search($id, $tmpArray);
+            $fileRecord = $files[$id] ?? null;
 
-            if ($fileId) {
+            if ($fileRecord) {
+                $fileId = $fileRecord->id;
                 // Now we can get the element
                 $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
                 // Get the elements translated file
                 $file = Translations::$plugin->fileRepository->getFileById($fileId);
-                
+
                 // Is the element more recent than the file?
                 if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
                     // Translated file XML
-                    $translatedXML = $file->source;
+                    $translatedXML = $file->target;
 
                     // Current entries XML
                     $currentXML = Translations::$plugin->elementToFileConverter->convert(
@@ -542,7 +555,7 @@ class WidgetController extends Controller
 
         $entriesInOrders = [];
         $records = FileRecord::find()
-                ->select(['elementId'])
+            ->select(['elementId'])
             ->groupBy('elementId')
             ->all();
 

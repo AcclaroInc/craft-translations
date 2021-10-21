@@ -891,6 +891,15 @@ td.target{
     width: 100%;
 }
 
+.diff-box{
+    box-shadow: 0 0 0 1px #cdd8e4, 0 2px 12px rgba(205, 216, 228, 0.5);
+    border-radius: 5px;
+}
+
+.diff-meta{
+    padding: 24px 0 12px
+}
+
 .bg-none {
     background: none !important;
     cursor: pointer !important;

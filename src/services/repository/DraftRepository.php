@@ -496,6 +496,10 @@ class DraftRepository
     
                     if ($draft) {
                         $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+
+                        if ($success) {
+                            Translations::$plugin->globalSetDraftRepository->deleteDraft($draft);
+                        }
                     } else {
                         $success = false;
                     }
@@ -510,6 +514,10 @@ class DraftRepository
     
                     if ($draft) {
                         $success = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
+
+                        if ($success) {
+                            Translations::$plugin->categoryDraftRepository->deleteDraft($draft);
+                        }
                     } else {
                         $success = false;
                     }
@@ -524,6 +532,10 @@ class DraftRepository
     
                     if ($draft) {
                         $success = Translations::$plugin->assetDraftRepository->publishDraft($draft);
+
+                        if ($success) {
+                            Translations::$plugin->assetDraftRepository->deleteDraft($draft);
+                        }
                     } else {
                         $success = false;
                     }

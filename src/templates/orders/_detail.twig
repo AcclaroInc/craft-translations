@@ -443,7 +443,7 @@
                                                     <tr>
                                                         <td>
                                                             <a href="{{ fileUrls[file.id] }}">
-                                                                {{ translatedFiles[file.id] ?? element.title ?? element.name }}
+                                                                {{ translatedFiles[file.id] ?: element.title ?: element.name }}
                                                             </a>
                                                             {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
                                                                 element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') and
@@ -670,7 +670,7 @@
                         }) }}
                     </form>
                 </div>
-                {% if not isCancellable and 
+                {% if not isCancellable and
                     order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
                     <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
                 {% else %}
