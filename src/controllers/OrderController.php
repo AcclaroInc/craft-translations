@@ -184,11 +184,14 @@ class OrderController extends Controller
             }
 
             if ($orderTags= Craft::$app->getRequest()->getQueryParam('tags') ?? Craft::$app->getRequest()->getParam('tags')) {
+                if (! is_array($orderTags)) {
+                    $orderTags = explode(',', $orderTags);
+                }
                 $newOrder->tags = json_encode($orderTags);
             }
 
-            if ($orderDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
-                $newOrder->orderDueDate = $orderDueDate;
+            if ($requestedDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
+                $newOrder->requestedDueDate = $requestedDueDate;
             }
 
             if ($orderComments= Craft::$app->getRequest()->getQueryParam('comments')) {
@@ -643,12 +646,14 @@ class OrderController extends Controller
 
             if ($requestedDueDate) {
                 if (!is_array($requestedDueDate)) {
-                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
+                    $orderDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
                 } else {
-                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
+                    if (isset($requestedDueDate['date']) && $requestedDueDate['date'] != '') {
+                        $orderDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
+                    }
                 }
             }
-            $order->requestedDueDate = $requestedDueDate ?: null;
+            $order->requestedDueDate = $orderDueDate ?? null;
 
             $order->comments = Craft::$app->getRequest()->getParam('comments');
             $order->translatorId = $translatorId;
