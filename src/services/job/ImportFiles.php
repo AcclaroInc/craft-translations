@@ -338,6 +338,7 @@ class ImportFiles extends BaseJob
 
         $draft_file->status = Constants::FILE_STATUS_REVIEW_READY;
         $draft_file->target = $xml_content;
+        $draft_file->dateDelivered = new \DateTime();
 
         //If Successfully saved
         $success = Translations::$plugin->fileRepository->saveFile($draft_file);

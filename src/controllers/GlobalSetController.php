@@ -12,6 +12,7 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use Craft;
 use craft\web\Controller;
 use acclaro\translations\Translations;
@@ -165,21 +166,22 @@ class GlobalSetController extends Controller
         if ($file) {
             $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
 
-            $file->status = 'published';
+            $file->status = Constants::FILE_STATUS_PUBLISHED;
+            $file->draftId = 0;
 
             Translations::$plugin->fileRepository->saveFile($file);
 
             $areAllFilesPublished = true;
 
             foreach ($order->files as $file) {
-                if ($file->status !== 'published') {
+                if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
                     $areAllFilesPublished = false;
                     break;
                 }
             }
 
             if ($areAllFilesPublished) {
-                $order->status = 'published';
+                $order->status = Constants::ORDER_STATUS_PUBLISHED;
 
                 Translations::$plugin->orderRepository->saveOrder($order);
             }

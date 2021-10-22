@@ -150,6 +150,7 @@ class AssetController extends BaseController
             $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
 
             $file->status = Constants::ORDER_STATUS_PUBLISHED;
+            $file->draftId = 0;
 
             Translations::$plugin->fileRepository->saveFile($file);
 

@@ -425,6 +425,8 @@
                                 {% for element in elements %}
                                     {% set tempElementId = element.id %}
                                     {% for file in files[tempElementId] %}
+
+                                        {% if file.id in fileUrls|keys %}
                                         <tr data-word-count="{{ elementWordCounts[tempElementId] }}" data-element-id="{{ tempElementId }}" class="diff-clone" data-file-id="{{ file.id }}">
 
                                             <td class="thin checkbox-cell translations-checkbox-cell">
@@ -443,7 +445,7 @@
                                                     <tr>
                                                         <td>
                                                             <a href="{{ fileUrls[file.id] }}">
-                                                                {{ translatedFiles[file.id] ?? element.title ?? element.name }}
+                                                                {{ translatedFiles[file.id] ?: element.title ?: element.name }}
                                                             </a>
                                                             {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
                                                                 element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') and
@@ -502,6 +504,7 @@
                                             </td>
                                             <td><table><thead><th class="bg-none icon ordered desc hidden"></th></thead></table></td>
                                         </tr>
+                                        {% endif %}
                                     {% endfor %}
                                     {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                                 {% endfor %}
