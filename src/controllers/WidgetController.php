@@ -496,10 +496,17 @@ class WidgetController extends Controller
                     $diffData = Translations::$plugin->fileRepository->getSourceTargetDifferences($currentXML, $translatedXML);
                     $diffHtml = Translations::$plugin->fileRepository->getFileDiffHtml($diffData, true);
 
+                    $sourceString = '';
+                    $targetString = '';
+                    foreach ($diffData as $key => $field) {
+                        $sourceString .= $field['source'];
+                        $targetString .= $field['target'];
+                    }
+
                     $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
 
                     // Check to see if there is a difference between translated XML and current entries XML
-                    if (! empty($diffHtml) && $wordCount != 0) {
+                    if (! empty($diffHtml) && base64_encode($sourceString) != base64_encode($targetString)) {
                         // Create data array
                         $data[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
                         $data[$i]['entryId'] = $element->id;
