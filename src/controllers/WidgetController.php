@@ -443,53 +443,70 @@ class WidgetController extends Controller
             ->where(['status' => 'published'])
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->all();
+        // Get in progress Files and order
+        $inProgressRecords = FileRecord::find()
+            ->where(['status' => 'in progress'])
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->all();
 
         // Build file array
         foreach ($records as $key => $record) {
-            $files[$key]['id'] = $record->id;
-            $files[$key]['elementId'] = $record->elementId;
+            if (! array_key_exists($record->elementId, $files)) {
+                $files[$record->elementId] = $record;
+            }
         }
 
-        // Create a temporary array with $fileId => $elementId columns
-        $tmpArray = array_column($files, 'elementId', 'id');
-        
+        // Filter out published records which are also present in $inProgressRecords and are created after than published ones.
+        foreach ($inProgressRecords as $key => $record) {
+            if (array_key_exists($record->elementId, $files)) {
+                if ($record->dateCreated > $files[$record->elementId]->dateCreated) {
+                    unset($files[$record->elementId]);
+                }
+            }
+        }
+
         // Loop through entry IDs
         foreach ($entries as $id) {
             // Check to see if we have a file that meets the conditions
-            $fileId = array_search($id, $tmpArray);
+            $fileRecord = $files[$id] ?? null;
 
-            if ($fileId) {
+            if ($fileRecord) {
+                $fileId = $fileRecord->id;
                 // Now we can get the element
                 $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
                 // Get the elements translated file
                 $file = Translations::$plugin->fileRepository->getFileById($fileId);
-                
+
                 // Is the element more recent than the file?
                 if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
                     // Translated file XML
-                    if (strpos($file->source, "<xml>") !== false) {
-                        $translatedXML = $file->source;
-                    } else {
-                        $translatedXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($file->source, true));
-                    }
+                    $translatedXML = $file->target;
 
                     // Current entries XML
-                    $currentJson = Translations::$plugin->elementToFileConverter->convert(
+                    $currentXML = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        Constants::FILE_FORMAT_JSON,
+                        Constants::FILE_FORMAT_XML,
                         [
                             'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
                             'targetSite'    => $file->targetSite,
                             'orderId'       => $file->orderId,
                         ]
                     );
-                    $currentXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($currentJson, true));
 
                     $diffData = Translations::$plugin->fileRepository->getSourceTargetDifferences($currentXML, $translatedXML);
                     $diffHtml = Translations::$plugin->fileRepository->getFileDiffHtml($diffData, true);
 
+                    $sourceString = '';
+                    $targetString = '';
+                    foreach ($diffData as $key => $field) {
+                        $sourceString .= $field['source'];
+                        $targetString .= $field['target'];
+                    }
+
+                    $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
+
                     // Check to see if there is a difference between translated XML and current entries XML
-                    if (! empty($diffHtml)) {
+                    if (! empty($diffHtml) && base64_encode($sourceString) != base64_encode($targetString)) {
                         // Create data array
                         $data[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
                         $data[$i]['entryId'] = $element->id;
@@ -499,7 +516,6 @@ class WidgetController extends Controller
                         $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
                         $data[$i]['entryUrl'] = $element->getCpEditUrl();
                         $data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
-                        $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
                         $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
                         $data[$i]['diff'] = $diffHtml;
     
@@ -544,8 +560,20 @@ class WidgetController extends Controller
             ->orderBy(['dateCreated' => SORT_DESC])
             ->ids();
 
+        $entriesInOrders = [];
+        $records = FileRecord::find()
+            ->select(['elementId'])
+            ->groupBy('elementId')
+            ->all();
+
+        foreach ($records as $key => $record) {
+            array_push($entriesInOrders, $record->elementId);
+        }
+
         // Loop through entry IDs
         foreach ($entries as $id) {
+            // exclude entries for which order has been created
+            if (in_array($id, $entriesInOrders)) continue;
             // Now we can get the element
             $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
 

@@ -535,7 +535,7 @@
                     setButtonText('.translations-submit-order.submit', 'Update order');
                 }
 
-                if (validateForm() && isOrderChanged({all: "all"})) {
+                if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
                     setSubmitButtonStatus(true);
                 } else {
                     setSubmitButtonStatus(false);

@@ -595,10 +595,11 @@ class FileRepository
         if ($isDifference) {
             foreach ($data as $key => $values) {
                 $content = '<tr>';
+                krsort($values);
                 foreach ($values as $class => $value) {
                     $content .= "<td class='$class'>";
     
-                    $content .= "<label class='diff-tl'> $key : </label>";
+                    $content .= "<label class='diff-tl'> $key: </label>";
                     
                     $content .= "<div class='diff-copy'> $copyIcon </div><br>";
     
@@ -613,7 +614,7 @@ class FileRepository
             foreach ($sourceContent as $key => $value) {
                 $content = '<tr><td class="source">';
 
-                $content .= "<label class='diff-tl'> $key : </label>";
+                $content .= "<label class='diff-tl'> $key: </label>";
                 
                 $content .= "<div class='diff-copy'> $copyIcon </div><br>";
 
