@@ -1036,5 +1036,9 @@
 
     $(function() {
         Craft.Translations.OrderDetails.init();
+
+        Garnish.$doc.mouseover($.proxy(function() {
+            Craft.initUiElements('#main');
+        }, this));
     });
 })(jQuery);
