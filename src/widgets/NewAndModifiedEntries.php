@@ -160,7 +160,6 @@ class NewAndModifiedEntries extends Widget
             $entries[$i]['entryId'] = $element->id;
             $entries[$i]['entryDate'] = $element->dateUpdated;
             $entries[$i]['entryDateTimestamp'] = $element->dateUpdated;
-            $entries[$i]['statusLabel'] = $element->dateUpdated;
             $entries[$i]['id'] = $element->id;
             $i++;
         }
