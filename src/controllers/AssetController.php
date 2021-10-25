@@ -137,9 +137,11 @@ class AssetController extends BaseController
         $draft->title = $this->request->getParam('title') ?? $asset->title;
         $draft->newFilename = $this->request->getParam('filename');
 
-        $fieldsLocation = $this->request->getParam('fieldsLocation') ?? 'fields';
-        
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        $fields = $this->request->getParam('fields') ?? [];
+
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
         
         // restore the original name
         $draft->name = $asset->title;
@@ -150,6 +152,7 @@ class AssetController extends BaseController
             $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
 
             $file->status = Constants::ORDER_STATUS_PUBLISHED;
+            $file->draftId = 0;
 
             Translations::$plugin->fileRepository->saveFile($file);
 

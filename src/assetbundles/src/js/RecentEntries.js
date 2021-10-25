@@ -17,12 +17,17 @@
             init: function(widgetId, params) {
                 this.params = params;
                 this.$widget = $('#widget' + widgetId);
-                this.$body = this.$widget.find('.body:first');
+                this.$body = this.$widget.find('#recent-entries-widget');
                 this.$container = this.$widget.find('.recententries-container:first');
                 this.$tbody = this.$container.find('tbody:first');
                 this.hasEntries = !!this.$tbody.length;
 
                 this.$widget.addClass('loading');
+
+                $(window).resize(function() {
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
+                });
 
                 $modal_entry = new Garnish.Modal($('#diff-modal-entry').removeClass('hidden'), {
                     autoShow: false,
@@ -44,6 +49,7 @@
                         var content = [];
 
                         if (response.data.length) {
+                            this.$widget.find('#recent-entries-widget .tableview').prepend('<h2 style="padding-top: 24px;">New Source Entries</h2><h5>Entries that have not been translated yet.</h5>');
                             for (var i = 0; i < response.data.length; i++) {
                                 var item = response.data[i],
                                     $container = $('#item-entry-'+ (i + 1));
@@ -71,10 +77,10 @@
                             }
                         } else {
                             var widgetHtml = `
-                            <td style="text-align:center;">No new source entry found.</td>
+                            <td style="text-align:center;padding-top:15px;">There are no new source entries.</td>
                             `;
 
-                            this.$body.html(widgetHtml);
+                            this.$widget.find('#recent-entries-widget').html(widgetHtml);
                         }
                     }
 
@@ -89,10 +95,7 @@
                     $('.view-diff-entry').on('click', function(e) {
                         e.preventDefault();
 
-                        var diffHtml = Diff2Html.getPrettyHtml(
-                            content[$(e.target).attr('data-id')].diff,
-                            {inputFormat: 'diff', showFiles: false, matching: 'lines', outputFormat: 'line-by-line'}
-                        );
+                        var diffHtml = content[$(e.target).attr('data-id')].diff;
 
                         var classNames = [
                             'entryId',
@@ -113,6 +116,10 @@
 
                         // Add the diff html
                         document.getElementById("modal-body-entry").innerHTML = diffHtml;
+
+                        $('#modal-body-entry').on('click', 'div.diff-copy', function(event) {
+                            Craft.Translations.OrderEntries.copyTextToClipboard(event);
+                        });
 
                         $('#close-diff-modal-entry').on('click', function(e) {
                             e.preventDefault();

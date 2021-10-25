@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.0.2 - 2021-10-25
+
+### Added
+
+- 'Review changes' modal UI/UX updates ([AcclaroInc/#382](https://github.com/AcclaroInc/pm-craft-translations/issues/382))
+- 'New & Modified Source Entries' dashboard widget UI/UX updates ([AcclaroInc/#147](https://github.com/AcclaroInc/pm-craft-translations/issues/147))
+- Download file action for API orders
+- Support for custom preview target URIs ([AcclaroInc/#383](https://github.com/AcclaroInc/pm-craft-translations/issues/383))
+
+### Updated
+
+- `applyDrafts` logic to create and apply drafts individually v.s in bulk ([AcclaroInc/#387](https://github.com/AcclaroInc/pm-craft-translations/issues/387)), ([AcclaroInc/#388](https://github.com/AcclaroInc/pm-craft-translations/issues/388))
+
+### Fixed
+
+- Use the block's `canonicalId` instead of `typeId` (#237)
+- PostgreSQL migration exception (#231)
+- Resname mismatch issue ([AcclaroInc/#387](https://github.com/AcclaroInc/pm-craft-translations/issues/387))
+- Misc. bug fixes ([AcclaroInc/#391](https://github.com/AcclaroInc/pm-craft-translations/issues/391)), ([AcclaroInc/#394](https://github.com/AcclaroInc/pm-craft-translations/issues/394)), ([AcclaroInc/#395](https://github.com/AcclaroInc/pm-craft-translations/issues/395))
 ## 2.0.1 - 2021-09-30
 
 ### Fixed

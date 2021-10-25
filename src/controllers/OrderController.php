@@ -95,6 +95,8 @@ class OrderController extends Controller
 
         $variables['selectedSubnavItem'] = 'orders';
 
+        $variables['context'] = 'index';
+
         $this->renderTemplate('translations/orders/_index', $variables);
     }
 
@@ -182,11 +184,14 @@ class OrderController extends Controller
             }
 
             if ($orderTags= Craft::$app->getRequest()->getQueryParam('tags') ?? Craft::$app->getRequest()->getParam('tags')) {
+                if (! is_array($orderTags)) {
+                    $orderTags = explode(',', $orderTags);
+                }
                 $newOrder->tags = json_encode($orderTags);
             }
 
-            if ($orderDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
-                $newOrder->orderDueDate = $orderDueDate;
+            if ($requestedDueDate= Craft::$app->getRequest()->getQueryParam('dueDate')) {
+                $newOrder->requestedDueDate = $requestedDueDate;
             }
 
             if ($orderComments= Craft::$app->getRequest()->getQueryParam('comments')) {
@@ -344,12 +349,13 @@ class OrderController extends Controller
                         $variables['translatedFiles'][$file->id] = $tempElement->title;
                     }
 
-                    if ($element instanceof Entry) {
-                        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+                    if ($translatedElement && $element instanceof Entry) {
+                        $previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($translatedElement, $file);
 
-                            $variables['webUrls'][$file->id] = $translatedElement ? $translatedElement->url : $element->url;
+                        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+                            $variables['webUrls'][$file->id] = $previewUrl;
                         } else {
-                            $variables['webUrls'][$file->id] = $file->previewUrl ?? ($translatedElement ? $translatedElement->url : $element->url);
+                            $variables['webUrls'][$file->id] = $file->previewUrl ?? $previewUrl;
                         }
                     }
 
@@ -358,6 +364,10 @@ class OrderController extends Controller
                         $file->status === Constants::FILE_STATUS_REVIEW_READY ||
                         $file->status === Constants::FILE_STATUS_PUBLISHED
                     ) {
+                        $variables['fileDifference'][$file->id] =
+                            ! empty(Translations::$plugin->fileRepository->getSourceTargetDifferences(
+                                $file->source, $file->target
+                            )) ? 1 : 0;
                         $variables['entriesCountByElementCompleted']++;
                     }
 
@@ -636,12 +646,14 @@ class OrderController extends Controller
 
             if ($requestedDueDate) {
                 if (!is_array($requestedDueDate)) {
-                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
+                    $orderDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate);
                 } else {
-                    $requestedDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
+                    if (isset($requestedDueDate['date']) && $requestedDueDate['date'] != '') {
+                        $orderDueDate = DateTime::createFromFormat('n/j/Y', $requestedDueDate['date']);
+                    }
                 }
             }
-            $order->requestedDueDate = $requestedDueDate ?: null;
+            $order->requestedDueDate = $orderDueDate ?? null;
 
             $order->comments = Craft::$app->getRequest()->getParam('comments');
             $order->translatorId = $translatorId;
@@ -908,13 +920,16 @@ class OrderController extends Controller
 
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['sourceSite']);
         $variables['translatorId'] = $variables['order']['translatorId'];
-        $user = Craft::$app->getUser();
-        $variables['author'] = $user->getRememberedUsername();
         $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
+        
+        $userId = Craft::$app->getUser()->id;
+        $user = Craft::$app->getUsers()->getUserById($userId);
 
         $variables['owners'] = array(
-            $user->id => $user->getRememberedUsername(),
+            $user->id => $user->username,
         );
+
+        $variables['author'] = $user;
 
         $variables['elements'] = [];
         $variables['elementVersionMap'] = array();

@@ -17,11 +17,13 @@
             init: function(widgetId, params) {
                 this.params = params;
                 this.$widget = $('#widget' + widgetId);
-                this.$body = this.$widget.find('.body:first');
+                this.$body = this.$widget.find('#recently-modified-entries');
                 this.$container = this.$widget.find('.recentlymodified-container:first');
                 this.$tbody = this.$container.find('tbody:first');
                 this.hasEntries = !!this.$tbody.length;
-
+                // Hide widget title
+                this.$widget.find('h2').html('');
+                this.$widget.find('div.settings.icon').addClass('on-top');
                 this.$widget.addClass('loading');
 
                 $modal = new Garnish.Modal($('#diff-modal').removeClass('hidden'), {
@@ -31,6 +33,45 @@
                 $('#bulk-reorder').on('click', function(e){
                     if ($(this).hasClass('disabled')) {
                         e.preventDefault();
+                    }
+                });
+
+                var modified = 'recently-modified-widget';
+                var recent = 'recent-entries-widget';
+
+                $('#tab-'+modified).on('click', function() {
+                    if ($(this).hasClass('sel')) return;
+
+                    $('#tab-'+recent).removeClass('sel');
+                    $('#tab-'+modified).addClass('sel');
+                    $('div.menu ul.padded li a[data-id="'+recent+'"]').removeClass('sel');
+                    $('div.menu ul.padded li a[data-id="'+modified+'"]').addClass('sel');
+                    $("#"+modified).removeClass('hidden');
+                    $("#"+recent).addClass('hidden');
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
+                });
+                
+                $('#tab-'+recent).on('click', function() {
+                    if ($(this).hasClass('sel')) return;
+                    
+                    $('#tab-'+recent).addClass('sel');
+                    $('#tab-'+modified).removeClass('sel');
+                    $('div.menu ul.padded li a[data-id="'+recent+'"]').addClass('sel');
+                    $('div.menu ul.padded li a[data-id="'+modified+'"]').removeClass('sel');
+                    $("#"+modified).addClass('hidden');
+                    $("#"+recent).removeClass('hidden');
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
+                });
+
+                $(document).on('click', '#tabs .btn.menubtn', function() {
+                    if ($('#tab-'+modified).hasClass('sel')) {
+                        $('div.menu ul.padded li a[data-id="'+recent+'"]').removeClass('sel');
+                        $('div.menu ul.padded li a[data-id="'+modified+'"]').addClass('sel');
+                    } else {
+                        $('div.menu ul.padded li a[data-id="'+recent+'"]').addClass('sel');
+                        $('div.menu ul.padded li a[data-id="'+modified+'"]').removeClass('sel');
                     }
                 });
 
@@ -49,6 +90,7 @@
                         var content = [];
 
                         if (response.data.length) {
+                            this.$widget.find('#recently-modified-widget .tableview').prepend('<h2 style="padding-top: 24px;">Modified Source Entries</h2><h5>Entries that have been modified post-translation.</h5>');
                             for (var i = 0; i < response.data.length; i++) {
                                 var item = response.data[i],
                                     $container = $('#item-'+ (i + 1));
@@ -76,10 +118,10 @@
                             }
                         } else {
                             var widgetHtml = `
-                            <td style="text-align:center;">Translated source entries are up to date.</td>
+                            <td style="text-align:center;padding-top:15px;">There are no new modified source entries.</td>
                             `;
 
-                            this.$body.html(widgetHtml);
+                            this.$widget.find('#recently-modified-widget').html(widgetHtml);
                         }
                     }
                     
@@ -94,10 +136,7 @@
                     $('.view-diff').on('click', function(e) {
                         e.preventDefault();
 
-                        var diffHtml = Diff2Html.getPrettyHtml(
-                            content[$(e.target).attr('data-id')].diff,
-                            {inputFormat: 'diff', showFiles: false, matching: 'lines', outputFormat: 'side-by-side'}
-                        );
+                        var diffHtml = content[$(e.target).attr('data-id')].diff;
 
                         var classNames = [
                             'entryId',
@@ -120,7 +159,11 @@
                         }
 
                         // Add the diff html
-                        document.getElementById("modal-body").innerHTML = diffHtml; 
+                        document.getElementById("modal-body").innerHTML = diffHtml;
+
+                        $('#modal-body').on('click', 'div.diff-copy', function(event) {
+                            Craft.Translations.OrderEntries.copyTextToClipboard(event);
+                        });
                         
                         $('#close-diff-modal').on('click', function(e) {
                             e.preventDefault();

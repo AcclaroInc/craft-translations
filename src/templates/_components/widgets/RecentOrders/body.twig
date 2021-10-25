@@ -1,4 +1,4 @@
-<div class="recentorders-container">
+<div class="recentorders-container scroll-x-auto">
     {% if orders|length %}
         <table class="data fullwidth table">
             <tr>
@@ -16,28 +16,7 @@
                         <a href="{{ order.getCpEditUrl() }}">{{ order.title }}</a>
                     </td>
                     <td>
-                    {% switch order.status %}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') %}
-                            <span class="status red"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
-                            <span class="status"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_NEEDS_APPROVAL') %}
-                            <span class="status orange"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PREPARATION') %}
-                            <span class="status orange"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_PROGRESS') %}
-                            <span class="status orange"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_IN_REVIEW') %}
-                            <span class="status yellow"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_REVIEW_READY') %}
-                            <span class="status yellow"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') %}
-                            <span class="status blue"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') %}
-                            <span class="status red"></span>{{order.statusLabel}}
-                        {% case constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                            <span class="status green"></span>{{order.statusLabel}}
-                    {% endswitch %}
+                        <span class="status {{order.getStatusColour()}}"></span>{{order.getStatusLabel()}}
                     </td>
                     <td style="text-align:right;">
                         <span class="light">

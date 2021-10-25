@@ -73,11 +73,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.3.5';
-
-    const ACCLARO = 'acclaro';
-
-    const EXPORT_IMPORT = 'export_import';
+    public $schemaVersion = '1.3.6';
 
     // Public Methods
     // =========================================================================
@@ -633,19 +629,6 @@ class Translations extends Plugin
 
                     $currentFile->status = 'canceled';
 
-                    $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->sourceSite);
-                    $currentFile->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($element, $currentFile->targetSite);
-                    $currentFile->source = Translations::$plugin->elementToFileConverter->convert(
-                        $element,
-                        Constants::FILE_FORMAT_XML,
-                        [
-                            'sourceSite'    => $currentFile->sourceSite,
-                            'targetSite'    => $currentFile->targetSite,
-                            'previewUrl'    => $currentFile->previewUrl,
-                            'orderId'       => $order->id
-                        ]
-                    );
-
                     self::$plugin->fileRepository->saveFile($currentFile);
                 }
             }
@@ -654,6 +637,20 @@ class Translations extends Plugin
         $request = Craft::$app->getRequest();
         if (!$request->getIsConsoleRequest() && $request->getParam('hardDelete')) {
             $event->hardDelete = true;
+        }
+
+        if ($order = Translations::$plugin->orderRepository->isTranslationOrder($event->element->id) && $event->hardDelete) {
+            $drafts = [];
+            foreach ($order->getFiles() as $file) {
+                $drafts[] = $file->draftId;
+            }
+
+            if ($drafts) {
+                Craft::$app->queue->push(new DeleteDrafts([
+                    'description' => 'Deleting Translation Drafts',
+                    'drafts' => $drafts,
+                ]));
+            }
         }
     }
 

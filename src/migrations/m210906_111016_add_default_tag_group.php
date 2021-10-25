@@ -2,6 +2,7 @@
 
 namespace acclaro\translations\migrations;
 
+use acclaro\translations\Constants;
 use Craft;
 use craft\db\Migration;
 
@@ -16,8 +17,8 @@ class m210906_111016_add_default_tag_group extends Migration
     public function safeUp()
     {
         $data = [
-            'name'  => 'Craft Translations',
-            'handle'    => 'craftTranslations',
+            'name'      => 'Craft Translations',
+            'handle'    => Constants::ORDER_TAG_GROUP_HANDLE,
         ];
 
         $this->insert('{{%taggroups}}', $data);

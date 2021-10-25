@@ -349,7 +349,7 @@ class BaseController extends Controller
         $translator = $order->getTranslator();
         $service = $translator->service;
         $settings = $translator->getSettings();
-        $authenticate = AcclaroService::authenticateService($service, $settings);
+        $authenticate = (new AcclaroService())->authenticateService($service, $settings);
         
         if (!$authenticate && $service === Constants::TRANSLATOR_ACCLARO) {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');

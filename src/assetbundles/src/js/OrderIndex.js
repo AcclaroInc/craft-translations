@@ -39,43 +39,6 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
             });
         }
 
-        $(document).on("click", ".translations-delete-order", function() {
-            var $button = $(this);
-
-            var message = 'Order moved to trash.';
-            var conf_msg = 'move to trash';
-            if ($button.data('hard-delete')) {
-                message = "Order deleted permanently.";
-                conf_msg = 'delete';
-            }
-
-            if (confirm(Craft.t('app', 'Are you sure you want to '+conf_msg+' this order?'))) {
-                var data = {
-                    action: 'translations/order/delete-order',
-                    orderId: $button.data('order-id'),
-                    hardDelete: $button.data('hard-delete'),
-                };
-
-                data[Craft.csrfTokenName] = Craft.csrfTokenValue;
-
-                $.post(
-                    location.href,
-
-                    data,
-                    function (data) {
-                        if (!data.success) {
-                            alert(data.error);
-                        } else {
-                            $button.closest('tr').remove();
-                            Craft.cp.displayNotice(Craft.t('app', ''+message));
-                            window.location.reload();
-                        }
-                    },
-                    'json'
-                );
-            }
-        });
-
         var paidNotification = localStorage.getItem(Craft.username+"PaidNotification");
         if(paidNotification == null || paidNotification == "false"){
             if (document.getElementById("trial-notice")) {
@@ -95,39 +58,6 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
             $("#"+that.data('id')).fadeOut();
             localStorage.setItem(Craft.username+that.data('key'), "true");
         })
-
-        $(document).on("click", ".translations-restore-order", function() {
-            var $button = $(this);
-
-            if (confirm(Craft.t('app', 'Are you sure you want to restore this order?'))) {
-                var data = {
-                    action: 'translations/order/delete-order',
-                    orderId: $button.data('order-id'),
-                    restore: 1
-                };
-
-                data[Craft.csrfTokenName] = Craft.csrfTokenValue;
-
-                $.post(
-                    location.href,
-                    data,
-                    function (data) {
-                        if (!data.success) {
-                            alert(data.error);
-                        } else {
-                            $button.closest('tr').remove();
-                            Craft.cp.displayNotice(Craft.t('app', 'Order restored.'));
-                            window.location.reload();
-                        }
-                    },
-                    'json'
-                );
-            }
-        });
-
-        Garnish.$doc.mouseover($.proxy(function() {
-            Craft.initUiElements('#main');
-        }, this));
     }
 });
 

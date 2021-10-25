@@ -7,6 +7,12 @@
 
 {% set orderStatus = orderRecentStatus | default(order.status) %}
 
+{# For Sync and Cancel order buttons #}
+{% set isDefaultTranslator = true %}
+{% if order.translator.service is defined and
+    order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
+    {% set isDefaultTranslator = false %}
+{% endif %}
 {% set isCancellable =  orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') and
                         orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') and
                         orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') and
@@ -14,6 +20,15 @@
                         orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
 %}
 
+{# For Export/Import and regenrate preview url's buttons #}
+{% set exportImportStatus = '' %}
+{% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
+    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
+    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+    {% set exportImportStatus = 'disabled' %}
+{% endif %}
+
+{# For checking if form's input fields needs to be disabled #}
 {% if not isEditable %}
     {% set isEditable = "noClick" %}
 {% endif %}
@@ -303,7 +318,6 @@
                         id: 'requestedDueDate',
                         size: 20,
                         placeholder: 'Optional',
-                        class: isEditable
                     }) }}
                     <input type="hidden" id="originalRequestedDueDate" value="{{ date(order.requestedDueDate) | date('m/d/Y') }}">
 
@@ -313,7 +327,6 @@
                         name: 'comments',
                         placeholder: 'Additional comments and instructions',
                         id: 'comments',
-                        class: isEditable,
                         maxlength: 2000,
                         size: 20
                     }) }}
@@ -390,12 +403,12 @@
                             <thead>
                                 <tr>
                                     {% if entriesCountByElementCompleted > 0 %}
-                                        <td class="thin checkbox-cell translations-checkbox-cell">
+                                        <td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
                                             <input class="checkbox" id="element-0" type="checkbox">
                                             <label class="checkbox" for="element-0"></label>
                                         </td>
                                     {% else %}
-                                        <td class="thin checkbox-cell translations-checkbox-cell">
+                                        <td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
                                             <input class="checkbox" id="element-0" type="checkbox" disabled="disabled">
                                             <label class="checkbox" for="element-0"></label>
                                         </td>
@@ -412,6 +425,8 @@
                                 {% for element in elements %}
                                     {% set tempElementId = element.id %}
                                     {% for file in files[tempElementId] %}
+
+                                        {% if file.id in fileUrls|keys %}
                                         <tr data-word-count="{{ elementWordCounts[tempElementId] }}" data-element-id="{{ tempElementId }}" class="diff-clone" data-file-id="{{ file.id }}">
 
                                             <td class="thin checkbox-cell translations-checkbox-cell">
@@ -430,7 +445,7 @@
                                                     <tr>
                                                         <td>
                                                             <a href="{{ fileUrls[file.id] }}">
-                                                                {{ translatedFiles[file.id] ?? element.title ?? element.name }}
+                                                                {{ translatedFiles[file.id] ?: element.title ?: element.name }}
                                                             </a>
                                                             {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
                                                                 element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') and
@@ -481,8 +496,7 @@
                                                         <td class="inline-flex align-center">
                                                             <span class="status {{ file.statusColor }}" 
                                                                 style="position: absolute;left: -10px;"
-                                                                data-status="{{ file.status == 'complete' 
-                                                                or file.status == 'published' or file.status == 'ready for review' ? 1 : 0 }}">
+                                                                data-status="{{ attribute(fileDifference,file.id)|default(0) }}">
                                                                 </span>{{ file.statusLabel }}
                                                         </td>
                                                     </tr>
@@ -490,6 +504,7 @@
                                             </td>
                                             <td><table><thead><th class="bg-none icon ordered desc hidden"></th></thead></table></td>
                                         </tr>
+                                        {% endif %}
                                     {% endfor %}
                                     {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                                 {% endfor %}
@@ -501,38 +516,6 @@
                 </div>
             </form>
         </div>
-
-        {# Additional Forms for order export/import and sync #}
-        {% if order.translator.service is defined and
-            order.translator.service == constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
-            <form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
-                {{ csrfInput() }}
-                {{ forms.hidden({
-                        name: 'action',
-                        value: 'translations/files/create-export-zip',
-                    }) }}
-
-                {{ forms.hidden({
-                    name: 'orderId',
-                    value: order.id
-                }) }}
-            </form>
-        {% else %}
-            {% if order.status != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
-                    {{ csrfInput() }}
-                    {{ forms.hidden({
-                        name: 'action',
-                        value: 'translations/order/sync-order',
-                    }) }}
-
-                    {{ forms.hidden({
-                        name: 'orderId',
-                        value: order.id
-                    }) }}
-                </form>
-            {% endif %}
-        {% endif %}
     {% endif %}
 {% endblock %}
 
@@ -544,8 +527,7 @@
             </div>
 
             <div class="input ltr">
-                {% if order.translator.service is defined and
-                    order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
+                {% if not isDefaultTranslator %}
                     {% if order.serviceOrderId %}
                         {% if isCancellable %}
                             <table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
@@ -632,74 +614,32 @@
             </div>
         </div>
 
-        {# Export/Import Or Sync Buttons #}
+        {# Export/Import And Sync Buttons #}
+        <div class="field" style="justify-content: space-between;">
+            <div class="heading">
+                <label id="source-files">Source files</label>
+                <form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
+                    {{ csrfInput() }}
+                    {{ forms.hidden({
+                            name: 'action',
+                            value: 'translations/files/create-export-zip',
+                        }) }}
 
-        {% if order.translator.service is defined and
-            order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
-            <div class="field" style="justify-content: space-between;">
-                <div class="heading">
-                    <label id="translated-files">Translated files</label>
-                </div>
-                <button type="button" class="btn icon" data-icon="upload" value="submit" id="import-tool" style="width: 125px;">{{ "Upload"|t('app') }}
-                    <div class="utility-status"></div>
-                </button>
-            </div>
-            <div class="hud-wrapper hidden">
-                <div id="translations-import-form" class="form meta">
                     {{ forms.hidden({
                         name: 'orderId',
-                        id: 'order_id',
-                        value: orderId,
+                        value: order.id
                     }) }}
-                </div>
+                </form>
             </div>
-            
-            <div class="field" style="justify-content: space-between;">
-                <div class="heading">
-                    <label id="acclaro-sync">My Acclaro</label>
-                </div>
-                {% if not isCancellable and 
-                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                    <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
-                {% else %}
-                    <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
-                {% endif %}
-            </div>
-        {% else %}
-            {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
-                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
-                <div class="field" style="justify-content: space-between;">
-                    <div class="heading">
-                        <label id="source-files">Source files</label>
-                    </div>
-                    <button type="button" class="btn icon disabled" disabled data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}</button>
-                </div>
-                
-                <div class="field" style="justify-content: space-between;">
-                    <div class="heading">
-                        <label id="translated-files">Translated files</label>
-                    </div>
-                    <button type="button" class="btn icon disabled" disabled data-icon="upload" value="submit" style="width: 125px;">{{ "Upload"|t('app') }}</button>
-                </div>
-            {% else %}
-                <div class="field" style="justify-content: space-between;">
-                    <div class="heading">
-                        <label id="source-files">Source files</label>
-                    </div>
-                    <button type="button" id="export-btn" class="btn icon" data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
-                        <div class="utility-status"></div>
-                    </button>
-                </div>
-                
-                <div class="field" style="justify-content: space-between;">
-                    <div class="heading">
-                        <label id="translated-files">Translated files</label>
-                    </div>
-                    <button type="button" class="btn icon" data-icon="upload" value="submit" id="import-tool" style="width: 125px;">{{ "Upload"|t('app') }}
-                        <div class="utility-status"></div>
-                    </button>
-                </div>
+            <button type="button" id="export-btn" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }}
+                data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
+                <div class="utility-status"></div>
+            </button>
+        </div>
+
+        <div class="field" style="justify-content: space-between;">
+            <div class="heading">
+                <label id="translated-files">Translated files</label>
                 <div class="hud-wrapper hidden">
                     <div id="translations-import-form" class="form meta">
                         {{ forms.hidden({
@@ -709,8 +649,37 @@
                         }) }}
                     </div>
                 </div>
-                {% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
-            {% endif %}
+            </div>
+            <button type="button" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }} data-icon="upload"
+                value="submit" id="import-tool" style="width: 125px;">{{ "Upload"|t('app') }}
+                <div class="utility-status"></div>
+            </button>
+        </div>
+        {% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
+        {% if not isDefaultTranslator %}
+            <div class="field" style="justify-content: space-between;">
+                <div class="heading">
+                    <label id="acclaro-sync">My Acclaro</label>
+                    <form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
+                        {{ csrfInput() }}
+                        {{ forms.hidden({
+                            name: 'action',
+                            value: 'translations/order/sync-order',
+                        }) }}
+
+                        {{ forms.hidden({
+                            name: 'orderId',
+                            value: order.id
+                        }) }}
+                    </form>
+                </div>
+                {% if not isCancellable and
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                    <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
+                {% else %}
+                    <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
+                {% endif %}
+            </div>
         {% endif %}
     </div>
     <div id="meta-details" class="meta read-only">
@@ -718,15 +687,15 @@
             <div class="heading">
                 <label>Status</label>
             </div>
-            <div id="status-value" class="value">
-                <span class="status {{ order.statusColour }}"></span> {{ order.statusLabel|t }}
+            <div class="value">
+                <span class="status {{ order.getStatusColour() }}"></span> {{ order.getStatusLabel()|t }}
             </div>
         </div>
         <div class="data">
             <div class="heading">
                 <span>Created At</span>
             </div>
-            <div id="status-value" class="value">
+            <div class="value">
                 <span> {{ order.dateOrdered ? order.dateOrdered|date('n/j/Y, H:i A') : 'N/A' }} </span>
             </div>
         </div>
@@ -734,7 +703,7 @@
             <div class="heading">
                 <span>Updated At</span>
             </div>
-            <div id="status-value" class="value">
+            <div class="value">
                 <span> {{ order.dateUpdated ? order.dateUpdated|date('n/j/Y, H:i A') : 'N/A' }} </span>
             </div>
         </div>
@@ -753,26 +722,22 @@
         </ul>
     </div>
     <hr>
-    {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') or
-            order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-            order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
-        <a class="btn w-100 disabled">{{ "Rebuild draft previews"|t('app') }}</a>
-    {% else %}
-        <form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
-            {{ csrfInput() }}
-            {{ forms.hidden({
-                name: 'action',
-                value: 'translations/base/regenerate-preview-urls',
-            }) }}
+    <form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ forms.hidden({
+            name: 'action',
+            value: 'translations/base/regenerate-preview-urls',
+        }) }}
 
-            {{ forms.hidden({
-                name: 'orderId',
-                value: order.id
-            }) }}
+        {{ forms.hidden({
+            name: 'orderId',
+            value: order.id
+        }) }}
 
-            <a class="btn w-100" onclick="this.closest('form').submit();return false;">{{ "Rebuild draft previews"|t('app') }}</a>
-        </form>
-    {% endif %}
+        <a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %} 
+            onclick="this.closest('form').submit();return false;" {% else %} {{ exportImportStatus }} {% endif %}>{{ "Rebuild draft previews"|t('app') }}
+        </a>
+    </form>
 {% endblock %}
 
 {% set jsSettings = {

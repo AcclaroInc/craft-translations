@@ -123,11 +123,11 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                             $errorMessage .= implode('; ', $r);
                         }
                         $order->logActivity(
-                            sprintf(Translations::$plugin->translator->translate('app', 'Error: '.$errorMessage), $file_name)
+                            Translations::$plugin->translator->translate('app', 'error saving drafts content. Error: '.$errorMessage)
                         );
                     } else {
                         $order->logActivity(
-                            sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                            sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML for entry [%s]'), $element->title)
                         );
                     }
 
@@ -148,7 +148,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $res = Translations::$plugin->categoryDraftRepository->saveDraft($draft, $post);
                 if (!$res) {
                     $order->logActivity(
-                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML for entry [%s]'), $element->title)
                     );
 
                     return false;
@@ -167,7 +167,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $res = Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $post);
                 if (!$res) {
                     $order->logActivity(
-                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML for entry [%s]'), $element->title)
                     );
 
                     return false;
@@ -185,7 +185,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $res = Translations::$plugin->assetDraftRepository->saveDraft($draft, $post);
                 if (!$res) {
                     $order->logActivity(
-                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML file %s'), $file_name)
+                        sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML for entry [%s]'), $element->title)
                     );
 
                     return false;

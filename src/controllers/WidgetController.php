@@ -48,6 +48,7 @@ use acclaro\translations\services\repository\SiteRepository;
 use acclaro\translations\assetbundles\RecentlyModifiedAssets;
 use acclaro\translations\Constants;
 use craft\models\Updates as UpdatesModel;
+use Exception;
 
 // Widget Classes
 use acclaro\translations\widgets\News;
@@ -56,7 +57,7 @@ use acclaro\translations\widgets\RecentOrders;
 use acclaro\translations\widgets\RecentEntries;
 use acclaro\translations\widgets\RecentlyModified;
 use acclaro\translations\widgets\LanguageCoverage;
-
+use acclaro\translations\widgets\NewAndModifiedEntries;
 
 /**
  * @author    Acclaro
@@ -156,6 +157,7 @@ class WidgetController extends Controller
         $variables = [];
         // Assemble the list of existing widgets
         $variables['widgets'] = [];
+
         /** @var Widget[] $widgets */
         $widgets = $this->getAllWidgets();
         $allWidgetJs = '';
@@ -176,7 +178,9 @@ class WidgetController extends Controller
                     'selectable' => false,
                 ];
             }
+
             $variables['widgets'][] = $info;
+
             $allWidgetJs .= 'new Craft.Translations.Widget("#widget' . $widget->id . '", ' .
                 Json::encode($info['settingsHtml']) . ', ' .
                 'function(){' . $info['settingsJs'] . '}' .
@@ -200,6 +204,12 @@ class WidgetController extends Controller
             '@acclaro/translations/assetbundles/src',
             true
         );
+        foreach ($widgetTypeInfo as $key => $widget) {
+            if ($key::displayName() == 'New Source Entries') {
+                unset($widgetTypeInfo[$key]);
+            }
+        }
+
         $variables['widgetTypes'] = $widgetTypeInfo;
         $variables['selectedSubnavItem'] = 'dashboard';
         $variables['isSelectableWidget'] = $isSelectableWidget;
@@ -239,6 +249,7 @@ class WidgetController extends Controller
         $this->requirePostRequest();
         $this->requireAcceptsJson();
         $request = Craft::$app->getRequest();
+
         $type = $request->getRequiredBodyParam('type');
         $settingsNamespace = $request->getBodyParam('settingsNamespace');
         if ($settingsNamespace) {
@@ -246,11 +257,13 @@ class WidgetController extends Controller
         } else {
             $settings = null;
         }
-        
-        $widget = $this->createWidget([
+
+        $config = [
             'type' => $type,
             'settings' => $settings,
-        ]);
+        ];
+
+        $widget = $this->createWidget($config);
         return $this->_saveAndReturnWidget($widget);
     }
 
@@ -311,7 +324,9 @@ class WidgetController extends Controller
         $request = Craft::$app->getRequest();
         $widgetId = $request->getRequiredBodyParam('id');
         $colspan = $request->getRequiredBodyParam('colspan');
-        $this->changeWidgetColspan($widgetId, $colspan);
+        foreach (explode(',', $widgetId) as $id) {
+            $this->changeWidgetColspan($id, $colspan);
+        }
         return $this->asJson(['success' => true]);
     }
 
@@ -428,55 +443,70 @@ class WidgetController extends Controller
             ->where(['status' => 'published'])
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->all();
+        // Get in progress Files and order
+        $inProgressRecords = FileRecord::find()
+            ->where(['status' => 'in progress'])
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->all();
 
         // Build file array
         foreach ($records as $key => $record) {
-            $files[$key]['id'] = $record->id;
-            $files[$key]['elementId'] = $record->elementId;
+            if (! array_key_exists($record->elementId, $files)) {
+                $files[$record->elementId] = $record;
+            }
         }
 
-        // Create a temporary array with $fileId => $elementId columns
-        $tmpArray = array_column($files, 'elementId', 'id');
-        
+        // Filter out published records which are also present in $inProgressRecords and are created after than published ones.
+        foreach ($inProgressRecords as $key => $record) {
+            if (array_key_exists($record->elementId, $files)) {
+                if ($record->dateCreated > $files[$record->elementId]->dateCreated) {
+                    unset($files[$record->elementId]);
+                }
+            }
+        }
+
         // Loop through entry IDs
         foreach ($entries as $id) {
             // Check to see if we have a file that meets the conditions
-            $fileId = array_search($id, $tmpArray);
+            $fileRecord = $files[$id] ?? null;
 
-            if ($fileId) {
+            if ($fileRecord) {
+                $fileId = $fileRecord->id;
                 // Now we can get the element
                 $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
                 // Get the elements translated file
                 $file = Translations::$plugin->fileRepository->getFileById($fileId);
-                
+
                 // Is the element more recent than the file?
                 if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
                     // Translated file XML
-                    if (strpos($file->source, "<xml>") !== false) {
-                        $translatedXML = $file->source;
-                    } else {
-                        $translatedXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($file->source, true));
-                    }
-                    $translatedXML = simplexml_load_string($translatedXML)->body->asXML();
+                    $translatedXML = $file->target;
 
                     // Current entries XML
-                    $currentJson = Translations::$plugin->elementToFileConverter->convert(
+                    $currentXML = Translations::$plugin->elementToFileConverter->convert(
                         $element,
-                        Constants::FILE_FORMAT_JSON,
+                        Constants::FILE_FORMAT_XML,
                         [
                             'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
                             'targetSite'    => $file->targetSite,
                             'orderId'       => $file->orderId,
                         ]
                     );
-                    $currentXML = Translations::$plugin->elementToFileConverter->jsonToXml(json_decode($currentJson, true));
-                    $currentXML = simplexml_load_string($currentXML)->body->asXML();
 
-                    // Load a new Diff class
-                    $differ = new Differ();
+                    $diffData = Translations::$plugin->fileRepository->getSourceTargetDifferences($currentXML, $translatedXML);
+                    $diffHtml = Translations::$plugin->fileRepository->getFileDiffHtml($diffData, true);
+
+                    $sourceString = '';
+                    $targetString = '';
+                    foreach ($diffData as $key => $field) {
+                        $sourceString .= $field['source'];
+                        $targetString .= $field['target'];
+                    }
+
+                    $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
 
                     // Check to see if there is a difference between translated XML and current entries XML
-                    if (strlen($differ->diff($translatedXML, $currentXML)) > '21') {
+                    if (! empty($diffHtml) && base64_encode($sourceString) != base64_encode($targetString)) {
                         // Create data array
                         $data[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
                         $data[$i]['entryId'] = $element->id;
@@ -486,9 +516,8 @@ class WidgetController extends Controller
                         $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
                         $data[$i]['entryUrl'] = $element->getCpEditUrl();
                         $data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
-                        $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
                         $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
-                        $data[$i]['diff'] = $differ->diff($translatedXML, $currentXML);
+                        $data[$i]['diff'] = $diffHtml;
     
                         // Sort data array by most recent
                         usort($data, function($a, $b) {
@@ -513,6 +542,85 @@ class WidgetController extends Controller
         ]);
     }
 
+    public function actionGetRecentEntries($limit = 0)
+    {
+        // Get the post request
+        $this->requirePostRequest();
+
+        // Set variables
+        $limit = Craft::$app->getRequest()->getParam('limit');
+        $days = Craft::$app->getRequest()->getParam('days');
+        $data = [];
+        $i = 0;
+
+        // Get array of entry IDs sorted by most recently updated
+        $fromDate = (new \DateTime("-{$days} days"))->format(\DateTime::ATOM);
+        $entries = Entry::find()
+            ->dateCreated(">= {$fromDate}")
+            ->orderBy(['dateCreated' => SORT_DESC])
+            ->ids();
+
+        $entriesInOrders = [];
+        $records = FileRecord::find()
+            ->select(['elementId'])
+            ->groupBy('elementId')
+            ->all();
+
+        foreach ($records as $key => $record) {
+            array_push($entriesInOrders, $record->elementId);
+        }
+
+        // Loop through entry IDs
+        foreach ($entries as $id) {
+            // exclude entries for which order has been created
+            if (in_array($id, $entriesInOrders)) continue;
+            // Now we can get the element
+            $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
+
+            // Current entries XML
+            $currentXML = Translations::$plugin->elementToFileConverter->convert(
+                $element,
+                Constants::FILE_FORMAT_XML,
+                [
+                    'sourceSite'    => Craft::$app->getSites()->getPrimarySite()->id,
+                    'targetSite'    => Craft::$app->getSites()->getPrimarySite()->id,
+                ]
+            );
+
+            $diffHtml = Translations::$plugin->fileRepository->getFileDiffHtml($currentXML);
+
+            // Create data array
+            $data[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
+            $data[$i]['entryId'] = $element->id;
+            $data[$i]['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
+            $data[$i]['entryDateTimestamp'] = $element->dateUpdated->format('Y-m-d H:i:s');
+            $data[$i]['siteId'] = $element->siteId;
+            $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
+            $data[$i]['entryUrl'] = $element->getCpEditUrl();
+            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element));
+            $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
+            $data[$i]['diff'] = $diffHtml;
+
+            // Sort data array by most recent
+            usort($data, function($a, $b) {
+                return $b['entryDateTimestamp'] <=> $a['entryDateTimestamp'];
+            });
+
+            // Only return set limit
+            if ($i + 1 < $limit) {
+                $i++;
+            } else {
+                break;
+            }
+        }
+
+        return $this->asJson([
+            'success' => true,
+            'data' => $data,
+            'error' => null
+        ]);
+    }
+
     // Public Methods
     // =========================================================================
 
@@ -527,8 +635,7 @@ class WidgetController extends Controller
             News::class,
             Translators::class,
             RecentOrders::class,
-            RecentEntries::class,
-            RecentlyModified::class,
+            NewAndModifiedEntries::class,
             LanguageCoverage::class,
         ];
         
@@ -605,7 +712,7 @@ class WidgetController extends Controller
         return $result ? $this->createWidget($result) : null;
     }
 
-        /**
+    /**
      * Saves a widget for the current user.
      *
      * @param WidgetInterface $widget The widget to be saved
@@ -642,7 +749,11 @@ class WidgetController extends Controller
                     ->from(['{{%translations_widgets}}'])
                     ->where(['userId' => Craft::$app->getUser()->getIdentity()->id])
                     ->max('[[sortOrder]]');
-                $widgetRecord->sortOrder = $maxSortOrder + 1;
+                if (get_class($widget) == "acclaro\\translations\\widgets\\RecentlyModified") {
+                    $widgetRecord->sortOrder = $maxSortOrder;
+                } else {
+                    $widgetRecord->sortOrder = $maxSortOrder + 1;
+                }
             }
             $widgetRecord->save(false);
             // Now that we have a widget ID, save it on the model
@@ -687,31 +798,35 @@ class WidgetController extends Controller
      */
     public function deleteWidget(WidgetInterface $widget): bool
     {
-        /** @var Widget $widget */
-        // Fire a 'beforeDeleteWidget' event
-        if ($this->hasEventHandlers(self::EVENT_BEFORE_DELETE_TRANSLATIONS_WIDGET)) {
-            $this->trigger(self::EVENT_BEFORE_DELETE_TRANSLATIONS_WIDGET, new WidgetEvent([
-                'widget' => $widget,
-            ]));
-        }
-        if (!$widget->beforeDelete()) {
-            return false;
-        }
-        $transaction = Craft::$app->getDb()->beginTransaction();
-        try {
-            $widgetRecord = $this->_getUserWidgetRecordById($widget->id);
-            $widgetRecord->delete();
-            $widget->afterDelete();
-            $transaction->commit();
-        } catch (\Throwable $e) {
-            $transaction->rollBack();
-            throw $e;
-        }
-        // Fire an 'afterDeleteWidget' event
-        if ($this->hasEventHandlers(self::EVENT_AFTER_DELETE_TRANSLATIONS_WIDGET)) {
-            $this->trigger(self::EVENT_AFTER_DELETE_TRANSLATIONS_WIDGET, new WidgetEvent([
-                'widget' => $widget,
-            ]));
+        $widgets = [$widget];
+
+        foreach ($widgets as $widget) {
+            /** @var Widget $widget */
+            // Fire a 'beforeDeleteWidget' event
+            if ($this->hasEventHandlers(self::EVENT_BEFORE_DELETE_TRANSLATIONS_WIDGET)) {
+                $this->trigger(self::EVENT_BEFORE_DELETE_TRANSLATIONS_WIDGET, new WidgetEvent([
+                    'widget' => $widget,
+                ]));
+            }
+            if (!$widget->beforeDelete()) {
+                return false;
+            }
+            $transaction = Craft::$app->getDb()->beginTransaction();
+            try {
+                $widgetRecord = $this->_getUserWidgetRecordById($widget->id);
+                $widgetRecord->delete();
+                $widget->afterDelete();
+                $transaction->commit();
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
+            // Fire an 'afterDeleteWidget' event
+            if ($this->hasEventHandlers(self::EVENT_AFTER_DELETE_TRANSLATIONS_WIDGET)) {
+                $this->trigger(self::EVENT_AFTER_DELETE_TRANSLATIONS_WIDGET, new WidgetEvent([
+                    'widget' => $widget,
+                ]));
+            }
         }
         return true;
     }
@@ -764,8 +879,7 @@ class WidgetController extends Controller
     {
         $user = Craft::$app->getUser()->getIdentity();
         $this->saveWidget($this->createWidget(RecentOrders::class));
-        $this->saveWidget($this->createWidget(RecentlyModified::class));
-        $this->saveWidget($this->createWidget(RecentEntries::class));
+        $this->saveWidget($this->createWidget(NewAndModifiedEntries::class));
         $this->saveWidget($this->createWidget(LanguageCoverage::class));
         $this->saveWidget($this->createWidget(Translators::class));
         $this->saveWidget($this->createWidget(News::class));
@@ -796,6 +910,31 @@ class WidgetController extends Controller
             ]);
             if (!$widgetRecord) {
                 $this->_noWidgetExists($widgetId);
+            }
+        } else {
+            $widgetRecord = new WidgetRecord();
+            $widgetRecord->userId = $userId;
+        }
+        return $widgetRecord;
+    }
+
+    /**
+     * Gets a widget's record.
+     *
+     * @param int|null $widgetId
+     * @return WidgetRecord
+     */
+    private function _getUserWidgetRecordByType(string $widgetType = null): WidgetRecord
+    {
+        $userId = Craft::$app->getUser()->getIdentity()->id;
+
+        if ($widgetType !== null) {
+            $widgetRecord = WidgetRecord::findOne([
+                'type' => $widgetType,
+                'userId' => $userId
+            ]);
+            if (!$widgetRecord) {
+                throw new WidgetNotFoundException("No widget exists of Type '{$widgetType}'");
             }
         } else {
             $widgetRecord = new WidgetRecord();
@@ -993,83 +1132,4 @@ class WidgetController extends Controller
             $this->_progress = round(100 * $progress);
         }
     }
-
-    public function actionGetRecentEntries($limit = 0)
-    {
-        // Get the post request
-        $this->requirePostRequest();
-
-        // Set variables
-        $limit = Craft::$app->getRequest()->getParam('limit');
-        $days = Craft::$app->getRequest()->getParam('days');
-        $files = [];
-        $data = [];
-        $i = 0;
-
-        // Get array of entry IDs sorted by most recently updated
-        $fromDate = (new \DateTime("-{$days} days"))->format(\DateTime::ATOM);
-        $entries = Entry::find()
-            ->dateCreated(">= {$fromDate}")
-            ->orderBy(['dateCreated' => SORT_DESC])
-            ->ids();
-
-        // Loop through entry IDs
-        foreach ($entries as $id) {
-            // Check to see if we have a file that meets the conditions
-
-            // Now we can get the element
-            $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
-
-            // Current entries XML
-            $currentXML = Translations::$plugin->elementToFileConverter->convert(
-                $element,
-                Constants::FILE_FORMAT_XML,
-                [
-                    'sourceSite'    => Craft::$app->getSites()->getPrimarySite()->id,
-                    'targetSite'    => Craft::$app->getSites()->getPrimarySite()->id,
-                ]
-            );
-            $currentXML = simplexml_load_string($currentXML)->body->asXML();
-
-            $blank = '';
-
-            // Load a new Diff class
-            $differ = new Differ();
-
-            // Check to see if there is a difference between translated XML and current entries XML
-            if (strlen($differ->diff($blank, $currentXML)) > '21') {
-                // Create data array
-                $data[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
-                $data[$i]['entryId'] = $element->id;
-                $data[$i]['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
-                $data[$i]['entryDateTimestamp'] = $element->dateUpdated->format('Y-m-d H:i:s');
-                $data[$i]['siteId'] = $element->siteId;
-                $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
-                $data[$i]['entryUrl'] = $element->getCpEditUrl();
-                //$data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
-                $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element));
-                $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
-                $data[$i]['diff'] = $differ->diff($blank, $currentXML);
-
-                // Sort data array by most recent
-                usort($data, function($a, $b) {
-                    return $b['entryDateTimestamp'] <=> $a['entryDateTimestamp'];
-                });
-
-                // Only return set limit
-                if ($i + 1 < $limit) {
-                    $i++;
-                } else {
-                    break;
-                }
-            }
-        }
-
-        return $this->asJson([
-            'success' => true,
-            'data' => $data,
-            'error' => null
-        ]);
-    }
-
 }

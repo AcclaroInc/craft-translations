@@ -12,6 +12,7 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use Craft;
 use craft\web\Controller;
@@ -97,10 +98,14 @@ class CategoryController extends Controller
         }
 
         $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
+        
+        $fields = $this->request->getParam('fields') ?? [];
 
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
 
-        if (Translations::$plugin->categoryDraftRepository->saveDraft($draft)) {
+        if (Translations::$plugin->categoryDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
 
             $this->redirect($draft->getCpEditUrl(), 302, true);
@@ -144,9 +149,11 @@ class CategoryController extends Controller
             $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
         }
 
-        $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
+        $fields = $this->request->getParam('fields') ?? [];
 
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
 
         $draft->id = $category->id;
         $draft->categoryId = $category->id;
@@ -160,21 +167,22 @@ class CategoryController extends Controller
         if ($file) {
             $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
 
-            $file->status = 'published';
+            $file->status = Constants::FILE_STATUS_PUBLISHED;
+            $file->draftId = 0;
 
             Translations::$plugin->fileRepository->saveFile($file);
 
             $areAllFilesPublished = true;
 
             foreach ($order->files as $file) {
-                if ($file->status !== 'published') {
+                if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
                     $areAllFilesPublished = false;
                     break;
                 }
             }
 
             if ($areAllFilesPublished) {
-                $order->status = 'published';
+                $order->status = Constants::ORDER_STATUS_PUBLISHED;
 
                 Translations::$plugin->orderRepository->saveOrder($order);
             }

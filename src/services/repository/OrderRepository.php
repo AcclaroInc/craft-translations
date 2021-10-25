@@ -70,6 +70,11 @@ class OrderRepository
         return $orderCount;
     }
 
+    public function isTranslationOrder($elementId)
+    {
+        return Order::findOne(['id' => $elementId]);
+    }
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -316,10 +321,6 @@ class OrderRepository
         $orderUrl = "Craft Order: <a href='$orderUrl'>$orderUrl</a>";
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
         $dueDate = $order->requestedDueDate;
-
-        if($order->requestedDueDate){
-            $dueDate = $dueDate->format('Y-m-d');
-        }
 
         if($dueDate = $order->requestedDueDate){
             $dueDate = $dueDate->format('Y-m-d');

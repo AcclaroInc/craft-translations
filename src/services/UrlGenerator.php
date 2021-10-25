@@ -25,7 +25,7 @@ use acclaro\translations\models\GlobalSetDraftModel;
 use craft\elements\Asset;
 use DOMDocument;
 use DateTime;
-
+use yii\log\Target;
 
 class UrlGenerator
 {
@@ -106,12 +106,12 @@ class UrlGenerator
 
     public function generateFileWebUrl(Element $element, FileModel $file)
     {
-        if ($file->status === 'published') {
-            if ($element instanceof GlobalSet OR $element instanceof Category) {
+        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+            if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
                 return '';
             }
 
-            return $element->url;
+            return $element->getUrl();
         }
 
         return $this->generateElementPreviewUrl($element, $file->targetSite);
@@ -121,19 +121,19 @@ class UrlGenerator
     {
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
-    
+
     public function generateElementPreviewUrl(Element $element, $siteId = null)
     {
         $params = array();
-        
-        if ($element instanceof GlobalSet || $element instanceof Category ) {
+
+        if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
             return '';
         }
-        
+
         $className = get_class($element);
-        
+
         if ($className === Entry::class && !$element->getIsDraft()) {
-            $previewUrl = $element->getUrl();
+            $previewUrl = $this->getPrimaryPreviewTargetUrl($element);
         } else {
             $route = [
                 'preview/preview', [
@@ -153,12 +153,28 @@ class UrlGenerator
             }
 
             if ($element->getUrl()) {
-                $previewUrl = Translations::$plugin->urlHelper->urlWithToken($element->getUrl(), $token);
+                $previewUrl = Translations::$plugin->urlHelper->urlWithParams($this->getPrimaryPreviewTargetUrl($element), [
+                    Craft::$app->getConfig()->getGeneral()->tokenParam => $token,
+                ]);
             } else {
                 $previewUrl = '';
             }
         }
 
         return $previewUrl;
+    }
+
+    private function getPrimaryPreviewTargetUrl($element)
+    {
+        if (Craft::$app->getRequest()->getIsCpRequest() && !Craft::$app->getRequest()->getIsConsoleRequest()) {
+            $targets = $element->getPreviewTargets();
+        } else {
+            // If the request comes from the job queue, get the preview targets from the section
+            // TODO: Figure out how we can construct the ['url'] param without using `renderObjectTemplate()`
+            // - Ref: https://github.com/craftcms/cms/blob/main/src/base/Element.php#L2662
+            $targets = $element->getSection()->previewTargets;
+        }
+
+        return ($targets[0]['url'] ?? $element->getUrl());
     }
 }

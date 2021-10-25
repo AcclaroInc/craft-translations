@@ -10,11 +10,12 @@
 
 namespace acclaro\translations\elements;
 
-
 use Craft;
 use DateTime;
 use craft\base\Model;
 use craft\base\Element;
+use craft\elements\Entry;
+use craft\models\Section;
 use craft\helpers\ElementHelper;
 use craft\elements\db\ElementQuery;
 use yii\validators\NumberValidator;
@@ -23,15 +24,15 @@ use craft\validators\UniqueValidator;
 use craft\validators\DateTimeValidator;
 use craft\validators\SiteIdValidator;
 use craft\elements\db\ElementQueryInterface;
+use craft\controllers\ElementIndexesController;
+use craft\elements\actions\Restore;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\db\OrderQuery;
-use craft\controllers\ElementIndexesController;
-use craft\elements\actions\Delete;
-use craft\elements\Entry;
-use craft\models\Section;
+use acclaro\translations\elements\actions\OrderDelete;
+use craft\helpers\StringHelper;
 
 /**
  * @author    Acclaro
@@ -61,6 +62,10 @@ class Order extends Element
     public $targetSites;
     
     public $status;
+    
+    public $statusColour;
+
+    public $statusLabel;
     
     public $requestedDueDate;
 
@@ -98,6 +103,30 @@ class Order extends Element
         return Translations::$plugin->translator->translate('app', 'Order');
     }
 
+    /**
+     * @inheritdoc
+     */
+    public static function lowerDisplayName(): string
+    {
+        return StringHelper::toLowerCase(static::displayName());
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function pluralDisplayName(): string
+    {
+        return Craft::t('app', 'Orders');
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function pluralLowerDisplayName(): string
+    {
+        return StringHelper::toLowerCase(static::pluralDisplayName());
+    }
+
     public static function refHandle()
     {
         return 'order';
@@ -123,6 +152,14 @@ class Order extends Element
         return false;
     }
 
+    /**
+     * @inheritdoc
+     */
+    public static function trackChanges(): bool
+    {
+        return true;
+    }
+
     public static function hasStatuses(): bool
     {
         return false;
@@ -130,7 +167,19 @@ class Order extends Element
 
     protected static function defineActions(string $source = null): array
     {
-        return [Delete::class];
+        $actions = [];
+
+        $actions[] = OrderDelete::class;
+
+        // Restore
+        $actions[] = Craft::$app->getElements()->createAction([
+            'type' => Restore::class,
+            'successMessage' => Craft::t('app', 'Orders restored.'),
+            'partialSuccessMessage' => Craft::t('app', 'Some orders restored.'),
+            'failMessage' => Craft::t('app', 'Orders not restored.'),
+        ]);
+
+        return $actions;
     }
 
     protected static function defineSources(string $context = null): array
@@ -297,7 +346,7 @@ class Order extends Element
                 return sprintf('<a href="%s" target="_blank">#%s</a>', $translationService->getOrderUrl($this), $value);
 
             case 'status':
-                return "<span class='status $this->statusColour'></span>".Translations::$plugin->translator->translate('app', $this->statusLabel);
+                return "<span class='status ". $this->getStatusColour() ."'></span>".Translations::$plugin->translator->translate('app', $this->getStatusLabel());
             case 'orderDueDate':
             case 'requestedDueDate':
             case 'dateOrdered':
@@ -305,22 +354,6 @@ class Order extends Element
 
             case 'dateUpdated':
                 return $value ? date('n/j/y', strtotime($value->format('Y-m-d H:i:s'))) : '--';
-
-            case 'actionButton':
-
-                if (($this->getTranslator()->service == 'export_import' && $this->status === 'published') || ($this->getTranslator()->service == 'acclaro' && $this->status !== 'new' && $this->status !== 'failed')) {
-                    return '<form><div class="btn menubtn settings icon"></div><div class="menu"><ul><li><a class="" href="'.$this->getCpEditUrl().'"> Edit</a></li></ul><hr><ul><li><a class="link-disabled">Move to Trash</a></li></ul></div></form>';
-                }
-
-                if (!$this->trashed) {
-                    return sprintf(
-                        '<div class="btn menubtn settings icon"></div><div class="menu"><ul><li><a class="" href="'.$this->getCpEditUrl().'"> Edit</a></li></ul><hr><ul><li><a class="translations-delete-order error" data-hard-delete="0" data-order-id="%s">Move to Trash</a></li></ul></div>',$this->id
-                    );
-                } else {
-                    return sprintf(
-                        '<div class="btn menubtn settings icon"></div><div class="menu"><ul><li><a class="translations-restore-order" data-order-id="%s"> Restore </a></li></ul><hr><ul><li><a class="translations-delete-order error" data-hard-delete="1" data-order-id="%s">Delete Permanently</a></li></ul></div>',$this->id,$this->id
-                    );
-                }
 
             case 'ownerId':
                 return $this->getOwner() ? $this->getOwner()->username : '';
@@ -466,49 +499,72 @@ class Order extends Element
 
     public function getStatusLabel()
     {
+        $statusLabel = '';
         switch ($this->status) {
             case 'new':
-                return 'Pending submission';
+                $statusLabel = 'Pending submission';
+                break;
             case 'getting quote':
             case 'needs approval':
             case 'in preparation':
             case 'in progress':
             case 'in review':
-                return 'In progress';
+                $statusLabel = 'In progress';
+                break;
             case 'ready for review':
-                return 'Ready for review';
+                $statusLabel = 'Ready for review';
+                break;
             case 'complete':
-                return 'Ready to apply';
+                $statusLabel = 'Ready to apply';
+                break;
             case 'canceled':
-                return 'Canceled';
+                $statusLabel = 'Canceled';
+                break;
             case 'published':
-                return 'Applied';
+                $statusLabel = 'Applied';
+                break;
             case 'failed':
-                return 'Failed';
+                $statusLabel = 'Failed';
+                break;
+            default:
+                $statusLabel = 'Pending submission';
+                break;
         }
+
+        $this->statusLabel = $this->statusLabel ?? $statusLabel;
+        return $this->statusLabel;
     }
 
     public function getStatusColour()
     {
         switch ($this->status) {
             case 'new':
-                return '';
+                $statusColour = '';
+                break;
             case 'getting quote':
             case 'needs approval':
             case 'in preparation':
             case 'in review':
             case 'in progress':
-                return 'orange';
+                $statusColour = 'orange';
+                break;
             case 'ready for review':
-                return 'yellow';
+                $statusColour = 'yellow';
+                break;
             case 'complete':
-                return 'blue';
+                $statusColour = 'blue';
+                break;
             case 'published':
-                return 'green';
+                $statusColour = 'green';
+                break;
             case 'canceled':
             case 'failed':
-                return 'red';
+                $statusColour = 'red';
+                break;
         }
+
+        $this->statusColour = $this->statusColour ?? $statusColour;
+        return $this->statusColour;
     }
 
     /**

@@ -69,7 +69,7 @@ class News extends Widget
      */
     public function getSettingsHtml()
     {
-        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/RecentlyModified/settings',
+        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/News/settings',
             [
                 'widget' => $this
             ]);
@@ -113,7 +113,7 @@ class News extends Widget
     private function _getArticles(): array
     {
         $articles = [];
-        
+
         $client = Craft::createGuzzleClient(array(
             'base_uri' => 'https://www.acclaro.com/',
             'timeout' => 2.0,

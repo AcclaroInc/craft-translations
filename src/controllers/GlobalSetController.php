@@ -12,6 +12,7 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use Craft;
 use craft\web\Controller;
 use acclaro\translations\Translations;
@@ -106,11 +107,12 @@ class GlobalSetController extends Controller
             $draft->id = $globalSetId;
             $draft->site = $site;
         }
+        
+        $fields = $this->request->getParam('fields') ?? [];
 
-        // @TODO Make sure they have permission to be editing this
-        $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
-
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
         
         if (Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
@@ -153,9 +155,11 @@ class GlobalSetController extends Controller
 
         //@TODO $this->enforceEditEntryPermissions($entry);
 
-        $fieldsLocation = $this->request->getParam('fieldsLocation', 'fields');
+        $fields = $this->request->getParam('fields') ?? [];
 
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
 
         // restore the original name
         $draft->name = $globalSet->name;
@@ -165,21 +169,22 @@ class GlobalSetController extends Controller
         if ($file) {
             $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
 
-            $file->status = 'published';
+            $file->status = Constants::FILE_STATUS_PUBLISHED;
+            $file->draftId = 0;
 
             Translations::$plugin->fileRepository->saveFile($file);
 
             $areAllFilesPublished = true;
 
             foreach ($order->files as $file) {
-                if ($file->status !== 'published') {
+                if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
                     $areAllFilesPublished = false;
                     break;
                 }
             }
 
             if ($areAllFilesPublished) {
-                $order->status = 'published';
+                $order->status = Constants::ORDER_STATUS_PUBLISHED;
 
                 Translations::$plugin->orderRepository->saveOrder($order);
             }

@@ -184,8 +184,8 @@ class ImportFiles extends BaseJob
         }
 
         $translation_service = $this->order->translator->service;
-        if ($translation_service === Translations::ACCLARO) {
-            $translation_service = Translations::EXPORT_IMPORT;
+        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+            $translation_service = Constants::TRANSLATOR_DEFAULT;
         }
 
         //Translation Service
@@ -327,8 +327,8 @@ class ImportFiles extends BaseJob
         }
 
         $translation_service = $this->order->translator->service;
-        if ($translation_service === Translations::ACCLARO) {
-            $translation_service = Translations::EXPORT_IMPORT;
+        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+            $translation_service = Constants::TRANSLATOR_DEFAULT;
         }
 
         //Translation Service
@@ -338,6 +338,7 @@ class ImportFiles extends BaseJob
 
         $draft_file->status = Constants::FILE_STATUS_REVIEW_READY;
         $draft_file->target = $xml_content;
+        $draft_file->dateDelivered = new \DateTime();
 
         //If Successfully saved
         $success = Translations::$plugin->fileRepository->saveFile($draft_file);
@@ -431,8 +432,8 @@ class ImportFiles extends BaseJob
         }
 
         $translation_service = $this->order->translator->service;
-        if ($translation_service === Translations::ACCLARO) {
-            $translation_service = Translations::EXPORT_IMPORT;
+        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+            $translation_service = Constants::TRANSLATOR_DEFAULT;
         }
 
         //Translation Service
@@ -486,18 +487,7 @@ class ImportFiles extends BaseJob
             $targetFields[$node->getAttribute('resname')] = $node->getAttribute('resname');
         }
 
-        $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-
-        $xmlSource = Translations::$plugin->elementToFileConverter->convert(
-            $element,
-            Constants::FILE_FORMAT_XML,
-            [
-                'sourceSite'    => $file->sourceSite,
-                'targetSite'    => $file->targetSite,
-                'wordCount'     => $file->wordCount,
-                'orderId'       => $file->orderId,
-            ]
-        );
+        $xmlSource = $file->source;
 
         try {
             if (!$dom->loadXML( $xmlSource )) {

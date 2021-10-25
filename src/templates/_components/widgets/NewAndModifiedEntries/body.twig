@@ -1,0 +1,182 @@
+<div class="tab-container mt--30">
+    {% set tabs = {
+            "recent-entries-widget": {label: "New Source Entries"|t, url: 'javascript:void(0)'},
+            "recently-modified-widget": {label: "Modified Source Entries"|t, url: 'javascript:void(0)'},
+        }
+    %}
+    <header id="content-header" class="pane-header" style="margin: -38px var(--neg-padding) 24px">
+        {% include "_includes/tabs" with {
+            containerAttributes: {
+                id: 'tabs',
+            },
+        } %}
+    </header>
+
+    {# Recently modified tab data #}
+    <div id="recently-modified-widget" class="recentlymodified-container hidden">
+        <div class="spinner body-loading"></div>
+        <div class="elements hidden">
+            <div class="tableview scroll-x-auto mt--30">
+                <table class="data fullwidth table">
+                    <tr>
+                        <td class="checkbox-cell"></td>
+                        <th>Entry Title</th>
+                        <th>Last Updated</th>
+                        <th class="nowrap" style="text-align:right;">Compare Changes</th>
+                    </tr>
+                    {% for i in 1..limit %}
+                        <tr id="item-{{i}}">&nbsp;</tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="buttons right" style="margin-top:14px;">
+                <a href="#" id="bulk-reorder" class="btn submit disabled icon" data-icon="language" target="_blank">Re-order</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="hidden">
+        <div id="diff-modal" class="modal" tabindex="-1" role="dialog" style="padding:15px;overflow-y:auto;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header field">
+                        <div class="modal-title">
+                            <h1>Entry Modification Details</h1>
+                            <div class="buttons">
+                                <a href="#" id="close-diff-modal" class="btn">Close</a>
+                                <a href="#" class="btn submit reorderUrl icon" data-icon="language" target="_blank">Re-order translations</a>
+                            </div>
+                        </div>
+                        <div class="diff-meta">
+                            <div class="meta read-only diff-box">
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Entry ID</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions entryId"></span>
+                                    </div>
+                                </div>
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Entry Title</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions entryName"></span>
+                                    </div>
+                                </div>
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Site</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions siteLabel"></span>
+                                    </div>
+                                </div>
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Last Translated</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions fileDate"></span>
+                                    </div>
+                                </div>
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Date Updated</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions entryDate"></span>
+                                    </div>
+                                </div>
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Words Difference</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions wordDifference"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex;width: 100%;justify-content: space-between;align-items: baseline;">
+                        <h4 style="width: 50%;">Original Source</h4>
+                        <h4 style="width: 50%;">New Source</h4>
+                    </div>
+                    <div id="modal-body" class="modal-body diff-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="recent-entries-widget" class="recententries-container">
+        <div class="elements hidden">
+            <div class="tableview scroll-x-auto mt--30">
+                <table class="data fullwidth table">
+                    <tr>
+                        <td class="checkbox-cell"></td>
+                        <th>Name</th>
+                        <th>Date Created</th>
+                        <th class="nowrap" style="text-align:right;">View Source</th>
+                    </tr>
+                    {% for i in 1..limit %}
+                        <tr id="item-entry-{{i}}">&nbsp;</tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+            <div class="buttons right" style="margin-top:14px;">
+                <a class="btn" href="{{ url('entries') }}">{{ 'View all entries'|t }}</a>
+                <a href="#" id="new-entry-orders" class="btn submit disabled" target="_blank">{{ "New order"|t('app') }}</a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="hidden">
+        <div id="diff-modal-entry" class="modal" tabindex="-1" role="dialog" style="padding:15px;overflow-y:auto;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header field">
+                        <div class="modal-title">
+                            <h1>New Source Entry Details</h1>
+                            <div class="buttons">
+                                <a href="#" id="close-diff-modal-entry" class="btn">Close</a>
+                            </div>
+                        </div>
+                        <div class="diff-meta">
+                            <div class="meta read-only diff-box">
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Entry ID</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions entryId"></span>
+                                    </div>
+                                </div>
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Entry Title</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions entryName"></span>
+                                    </div>
+                                </div>
+                                <div class="data field">
+                                    <div class="heading">
+                                        <label>Site</label>
+                                    </div>
+                                    <div class="value">
+                                        <span class="instructions siteLabel"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modal-body-entry" class="modal-body-entry diff-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

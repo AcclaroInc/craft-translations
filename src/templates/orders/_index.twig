@@ -1,11 +1,10 @@
 {% extends "_layouts/cp" %}
 {% import 'translations/_macros' as macros %}
 
-{% set title = "Orders"|t('app') %}
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
 
 {% set elementInstance = craft.app.elements.createElement(elementType) %}
-{% set context = 'index' %}
+{% set title = elementInstance.pluralDisplayName|t('app') %}
 
 {% if not elementInstance %}
     {% exit 404 %}
