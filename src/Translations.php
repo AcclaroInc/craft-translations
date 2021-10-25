@@ -639,7 +639,7 @@ class Translations extends Plugin
             $event->hardDelete = true;
         }
 
-        if ($order = Translations::$plugin->orderRepository->isTranslationOrder($event->element->id)) {
+        if ($order = Translations::$plugin->orderRepository->isTranslationOrder($event->element->id) && $event->hardDelete) {
             $drafts = [];
             foreach ($order->getFiles() as $file) {
                 $drafts[] = $file->draftId;
