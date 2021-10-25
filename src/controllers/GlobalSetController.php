@@ -106,11 +106,12 @@ class GlobalSetController extends Controller
             $draft->id = $globalSetId;
             $draft->site = $site;
         }
+        
+        $fields = $this->request->getParam('fields') ?? [];
 
-        // @TODO Make sure they have permission to be editing this
-        $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
-
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
         
         if (Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
@@ -153,9 +154,11 @@ class GlobalSetController extends Controller
 
         //@TODO $this->enforceEditEntryPermissions($entry);
 
-        $fieldsLocation = $this->request->getParam('fieldsLocation', 'fields');
+        $fields = $this->request->getParam('fields') ?? [];
 
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
 
         // restore the original name
         $draft->name = $globalSet->name;

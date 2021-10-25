@@ -137,9 +137,11 @@ class AssetController extends BaseController
         $draft->title = $this->request->getParam('title') ?? $asset->title;
         $draft->newFilename = $this->request->getParam('filename');
 
-        $fieldsLocation = $this->request->getParam('fieldsLocation') ?? 'fields';
-        
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        $fields = $this->request->getParam('fields') ?? [];
+
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
         
         // restore the original name
         $draft->name = $asset->title;
