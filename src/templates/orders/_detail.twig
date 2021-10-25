@@ -688,7 +688,7 @@
                 <label>Status</label>
             </div>
             <div class="value">
-                <span class="status {{ order.statusColour }}"></span> {{ order.statusLabel|t }}
+                <span class="status {{ order.getStatusColour() }}"></span> {{ order.getStatusLabel()|t }}
             </div>
         </div>
         <div class="data">
