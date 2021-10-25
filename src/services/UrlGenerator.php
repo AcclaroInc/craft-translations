@@ -166,7 +166,15 @@ class UrlGenerator
 
     private function getPrimaryPreviewTargetUrl($element)
     {
-        $targets = $element->getPreviewTargets();
+        if (Craft::$app->getRequest()->getIsCpRequest() && !Craft::$app->getRequest()->getIsConsoleRequest()) {
+            $targets = $element->getPreviewTargets();
+        } else {
+            // If the request comes from the job queue, get the preview targets from the section
+            // TODO: Figure out how we can construct the ['url'] param without using `renderObjectTemplate()`
+            // - Ref: https://github.com/craftcms/cms/blob/main/src/base/Element.php#L2662
+            $targets = $element->getSection()->previewTargets;
+        }
+
         return ($targets[0]['url'] ?? $element->getUrl());
     }
 }
