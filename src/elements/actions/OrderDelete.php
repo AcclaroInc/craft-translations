@@ -34,7 +34,7 @@ class OrderDelete extends Delete
             return Craft::t('app', 'Delete (with descendants)');
         }
 
-        return Craft::t('app', 'Trash');
+        return Craft::t('app', 'Delete');
     }
 
     /**
