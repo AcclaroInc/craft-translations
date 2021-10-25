@@ -2,6 +2,7 @@
 
 namespace acclaro\translations\services;
 
+use acclaro\translations\elements\actions\OrderDelete;
 use craft\base\Component;
 use yii\base\Application as Application;
 
@@ -155,6 +156,11 @@ class App extends Component
      */
     public $orderSearchParams;
     
+    /**
+     * @var OrderDelete
+     */
+    public $orderDelete;
+    
     public function init()
     {
         $this->acclaroService = new AcclaroService();
@@ -184,5 +190,6 @@ class App extends Component
         $this->elementTranslator = new ElementTranslator();
         $this->elementToFileConverter = new ElementToFileConverter();
         $this->orderSearchParams = new OrderSearchParams();
+        $this->orderDelete = new OrderDelete();
     }
 }

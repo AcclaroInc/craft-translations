@@ -98,10 +98,14 @@ class CategoryController extends Controller
         }
 
         $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
+        
+        $fields = $this->request->getParam('fields') ?? [];
 
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
 
-        if (Translations::$plugin->categoryDraftRepository->saveDraft($draft)) {
+        if (Translations::$plugin->categoryDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
 
             $this->redirect($draft->getCpEditUrl(), 302, true);
@@ -145,9 +149,11 @@ class CategoryController extends Controller
             $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
         }
 
-        $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
+        $fields = $this->request->getParam('fields') ?? [];
 
-        $draft->setFieldValuesFromRequest($fieldsLocation);
+        if ($fields) {
+            $draft->setFieldValues($fields);
+        }
 
         $draft->id = $category->id;
         $draft->categoryId = $category->id;

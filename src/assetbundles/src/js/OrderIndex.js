@@ -125,9 +125,10 @@ Craft.Translations.OrderIndex = Garnish.Base.extend(
             }
         });
 
-        Garnish.$doc.mouseover($.proxy(function() {
-            Craft.initUiElements('#main');
-        }, this));
+        // ! NOTE: Commented as because of this delete permanently confirm was popping multiple times.
+        // Garnish.$doc.mouseover($.proxy(function() {
+        //     Craft.initUiElements('#main');
+        // }, this));
     }
 });
 

@@ -10,11 +10,12 @@
 
 namespace acclaro\translations\elements;
 
-
 use Craft;
 use DateTime;
 use craft\base\Model;
 use craft\base\Element;
+use craft\elements\Entry;
+use craft\models\Section;
 use craft\helpers\ElementHelper;
 use craft\elements\db\ElementQuery;
 use yii\validators\NumberValidator;
@@ -23,15 +24,14 @@ use craft\validators\UniqueValidator;
 use craft\validators\DateTimeValidator;
 use craft\validators\SiteIdValidator;
 use craft\elements\db\ElementQueryInterface;
+use craft\controllers\ElementIndexesController;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\db\OrderQuery;
-use craft\controllers\ElementIndexesController;
-use craft\elements\actions\Delete;
-use craft\elements\Entry;
-use craft\models\Section;
+use acclaro\translations\elements\actions\OrderDelete;
+use craft\helpers\StringHelper;
 
 /**
  * @author    Acclaro
@@ -98,6 +98,30 @@ class Order extends Element
         return Translations::$plugin->translator->translate('app', 'Order');
     }
 
+    /**
+     * @inheritdoc
+     */
+    public static function lowerDisplayName(): string
+    {
+        return StringHelper::toLowerCase(static::displayName());
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function pluralDisplayName(): string
+    {
+        return Craft::t('app', 'Orders');
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function pluralLowerDisplayName(): string
+    {
+        return StringHelper::toLowerCase(static::pluralDisplayName());
+    }
+
     public static function refHandle()
     {
         return 'order';
@@ -123,6 +147,14 @@ class Order extends Element
         return false;
     }
 
+    /**
+     * @inheritdoc
+     */
+    public static function trackChanges(): bool
+    {
+        return true;
+    }
+
     public static function hasStatuses(): bool
     {
         return false;
@@ -130,7 +162,7 @@ class Order extends Element
 
     protected static function defineActions(string $source = null): array
     {
-        return [Delete::class];
+        return [OrderDelete::class];
     }
 
     protected static function defineSources(string $context = null): array
