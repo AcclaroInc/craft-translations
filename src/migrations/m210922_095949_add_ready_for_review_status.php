@@ -44,9 +44,9 @@ class m210922_095949_add_ready_for_review_status extends Migration
         echo "m210922_095949_add_ready_for_review_status cannot be reverted.\n";
         return false;
     }
-
-    private function dropConstraint($contraint, $table)
+    
+    private function dropConstraint($constraint, $table)
     {
-        Craft::$app->getDb()->createCommand("ALTER TABLE {{%$table}} DROP CONSTRAINT IF EXISTS $contraint")->execute();
+        Craft::$app->getDb()->createCommand("ALTER TABLE {{%$table}} DROP CONSTRAINT IF EXISTS {{%$constraint}}")->execute();
     }
 }
