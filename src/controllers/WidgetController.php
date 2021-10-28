@@ -480,7 +480,7 @@ class WidgetController extends Controller
                 // Is the element more recent than the file?
                 if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
                     // Translated file XML
-                    $translatedXML = $file->target;
+                    $translatedXML = $file->source;
 
                     // Current entries XML
                     $currentXML = Translations::$plugin->elementToFileConverter->convert(
