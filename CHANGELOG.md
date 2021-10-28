@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.0.3 - 2021-10-28
+
+### Fixed
+
+- `m210922_095949_add_ready_for_review_status` PostgreSQL migration issue (#231)
+- Use `$file->source` instead of `$file->target` for "Modified Source Entries" source html
+- Added margin to 'updates available' button on Translation dashboard
+
 ## 2.0.2 - 2021-10-25
 
 ### Added
