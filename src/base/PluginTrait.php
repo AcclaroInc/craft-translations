@@ -1,7 +1,7 @@
 <?php
+
 namespace acclaro\translations\base;
 
-use acclaro\translations;
 use acclaro\translations\services\TranslationsService;
 
 use Craft;

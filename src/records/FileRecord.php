@@ -10,10 +10,8 @@
 
 namespace acclaro\translations\records;
 
-use acclaro\translations\Translations;
-
-use Craft;
 use craft\db\ActiveRecord;
+use acclaro\translations\Constants;
 
 /**
  * @author    Acclaro
@@ -27,6 +25,6 @@ class FileRecord extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%translations_files}}';
+        return Constants::TABLE_FILES;
     }
 }

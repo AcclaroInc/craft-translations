@@ -13,9 +13,10 @@ namespace acclaro\translations\elements;
 use Craft;
 use craft\base\Element;
 use yii\helpers\FileHelper;
-use acclaro\translations\Translations;
 use craft\elements\db\ElementQueryInterface;
-use acclaro\translations\services\StaticTranslation;
+
+use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 use acclaro\translations\elements\db\StaticTranslationQuery;
 
 
@@ -26,10 +27,6 @@ use acclaro\translations\elements\db\StaticTranslationQuery;
  */
 class StaticTranslations extends Element
 {
-
-    const TRANSLATED = 'translated';
-    const UNTRANSLATED = 'untranslated';
-
     public $original;
     public $translateId;
     public $translation;
@@ -69,10 +66,10 @@ class StaticTranslations extends Element
     public function getTranslateStatus()
     {
         if ($this->original != $this->translation) {
-            return static::TRANSLATED;
+            return Constants::STATUS_STATIC_TRANSLATION_TRANSLATED;
         }
 
-        return static::UNTRANSLATED;
+        return Constants::STATUS_STATIC_TRANSLATION_UNTRANSLATED;
     }
 
     /**

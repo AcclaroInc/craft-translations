@@ -11,10 +11,10 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
-use craft\fields\Matrix;
+use Exception;
 use craft\base\Element;
 use craft\elements\Category;
-use craft\base\ElementInterface;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\models\CategoryDraftModel;
 use acclaro\translations\records\CategoryDraftRecord;
@@ -152,17 +152,10 @@ class CategoryDraftRepository
             }
         }
 
-        $nestedFieldType = [
-            'craft\fields\Matrix',
-            'craft\fields\Assets',
-            'verbb\supertable\fields\SuperTableField',
-            'benf\neo\Field'
-        ];
-
         foreach ($draft->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
-            if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
+            if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
                 if (isset($content[$field->handle]) && $content[$field->handle] !== null) { 
                     $data['fields'][$field->id] = $content[$field->handle];
                 }
@@ -241,5 +234,31 @@ class CategoryDraftRepository
 
             throw $e;
         }
+    }
+
+    public function createDraft(Category $category, $site, $orderName, $sourceSite)
+    {
+        try {
+            $draft = $this->makeNewDraft();
+            
+            $draft->name = sprintf('%s [%s]', $orderName, $site);
+            $draft->id = $category->id;
+            $draft->title = $category->title;
+            $draft->site = $site;
+            $draft->siteId = $site;
+            $draft->sourceSite = $sourceSite;
+
+            $post = Translations::$plugin->elementTranslator->toPostArray($category);
+
+            $draft->setFieldValues($post);
+
+            $this->saveDraft($draft, $post);
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), 'translations');
+            return [];
+        }
+
     }
 }

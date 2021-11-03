@@ -10,10 +10,10 @@
 
 namespace acclaro\translations\records;
 
-use craft\db\Table;
+use craft\records\User;
 use craft\db\ActiveRecord;
 use yii\db\ActiveQueryInterface;
-use acclaro\translations\Translations;
+use acclaro\translations\Constants;
 
 /**
  * @author    Acclaro
@@ -30,7 +30,7 @@ class WidgetRecord extends ActiveRecord
      */
     public static function tableName(): string
     {
-        return '{{%translations_widgets}}';
+        return Constants::TABLE_WIDGET;
     }
     
     /**

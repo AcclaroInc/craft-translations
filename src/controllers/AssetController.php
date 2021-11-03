@@ -3,8 +3,6 @@
 namespace acclaro\translations\controllers;
 
 use Craft;
-use craft\base\Element;
-use craft\elements\Asset;
 use acclaro\translations\Translations;
 use acclaro\translations\Constants;
 
@@ -148,43 +146,39 @@ class AssetController extends BaseController
 
         $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $asset->id);
 
-        if ($file) {
-            $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+        $transaction = Craft::$app->getDb()->beginTransaction();
 
-            $file->status = Constants::ORDER_STATUS_PUBLISHED;
-            $file->draftId = 0;
-
-            Translations::$plugin->fileRepository->saveFile($file);
-
-            $areAllFilesPublished = true;
-
-            foreach ($order->files as $file) {
-                if ($file->status !== Constants::ORDER_STATUS_PUBLISHED) {
-                    $areAllFilesPublished = false;
-                    break;
-                }
-            }
-
-            if ($areAllFilesPublished) {
-                $order->status = Constants::ORDER_STATUS_PUBLISHED;
-
+        try {
+            if ($file) {
+                $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+    
+                $file->status = Constants::ORDER_STATUS_PUBLISHED;
+                $file->draftId = 0;
+    
+                Translations::$plugin->fileRepository->saveFile($file);
+    
+                $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
                 Translations::$plugin->orderRepository->saveOrder($order);
             }
-        }
+    
+            if (Translations::$plugin->assetDraftRepository->publishDraft($draft)) {
+                $this->redirect($asset->getCpEditUrl(), 302, true);
+    
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+                $transaction->commit();
 
-        if (Translations::$plugin->assetDraftRepository->publishDraft($draft)) {
-            $this->redirect($asset->getCpEditUrl(), 302, true);
+                return Translations::$plugin->assetDraftRepository->deleteDraft($draft);
+            } else {
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+                $transaction->rollBack();
 
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
-
-            return Translations::$plugin->assetDraftRepository->deleteDraft($draft);
-        } else {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
-
-            // Send the draft back to the template
-            Craft::$app->urlManager->setRouteParams(array(
-                'asset' => $draft
-            ));
+                // Send the draft back to the template
+                Craft::$app->urlManager->setRouteParams(array(
+                    'asset' => $draft
+                ));
+            }
+        } catch (\Exception $e) {
+            $transaction->rollBack();
         }
     }
 

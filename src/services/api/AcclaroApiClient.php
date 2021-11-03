@@ -2,15 +2,11 @@
 
 namespace acclaro\translations\services\api;
 
-use acclaro\translations\Constants;
 use Craft;
 use Exception;
 use GuzzleHttp\Client;
-use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\RequestOptions;
-use Psr\Http\Message\ResponseInterface;
-use GuzzleHttp\Exception\RequestException;
+use acclaro\translations\Constants;
 
 class AcclaroApiClient
 {
@@ -63,7 +59,7 @@ class AcclaroApiClient
             mkdir($tempPath);
         }
 
-        $filename = 'api-response-'.$endpoint.'-'.date('YmdHis').'.txt';
+        $filename = 'api-response-'.$endpoint.'-'.date('YmdHis').'.' . Constants::FILE_FORMAT_TXT;
 
         $filePath = $tempPath.'/'.$filename;
 
@@ -330,9 +326,6 @@ class AcclaroApiClient
 
     public function requestFileCallback($orderId, $fileId, $url)
     {
-        // var_dump($orderId);
-        // var_dump($fileId);
-        // var_dump($url);
         return $this->post('RequestFileCallback', array(
             'orderid' => $orderId,
             'fileid' => $fileId,

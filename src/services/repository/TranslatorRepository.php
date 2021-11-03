@@ -12,7 +12,7 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
-use acclaro\translations\Translations;
+use acclaro\translations\Constants;
 use acclaro\translations\models\TranslatorModel;
 use acclaro\translations\records\TranslatorRecord;
 
@@ -259,7 +259,7 @@ class TranslatorRepository
         $translators = array();
 
         foreach ($this->getActiveTranslators() as $translator) {
-            if ($translator->service == 'acclaro') {
+            if ($translator->service === Constants::TRANSLATOR_ACCLARO) {
                 $translators[] = $translator->id;
             }
         }

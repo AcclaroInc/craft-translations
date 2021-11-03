@@ -11,10 +11,7 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\db\Query;
-use craft\helpers\Db;
 use craft\base\Widget;
-use acclaro\translations\services\App;
 use acclaro\translations\records\WidgetRecord;
 use acclaro\translations\services\repository\TranslatorRepository;
 

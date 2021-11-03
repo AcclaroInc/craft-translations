@@ -11,12 +11,10 @@
 
 namespace acclaro\translations\services;
 
-use acclaro\translations\Constants;
 use Craft;
-use Exception;
 use DOMDocument;
 use craft\base\Element;
-use acclaro\translations\services\App;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 
 class ElementToFileConverter
@@ -235,7 +233,7 @@ class ElementToFileConverter
             $element = isset($element[0]) ? $element[0] : $element;
     
             return (string)$element->getAttribute('elementId');
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             Craft::error(Translations::$plugin->translator->translate('app', $e->getMessage()));
         }
         

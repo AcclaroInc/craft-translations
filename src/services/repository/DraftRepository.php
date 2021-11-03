@@ -10,31 +10,26 @@
 
 namespace acclaro\translations\services\repository;
 
-use acclaro\translations\Constants;
 use Craft;
-use DateTime;
 use Exception;
 use craft\db\Query;
-use craft\elements\User;
+use craft\elements\Asset;
 use craft\models\Section;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
 use yii\web\NotFoundHttpException;
-use acclaro\translations\Translations;
 use craft\errors\InvalidElementException;
+
+use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\CreateDrafts;
-use craft\elements\Asset;
 
 class DraftRepository
 {
-    private $creatorId;
-
-    private $allSitesHandle = [];
-
     /**
      * @return \craft\elements\Entry|null
      */
@@ -80,39 +75,6 @@ class DraftRepository
         Craft::$app->elements->saveElement($draft, true, true, false);
 
         return Craft::$app->getDrafts()->publishDraft($draft);
-    }
-
-    public function deleteAutoPropagatedDrafts($draftId, $targetSite)
-    {
-        if (empty($draftId) || empty($targetSite)) {
-            return;
-        }
-
-        $transaction = Craft::$app->getDb()->beginTransaction();
-        try {
-            $query = (new Query())
-                ->select('elements_sites.id')
-                ->from(['{{%elements_sites}} elements_sites'])
-                ->innerJoin('{{%elements}} elements', '[[elements.id]] = [[elements_sites.elementId]]')
-                ->where(['elements.draftId' => $draftId,])
-                ->andWhere(['!=', 'elements_sites.siteId', $targetSite])
-                ->all();
-
-            $propagatedElements = [];
-            foreach ($query as $key => $id) {
-                $propagatedElements[] = $id['id'];
-            }
-            $response = Craft::$app->db->createCommand()
-                ->delete('{{%elements_sites}}', array('IN', 'id', $propagatedElements))
-                ->execute();
-            
-            $transaction->commit();
-        } catch (\Throwable $e) {
-            $transaction->rollBack();
-            throw $e;
-        }
-
-        return $response;
     }
 
     public function isTranslationDraft($draftId, $elementId=null)
@@ -184,13 +146,8 @@ class DraftRepository
                 throw new InvalidElementException($draft);
             }
 
-            // Let's remove the auto-propagated drafts
-            //Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
-
             // Apply the draft to the entry
             $newEntry = Craft::$app->getDrafts()->publishDraft($draft);
-
-
         } catch (InvalidElementException $e) {
             Craft::$app->getSession()->setError(Craft::t('app', 'Couldn’t publish draft.'));
             // Send the draft back to the template
@@ -214,9 +171,9 @@ class DraftRepository
                 ->select('siteId')
                 ->from('{{%elements_sites}}')
                 ->where([
-                                'enabled' => true,
-                                'elementId' => $element->id
-                        ])
+                    'enabled' => true,
+                    'elementId' => $element->id
+                ])
                 ->column();
 
         if ($element->getSection()->propagationMethod === Section::PROPAGATION_METHOD_CUSTOM && array_diff($supportedSites, $enabledSites)) {
@@ -239,15 +196,7 @@ class DraftRepository
         $currentElement = 0;
 
         $createDrafts = new CreateDrafts();
-        $creator = User::find()
-                ->admin()
-                ->orderBy(['elements.id' => SORT_ASC])
-                ->one();
 
-        $this->creatorId = $creator->id;
-
-        $this->allSitesHandle = $this->getAllSitesHandle();
-        
         $orderFiles = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
 
         foreach ($orderFiles as $file) {
@@ -275,7 +224,6 @@ class DraftRepository
             } else {
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
-
             }
 
             try {
@@ -316,13 +264,13 @@ class DraftRepository
     {
         switch (get_class($element)) {
             case Entry::class:
-                $draft = $this->createEntryDraft($element, $site, $order->title);
+                $draft = Translations::$plugin->entryRepository->createDraft($element, $site, $order->title);
                 break;
             case GlobalSet::class:
-                $draft = $this->createGlobalSetDraft($element, $site, $order->title);
+                $draft = Translations::$plugin->globalSetDraftRepository->createDraft($element, $site, $order->title);
                 break;
             case Category::class:
-                $draft = $this->createCategoryDraft($element, $site, $order->title, $order->sourceSite);
+                $draft = Translations::$plugin->categoryDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
                 break;
             case Asset::class:
                 $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
@@ -359,9 +307,6 @@ class DraftRepository
             
             Translations::$plugin->fileRepository->saveFile($file);
             
-            // Delete draft elements that are automatically propagated for other sites
-            // Translations::$plugin->draftRepository->deleteAutoPropagatedDrafts($file->draftId, $file->targetSite);
-            
             return $file;
         } catch (Exception $e) {
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not create draft Error: ' .$e->getMessage()));
@@ -370,91 +315,13 @@ class DraftRepository
             $file->draftId = $draft->draftId;
             $file->sourceSite = $order->sourceSite;
             $file->targetSite = $targetSite;
-            $file->status = 'canceled';
+            $file->status = Constants::FILE_STATUS_CANCELED;
             $file->wordCount = isset($wordCounts[$draft->id]) ? $wordCounts[$draft->id] : 0;
             
             Translations::$plugin->fileRepository->saveFile($file);
             
             return false;
         }
-    }
-
-    public function createEntryDraft(Entry $entry, $site, $orderName)
-    {
-
-        try{
-            $handle = isset($this->allSitesHandle[$site]) ? $this->allSitesHandle[$site] : "";
-            $name = sprintf('%s [%s]', $orderName, $handle);
-            $notes = '';
-            $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
-            //$supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
-
-            $newAttributes = [
-                // 'enabledForSite' => in_array($site, $supportedSites),
-                'siteId' => $site,
-                'uri' => $elementURI,
-            ];
-
-            $draft = Translations::$plugin->draftRepository->makeNewDraft($entry, $this->creatorId, $name, $notes, $newAttributes);
-            
-            return $draft;
-        } catch (Exception $e) {
-
-            Craft::error( '['. __METHOD__ .'] CreateEntryDraft exception:: '.$e->getMessage(), 'translations' );
-            return [];
-        }
-
-    }
-
-    public function createGlobalSetDraft(GlobalSet $globalSet, $site, $orderName)
-    {
-        try {
-            $draft = Translations::$plugin->globalSetDraftRepository->makeNewDraft();
-            $draft->name = sprintf('%s [%s]', $orderName, $site);
-            $draft->id = $globalSet->id;
-            $draft->site = $site;
-            $draft->siteId = $site;
-
-            $post = Translations::$plugin->elementTranslator->toPostArray($globalSet);
-
-            $draft->setFieldValues($post);
-
-            Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $post);
-
-            return $draft;
-        } catch (Exception $e) {
-
-            Craft::error( '['. __METHOD__ .'] CreateGlobalSetDraft exception:: '.$e->getMessage(), 'translations' );
-            return [];
-        }
-
-    }
-
-    public function createCategoryDraft(Category $category, $site, $orderName, $sourceSite)
-    {
-        try {
-            $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
-            
-            $draft->name = sprintf('%s [%s]', $orderName, $site);
-            $draft->id = $category->id;
-            $draft->title = $category->title;
-            $draft->site = $site;
-            $draft->siteId = $site;
-            $draft->sourceSite = $sourceSite;
-
-            $post = Translations::$plugin->elementTranslator->toPostArray($category);
-
-            $draft->setFieldValues($post);
-            
-            
-            Translations::$plugin->categoryDraftRepository->saveDraft($draft, $post);
-            return $draft;
-        } catch (Exception $e) {
-
-            Craft::error( '['. __METHOD__ .'] CreateCategoryDraft exception:: '.$e->getMessage(), 'translations');
-            return [];
-        }
-
     }
 
     /**
@@ -594,23 +461,5 @@ class DraftRepository
         $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts applied'));
 
         Translations::$plugin->orderRepository->saveOrder($order);
-    }
-    
-    /**
-     * getAllSitesHandle
-     *
-     * @return void
-     */
-    public function getAllSitesHandle()
-    {
-        $allSitesHandle = [];
-        $allSites = Craft::$app->getSites()->getAllSites();
-        
-        foreach($allSites as $site)
-        {
-            $allSitesHandle[$site->id] = $site->handle;
-        }
-
-        return $allSitesHandle;
     }
 }

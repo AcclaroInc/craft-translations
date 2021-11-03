@@ -10,11 +10,6 @@
 
 namespace acclaro\translations\models;
 
-use acclaro\translations\Translations;
-use acclaro\translations\services\App;
-
-
-use Craft;
 use craft\base\Model;
 
 /**

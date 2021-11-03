@@ -11,12 +11,14 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
+use craft\elements\User;
 use craft\elements\Entry;
-use craft\base\ElementInterface;
 use acclaro\translations\Translations;
 
 class EntryRepository
 {
+    private $allSitesHandle = [];
+
     /**
      * @param  int|string $orderId
      * @return \craft\elements\Entry|null
@@ -76,5 +78,34 @@ class EntryRepository
             throw new InvalidConfigException('Invalid section ID: ' . $id);
         }
         return $section;
+    }
+
+    public function createDraft(Entry $entry, $site, $orderName)
+    {
+        $this->allSitesHandle = Translations::$plugin->siteRepository->getAllSitesHandle();
+
+        try{
+            $handle = isset($this->allSitesHandle[$site]) ? $this->allSitesHandle[$site] : "";
+            $name = sprintf('%s [%s]', $orderName, $handle);
+            $notes = '';
+            $creator = User::find()
+                ->admin()
+                ->orderBy(['elements.id' => SORT_ASC])
+                ->one();
+            $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
+
+            $newAttributes = [
+                'siteId' => $site,
+                'uri' => $elementURI,
+            ];
+
+            $draft = Translations::$plugin->draftRepository->makeNewDraft($entry, $creator->id, $name, $notes, $newAttributes);
+            
+            return $draft;
+        } catch (\Exception $e) {
+            Craft::error( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), 'translations' );
+            return [];
+        }
+
     }
 }
