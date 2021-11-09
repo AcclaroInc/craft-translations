@@ -445,7 +445,8 @@ class OrderController extends Controller
 
         if (
             !is_null($variables['translator']) &&
-            $variables['translator']->service !== Constants::TRANSLATOR_DEFAULT
+            $variables['translator']->service !== Constants::TRANSLATOR_DEFAULT &&
+            $variables['order']->status !== Constants::ORDER_STATUS_NEW
         ) {
             $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
                 $variables['translator']->service,

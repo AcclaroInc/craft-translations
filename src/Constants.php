@@ -71,8 +71,8 @@ class Constants
     const FILE_STATUS_IN_PROGRESS   = 'in progress';
 
     // Acclaro Constants
-    const PRODUCTION_URL    = 'https://my.acclaro.com/api2/ ';
-    const SANDBOX_URL       = 'https://apisandbox.acclaro.com/api2/';
+    const PRODUCTION_URL    = 'https://my.acclaro.com/api/v2/';
+    const SANDBOX_URL       = 'https://apisandbox.acclaro.com/api/v2/';
 
     const DELIVERY      = 'craftcms';
     const DEFAULT_TAG   = 'CraftCMS';
@@ -155,4 +155,30 @@ class Constants
         'verbb\supertable\fields\SuperTableField',
         'benf\neo\Field'
     ];
+
+    // Api Constant
+    const REQUEST_METHOD_GET = 'GET';
+    const REQUEST_METHOD_POST = 'POST';
+
+    // Acclaro Api
+    const ACCLARO_API_GET_ACCOUNT           = 'info/account';
+    const ACCLARO_API_GET_LANGUAGES         = 'info/languages';
+    const ACCLARO_API_GET_LANGUAGE_PAIRS    = 'info/language-pairs';
+
+    const ACCLARO_API_CREATE_ORDER              = 'orders';
+    const ACCLARO_API_GET_ORDER                 = 'orders/{orderid}';
+    const ACCLARO_API_EDIT_ORDER                = 'orders/{orderid}';
+    const ACCLARO_API_SUBMIT_ORDER              = 'orders/{orderid}/submit';
+    const ACCLARO_API_ADD_ORDER_TAG             = 'orders/{orderid}/tag';
+    const ACCLARO_API_DELETE_ORDER_TAG          = 'orders/{orderid}/tag-delete';
+    const ACCLARO_API_ADD_ORDER_COMMENT         = 'orders/{orderid}/comment';
+    const ACCLARO_API_REQUEST_ORDER_CALLBACK    = 'orders/{orderid}/callback';
+
+    const ACCLARO_API_SEND_SOURCE_FILE      = 'orders/{orderid}/files';
+    const ACCLARO_API_GET_ORDER_FILES_INFO  = 'orders/{orderid}/files-info';
+    const ACCLARO_API_GET_FILE              = 'orders/{orderid}/files/{fileid}';
+    const ACCLARO_API_GET_FILE_STATUS       = 'orders/{orderid}/files/{fileid}/status';
+    const ACCLARO_API_ADD_FILE_COMMENT      = 'orders/{orderid}/files/{fileid}/comment';
+    const ACCLARO_API_REQUEST_FILE_CALLBACK = 'orders/{orderid}/files/{fileid}/callback';
+    const ACCLARO_API_ADD_FILE_REVIEW_URL   = 'orders/{orderid}/files/{fileid}/review-url';
 }
