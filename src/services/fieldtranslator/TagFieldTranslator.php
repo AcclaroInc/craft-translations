@@ -10,11 +10,9 @@
 
 namespace acclaro\translations\services\fieldtranslator;
 
-use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use craft\elements\Tag;
-use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 

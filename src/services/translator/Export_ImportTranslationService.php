@@ -11,18 +11,15 @@
 namespace acclaro\translations\services\translator;
 
 use Craft;
-use DateTime;
-use Exception;
+use craft\elements\Asset;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
+
 use acclaro\translations\Constants;
-use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
-use acclaro\translations\Translations;
-use acclaro\translations\services\api\AcclaroApiClient;
-use craft\elements\Asset;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {

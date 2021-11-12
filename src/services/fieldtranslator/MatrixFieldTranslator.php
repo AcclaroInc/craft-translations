@@ -10,11 +10,8 @@
 
 namespace acclaro\translations\services\fieldtranslator;
 
-use Craft;
 use craft\base\Field;
 use craft\base\Element;
-use acclaro\translations\services\App;
-use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
 class MatrixFieldTranslator extends GenericFieldTranslator
@@ -69,8 +66,6 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->enabled,
-                // 'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,
-                // 'siteId'            => $element->siteId,
                 'fields'            => $elementTranslator->toPostArray($block),
             );
         }

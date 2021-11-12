@@ -11,7 +11,6 @@
 namespace acclaro\translations;
 
 use Craft;
-use craft\db\Table;
 use craft\events\RegisterUserPermissionsEvent;
 use craft\services\UserPermissions;
 use yii\base\Event;
@@ -24,7 +23,6 @@ use craft\helpers\UrlHelper;
 use craft\events\DraftEvent;
 use craft\services\Elements;
 use craft\events\PluginEvent;
-use craft\events\ElementEvent;
 use craft\services\Drafts;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
@@ -210,7 +208,7 @@ class Translations extends Plugin
 
         if ($drafts) {
             Craft::$app->queue->push(new DeleteDrafts([
-                'description' => 'Deleting Translation Drafts',
+                'description' => Constants::JOB_DELETING_DRAFT,
                 'drafts' => $drafts,
             ]));
         }
@@ -238,32 +236,32 @@ class Translations extends Plugin
         if ($currentUser->can('translations:dashboard')) {
             $subNavs['dashboard'] = [
                 'label' => 'Dashboard',
-                'url' => 'translations',
+                'url' => Constants::URL_TRANSLATIONS,
             ];
         }
         if ($currentUser->can('translations:orders')) {
             $subNavs['orders'] = [
                 'label' => 'Orders',
-                'url' => 'translations/orders',
+                'url' => Constants::URL_ORDERS,
             ];
         }
         if ($currentUser->can('translations:translator')) {
             $subNavs['translators'] = [
                 'label' => 'Translators',
-                'url' => 'translations/translators',
+                'url' => Constants::URL_TRANSLATOR,
             ];
         }
         if ($currentUser->can('translations:static-translations')) {
             $subNavs['static-translations'] = [
                 'label' => 'Static Translations',
-                'url' => 'translations/static-translations',
+                'url' => Constants::URL_STATIC_TRANSLATIONS,
             ];
         }
 
         if ($currentUser->can('translations:settings')) {
             $subNavs['settings'] = [
                 'label' => 'Settings',
-                'url' => 'translations/settings',
+                'url' => Constants::URL_SETTINGS,
             ];
         }
 
@@ -279,7 +277,7 @@ class Translations extends Plugin
     public function getSettingsResponse()
     {
         // Just redirect to the plugin settings page
-        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('translations/settings'));
+        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl(Constants::URL_SETTINGS));
     }
 
     protected function createSettingsModel()
@@ -472,7 +470,7 @@ class Translations extends Plugin
             'orders' => $orders,
             'openOrders' => $openOrders,
             'sites' => Craft::$app->sites->getAllSiteIds(),
-            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus('translations')
+            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus(Constants::PLUGIN_HANDLE)
         ];
         $data = json_encode($data);
         
@@ -647,7 +645,7 @@ class Translations extends Plugin
 
             if ($drafts) {
                 Craft::$app->queue->push(new DeleteDrafts([
-                    'description' => 'Deleting Translation Drafts',
+                    'description' => Constants::JOB_DELETING_DRAFT,
                     'drafts' => $drafts,
                 ]));
             }

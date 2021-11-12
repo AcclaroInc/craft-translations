@@ -11,53 +11,36 @@
 namespace acclaro\translations\controllers;
 
 use Craft;
-use DateTime;
-use craft\db\Table;
 use craft\db\Query;
-use craft\helpers\Db;
 use yii\web\Response;
 use craft\helpers\Json;
 use craft\web\Controller;
 use craft\services\Users;
 use craft\elements\Entry;
-use craft\elements\Sites;
-use yii\web\HttpException;
 use craft\helpers\UrlHelper;
-use craft\elements\GlobalSet;
 use craft\helpers\FileHelper;
 use craft\events\WidgetEvent;
 use craft\helpers\ArrayHelper;
-use craft\helpers\StringHelper;
 use craft\base\WidgetInterface;
 use craft\widgets\MissingWidget;
-use craft\helpers\ElementHelper;
-use SebastianBergmann\Diff\Differ;
+use craft\models\Updates as UpdatesModel;
 use craft\errors\WidgetNotFoundException;
 use craft\errors\MissingComponentException;
-use acclaro\translations\services\App;
 use craft\helpers\Component as ComponentHelper;
-use acclaro\translations\elements\Order;
-use acclaro\translations\models\FileModel;
+
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\records\WidgetRecord;
 use acclaro\translations\Translations;
-use SebastianBergmann\Diff\Output\DiffOnlyOutputBuilder;
 use acclaro\translations\assetbundles\DashboardAssets;
-use acclaro\translations\services\repository\FileRepository;
-use acclaro\translations\services\repository\SiteRepository;
-use acclaro\translations\assetbundles\RecentlyModifiedAssets;
 use acclaro\translations\Constants;
-use craft\models\Updates as UpdatesModel;
-use Exception;
 
 // Widget Classes
 use acclaro\translations\widgets\News;
 use acclaro\translations\widgets\Translators;
 use acclaro\translations\widgets\RecentOrders;
-use acclaro\translations\widgets\RecentEntries;
-use acclaro\translations\widgets\RecentlyModified;
 use acclaro\translations\widgets\LanguageCoverage;
 use acclaro\translations\widgets\NewAndModifiedEntries;
+use yii\web\BadRequestHttpException;
 
 /**
  * @author    Acclaro
@@ -102,24 +85,24 @@ class WidgetController extends Controller
         if (!$currentUser->can('translations:dashboard')) {
             switch (true) {
                 case $currentUser->can('translations:orders'):
-                    return $this->redirect('translations/orders', 302, true);
+                    return $this->redirect(Constants::URL_ORDERS, 302, true);
                     break;
 
                 case $currentUser->can('translations:translator'):
-                    return $this->redirect('translations/translators', 302, true);
+                    return $this->redirect(Constants::URL_TRANSLATOR, 302, true);
                     break;
                 
                 case $currentUser->can('translations:settings'):
-                    return $this->redirect('translations/settings', 302, true);
+                    return $this->redirect(Constants::URL_SETTINGS, 302, true);
                     break;
                 
                 default:
-                    return $this->redirect('entries', 302, true);
+                    return $this->redirect(Constants::URL_ENTRIES, 302, true);
                     break;
             }
         }
 
-        $pluginHandle = "translations";
+        $pluginHandle = Constants::PLUGIN_HANDLE;
 
         $view = $this->getView();
         $namespace = $view->getNamespace();
@@ -192,23 +175,18 @@ class WidgetController extends Controller
         }
 
         // Check For Plugin Updates
-        $variables['updates'] = $this->checkForUpdate('translations');
+        $variables['updates'] = $this->checkForUpdate(Constants::PLUGIN_HANDLE);
 
         // Register Dashboard Assets
         $view->registerAssetBundle(DashboardAssets::class);
         $view->registerJs('window.translationsdashboard = new Craft.Translations.Dashboard(' . Json::encode($widgetTypeInfo) . ');');
 
         $view->registerJs($allWidgetJs);
-        $variables['licenseStatus'] = Craft::$app->plugins->getPluginLicenseKeyStatus('translations');
+        $variables['licenseStatus'] = Craft::$app->plugins->getPluginLicenseKeyStatus(Constants::PLUGIN_HANDLE);
         $variables['baseAssetsUrl'] = Craft::$app->assetManager->getPublishedUrl(
-            '@acclaro/translations/assetbundles/src',
+            Constants::URL_BASE_ASSETS,
             true
         );
-        foreach ($widgetTypeInfo as $key => $widget) {
-            if ($key::displayName() == 'New Source Entries') {
-                unset($widgetTypeInfo[$key]);
-            }
-        }
 
         $variables['widgetTypes'] = $widgetTypeInfo;
         $variables['selectedSubnavItem'] = 'dashboard';
@@ -381,14 +359,19 @@ class WidgetController extends Controller
                 $inQueue = FileRecord::find()
                     ->select(['elementId'])
                     ->distinct(true)
-                    ->where(['status' => ['new','preview','in progress','complete']])
+                    ->where(['status' => [
+                        Constants::FILE_STATUS_NEW,
+                        Constants::FILE_STATUS_PREVIEW,
+                        Constants::FILE_STATUS_IN_PROGRESS,
+                        Constants::FILE_STATUS_COMPLETE,
+                        ]])
                     ->andWhere(['targetSite' => $id])
                     ->count();
 
                 $translated = FileRecord::find()
                     ->select(['elementId'])
                     ->distinct(true)
-                    ->where(['status' => 'published'])
+                    ->where(['status' => Constants::FILE_STATUS_PUBLISHED])
                     ->andWhere(['targetSite' => $id])
                     ->count();
 
@@ -440,12 +423,12 @@ class WidgetController extends Controller
 
         // Get Files and order by most recently updated
         $records = FileRecord::find()
-            ->where(['status' => 'published'])
+            ->where(['status' => Constants::FILE_STATUS_PUBLISHED])
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->all();
         // Get in progress Files and order
         $inProgressRecords = FileRecord::find()
-            ->where(['status' => 'in progress'])
+            ->where(['status' => Constants::FILE_STATUS_IN_PROGRESS])
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->all();
 
@@ -746,14 +729,11 @@ class WidgetController extends Controller
             if ($isNewWidget) {
                 // Set the sortOrder
                 $maxSortOrder = (new Query())
-                    ->from(['{{%translations_widgets}}'])
+                    ->from([Constants::TABLE_WIDGET])
                     ->where(['userId' => Craft::$app->getUser()->getIdentity()->id])
                     ->max('[[sortOrder]]');
-                if (get_class($widget) == "acclaro\\translations\\widgets\\RecentlyModified") {
-                    $widgetRecord->sortOrder = $maxSortOrder;
-                } else {
-                    $widgetRecord->sortOrder = $maxSortOrder + 1;
-                }
+
+                $widgetRecord->sortOrder = $maxSortOrder + 1;
             }
             $widgetRecord->save(false);
             // Now that we have a widget ID, save it on the model
@@ -963,7 +943,7 @@ class WidgetController extends Controller
     {
         $user = Craft::$app->getUser()->getIdentity();
         if (!$user) {
-            throw new Exception('No logged-in user');
+            throw new \Exception('No logged-in user');
         }
         
         // Get value from user preferences
@@ -975,9 +955,9 @@ class WidgetController extends Controller
         }
 
         $results = $this->_createWidgetsQuery()
-        ->where(['userId' => $user->id])
-        ->orderBy(['sortOrder' => SORT_ASC])
-        ->all();
+            ->where(['userId' => $user->id])
+            ->orderBy(['sortOrder' => SORT_ASC])
+            ->all();
         $widgets = [];
         foreach ($results as $result) {
             $widgets[] = $this->createWidget($result);
@@ -1000,7 +980,7 @@ class WidgetController extends Controller
                 'type',
                 'settings',
             ])
-            ->from(['{{%translations_widgets}}']);
+            ->from([Constants::TABLE_WIDGET]);
     }
 
     /**

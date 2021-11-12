@@ -11,10 +11,10 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
-use craft\fields\Matrix;
+use Exception;
 use craft\base\Element;
 use craft\elements\Asset;
-use craft\base\ElementInterface;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\models\AssetDraftModel;
 use acclaro\translations\records\AssetDraftRecord;
@@ -152,19 +152,12 @@ class AssetDraftRepository
             }
         }
         
-        $nestedFieldType = [
-            'craft\fields\Matrix',
-            'craft\fields\Assets',
-            'verbb\supertable\fields\SuperTableField',
-            'benf\neo\Field'
-        ];
-
         $asset = $this->getAssetById($record->assetId, $draft->site);
 
         foreach ($asset->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
-            if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
+            if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
                 if (isset($content[$field->handle]) && $content[$field->handle] !== null) { 
                     $data['fields'][$field->id] = $content[$field->handle];
                 }

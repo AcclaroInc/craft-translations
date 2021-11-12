@@ -11,11 +11,7 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
-use Exception;
 use craft\elements\Category;
-use craft\elements\db\ElementQuery;
-use craft\elements\db\CategoryQuery;
-use acclaro\translations\Translations;
 
 class CategoryRepository
 {
@@ -24,7 +20,6 @@ class CategoryRepository
         return Category::find()
                 ->siteId($attributes['siteId'])
                 ->groupId($attributes['groupId'])
-                // ->slug($attributes['slug'])
                 ->one();
     }
 

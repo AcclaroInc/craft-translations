@@ -12,11 +12,7 @@ namespace acclaro\translations\models;
 
 use craft\elements\Asset;
 use craft\behaviors\DraftBehavior;
-use craft\validators\NumberValidator;
 use craft\validators\SiteIdValidator;
-use craft\validators\StringValidator;
-use craft\validators\DateTimeValidator;
-use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use craft\behaviors\FieldLayoutBehavior;
 use craft\behaviors\CustomFieldBehavior;

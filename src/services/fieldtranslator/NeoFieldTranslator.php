@@ -10,12 +10,9 @@
 
 namespace acclaro\translations\services\fieldtranslator;
 
-use Craft;
 use craft\base\Field;
 use craft\base\Element;
 use benf\neo\elements\Block;
-use acclaro\translations\services\App;
-use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
 class NeoFieldTranslator extends GenericFieldTranslator

@@ -11,9 +11,8 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
-use craft\fields\Matrix;
 use craft\elements\GlobalSet;
-use craft\base\ElementInterface;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\models\GlobalSetDraftModel;
 use acclaro\translations\records\GlobalSetDraftRecord;
@@ -135,17 +134,10 @@ class GlobalSetDraftRepository
 
         $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
 
-        $nestedFieldType = [
-            'craft\fields\Matrix',
-            'craft\fields\Assets',
-            'verbb\supertable\fields\SuperTableField',
-            'benf\neo\Field'
-        ];
-
         foreach ($draft->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
-            if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
+            if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
                 if (isset($content[$field->handle]) && $content[$field->handle] !== null) { 
                     $data['fields'][$field->id] = $content[$field->handle];
                 }
@@ -224,5 +216,29 @@ class GlobalSetDraftRepository
 
             throw $e;
         }
+    }
+
+    public function createDraft(GlobalSet $globalSet, $site, $orderName)
+    {
+        try {
+            $draft = $this->makeNewDraft();
+            $draft->name = sprintf('%s [%s]', $orderName, $site);
+            $draft->id = $globalSet->id;
+            $draft->site = $site;
+            $draft->siteId = $site;
+
+            $post = Translations::$plugin->elementTranslator->toPostArray($globalSet);
+
+            $draft->setFieldValues($post);
+
+            $this->saveDraft($draft, $post);
+
+            return $draft;
+        } catch (Exception $e) {
+
+            Craft::error( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), 'translations' );
+            return [];
+        }
+
     }
 }

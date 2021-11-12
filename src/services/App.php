@@ -2,9 +2,9 @@
 
 namespace acclaro\translations\services;
 
-use acclaro\translations\elements\actions\OrderDelete;
 use craft\base\Component;
-use yii\base\Application as Application;
+use acclaro\translations\elements\actions\OrderDelete;
+use acclaro\translations\elements\actions\OrderEdit;
 
 /**
  * App Service
@@ -147,9 +147,9 @@ class App extends Component
     public $elementToFileConverter;
     
     /**
-     * @var AcclaroService
+     * @var Services
      */
-    public $acclaroService;
+    public $services;
     
     /**
      * @var OrderSearchParams
@@ -161,9 +161,14 @@ class App extends Component
      */
     public $orderDelete;
     
+    /**
+     * @var OrderEdit
+     */
+    public $orderEdit;
+    
     public function init()
     {
-        $this->acclaroService = new AcclaroService();
+        $this->services = new Services();
         $this->urlHelper = new UrlHelper();
         $this->urlGenerator = new UrlGenerator();
         $this->translator = new Translator();
@@ -191,5 +196,6 @@ class App extends Component
         $this->elementToFileConverter = new ElementToFileConverter();
         $this->orderSearchParams = new OrderSearchParams();
         $this->orderDelete = new OrderDelete();
+        $this->orderEdit = new OrderEdit();
     }
 }

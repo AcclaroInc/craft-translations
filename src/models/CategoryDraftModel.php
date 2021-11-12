@@ -12,11 +12,7 @@ namespace acclaro\translations\models;
 
 use craft\elements\Category;
 use craft\behaviors\DraftBehavior;
-use craft\validators\NumberValidator;
 use craft\validators\SiteIdValidator;
-use craft\validators\StringValidator;
-use craft\validators\DateTimeValidator;
-use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use craft\behaviors\FieldLayoutBehavior;
 use craft\behaviors\CustomFieldBehavior;
@@ -120,11 +116,6 @@ class CategoryDraftModel extends Category
         } else {
             $this->_category = Translations::$plugin->categoryRepository->getCategoryById($this->categoryId); // this works for edit draft
         }
-        
-        // echo '<pre>';
-        // echo "//======================================================================<br>// return getCategory()<br>//======================================================================<br>";
-        // var_dump($this->_category);
-        // echo '</pre>';
 
         return $this->_category;
     }

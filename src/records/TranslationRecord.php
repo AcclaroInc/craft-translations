@@ -10,10 +10,8 @@
 
 namespace acclaro\translations\records;
 
-use acclaro\translations\Translations;
-
-use Craft;
 use craft\db\ActiveRecord;
+use acclaro\translations\Constants;
 
 /**
  * @author    Acclaro
@@ -22,12 +20,11 @@ use craft\db\ActiveRecord;
  */
 class TranslationRecord extends ActiveRecord
 {
-
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return '{{%translations_translations}}';
+        return Constants::TABLE_TRANSLATIONS;
     }
 }

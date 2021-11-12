@@ -11,8 +11,6 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
-use Exception;
-use acclaro\translations\Translations;
 use craft\elements\Entry;
 
 class ElementRepository

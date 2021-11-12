@@ -10,20 +10,16 @@
 
 namespace acclaro\translations\models;
 
+use Craft;
 use craft\elements\GlobalSet;
-use craft\validators\NumberValidator;
+use craft\behaviors\DraftBehavior;
 use craft\validators\SiteIdValidator;
-use craft\validators\StringValidator;
 use craft\validators\DateTimeValidator;
-use acclaro\translations\services\App;
-use acclaro\translations\Translations;
-use acclaro\translations\records\GlobalSetDraftRecord;
 use craft\behaviors\CustomFieldBehavior;
 use craft\behaviors\FieldLayoutBehavior;
-use craft\behaviors\DraftBehavior;
 
-use Craft;
-use craft\base\Model;
+use acclaro\translations\Translations;
+use acclaro\translations\records\GlobalSetDraftRecord;
 
 /**
  * @author    Acclaro
@@ -63,12 +59,9 @@ class GlobalSetDraftModel extends GlobalSet
         $rules = parent::rules();
         $rules[] = [['name', 'globalSetId', 'site', 'data'], 'required'];
         $rules[] = ['site', SiteIdValidator::class];
-        // $rules[] = ['wordCount', NumberValidator::class];
         $rules[] = [['dateCreated', 'dateUpdated'], DateTimeValidator::class];
         $rules[] = ['enabled', 'default', 'value' => true];
         $rules[] = ['archived', 'default', 'value' => false];
-        // $rules[] = ['slug', 'default', StringValidator::class];
-        // $rules[] = ['uri', 'default', StringValidator::class];
         $rules[] = ['enabledForSite', 'default', 'value' => true];
 
         return $rules;
@@ -94,7 +87,6 @@ class GlobalSetDraftModel extends GlobalSet
 
         $globalSetData = json_decode($attributes['data'], true);
         $fieldContent = isset($globalSetData['fields']) ? $globalSetData['fields'] : null;
-        // $attributes['draftId'] = $attributes['id'];
         $attributes['id'] = $attributes['globalSetId'];
         
         $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'globalSetId')));
