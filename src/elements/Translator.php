@@ -11,11 +11,9 @@
 namespace acclaro\translations\elements;
 
 use Craft;
-use craft\base\Model;
 use craft\base\Element;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
-use craft\elements\db\ElementQueryInterface;
-use acclaro\translations\elements\db\TranslatorQuery;
 
 /**
  * @author    Acclaro
@@ -45,7 +43,7 @@ class Translator extends Element
         foreach ($allServices as $service) {
             $sources[] = [
                 "key"       => $service['service'],
-                "label"     => $service['service'] == "export_import" ? "Export/Import" : ucwords($service['service']),
+                "label"     => $service['service'] == Constants::TRANSLATOR_DEFAULT ? "Export/Import" : ucwords($service['service']),
                 "criteria"  => [
                     "service"    => $service['service']
                 ],

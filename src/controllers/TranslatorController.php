@@ -10,13 +10,12 @@
 
 namespace acclaro\translations\controllers;
 
-use acclaro\translations\Constants;
 use Craft;
-use Exception;
 use craft\web\Controller;
 use yii\web\HttpException;
+
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
-use acclaro\translations\services\AcclaroService;
 
 /**
  * @author    Acclaro
@@ -117,7 +116,7 @@ class TranslatorController extends Controller
         //Make Export/Import Translator automatically active
         if ($translator->service !== Constants::TRANSLATOR_DEFAULT)
         {
-            $auth = (new AcclaroService())->authenticateService($service, $settings);
+            $auth = Translations::$plugin->services->authenticateService($service, $settings);
             if (! $auth) {
                 $translator->status = "";
                 $variables['translator'] = $translator;
@@ -126,7 +125,7 @@ class TranslatorController extends Controller
             }
         }
 
-        $translator->status = 'active';
+        $translator->status = Constants::TRANSLATOR_STATUS_ACTIVE;
         Translations::$plugin->translatorRepository->saveTranslator($translator);
 
         Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator saved.'));

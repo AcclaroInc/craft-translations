@@ -12,7 +12,6 @@ namespace acclaro\translations\services;
 
 use Craft;
 use acclaro\translations\Translations;
-use acclaro\translations\services\App;
 
 class OrderSearchParams
 {

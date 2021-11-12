@@ -10,12 +10,8 @@
 
 namespace acclaro\translations\services\translator;
 
-use Craft;
-use Exception;
-use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
-use acclaro\translations\Translations;
 
 interface TranslationServiceInterface
 {

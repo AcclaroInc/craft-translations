@@ -10,27 +10,27 @@
 
 namespace acclaro\translations\services\repository;
 
-use acclaro\translations\Constants;
 use Craft;
-use craft\elements\Category;
-use DateTime;
 use Exception;
 use craft\db\Query;
+use craft\db\Table;
 use craft\helpers\Db;
+use craft\helpers\App;
+use craft\elements\Tag;
 use craft\records\Element;
-use craft\helpers\UrlHelper;
 use craft\elements\Asset;
+use craft\elements\Category;
+use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
 use craft\elements\db\ElementQuery;
+
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
-use craft\db\Table;
-use craft\elements\Tag;
-use craft\helpers\App;
 
 class OrderRepository
 {
@@ -82,7 +82,10 @@ class OrderRepository
     {
         $orders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.status', array(
-                'published', 'complete', 'in preparation', 'in progress'
+                Constants::ORDER_STATUS_PUBLISHED,
+                Constants::ORDER_STATUS_COMPLETE,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_IN_PROGRESS
             )))
             ->all();
         $orderIds = [];
@@ -100,7 +103,12 @@ class OrderRepository
     {
         $openOrders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.status', array(
-                'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval', 'complete'
+                Constants::ORDER_STATUS_IN_PROGRESS,
+                Constants::ORDER_STATUS_IN_REVIEW,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_GETTING_QUOTE,
+                Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                Constants::ORDER_STATUS_COMPLETE
             )))
             ->all();
             
@@ -114,7 +122,10 @@ class OrderRepository
     {
         $inProgressOrders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.status', array(
-                'getting quote', 'needs approval', 'in preparation', 'in progress'
+                Constants::ORDER_STATUS_GETTING_QUOTE,
+                Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_IN_PROGRESS
             )))
             ->all();
             
@@ -138,10 +149,11 @@ class OrderRepository
      */
     public function getCompleteOrders()
     {
-        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', 'complete'))->all();
+        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', Constants::ORDER_STATUS_COMPLETE))->all();
         return $results;
     }
-    
+
+    // ! TODO: check if this is of any use
     public function getOrderStatuses()
     {
         return array(
@@ -163,7 +175,7 @@ class OrderRepository
     {
         $order = new Order();
 
-        $order->status = 'new';
+        $order->status = Constants::ORDER_STATUS_NEW;
         
         $order->sourceSite = $sourceSite ?: Craft::$app->sites->getPrimarySite()->id;
         
@@ -238,7 +250,10 @@ class OrderRepository
             $orderCount = Order::find()
                 ->andWhere(Db::parseParam('translations_orders.translatorId', $translators))
                 ->andWhere(Db::parseParam('translations_orders.status', array(
-                    'getting quote', 'needs approval', 'in preparation', 'in progress'
+                    Constants::ORDER_STATUS_GETTING_QUOTE,
+                    Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                    Constants::ORDER_STATUS_IN_PREPARATION,
+                    Constants::ORDER_STATUS_IN_PROGRESS
                 )))
                 ->count();
         }
@@ -422,7 +437,7 @@ class OrderRepository
 
         $order->status = $submitOrderResponse->status;
 
-        $order->dateOrdered = new DateTime();
+        $order->dateOrdered = new \DateTime();
 
         $success = Craft::$app->getElements()->saveElement($order);
 

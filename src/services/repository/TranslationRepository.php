@@ -9,13 +9,9 @@
  */
 
 namespace acclaro\translations\services\repository;
-use acclaro\translations\Translations;
 
 use Craft;
 use Exception;
-use craft\i18n\PhpMessageSource;
-use yii\i18n\MessageSource;
-use yii\base\Application;
 use ReflectionClass;
 use acclaro\translations\models\TranslationModel;
 use acclaro\translations\records\TranslationRecord;

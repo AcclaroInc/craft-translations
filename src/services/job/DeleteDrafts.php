@@ -10,8 +10,8 @@
 
 namespace acclaro\translations\services\job;
 
+use acclaro\translations\Constants;
 use Craft;
-use Exception;
 
 use craft\queue\BaseJob;
 use craft\elements\Entry;
@@ -52,6 +52,6 @@ class DeleteDrafts extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Deleting Translation Drafts';
+        return Constants::JOB_DELETING_DRAFT;
     }
 }

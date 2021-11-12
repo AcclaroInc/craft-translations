@@ -10,15 +10,11 @@
 
 namespace acclaro\translations\services\job\acclaro;
 
-use Craft;
-use Exception;
-
+use acclaro\translations\Constants;
 use craft\queue\BaseJob;
-use craft\elements\Entry;
-use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
 
-class UdpateReviewFileUrls extends BaseJob
+class UpdateReviewFileUrls extends BaseJob
 {
     public $order;
     public $sandboxMode;
@@ -53,6 +49,6 @@ class UdpateReviewFileUrls extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Updating Acclaro review urls';
+        return Constants::JOB_ACCLARO_UPDATING_REVIEW_URL;
     }
 }

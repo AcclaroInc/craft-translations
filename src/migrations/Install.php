@@ -10,13 +10,11 @@
 
 namespace acclaro\translations\migrations;
 
-use acclaro\translations\Constants;
-use acclaro\translations\Translations;
-
 use Craft;
-use craft\config\DbConfig;
-use craft\db\Migration;
 use craft\db\Query;
+use craft\db\Migration;
+
+use acclaro\translations\Constants;
 
 /**
  * @author    Acclaro
@@ -69,11 +67,11 @@ class Install extends Migration
     {
         $tablesCreated = false;
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_files}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_FILES);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translations_files}}',
+                Constants::TABLE_FILES,
                 [
                     'id'                => $this->primaryKey(),
                     'orderId'           => $this->integer()->notNull(),
@@ -81,7 +79,7 @@ class Install extends Migration
                     'draftId'           => $this->integer(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSite'        => $this->integer()->notNull(),
-                    'status'            => $this->enum('status', Constants::FILE_STATUSES)->defaultValue('new'),
+                    'status'            => $this->enum('status', Constants::FILE_STATUSES)->defaultValue(Constants::FILE_STATUS_NEW),
                     'wordCount'         => $this->integer(),
                     'source'            => $this->longText(),
                     'target'            => $this->longText(),
@@ -96,11 +94,11 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_globalsetdrafts}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_GLOBAL_SET_DRAFT);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translations_globalsetdrafts}}',
+                Constants::TABLE_GLOBAL_SET_DRAFT,
                 [
                     'id'            => $this->primaryKey(),
                     'name'          => $this->string()->notNull(),
@@ -114,18 +112,18 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_orders}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_ORDERS);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translations_orders}}',
+                Constants::TABLE_ORDERS,
                 [
                     'id'                => $this->integer()->notNull(),
                     'translatorId'      => $this->integer(),
                     'ownerId'           => $this->integer()->notNull(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSites'       => $this->string(1020)->notNull()->defaultValue(''),
-                    'status'            => $this->enum('status', Constants::ORDER_STATUSES)->defaultValue('new'),
+                    'status'            => $this->enum('status', Constants::ORDER_STATUSES)->defaultValue(Constants::ORDER_STATUS_NEW),
                     'requestedDueDate'  => $this->dateTime(),
                     'orderDueDate'      => $this->dateTime(),
                     'comments'          => $this->text(),
@@ -146,16 +144,16 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_translators}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_TRANSLATORS);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translations_translators}}',
+                Constants::TABLE_TRANSLATORS,
                 [
                     'id'            => $this->primaryKey(),
                     'label'         => $this->string()->notNull()->defaultValue(''),
                     'service'       => $this->string()->notNull()->defaultValue(''),
-                    'status'        => $this->enum('status', ['active', 'inactive'])->defaultValue('inactive'),
+                    'status'        => $this->enum('status', Constants::TRANSLATOR_STATUSES)->defaultValue(Constants::TRANSLATOR_STATUS_INACTIVE),
                     'settings'      => $this->text()->notNull(),
                     'dateCreated'   => $this->dateTime()->notNull(),
                     'dateUpdated'   => $this->dateTime()->notNull(),
@@ -164,11 +162,11 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_translations}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_TRANSLATIONS);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translations_translations}}',
+                Constants::TABLE_TRANSLATIONS,
                 [
                     'id'                => $this->primaryKey(),
                     'sourceSite'        => $this->integer()->notNull(),
@@ -182,11 +180,11 @@ class Install extends Migration
             );
         }
         
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_widgets}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_WIDGET);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translations_widgets}}',
+                Constants::TABLE_WIDGET,
                 [
                     'id' => $this->primaryKey(),
                     'userId' => $this->integer()->notNull(),
@@ -202,11 +200,11 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_categorydrafts}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_CATEGORY_DRAFT);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translations_categorydrafts}}',
+                Constants::TABLE_CATEGORY_DRAFT,
                 [
                     'id'            => $this->primaryKey(),
                     'name'          => $this->string()->notNull(),
@@ -221,11 +219,11 @@ class Install extends Migration
             );
         }
         
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%translations_assetdrafts}}');
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_ASSET_DRAFT);
         if ($tableSchema === null) {
             $tablesCreated = true;
             $this->createTable(
-                '{{%translations_assetdrafts}}',
+                Constants::TABLE_ASSET_DRAFT,
                 [
                     'id'            => $this->primaryKey(),
                     'name'          => $this->string()->notNull(),
@@ -249,10 +247,10 @@ class Install extends Migration
      */
     protected function createIndexes()
     {
-        $this->createIndex(null, '{{%translations_files}}', ['orderId'], false);
-        $this->createIndex(null, '{{%translations_files}}', ['elementId'], false);
-        $this->createIndex(null, '{{%translations_globalsetdrafts}}', ['globalSetId'], false);
-        $this->createIndex(null, '{{%translations_widgets}}', ['userId'], false);
+        $this->createIndex(null, Constants::TABLE_FILES, ['orderId'], false);
+        $this->createIndex(null, Constants::TABLE_FILES, ['elementId'], false);
+        $this->createIndex(null, Constants::TABLE_GLOBAL_SET_DRAFT, ['globalSetId'], false);
+        $this->createIndex(null, Constants::TABLE_WIDGET, ['userId'], false);
     }
 
     /**
@@ -261,14 +259,14 @@ class Install extends Migration
      */
     protected function addForeignKeys()
     {
-        $this->addForeignKey(null,'{{%translations_files}}',['orderId'],'{{%translations_orders}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translations_files}}',['elementId'],'{{%elements}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translations_globalsetdrafts}}',['globalSetId'],'{{%globalsets}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translations_globalsetdrafts}}',['site'],'{{%sites}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translations_orders}}',['id'],'{{%elements}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translations_orders}}',['ownerId'],'{{%users}}',['id'],'CASCADE',null);
-        $this->addForeignKey(null,'{{%translations_orders}}',['translatorId'],'{{%translations_translators}}',['id'],'SET NULL',null);
-        $this->addForeignKey(null,'{{%translations_widgets}}',['userId'],'{{%users}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null, Constants::TABLE_FILES,['orderId'], Constants::TABLE_ORDERS,['id'],'CASCADE',null);
+        $this->addForeignKey(null, Constants::TABLE_FILES,['elementId'],'{{%elements}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null, Constants::TABLE_GLOBAL_SET_DRAFT,['globalSetId'],'{{%globalsets}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null, Constants::TABLE_GLOBAL_SET_DRAFT,['site'],'{{%sites}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null, Constants::TABLE_ORDERS,['id'],'{{%elements}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null, Constants::TABLE_ORDERS,['ownerId'],'{{%users}}',['id'],'CASCADE',null);
+        $this->addForeignKey(null, Constants::TABLE_ORDERS,['translatorId'], Constants::TABLE_TRANSLATORS,['id'],'SET NULL',null);
+        $this->addForeignKey(null, Constants::TABLE_WIDGET,['userId'],'{{%users}}',['id'],'CASCADE',null);
     }
 
     /**
@@ -283,7 +281,7 @@ class Install extends Migration
             "status" => "active",
             "settings" => "[]"
         ];
-        $this->upsert('{{%translations_translators}}', $defaultTranslator);
+        $this->upsert(Constants::TABLE_TRANSLATORS, $defaultTranslator);
 
         // Default Tag group
         $data = [
@@ -298,21 +296,21 @@ class Install extends Migration
      */
     protected function removeTables()
     {
-        $this->dropTableIfExists('{{%translations_files}}');
+        $this->dropTableIfExists(Constants::TABLE_FILES);
 
-        $this->dropTableIfExists('{{%translations_globalsetdrafts}}');
+        $this->dropTableIfExists(Constants::TABLE_GLOBAL_SET_DRAFT);
         
-        $this->dropTableIfExists('{{%translations_categorydrafts}}');
+        $this->dropTableIfExists(Constants::TABLE_CATEGORY_DRAFT);
         
-        $this->dropTableIfExists('{{%translations_assetdrafts}}');
+        $this->dropTableIfExists(Constants::TABLE_ASSET_DRAFT);
 
-        $this->dropTableIfExists('{{%translations_orders}}');
+        $this->dropTableIfExists(Constants::TABLE_ORDERS);
 
-        $this->dropTableIfExists('{{%translations_translators}}');
+        $this->dropTableIfExists(Constants::TABLE_TRANSLATORS);
 
-        $this->dropTableIfExists('{{%translations_translations}}');
+        $this->dropTableIfExists(Constants::TABLE_TRANSLATIONS);
         
-        $this->dropTableIfExists('{{%translations_widgets}}');
+        $this->dropTableIfExists(Constants::TABLE_WIDGET);
     }
 
     /**

@@ -10,16 +10,11 @@
 
 namespace acclaro\translations\models;
 
-use acclaro\translations\Translations;
-use acclaro\translations\services\App;
-
-
 use Craft;
 use craft\base\Model;
 use yii\validators\NumberValidator;
+use acclaro\translations\Constants;
 use craft\validators\SiteIdValidator;
-use craft\validators\StringValidator;
-use craft\validators\UniqueValidator;
 use craft\validators\DateTimeValidator;
 
 /**
@@ -64,9 +59,9 @@ class FileModel extends Model
     {
         parent::init();
 
-        $this->status = $this->status ? $this->status : 'new';
-        $this->sourceSite = $this->sourceSite ? $this->sourceSite : '';
-        $this->targetSite = $this->targetSite ? $this->targetSite : '';
+        $this->status = $this->status ? : Constants::FILE_STATUS_NEW;
+        $this->sourceSite = $this->sourceSite ?: '';
+        $this->targetSite = $this->targetSite ?: '';
     }
 
     public function rules()
@@ -82,19 +77,19 @@ class FileModel extends Model
     public function getStatusLabel()
     {
         switch ($this->status) {
-            case 'new':
-            case 'preview':
-            case 'in progress':
+            case Constants::FILE_STATUS_NEW:
+            case Constants::FILE_STATUS_PREVIEW:
+            case Constants::FILE_STATUS_IN_PROGRESS:
                 return 'In progress';
-            case 'ready for review':
+            case Constants::FILE_STATUS_REVIEW_READY:
                 return 'Ready for review';
-            case 'complete':
+            case Constants::FILE_STATUS_COMPLETE:
                 return 'Ready to apply';
-            case 'canceled':
+            case Constants::FILE_STATUS_CANCELED:
                 return 'Canceled';
-            case 'published':
+            case Constants::FILE_STATUS_PUBLISHED:
                 return 'Applied';
-            case 'failed':
+            case Constants::FILE_STATUS_FAILED:
                 return 'Failed';
         }
     }
@@ -102,18 +97,18 @@ class FileModel extends Model
     public function getStatusColor()
     {
         switch ($this->status) {
-            case 'new':
-            case 'preview':
-            case 'in progress':
+            case Constants::FILE_STATUS_NEW:
+            case Constants::FILE_STATUS_PREVIEW:
+            case Constants::FILE_STATUS_IN_PROGRESS:
                 return 'orange';
-            case 'ready for review':
+            case Constants::FILE_STATUS_REVIEW_READY:
                 return 'yellow';
-            case 'complete':
+            case Constants::FILE_STATUS_COMPLETE:
                 return 'blue';
-            case 'failed':
-            case 'canceled':
+            case Constants::FILE_STATUS_FAILED:
+            case Constants::FILE_STATUS_CANCELED:
                 return 'red';
-            case 'published':
+            case Constants::FILE_STATUS_PUBLISHED:
                 return 'green';
             default:
                 return '';

@@ -61,7 +61,7 @@ class OrderDelete extends Delete
             ]);
         }
 
-        return Craft::t('app', 'Are you sure you want to trash the selected {type}?', [
+        return Craft::t('app', 'Are you sure you want to delete the selected {type}?', [
             'type' => $elementType::pluralLowerDisplayName(),
         ]);
     }

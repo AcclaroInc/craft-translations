@@ -10,13 +10,9 @@
 
 namespace acclaro\translations\services\job;
 
-use Craft;
-use Exception;
-
+use acclaro\translations\Constants;
 use craft\queue\BaseJob;
-use craft\elements\Entry;
 use acclaro\translations\Translations;
-use acclaro\translations\services\job\UdpateReviewFileUrls;
 
 class RegeneratePreviewUrls extends BaseJob
 {
@@ -34,6 +30,6 @@ class RegeneratePreviewUrls extends BaseJob
     
     protected function defaultDescription()
     {
-        return 'Regenerating preview urls';
+        return Constants::JOB_REGENERATING_PREVIEW_URL;
     }
 }

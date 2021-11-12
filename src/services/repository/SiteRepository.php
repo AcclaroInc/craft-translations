@@ -83,4 +83,22 @@ class SiteRepository
 
         return $languages;
     }
+
+    /**
+     * getAllSitesHandle
+     *
+     * @return void
+     */
+    public function getAllSitesHandle()
+    {
+        $allSitesHandle = [];
+        $allSites = Craft::$app->getSites()->getAllSites();
+        
+        foreach($allSites as $site)
+        {
+            $allSitesHandle[$site->id] = $site->handle;
+        }
+
+        return $allSitesHandle;
+    }
 }

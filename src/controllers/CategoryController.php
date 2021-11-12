@@ -12,10 +12,10 @@
 
 namespace acclaro\translations\controllers;
 
-use acclaro\translations\Constants;
-use acclaro\translations\Translations;
 use Craft;
 use craft\web\Controller;
+use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 
 class CategoryController extends Controller
 {
@@ -164,43 +164,39 @@ class CategoryController extends Controller
 
         $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $category->id);
 
-        if ($file) {
-            $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+        $transaction = Craft::$app->getDb()->beginTransaction();
 
-            $file->status = Constants::FILE_STATUS_PUBLISHED;
-            $file->draftId = 0;
-
-            Translations::$plugin->fileRepository->saveFile($file);
-
-            $areAllFilesPublished = true;
-
-            foreach ($order->files as $file) {
-                if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
-                    $areAllFilesPublished = false;
-                    break;
-                }
-            }
-
-            if ($areAllFilesPublished) {
-                $order->status = Constants::ORDER_STATUS_PUBLISHED;
-
+        try {
+            if ($file) {
+                $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+    
+                $file->status = Constants::FILE_STATUS_PUBLISHED;
+                $file->draftId = 0;
+    
+                Translations::$plugin->fileRepository->saveFile($file);
+    
+                $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
                 Translations::$plugin->orderRepository->saveOrder($order);
             }
-        }
+    
+            if (Translations::$plugin->categoryDraftRepository->publishDraft($draft)) {
+                $this->redirect($category->getCpEditUrl(), 302, true);
+    
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+                $transaction->commit();
 
-        if (Translations::$plugin->categoryDraftRepository->publishDraft($draft)) {
-            $this->redirect($category->getCpEditUrl(), 302, true);
+                return Translations::$plugin->categoryDraftRepository->deleteDraft($draft);
+            } else {
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+                $transaction->rollBack();
 
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
-
-            return Translations::$plugin->categoryDraftRepository->deleteDraft($draft);
-        } else {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
-
-            // Send the draft back to the template
-            Craft::$app->urlManager->setRouteParams(array(
-                'draft' => $draft
-            ));
+                // Send the draft back to the template
+                Craft::$app->urlManager->setRouteParams(array(
+                    'draft' => $draft
+                ));
+            }
+        } catch (\Exception $e) {
+            $transaction->rollBack();
         }
     }
 

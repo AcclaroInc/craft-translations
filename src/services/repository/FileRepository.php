@@ -10,17 +10,35 @@
 
 namespace acclaro\translations\services\repository;
 
-use acclaro\translations\Constants;
 use Craft;
 use Exception;
+use yii\db\Query;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
-use yii\db\Query;
 
 class FileRepository
 {
+    protected $defaultColumns = [
+        'id',
+        'orderId',
+        'elementId',
+        'draftId',
+        'sourceSite',
+        'targetSite',
+        'status',
+        'wordCount',
+        'source',
+        'target',
+        'previewUrl',
+        'serviceFileId',
+        'dateUpdated',
+        'dateDelivered',
+        'dateDeleted'
+    ];
+
     /**
      * @param  int|string $fileId
      * @return \acclaro\translations\models\FileModel
@@ -33,23 +51,7 @@ class FileRepository
             return false;
         }
 
-        $file = new FileModel($record->toArray([
-            'id',
-            'orderId',
-            'elementId',
-            'draftId',
-            'sourceSite',
-            'targetSite',
-            'status',
-            'wordCount',
-            'source',
-            'target',
-            'previewUrl',
-            'serviceFileId',
-            'dateUpdated',
-            'dateDelivered',
-            'dateDeleted',
-        ]));
+        $file = new FileModel($record->toArray($this->defaultColumns));
 
         return $file;
     }
@@ -73,22 +75,7 @@ class FileRepository
             return false;
         }
         
-        $file = new FileModel($record->toArray([
-            'id',
-            'orderId',
-            'elementId',
-            'draftId',
-            'sourceSite',
-            'targetSite',
-            'status',
-            'wordCount',
-            'source',
-            'target',
-            'previewUrl',
-            'serviceFileId',
-            'dateDelivered',
-            'dateDeleted',
-        ]));
+        $file = new FileModel($record->toArray($this->defaultColumns));
 
         return $file;
     }
@@ -116,23 +103,7 @@ class FileRepository
         $files = array();
 
         foreach ($records as $key => $record) {
-            $files[$key] = new FileModel($record->toArray([
-                'id',
-                'orderId',
-                'elementId',
-                'draftId',
-                'sourceSite',
-                'targetSite',
-                'status',
-                'wordCount',
-                'source',
-                'target',
-                'previewUrl',
-                'serviceFileId',
-                'dateUpdated',
-                'dateDelivered',
-                'dateDeleted',
-            ]));
+            $files[$key] = new FileModel($record->toArray($this->defaultColumns));
         }
 
         return $files ? $files : array();
@@ -158,22 +129,7 @@ class FileRepository
         $files = array();
 
         foreach ($records as $key => $record) {
-            $files[$key] = new FileModel($record->toArray([
-                'id',
-                'orderId',
-                'elementId',
-                'draftId',
-                'sourceSite',
-                'targetSite',
-                'status',
-                'wordCount',
-                'source',
-                'target',
-                'previewUrl',
-                'serviceFileId',
-                'dateDelivered',
-                'dateDeleted',
-            ]));
+            $files[$key] = new FileModel($record->toArray($this->defaultColumns));
         }
 
         return $files ? $files : array();
@@ -199,22 +155,7 @@ class FileRepository
         $files = array();
 
         foreach ($records as $key => $record) {
-            $files[$key] = new FileModel($record->toArray([
-                'id',
-                'orderId',
-                'elementId',
-                'draftId',
-                'sourceSite',
-                'targetSite',
-                'status',
-                'wordCount',
-                'source',
-                'target',
-                'previewUrl',
-                'serviceFileId',
-                'dateDelivered',
-                'dateDeleted',
-            ]));
+            $files[$key] = new FileModel($record->toArray($this->defaultColumns));
         }
 
         return $files;
@@ -233,23 +174,7 @@ class FileRepository
         $files = array();
 
         foreach ($records as $key => $record) {
-            $files[$key] = new FileModel($record->toArray([
-                'id',
-                'orderId',
-                'elementId',
-                'draftId',
-                'sourceSite',
-                'targetSite',
-                'status',
-                'wordCount',
-                'source',
-                'target',
-                'previewUrl',
-                'serviceFileId',
-                'dateUpdated',
-                'dateDelivered',
-                'dateDeleted',
-            ]));
+            $files[$key] = new FileModel($record->toArray($this->defaultColumns));
         }
 
         return $files ? $files : array();
@@ -454,7 +379,7 @@ class FileRepository
 
             $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
 
-            $translationService->udpateReviewFileUrls($order);
+            $translationService->updateReviewFileUrls($order);
         }
 
         return true;
@@ -469,10 +394,16 @@ class FileRepository
 
         $query = (new Query())
             ->select('files.orderId')
-            ->from(['{{%translations_orders}} translations_orders'])
-            ->innerJoin('{{%translations_files}} files', '[[files.orderId]] = [[translations_orders.id]]')
+            ->from([Constants::TABLE_ORDERS . ' translations_orders'])
+            ->innerJoin(Constants::TABLE_FILES . ' files', '[[files.orderId]] = [[translations_orders.id]]')
             ->where(['files.elementId' => $elementId,])
-            ->andWhere(['translations_orders.status' => ['new','getting quote','needs approval','in preparation','in progress']])
+            ->andWhere(['translations_orders.status' => [
+                Constants::ORDER_STATUS_NEW,
+                Constants::ORDER_STATUS_GETTING_QUOTE,
+                Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_IN_PROGRESS
+                ]])
             ->andWhere(['dateDeleted' => null])
             ->groupBy('orderId')
             ->all();
@@ -546,8 +477,6 @@ class FileRepository
         );
         $file->wordCount = $wordCount;
 
-        // return without saving as acclaro order files are created later
-        // Translations::$plugin->fileRepository->saveFile($file);
         return $file;
     }
 
