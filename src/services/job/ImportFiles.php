@@ -95,13 +95,19 @@ class ImportFiles extends BaseJob
             } else if ($this->fileFormat === Constants::FILE_FORMAT_XML) {
                 return $this->processXmlFile($asset, $file_content);
             } else {
-                $this->order->logActivity(Translations::$plugin->translator->translate('app', "File {($this->fileNames[$asset->id] ?? $asset->getFilename())} is invalid, please try again with a valid zip/xml/json/csv file."));
+                $this->order->logActivity(sprintf(
+                    "File {%s} is invalid, please try again with a valid zip/xml/json/csv file.",
+                    $this->fileNames[$asset->id] ?? $asset->getFilename()
+                ));
                 Translations::$plugin->orderRepository->saveOrder($this->order);
                 return false;
             }
         } else {
             //Invalid
-            $this->order->logActivity(Translations::$plugin->translator->translate('app', "File {($this->fileNames[$asset->id] ?? $asset->getFilename())} is invalid, please try again with a valid zip/xml/json/csv file."));
+            $this->order->logActivity(sprintf(
+                "File {%s} is invalid, please try again with a valid zip/xml/json/csv file.",
+                $this->fileNames[$asset->id] ?? $asset->getFilename()
+            ));
             Translations::$plugin->orderRepository->saveOrder($this->order);
             return false;
         }

@@ -349,8 +349,8 @@ class OrderController extends Controller
                         $variables['translatedFiles'][$file->id] = $tempElement->title;
                     }
 
-                    if ($translatedElement && $element instanceof Entry) {
-                        $previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($translatedElement, $file);
+                    if ($element instanceof Entry) {
+                        $previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($translatedElement ?: $tempElement, $file);
 
                         if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
                             $variables['webUrls'][$file->id] = $previewUrl;
