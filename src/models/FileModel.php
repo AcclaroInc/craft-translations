@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\models;
 
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\services\App;
 
@@ -118,5 +119,15 @@ class FileModel extends Model
             default:
                 return '';
         }
+    }
+
+    public function hasDraft()
+    {
+        return $this->draftId ?: null;
+    }
+
+    public function isComplete()
+    {
+        return $this->status === Constants::FILE_STATUS_COMPLETE;
     }
 }
