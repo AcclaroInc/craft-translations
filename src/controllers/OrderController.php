@@ -736,7 +736,7 @@ class OrderController extends Controller
                             $sourceSlug = "$sourceSite->name ($sourceSite->language)";
 
                             foreach ($translationService->getLanguagePairs($sourceLanguage) as $key => $languagePair) {
-                                $supportedLanguagePairs[] = $languagePair->target['code'];
+                                $supportedLanguagePairs[] = strtolower($languagePair->target['code']);
                             }
 
                             foreach (json_decode($order->targetSites) as $key => $siteId) {
@@ -744,7 +744,7 @@ class OrderController extends Controller
                                 $language = Translations::$plugin->siteRepository->normalizeLanguage($site->language);
                                 $targetSlug = "$site->name ($site->language)";
 
-                                if (!in_array($language, array_column($translationService->getLanguages(), 'code'))) {
+                                if (!in_array($language, array_map('strtolower', array_column($translationService->getLanguages(), 'code')))) {
                                     $unsupported = true;
                                     $unsupportedLangs[] = array(
                                         'language' => "$sourceSlug to $targetSlug"
