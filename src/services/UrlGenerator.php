@@ -177,7 +177,7 @@ class UrlGenerator
             $uri = $targets[0]['urlFormat'] ?? null;
 
             if ($uri) {
-                return $this->normalizeUri($uri, $element);
+                return str_replace('//', '/', $this->normalizeUri($uri, $element));
             }
         }
 
@@ -186,20 +186,23 @@ class UrlGenerator
 
     private function normalizeUri($newUri, $element)
     {
-        if ($newUri[0] === '{') {
-            $newUri = explode('}', $newUri, 2);
-
-            $newUri = $newUri[1] ?? $newUri[0];
-        }
         switch (strpos($newUri, '}') !== false) {
+            case stripos($newUri, '{url}'):
+                $newUri = str_ireplace('{url}', $element->url, $newUri);
             case stripos($newUri, '{slug}'):
                 $newUri = str_ireplace('{slug}', $element->slug, $newUri);
             case stripos($newUri, '{uid}'):
-                $newUri = str_ireplace('{uid}', $element->uid ?? StringHelper::UUID_PATTERN, $newUri);
+                $newUri = str_ireplace('{uid}', $element->uid, $newUri);
             default:
-                $newUri = preg_replace('/={(.*?)}/', '', $newUri);
+                $newUri = preg_replace('/{(.*?)}/', '', $newUri);
         }
 
-        return $element->url . $newUri;
+        $baseUrl = str_replace($element->uri, '', $element->url);
+
+        if (strpos($newUri, '?') !== false) {
+            return rtrim($baseUrl, '/') . '/' . ltrim($newUri, '/');
+        } else {
+            return rtrim($baseUrl, '/') . '?' . ltrim($newUri, '/');
+        }
     }
 }

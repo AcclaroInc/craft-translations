@@ -277,7 +277,6 @@ class DraftRepository
             } else {
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
-
             }
 
             try {
