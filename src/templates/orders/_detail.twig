@@ -74,6 +74,8 @@
             {% set message = "Due to the large order size, we've added a job to the Queue Manager to create translation drafts" %}
         {% elseif isProcessing == "publish" %}
             {% set message = "Due to the large order size, we've added a job to the Queue Manager to publish translation drafts" %}
+        {% elseif isProcessing == "preview" %}
+            {% set message = "Due to the large order size, we've added a job to the Queue Manager to regenarate preview urls" %}
         {% else %}
             {% set message = "Due to the large file size, we've added a job to the Queue Manager to process the upload" %}
         {% endif %}
@@ -732,6 +734,11 @@
         {{ forms.hidden({
             name: 'orderId',
             value: order.id
+        }) }}
+
+        {{ forms.hidden({
+            name: 'isProcessing',
+            value: 'preview'
         }) }}
 
         <a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %} 
