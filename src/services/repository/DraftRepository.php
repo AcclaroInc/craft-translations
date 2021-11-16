@@ -233,6 +233,7 @@ class DraftRepository
 
     public function createOrderDrafts($orderId, $wordCounts, $queue=null, $publish = true, $elementIds = null, $fileIds = null)
     {
+        $isNewDraft = false;
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         $totalElements = (count($elementIds) * count($order->getTargetSitesArray()));
@@ -271,11 +272,11 @@ class DraftRepository
             
             // Create draft only if not already exist
             if (! $file->draftId) {
+                $isNewDraft = true;
                 $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
             } else {
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
-
             }
 
             try {
@@ -307,7 +308,8 @@ class DraftRepository
 
         $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
 
-        $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
+        if ($isNewDraft)
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
 
         Translations::$plugin->orderRepository->saveOrder($order);
     }
