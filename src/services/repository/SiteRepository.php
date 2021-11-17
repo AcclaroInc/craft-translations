@@ -64,7 +64,7 @@ class SiteRepository
             $language = $this->aliases[$language];
         }
 
-        return $language;
+        return strtolower($language);
     }
 
     public function getLanguages($namePrefix = '', $excludeSite = null)

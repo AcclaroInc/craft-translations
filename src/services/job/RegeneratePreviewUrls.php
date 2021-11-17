@@ -17,11 +17,12 @@ use acclaro\translations\Translations;
 class RegeneratePreviewUrls extends BaseJob
 {
     public $order;
+    public $filePreviewUrls;
 
     public function execute($queue)
     {
 
-        Translations::$plugin->fileRepository->regeneratePreviewUrls($this->order, $queue);
+        Translations::$plugin->fileRepository->regeneratePreviewUrls($this->order, $this->filePreviewUrls, $queue);
     }
 
     public function updateProgress($queue, $progress) {

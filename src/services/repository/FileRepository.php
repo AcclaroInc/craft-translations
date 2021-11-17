@@ -336,12 +336,14 @@ class FileRepository
      * @return bool
      * @throws \Throwable
      */
-    public function regeneratePreviewUrls($order, $queue=null) {
+    public function regeneratePreviewUrls($order, $previewUrls, $queue=null) {
         $totalElements = count($order->files);
         $currentElement = 0;
 
         $service = new RegeneratePreviewUrls();
         foreach ($order->files as $file) {
+
+            if (! ($file->hasDraft() || $file->isComplete())) continue;
 
             if ($queue) {
                 $service->updateProgress($queue, $currentElement++ / $totalElements);
@@ -353,7 +355,7 @@ class FileRepository
 
                 if ($draft) {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-                    $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
+                    $file->previewUrl = $previewUrls[$file->id] ?? $draft->url;
                     $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
                         Constants::FILE_FORMAT_XML,
@@ -383,6 +385,22 @@ class FileRepository
         }
 
         return true;
+    }
+
+    public function getOrderFilesPreviewUrl($order): array
+    {
+        $filePreviewUrls = [];
+        foreach ($order->files as $file) {
+            if ($file->hasDraft() && $file->isComplete()) {
+                $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+
+                if ($draft) {
+                    $filePreviewUrls[$file->id] = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $file->targetSite);
+                }
+            }
+        }
+
+        return $filePreviewUrls;
     }
 
     /**

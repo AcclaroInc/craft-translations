@@ -316,13 +316,11 @@ class BaseController extends Controller
 
     public function actionRegeneratePreviewUrls()
     {
-        $url = ltrim(Craft::$app->getRequest()->getQueryParam('p'), 'admin/');
-
         $this->requireLogin();
         $this->requirePostRequest();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:edit')) {
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'User does have permission to edit orders'));
-            return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
+            Craft::$app->getSession()->setNotice('User does have permission to regenerate preview urls.');
+            return;
         }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
@@ -344,14 +342,17 @@ class BaseController extends Controller
         if ($order) {
 
             $totalWordCount = ($order->wordCount * count($order->getTargetSitesArray()));
+            $filePreviewUrls = Translations::$plugin->fileRepository->getOrderFilesPreviewUrl($order);
 
             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                 $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
-                    'description' => Constants::JOB_REGENERATING_PREVIEW_URL . ' for '. $order->title,
-                    'order' => $order
+                    'description' => 'Regenerating preview urls for '. $order->title,
+                    'order' => $order,
+                    'filePreviewUrls' => $filePreviewUrls
                 ]));
 
                 if ($job) {
+                    Craft::$app->getSession()->set('importQueued', "1");
                     $params = [
                         'id' => (int) $job,
                         'notice' => 'Done building draft previews',
@@ -362,7 +363,7 @@ class BaseController extends Controller
                     $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
                 }
             } else {
-                Translations::$plugin->fileRepository->regeneratePreviewUrls($order);
+                Translations::$plugin->fileRepository->regeneratePreviewUrls($order, $filePreviewUrls);
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done building draft previews'));
             }
         }

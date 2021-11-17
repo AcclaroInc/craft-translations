@@ -114,4 +114,14 @@ class FileModel extends Model
                 return '';
         }
     }
+
+    public function hasDraft()
+    {
+        return $this->draftId ?: null;
+    }
+
+    public function isComplete()
+    {
+        return $this->status === Constants::FILE_STATUS_COMPLETE;
+    }
 }

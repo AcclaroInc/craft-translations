@@ -128,7 +128,7 @@ class UrlGenerator
         $className = get_class($element);
 
         if ($className === Entry::class && !$element->getIsDraft()) {
-            $previewUrl = $this->getPrimaryPreviewTargetUrl($element);
+            $previewUrl = $element->url;
         } else {
             $route = [
                 'preview/preview', [
@@ -147,7 +147,7 @@ class UrlGenerator
                 throw new ServerErrorHttpException(Craft::t('app', 'Could not create a preview token.'));
             }
 
-            if ($element->getUrl()) {
+            if ($element->url) {
                 $previewUrl = Translations::$plugin->urlHelper->urlWithParams($this->getPrimaryPreviewTargetUrl($element), [
                     Craft::$app->getConfig()->getGeneral()->tokenParam => $token,
                 ]);
@@ -161,15 +161,41 @@ class UrlGenerator
 
     private function getPrimaryPreviewTargetUrl($element)
     {
-        if (Craft::$app->getRequest()->getIsCpRequest() && !Craft::$app->getRequest()->getIsConsoleRequest()) {
+        try {
             $targets = $element->getPreviewTargets();
-        } else {
-            // If the request comes from the job queue, get the preview targets from the section
-            // TODO: Figure out how we can construct the ['url'] param without using `renderObjectTemplate()`
-            // - Ref: https://github.com/craftcms/cms/blob/main/src/base/Element.php#L2662
+
+            return $targets[0]['url'];
+        } catch(\Exception $e) {
             $targets = $element->getSection()->previewTargets;
+            $uri = $targets[0]['urlFormat'] ?? null;
+
+            if ($uri) {
+                return str_replace('//', '/', $this->normalizeUri($uri, $element));
+            }
         }
 
-        return ($targets[0]['url'] ?? $element->getUrl());
+        return $element->url;
+    }
+
+    private function normalizeUri($newUri, $element)
+    {
+        switch (strpos($newUri, '}') !== false) {
+            case stripos($newUri, '{url}'):
+                $newUri = str_ireplace('{url}', $element->url, $newUri);
+            case stripos($newUri, '{slug}'):
+                $newUri = str_ireplace('{slug}', $element->slug, $newUri);
+            case stripos($newUri, '{uid}'):
+                $newUri = str_ireplace('{uid}', $element->uid, $newUri);
+            default:
+                $newUri = preg_replace('/{(.*?)}/', '', $newUri);
+        }
+
+        $baseUrl = str_replace($element->uri, '', $element->url);
+
+        if (strpos($newUri, '?') !== false) {
+            return rtrim($baseUrl, '/') . '/' . ltrim($newUri, '/');
+        } else {
+            return rtrim($baseUrl, '/') . '?' . ltrim($newUri, '/');
+        }
     }
 }

@@ -27,6 +27,7 @@ use craft\services\Drafts;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\DeleteElementEvent;
+use acclaro\translations\Constants;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\base\PluginTrait;
@@ -71,7 +72,7 @@ class Translations extends Plugin
     /**
      * @var string
      */
-    public $schemaVersion = '1.3.6';
+    public $schemaVersion = Constants::PLUGIN_SCHEMA_VERSION;
 
     // Public Methods
     // =========================================================================
