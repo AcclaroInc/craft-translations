@@ -9,13 +9,10 @@ use acclaro\translations\services\api\CraftApiClient;
 class SiteRepository
 {   
     protected $supportedSites = array();
-
-    protected $aliases;
+    protected $isoMapping;
 
     public function __construct()
     {
-        $this->aliases = (new CraftApiClient())->getAliases() ?: Constants::SITE_DEFAULT_ALIASES;
-
         foreach (Craft::$app->sites->getAllSiteIds() as $key => $site) {
             $this->supportedSites[] = $site;
         }
@@ -60,11 +57,11 @@ class SiteRepository
 
         $language = str_replace('_', '-', $language);
 
-        if (isset($this->aliases[$language])) {
-            $language = $this->aliases[$language];
+        if (! $this->isoMapping) {
+            $this->isoMapping = (new CraftApiClient())->getAliases();
         }
 
-        return strtolower($language);
+        return strtolower($this->isoMapping[$language] ?? $language);
     }
 
     public function getLanguages($namePrefix = '', $excludeSite = null)
