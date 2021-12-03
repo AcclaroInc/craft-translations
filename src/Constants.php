@@ -223,6 +223,7 @@ class Constants
         'vi-VN' => 'vi',
         'zh-Hans' => 'zh-CN',
         'zh-Hans-CN' => 'zh-CN',
-        'zh-Hant' => 'zh-TW'
+        'zh-Hant' => 'zh-TW',
+        'es-419' => 'es-la'
     ];
 }
