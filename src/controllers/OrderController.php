@@ -54,7 +54,7 @@ class OrderController extends Controller
 
     public function __construct($id, $module = null) {
         parent::__construct($id, $module);
-        
+
         $this->service = new OrderRepository();
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin(Constants::PLUGIN_HANDLE)->getVersion();
     }
@@ -195,8 +195,8 @@ class OrderController extends Controller
 
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['order']['sourceSite']);
 
+        $variables['orderTargetSitesObject'] = array();
         if ($variables['order']->targetSites) {
-            $variables['orderTargetSitesObject'] = array();
             foreach (json_decode($variables['order']->targetSites) as $key => $site) {
                 $variables['orderTargetSitesObject'][] =
                     (Craft::$app->getSites()->getSiteById($site) ?: [ 'language' => 'Deleted']);
@@ -511,7 +511,7 @@ class OrderController extends Controller
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
         } else {
             $order = $this->service->makeNewOrder($sourceSite);
-    
+
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
         }
 
@@ -824,7 +824,7 @@ class OrderController extends Controller
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['sourceSite']);
         $variables['translatorId'] = $variables['order']['translatorId'];
         $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
-        
+
         $userId = Craft::$app->getUser()->id;
         $user = Craft::$app->getUsers()->getUserById($userId);
 
@@ -988,7 +988,7 @@ class OrderController extends Controller
             return $this->asJson(["success" => false, "message" => "Invalid OrderId."]);
         }
         $order = $this->service->getOrderById($orderId);
-        
+
         if (!$order) {
             return $this->asJson(["success" => false, "message" => "Invalid Order."]);
         }
@@ -1073,7 +1073,7 @@ class OrderController extends Controller
                     $targetSites = $newData[$field];
                     if ($targetSites === '*') {
                         $targetSites = Craft::$app->getSites()->getAllSiteIds();
-        
+
                         $source_site = Craft::$app->getRequest()->getParam('sourceSite');
                         if (($key = array_search($source_site, $targetSites)) !== false) {
                             unset($targetSites[$key]);
@@ -1363,7 +1363,7 @@ class OrderController extends Controller
         $service = $translator->service;
         $settings = $translator->getSettings();
         $authenticate = Translations::$plugin->services->authenticateService($service, $settings);
-        
+
         if (!$authenticate && $service == Constants::TRANSLATOR_ACCLARO) {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
             Craft::$app->getSession()->setError($message);
@@ -1426,7 +1426,7 @@ class OrderController extends Controller
                 if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
                     continue;
                 }
-    
+
                 if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                     $job = Craft::$app->queue->push(new SyncOrder([
                         'description' => 'Syncing order '. $order->title,
@@ -1491,7 +1491,7 @@ class OrderController extends Controller
 
             if ($targetSites === '*') {
                 $targetSites = Craft::$app->getSites()->getAllSiteIds();
-                
+
                 $source_site = Craft::$app->getRequest()->getParam('sourceSite');
                 if (($key = array_search($source_site, $targetSites)) !== false) {
                     unset($targetSites[$key]);
@@ -1531,7 +1531,7 @@ class OrderController extends Controller
             }
 
             $order->ownerId = Craft::$app->getRequest()->getParam('ownerId');
-            
+
             $orderTags = Craft::$app->getRequest()->getParam('tags') ?? null;
 
             $order->tags = $orderTags ? json_encode($orderTags) : '';

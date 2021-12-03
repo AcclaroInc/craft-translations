@@ -572,6 +572,23 @@
                 </label>
             </div>
         </div>
+        {% if orderId and orderTargetSitesObject %}
+            <div class="field">
+                <div class="heading">
+                    <label>Target Site(s)</label>
+                </div>
+                <div class="input ltr">
+                    {% for target in orderTargetSitesObject %}
+                        <label class='float-right'>
+                            {{target.name}}
+                            <span class="light">
+                                ({{ target.language }}),
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
         {% if author %}
             <div class="data field">
                 <h5 class="heading">{{ 'Author'|t('app') }}</h5>
@@ -603,7 +620,6 @@
             <div class="input ltr">
                 <div class="float-right">
                     <label> {{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }} </label>
-                    {# <label class="pl-10"> {{ order.requestedDueDate ? order.requestedDueDate|date('H:i A') : '' }} </label> #}
                 </div>
             </div>
         </div>
@@ -741,7 +757,7 @@
             value: 'preview'
         }) }}
 
-        <a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %} 
+        <a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %}
             onclick="this.closest('form').submit();return false;" {% else %} {{ exportImportStatus }} {% endif %}>{{ "Rebuild draft previews"|t('app') }}
         </a>
     </form>
