@@ -10,12 +10,9 @@
 
 namespace acclaro\translations\services\fieldtranslator;
 
-use Craft;
 use craft\base\Field;
 use craft\base\Element;
-use craft\fields\MultiSelect;
 use craft\fields\data\MultiOptionsFieldData;
-use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 

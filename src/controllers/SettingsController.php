@@ -10,19 +10,18 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use Craft;
-use ZipArchive;
-use craft\helpers\App as CraftApp;
 use craft\web\Controller;
 use craft\helpers\Path;
-use acclaro\translations\elements\Order;
-use acclaro\translations\services\App;
-use acclaro\translations\Translations;
-use yii\web\NotFoundHttpException;
 use craft\helpers\FileHelper;
-use acclaro\translations\models\Settings;
-use acclaro\translations\services\job\DeleteDrafts;
+use craft\helpers\App as CraftApp;
 use craft\base\VolumeInterface;
+use yii\web\NotFoundHttpException;
+
+use acclaro\translations\elements\Order;
+use acclaro\translations\Translations;
+use acclaro\translations\services\job\DeleteDrafts;
 
 /**
  * @author    Acclaro
@@ -46,7 +45,7 @@ class SettingsController extends Controller
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
-            return $this->redirect('translations', 302, true);
+            return $this->redirect(Constants::URL_TRANSLATIONS, 302, true);
         }
 
         $variables = array();
@@ -127,7 +126,7 @@ class SettingsController extends Controller
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
-            return $this->redirect('translations', 302, true);
+            return $this->redirect(Constants::URL_TRANSLATIONS, 302, true);
         }
 
         $variables['settings'] = [];
@@ -166,7 +165,7 @@ class SettingsController extends Controller
                     }
                     if ($drafts) {
                         Craft::$app->queue->push(new DeleteDrafts([
-                            'description' => 'Deleting Translation Drafts',
+                            'description' => Constants::JOB_DELETING_DRAFT,
                             'drafts' => $drafts,
                         ]));
                     }
@@ -185,15 +184,15 @@ class SettingsController extends Controller
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
-            return $this->redirect('translations', 302, true);
+            return $this->redirect(Constants::URL_TRANSLATIONS, 302, true);
         }
 
         $zipName = 'logs';
-        $zipDest = Craft::$app->path->getTempPath().'/'. $zipName .'_'.time().'.zip';
+        $zipDest = Craft::$app->path->getTempPath().'/'. $zipName .'_'.time().'.' . Constants::FILE_FORMAT_ZIP;
         $errors = array();
 
         // Create zip
-        $zip = new ZipArchive();
+        $zip = new \ZipArchive();
 
         // Open zip
         if ($zip->open($zipDest, $zip::CREATE) !== true)
@@ -283,7 +282,7 @@ class SettingsController extends Controller
         try {
 
             $pluginService = Craft::$app->getPlugins();
-            $plugin  = $pluginService->getPlugin('translations');
+            $plugin  = $pluginService->getPlugin(Constants::PLUGIN_HANDLE);
             if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries, 'uploadVolume' => $selectedVolume, 'twigSearchFilterSingleQuote' => $twigSearchFilterSingleQuote, 'twigSearchFilterDoubleQuote' => $twigSearchFilterDoubleQuote, 'targetStringPosition' => $targetStringPosition])) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
             } else {

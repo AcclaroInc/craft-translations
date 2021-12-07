@@ -11,14 +11,12 @@
 
 namespace acclaro\translations\services\job;
 
-use acclaro\translations\Constants;
 use Craft;
 use Exception;
-use craft\base\Element;
-use craft\elements\Asset;
 use craft\queue\BaseJob;
+use craft\elements\Asset;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
-use XMLReader;
 
 class ImportFiles extends BaseJob
 {
@@ -53,7 +51,7 @@ class ImportFiles extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Importing translation files';
+        return Constants::JOB_IMPORTING_FILES;
     }
 
     /**

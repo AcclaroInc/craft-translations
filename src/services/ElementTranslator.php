@@ -10,21 +10,14 @@
 
 namespace acclaro\translations\services;
 
-use acclaro\translations\Constants;
 use Craft;
-use Exception;
 use DOMDocument;
 use craft\base\Field;
 use craft\base\Element;
 use craft\elements\Tag;
 use craft\elements\Entry;
-use craft\records\EntryType;
-use \craft\base\ElementTrait;
 use craft\elements\Category;
-use \craft\base\ContentTrait;
-use \craft\base\ElementInterface;
-use craft\elements\db\ElementQuery;
-use acclaro\translations\services\App;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 
 class ElementTranslator
@@ -213,19 +206,12 @@ class ElementTranslator
     {
         $fieldType = $field;
 
-        $nestedFieldType = [
-            'craft\fields\Matrix',
-            'craft\fields\Assets',
-            'verbb\supertable\fields\SuperTableField',
-            'benf\neo\Field'
-        ];
-
         $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
         $fieldSource = array();
 
         // Check if field is translatable or is nested field
-        if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), $nestedFieldType)) {
+        if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
             $fieldSource = $translator->toTranslationSource($this, $element, $field, $sourceSite);
 
             if (!is_array($fieldSource)) {
@@ -242,19 +228,12 @@ class ElementTranslator
 
         $fieldHandle = $field->handle;
 
-        $nestedFieldType = [
-            'craft\fields\Matrix',
-            'craft\fields\Assets',
-            'verbb\supertable\fields\SuperTableField',
-            'benf\neo\Field'
-        ];
-
         $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
         $fieldSource = array();
 
         // Check if field is translatable or is nested field
-        if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), $nestedFieldType)) {
+        if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
             $fieldSource = $translator->toPostArray($this, $element, $field);
 
             if (!is_array($fieldSource)) {
@@ -271,15 +250,8 @@ class ElementTranslator
 
         $fieldHandle = $field->handle;
 
-        $nestedFieldType = [
-            'craft\fields\Matrix',
-            'craft\fields\Assets',
-            'verbb\supertable\fields\SuperTableField',
-            'benf\neo\Field'
-        ];
-
         // Check if field is translatable or is nested field
-        if ($field->getIsTranslatable() || in_array(get_class($field), $nestedFieldType)) {
+        if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             return $translator ? $translator->getWordCount($this, $element, $field) : 0;

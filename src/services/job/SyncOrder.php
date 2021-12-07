@@ -10,11 +10,7 @@
 
 namespace acclaro\translations\services\job;
 
-use Craft;
-use Exception;
-
 use craft\queue\BaseJob;
-use craft\elements\Entry;
 use acclaro\translations\Translations;
 
 class SyncOrder extends BaseJob

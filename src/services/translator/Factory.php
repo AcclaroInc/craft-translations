@@ -10,10 +10,6 @@
 
 namespace acclaro\translations\services\translator;
 
-use Craft;
-use Exception;
-use acclaro\translations\services\App;
-use acclaro\translations\Translations;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\translator\AcclaroTranslationService;
 use acclaro\translations\services\translator\Export_ImportTranslationService;
@@ -33,7 +29,7 @@ class Factory
     public function makeTranslationService($serviceHandle, $settings)
     {
         if (!array_key_exists($serviceHandle, $this->translationServices)) {
-            throw new Exception('Invalid translation service.');
+            throw new \Exception('Invalid translation service.');
         }
 
         $service = $serviceHandle != 'export_import' ? ucfirst($serviceHandle) : 'Export_Import';
@@ -62,6 +58,6 @@ class Factory
 
         $class = '\\'.$class;
 
-        return new $class($settings, Craft::$app);
+        return new $class($settings, \Craft::$app);
     }
 }

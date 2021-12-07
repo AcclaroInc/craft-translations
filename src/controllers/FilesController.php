@@ -10,28 +10,22 @@
 
 namespace acclaro\translations\controllers;
 
-use acclaro\translations\Constants;
 use Craft;
-use DateTime;
-use ZipArchive;
 use craft\helpers\Path;
 use craft\web\Controller;
 use craft\helpers\Assets;
-use craft\models\Section;
-use yii\web\HttpException;
+use craft\elements\Asset;
 use craft\web\UploadedFile;
-use craft\elements\Category;
-use craft\helpers\FileHelper;
 use craft\elements\GlobalSet;
-use craft\base\VolumeInterface;
+use craft\helpers\FileHelper;
+use craft\helpers\ArrayHelper;
 use craft\helpers\ElementHelper;
 use yii\web\NotFoundHttpException;
-use acclaro\translations\services\App;
+
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\ImportFiles;
 use acclaro\translations\services\repository\SiteRepository;
-use craft\elements\Asset;
-use craft\helpers\ArrayHelper;
 
 /**
  * @author    Acclaro
@@ -43,23 +37,16 @@ class FilesController extends Controller
     protected $allowAnonymous = ['actionImportFile', 'actionExportFile', 'actionCreateExportZip'];
 
     /**
-     * @var int
-     */
-    protected $pluginVersion;
-
-    /**
      * @var Order
      */
     protected $order;
-
-    protected $variables;
 
     /**
 	 * Allowed types of site images.
 	 *
 	 * @var array
 	 */
-	private $_allowedTypes = array('zip', 'xml', 'json', 'csv');
+	private $_allowedTypes = Constants::FILE_FORMAT_ALLOWED;
 
     public function actionCreateExportZip()
     {
@@ -80,10 +67,10 @@ class FilesController extends Controller
         $zipName = $this->getZipName($orderAttributes);
         
         // Set destination zip
-        $zipDest = Craft::$app->path->getTempPath() . '/' . $zipName . '.zip';
+        $zipDest = Craft::$app->path->getTempPath() . '/' . $zipName . '.' . Constants::FILE_FORMAT_ZIP;
         
         // Create zip
-        $zip = new ZipArchive();
+        $zip = new \ZipArchive();
 
         // Open zip
         if ($zip->open($zipDest, $zip::CREATE) !== true)
@@ -118,39 +105,20 @@ class FilesController extends Controller
 
                 $path = $tempPath . $filename;
                 
-                $sourceFormat = Translations::$plugin->fileRepository->getFileSourceFormat($file->source);
-                if (in_array($sourceFormat, [Constants::FILE_FORMAT_JSON, Constants::FILE_FORMAT_XML])) {
-
-                    if ($fileFormat === Constants::FILE_FORMAT_JSON) {
-                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
-                            $fileContent = Translations::$plugin->elementToFileConverter->xmlToJson($file->source);
-                        } else {
-                            $fileContent = $file->source;
-                        }
-                    } else if ($fileFormat === Constants::FILE_FORMAT_CSV) {
-                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
-                            $fileContent = Translations::$plugin->elementToFileConverter->xmlToCsv($file->source);
-                        } else {
-                            $fileContent = Translations::$plugin->elementToFileConverter->jsonToCsv($file->source);
-                        }
-                    } else {
-                        if ($sourceFormat === Constants::FILE_FORMAT_XML) {
-                            $fileContent = $file->source;
-                        } else {
-                            $fileContent = Translations::$plugin->elementToFileConverter->jsonToXml($file->source);
-                        }
-                    }
-
-                    if (! $fileContent || !$zip->addFromString($filename, $fileContent)) {
-                        $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
-                        Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
-                    }
+                if ($fileFormat === Constants::FILE_FORMAT_JSON) {
+                    $fileContent = Translations::$plugin->elementToFileConverter->xmlToJson($file->source);
+                } else if ($fileFormat === Constants::FILE_FORMAT_CSV) {
+                    $fileContent = Translations::$plugin->elementToFileConverter->xmlToCsv($file->source);
                 } else {
-                    Craft::error('The File Source is not of valid xml/json format.');
+                    $fileContent = $file->source;
+                }
+
+                if (! $fileContent || !$zip->addFromString($filename, $fileContent)) {
+                    $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
+                    Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
                 }
             }
         }
-        // return $this->asJson(['file', $zip]);
 
         // Close zip
         $zip->close();
@@ -208,8 +176,7 @@ class FilesController extends Controller
 
         $total_files = (count($this->order->files) * count($this->order->getTargetSitesArray()));
 
-        try
-        {
+        try {
             // Make sure a file was uploaded
             if ($file && $file->size > 0) {
                 if (!in_array($file->extension, $this->_allowedTypes)) {
@@ -253,7 +220,7 @@ class FilesController extends Controller
     
                                 $pathInfo = pathinfo($file);
     
-                                $compatibleFilename = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.txt';
+                                $compatibleFilename = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.' . Constants::FILE_FORMAT_TXT;
     
                                 rename($file, $compatibleFilename);
     
@@ -283,7 +250,7 @@ class FilesController extends Controller
                             // Process files via job or directly based on order "size"
                             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                                 $job = Craft::$app->queue->push(new ImportFiles([
-                                    'description' => 'Importing translation files',
+                                    'description' => Constants::JOB_IMPORTING_FILES,
                                     'orderId' => $orderId,
                                     'totalFiles' => $total_files,
                                     'assets' => $assetIds,
@@ -330,7 +297,7 @@ class FilesController extends Controller
     
                         $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
     
-                        $compatibleFilename = $file->tempName . '.txt';
+                        $compatibleFilename = $file->tempName . '.' . Constants::FILE_FORMAT_TXT;
     
                         rename($file->tempName, $compatibleFilename);
     
@@ -354,7 +321,7 @@ class FilesController extends Controller
                         // Process files via job or directly based on file "size"
                         if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                             $job = Craft::$app->queue->push(new ImportFiles([
-                                'description' => 'Importing translation files',
+                                'description' => Constants::JOB_IMPORTING_FILES,
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,
                                 'assets' => [$asset->id],
@@ -394,9 +361,7 @@ class FilesController extends Controller
                 Craft::$app->getSession()->set('fileImportError', 1);
                 $this->showUserMessages("The file you are trying to import is empty.");
             }
-        }
-        catch (Exception $exception)
-        {
+        } catch (Exception $exception) {
             $this->showUserMessages($exception->getMessage());
         }
     }
@@ -419,13 +384,13 @@ class FilesController extends Controller
         } else {
             $file = Translations::$plugin->fileRepository->getFileById($fileId);
             $error = "File not found.";
-            if ($file && ($file->status == 'complete' || $file->status == 'published' || $file->status == 'ready for review')) {
+            if ($file && (in_array($file->status, [Constants::FILE_STATUS_REVIEW_READY, Constants::FILE_STATUS_COMPLETE, Constants::FILE_STATUS_PUBLISHED]))) {
                 try {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
                     $data['diff'] = Translations::$plugin->fileRepository->getSourceTargetDifferences($file->source, $file->target);
 
-                    if ($file->status == Constants::FILE_STATUS_COMPLETE || $file->status == Constants::FILE_STATUS_PUBLISHED) {
+                    if ($file->status !== Constants::FILE_STATUS_REVIEW_READY) {
                         $data['previewClass'] = '';
                         $data['originalUrl'] = $element->url;
                         $data['newUrl'] = $file->previewUrl;
@@ -452,12 +417,9 @@ class FilesController extends Controller
 	 */
     public function showUserMessages($message, $isSuccess = false)
     {
-    	if ($isSuccess)
-    	{
+    	if ($isSuccess) {
 			Craft::$app->session->setNotice(Craft::t('app', $message));
-    	}
-    	else
-    	{
+    	} else {
     		Craft::$app->session->setError(Craft::t('app', $message));
     	}	
     }

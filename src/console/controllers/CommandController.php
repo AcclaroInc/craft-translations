@@ -12,9 +12,7 @@ namespace acclaro\translations\console\controllers;
 
 use acclaro\translations\Translations;
 
-use Craft;
 use yii\console\Controller;
-use yii\helpers\Console;
 
 /**
  * Command Command

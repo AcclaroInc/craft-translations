@@ -11,12 +11,7 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\db\Query;
-use craft\helpers\Db;
 use craft\base\Widget;
-use GuzzleHttp\Client;
-use acclaro\translations\services\App;
-use acclaro\translations\elements\Order;
 use acclaro\translations\records\WidgetRecord;
 
 /**

@@ -254,7 +254,7 @@
 
                 {{ forms.checkboxSelectField({
                     label: 'Target site(s) <span class="required"/>'|t,
-                    options: sourceSites,
+                    options: targetSites,
                     values: order.targetSites|json_decode(),
                     showAllOption: true,
                     name: 'targetSites',

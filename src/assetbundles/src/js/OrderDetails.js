@@ -445,10 +445,12 @@
                     toggleSelections($(this).is(':checked'));
                 } else {
                     var $all = $(':checkbox[name="targetSites[]"]');
-                    var $checkboxes = $(':checkbox[name="targetSites[]"]:checked');
+                    var $checkboxes = $(':checkbox[name="targetSites[]"]:checked:not(:disabled)');
                     var $sourceSite = $("#sourceSiteSelect").val();
                     $sourceSite = $sourceSite == '' ? 0 : 1;
-
+                    console.log("all => "+$all.length);
+                    console.log("source => "+$sourceSite);
+                    console.log("checked => "+$checkboxes.length);
                     if (($all.length - $sourceSite) == $checkboxes.length) {
                         $(':checkbox[name=targetSites]').prop('checked', true);
                         $(':checkbox[name="targetSites[]"]').prop('disabled', true);

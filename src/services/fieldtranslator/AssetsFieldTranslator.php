@@ -14,7 +14,6 @@ use Craft;
 use Exception;
 use craft\base\Field;
 use craft\base\Element;
-use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
@@ -30,12 +29,6 @@ class AssetsFieldTranslator extends GenericFieldTranslator
         {
             foreach ($blocks as $block) 
             {
-                /*$fields = Craft::$app->assets->getAssetById($block->id)->getFieldValues();
-                foreach ($fields as $key => $value) {
-                    $k = sprintf('%s.%s.%s', $field->handle, $block->id, $key);
-                    $source[$k] = $value;
-                }*/
-
                 $source[sprintf('%s.%s.%s', $field->handle, $block->id, 'title')] = $block->title;
 
                 $element = Craft::$app->assets->getAssetById($block->id, $sourceSite);

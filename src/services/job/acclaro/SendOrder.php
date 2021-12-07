@@ -10,10 +10,8 @@
 
 namespace acclaro\translations\services\job\acclaro;
 
-use Craft;
-use Exception;
-
 use craft\queue\BaseJob;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 
 class SendOrder extends BaseJob
@@ -34,6 +32,6 @@ class SendOrder extends BaseJob
 
     protected function defaultDescription()
     {
-        return 'Sending order to Acclaro';
+        return Constants::JOB_ACCLARO_SENDING_ORDER;
     }
 }

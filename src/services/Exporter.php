@@ -5,6 +5,7 @@ namespace acclaro\translations\services;
 use Craft;
 use craft\base\ElementExporter;
 use acclaro\translations\Translations;
+use craft\base\EagerLoadingFieldInterface;
 use craft\elements\db\ElementQueryInterface;
 
 class Exporter extends ElementExporter

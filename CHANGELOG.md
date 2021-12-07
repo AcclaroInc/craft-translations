@@ -387,7 +387,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 - Added `RegeneratePreviewUrls` background task
-- Added `acclaro/UdpateReviewFileUrls` background task
+- Added `acclaro/UpdateReviewFileUrls` background task
 
 ## 1.2.0 - 2019-08-16
 

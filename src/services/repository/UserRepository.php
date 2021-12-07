@@ -10,9 +10,9 @@
 
 namespace acclaro\translations\services\repository;
 
-use acclaro\translations\Translations;
 use Craft;
 use craft\elements\User;
+use acclaro\translations\Translations;
 
 use Exception;
 

@@ -10,12 +10,9 @@
 
 namespace acclaro\translations\widgets;
 
-use acclaro\translations\Translations;
 use Craft;
-use craft\db\Query;
-use craft\helpers\Db;
 use craft\base\Widget;
-use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\WidgetRecord;
 
@@ -24,8 +21,7 @@ use acclaro\translations\records\WidgetRecord;
  * @package   Translations
  * @since     1.0.2
  */
-class
-RecentOrders extends Widget
+class RecentOrders extends Widget
 {
     /**
      * @inheritdoc

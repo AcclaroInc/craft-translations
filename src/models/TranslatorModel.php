@@ -10,13 +10,9 @@
 
 namespace acclaro\translations\models;
 
-use Craft;
 use craft\base\Model;
-use craft\validators\SiteIdValidator;
-use craft\validators\StringValidator;
-use craft\validators\UniqueValidator;
+use acclaro\translations\Constants;
 use craft\validators\DateTimeValidator;
-use acclaro\translations\services\App;
 use acclaro\translations\Translations;
 
 /**
@@ -60,7 +56,7 @@ class TranslatorModel extends Model
         return [
             'label' => '',
             'service' => '',
-            'status' => 'inactive'
+            'status' => Constants::TRANSLATOR_STATUS_INACTIVE
         ];
     }
 
