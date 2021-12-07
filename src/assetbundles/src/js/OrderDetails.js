@@ -427,6 +427,7 @@
                     "z-index": "100",
                     "background-color": "white",
                     "min-height": "70px",
+                    "box-shadow": "inset 0 -1px 0 rgba(63, 77, 90, 0.1);",
                 });
                 this.$files.find('#text-field div.heading').css({
                     "padding-top": "20px",
@@ -439,6 +440,7 @@
                     "z-index": "0",
                     "background-color": "",
                     "min-height": "",
+                    "box-shadow": "",
                 });
                 this.$files.find('#text-field div.heading').css({
                     "padding-top": "",
