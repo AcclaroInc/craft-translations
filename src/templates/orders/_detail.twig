@@ -204,7 +204,7 @@
                                         </td>
                                         <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                         <td>
-                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}" 
+                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}"
                                                 title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
                                                 <input type="hidden" name="elements[]" value="{{ element.id }}">
                                             </a>
@@ -278,7 +278,7 @@
                 <input type="hidden" id="originalTranslatorId" value="{{ order.translatorId }}" data-id="{{ defaultTranslatorId|default(0) }}">
 
                 {# <hr> #}
-                
+
                 {# {{ forms.lightswitchField({
                     label: 'Track changes<p class="fw-400">Track source content updates. \
                         Recomended for continuous translation workflows.</p>'|t
@@ -481,7 +481,7 @@
                                                 {% endif %}
 
                                             </td>
-                                            
+
                                             <td>
                                                 <table>
                                                     <tr>
@@ -496,7 +496,7 @@
                                                 <table>
                                                     <tr>
                                                         <td class="inline-flex align-center">
-                                                            <span class="status {{ file.statusColor }}" 
+                                                            <span class="status {{ file.statusColor }}"
                                                                 style="position: absolute;left: -10px;"
                                                                 data-status="{{ attribute(fileDifference,file.id)|default(0) }}">
                                                                 </span>{{ file.statusLabel }}
@@ -578,14 +578,16 @@
                     <label>Target Site(s)</label>
                 </div>
                 <div class="input ltr">
-                    {% for target in orderTargetSitesObject %}
-                        <label class='float-right'>
-                            {{target.name}}
-                            <span class="light">
-                                ({{ target.language }}),
-                            </span>
+                    <ul>
+                        <label class="float-right">
+                        {% for target in orderTargetSitesObject|sort|reverse %}
+                            <li>
+                                <span class="status" style="margin-right: 2px;"></span>
+                                {{ target.name }} ({{ target.language }})
+                            </li>
+                        {% endfor %}
                         </label>
-                    {% endfor %}
+                     </ul>
                 </div>
             </div>
         {% endif %}
