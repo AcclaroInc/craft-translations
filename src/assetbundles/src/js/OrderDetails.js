@@ -416,30 +416,32 @@
 
     Craft.Translations.OrderDetails = {
         $main: null,
-        $contentContainer: null,
+        $headerContainer: null,
         $files: null,
         $isMobile: null,
+
         updateFixedHeader: function() {
-            if (this.$main.length && this.$contentContainer[0].getBoundingClientRect().top < 0) {
+            if (this.$main.length && this.$headerContainer.height() > this.$files[0].getBoundingClientRect().top - 10) {
+                $top = this.$isMobile ? 0 : this.$headerContainer.height();
                 this.$files.find('#text-field').css({
                     "position": "sticky",
-                    "top": "50px",
+                    "top": this.$headerContainer.height()+"px",
                     "z-index": "100",
                     "background-color": "white",
-                    "min-height": "70px",
+                    "max-height": "70px",
                     "box-shadow": "inset 0 -1px 0 rgba(63, 77, 90, 0.1);",
                 });
                 this.$files.find('#text-field div.heading').css({
                     "padding-top": "20px",
-                    "padding-bottom": "20px",
+                    "padding-bottom": "20px"
                 });
             } else {
                 this.$files.find('#text-field').css({
                     "position": "",
                     "top": "",
-                    "z-index": "0",
+                    "z-index": "",
                     "background-color": "",
-                    "min-height": "",
+                    "max-height": "",
                     "box-shadow": "",
                 });
                 this.$files.find('#text-field div.heading').css({
@@ -451,7 +453,7 @@
         init: function() {
             var self = this;
             this.$main = $('#main');
-            this.$contentContainer = $('#content-container');
+            this.$headerContainer = $('#header-container');
             this.$files = $('#files');
             this.$isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
 
@@ -787,9 +789,7 @@
             });
 
             $(window).on('scroll', function() {
-                if (! self.$isMobile) {
-                    self.updateFixedHeader();
-                }
+                self.updateFixedHeader();
             });
         },
         _addOrderTag: function($newTag, $tagId) {
