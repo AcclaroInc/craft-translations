@@ -415,17 +415,18 @@
     }
 
     Craft.Translations.OrderDetails = {
-        $main: null,
         $headerContainer: null,
         $files: null,
         $isMobile: null,
 
-        updateFixedHeader: function() {
-            if (this.$main.length && this.$headerContainer.height() > this.$files[0].getBoundingClientRect().top - 10) {
-                $top = this.$isMobile ? 0 : this.$headerContainer.height();
+        updateFixedHeader: function($top) {
+            if (this.$headerContainer.height() > this.$files[0].getBoundingClientRect().top - 10) {
+                if (this.$isMobile) {
+                    $top = 0;
+                }
                 this.$files.find('#text-field').css({
                     "position": "sticky",
-                    "top": this.$headerContainer.height()+"px",
+                    "top": $top+"px",
                     "z-index": "100",
                     "background-color": "white",
                     "max-height": "70px",
@@ -452,7 +453,6 @@
         },
         init: function() {
             var self = this;
-            this.$main = $('#main');
             this.$headerContainer = $('#header-container');
             this.$files = $('#files');
             this.$isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
@@ -788,8 +788,14 @@
                 }
             });
 
-            $(window).on('scroll', function() {
-                self.updateFixedHeader();
+            $(window).on('scroll resize', function(e) {
+                $width = $(window).width();
+                if ($width < 973) {
+                    height = 103;
+                } else {
+                    height = 49;
+                }
+                self.updateFixedHeader(height);
             });
         },
         _addOrderTag: function($newTag, $tagId) {
