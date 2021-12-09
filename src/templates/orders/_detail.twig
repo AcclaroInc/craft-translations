@@ -565,10 +565,8 @@
             </div>
             <div class="input ltr">
                 <label class='float-right'>
-                    {{sourceSiteObject.name}}
-                    <span class="light">
-                        ({{ sourceSiteObject.language }})
-                    </span>
+                    <span {% if sourceSiteObject.enabled %} class="status live" {% else %} class="status" {% endif %} style="margin-right: 2px;"></span>
+                    {{sourceSiteObject.name}} ({{ sourceSiteObject.language }})
                 </label>
             </div>
         </div>
@@ -580,9 +578,9 @@
                 <div class="input ltr">
                     <ul>
                         <label class="float-right">
-                        {% for target in orderTargetSitesObject|sort|reverse %}
+                        {% for target in orderTargetSitesObject %}
                             <li>
-                                <span class="status" style="margin-right: 2px;"></span>
+                                <span {% if target.enabled %} class="status live" {% else %} class="status" {% endif %} style="margin-right: 2px;"></span>
                                 {{ target.name }} ({{ target.language }})
                             </li>
                         {% endfor %}
