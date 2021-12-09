@@ -54,7 +54,7 @@ class OrderController extends Controller
 
     public function __construct($id, $module = null) {
         parent::__construct($id, $module);
-        
+
         $this->service = new OrderRepository();
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin(Constants::PLUGIN_HANDLE)->getVersion();
     }
@@ -112,6 +112,7 @@ class OrderController extends Controller
         $variables['inputSourceSite'] = Craft::$app->getRequest()->getQueryParam('sourceSite');
 
         $variables['elementIds'] = Craft::$app->getRequest()->getParam('elements');
+        $variables['isSourceChanged'] = [];
 
         if (empty($variables['inputSourceSite'])) {
             $variables['inputSourceSite'] = Craft::$app->getRequest()->getParam('sourceSite');
@@ -472,6 +473,10 @@ class OrderController extends Controller
         $variables['isSubmitted'] = ($variables['order']->status !== Constants::ORDER_STATUS_NEW &&
             $variables['order']->status !== Constants::ORDER_STATUS_FAILED);
 
+        if ($variables['isSubmitted']) {
+            $variables['isSourceChanged'] = Translations::$plugin->orderRepository->getIsSourceChanged($variables['order']);
+        }
+
         $this->renderTemplate('translations/orders/_detail', $variables);
     }
 
@@ -511,7 +516,7 @@ class OrderController extends Controller
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
         } else {
             $order = $this->service->makeNewOrder($sourceSite);
-    
+
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
         }
 
@@ -824,7 +829,7 @@ class OrderController extends Controller
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['sourceSite']);
         $variables['translatorId'] = $variables['order']['translatorId'];
         $variables['sites'] = Craft::$app->getSites()->getAllSiteIds();
-        
+
         $userId = Craft::$app->getUser()->id;
         $user = Craft::$app->getUsers()->getUserById($userId);
 
@@ -988,7 +993,7 @@ class OrderController extends Controller
             return $this->asJson(["success" => false, "message" => "Invalid OrderId."]);
         }
         $order = $this->service->getOrderById($orderId);
-        
+
         if (!$order) {
             return $this->asJson(["success" => false, "message" => "Invalid Order."]);
         }
@@ -1073,7 +1078,7 @@ class OrderController extends Controller
                     $targetSites = $newData[$field];
                     if ($targetSites === '*') {
                         $targetSites = Craft::$app->getSites()->getAllSiteIds();
-        
+
                         $source_site = Craft::$app->getRequest()->getParam('sourceSite');
                         if (($key = array_search($source_site, $targetSites)) !== false) {
                             unset($targetSites[$key]);
@@ -1363,7 +1368,7 @@ class OrderController extends Controller
         $service = $translator->service;
         $settings = $translator->getSettings();
         $authenticate = Translations::$plugin->services->authenticateService($service, $settings);
-        
+
         if (!$authenticate && $service == Constants::TRANSLATOR_ACCLARO) {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
             Craft::$app->getSession()->setError($message);
@@ -1426,7 +1431,7 @@ class OrderController extends Controller
                 if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
                     continue;
                 }
-    
+
                 if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                     $job = Craft::$app->queue->push(new SyncOrder([
                         'description' => 'Syncing order '. $order->title,
@@ -1491,7 +1496,7 @@ class OrderController extends Controller
 
             if ($targetSites === '*') {
                 $targetSites = Craft::$app->getSites()->getAllSiteIds();
-                
+
                 $source_site = Craft::$app->getRequest()->getParam('sourceSite');
                 if (($key = array_search($source_site, $targetSites)) !== false) {
                     unset($targetSites[$key]);
@@ -1531,7 +1536,7 @@ class OrderController extends Controller
             }
 
             $order->ownerId = Craft::$app->getRequest()->getParam('ownerId');
-            
+
             $orderTags = Craft::$app->getRequest()->getParam('tags') ?? null;
 
             $order->tags = $orderTags ? json_encode($orderTags) : '';
@@ -1609,5 +1614,47 @@ class OrderController extends Controller
             Craft::$app->getSession()->setError(Translations::$plugin->translator
                 ->translate('app', 'Error saving draft. Error: '.$e->getMessage()));
         }
+    }
+
+    public function actionUpdateOrderFilesSource()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
+
+        if (! $order) return $this->asJson(['success' => false, 'message' => 'Order not found']);
+
+        $elements = Craft::$app->getRequest()->getBodyParam('update-elements');
+        if ($elements) $elements = json_decode($elements, true);
+
+        $transaction = Craft::$app->getDb()->beginTransaction();
+
+        try {
+            foreach ($order->files as $file) {
+                if (in_array($file->elementId, $elements)) {
+                    $element = Craft::$app->getElements()->getElementById($file->elementId);
+                    $file->source = Translations::$plugin->elementToFileConverter->convert(
+                        $element,
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    => $file->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'wordCount'     => $file->wordCount,
+                            'orderId'       => $orderId,
+                        ]
+                    );
+                    Translations::$plugin->fileRepository->saveFile($file);
+                }
+            }
+            $transaction->commit();
+            Craft::$app->getSession()->setNotice('Order files updated.');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return $this->asJson(['success' => false, 'message' => 'Error updating source. Error: ' . $e->getMessage()]);
+        }
+
+        return $this->asJson(['success' => true, 'message' => 'Order files updated.']);
     }
 }

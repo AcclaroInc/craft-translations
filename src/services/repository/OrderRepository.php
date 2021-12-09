@@ -111,10 +111,10 @@ class OrderRepository
                 Constants::ORDER_STATUS_COMPLETE
             )))
             ->all();
-            
+
         return $openOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -128,10 +128,10 @@ class OrderRepository
                 Constants::ORDER_STATUS_IN_PROGRESS
             )))
             ->all();
-            
+
         return $inProgressOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -143,7 +143,7 @@ class OrderRepository
 
         return $pendingOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -153,7 +153,6 @@ class OrderRepository
         return $results;
     }
 
-    // ! TODO: check if this is of any use
     public function getOrderStatuses()
     {
         return array(
@@ -176,12 +175,12 @@ class OrderRepository
         $order = new Order();
 
         $order->status = Constants::ORDER_STATUS_NEW;
-        
+
         $order->sourceSite = $sourceSite ?: Craft::$app->sites->getPrimarySite()->id;
-        
+
         return $order;
     }
-    
+
     /**
      * @param \acclaro\translations\elements\Order $order
      * @throws \Exception
@@ -445,7 +444,7 @@ class OrderRepository
             Translations::$plugin->fileRepository->saveFile($file);
         }
     }
-    
+
     /**
      * saveOrderName
      *
@@ -454,7 +453,7 @@ class OrderRepository
      * @return void
      */
     public function saveOrderName($orderId, $name) {
-        
+
         $order = $this->getOrderById($orderId);
         $order->title = $name;
         Craft::$app->getElements()->saveElement($order);
@@ -557,5 +556,50 @@ class OrderRepository
         }
 
         return $draftElement->title ?? '';
+    }
+
+    /**
+     * Checks if source entry of elements in order has changed
+     *
+     * @return array|null $result
+     */
+    public function getIsSourceChanged($order): ?array
+    {
+        $result = [];
+
+        if ($elements = $order->elements) {
+            foreach ($order->files as $file) {
+                if (! $file->source || in_array($file->elementId, $result)) continue;
+
+                try {
+                    $element = $elements[$file->elementId];
+                    $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+                    $converter = Translations::$plugin->elementToFileConverter;
+
+                    $currentContent = $converter->convert(
+                        $element,
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    => $order->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'wordCount'     => $wordCount,
+                            'orderId'       => $order->id
+                        ]
+                    );
+
+                    $sourceContent = json_decode($converter->xmlToJson($file->source), true);
+                    $currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+                    $sourceContent = json_encode(array_values($sourceContent['content']));
+                    $currentContent = json_encode(array_values($currentContent['content']));
+
+                    if (md5($sourceContent) !== md5($currentContent)) array_push($result, $element->id);
+                } catch (Exception $e) {
+                    throw new Exception("Source entry changes check, Error: " . $e->getMessage(), 1);
+                }
+            }
+        }
+
+        return $result;
     }
 }

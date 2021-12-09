@@ -20,6 +20,9 @@
                         orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
 %}
 
+{% set canUpdateFiles = orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+
 {# For Export/Import and regenrate preview url's buttons #}
 {% set exportImportStatus = '' %}
 {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
@@ -43,7 +46,8 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}" data-submitted="{{ isSubmitted }}"
+                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}"
+                data-submitted="{{ isSubmitted }}" data-hasSourceChanges="{{ isSourceChanged|join(',') }}"
                 data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>
@@ -149,9 +153,13 @@
                     </div>
                     {% if elements %}
                         <div class="input ltr scroll-x-auto">
-                            <table class="data fullwidth" dir="ltr">
+                            <table id="elements-table" class="data fullwidth" dir="ltr">
                                 <thead>
                                 <tr>
+                                    <th class="thin checkbox-cell all-element-checkbox">
+                                        <input class="checkbox" id="element-0" type="checkbox" name="elements[]"/>
+                                        <label class="checkbox" for="element-0"></label>
+                                    </th>
                                     <th>{{ 'Title'|t }}</th>
                                     <th>{{ 'Version'|t }}</th>
                                     <th>{{ 'Section'|t }}</th>
@@ -162,6 +170,11 @@
                                 <tbody>
                                 {% for element in elements %}
                                     <tr data-word-count="{{ elementWordCounts[element.id] }}">
+                                        <td class="thin checkbox-cell element">
+                                            <input class="checkbox" data-element="{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"/>
+                                            <label class="checkbox" for="element-{{ element.id }}"></label>
+                                        </td>
+                                        </td>
                                         <td>{% include "_elements/element" with {'element': element} only %}
                                             {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
                                                 <span class="warning duplicate-warning">
@@ -203,12 +216,6 @@
 
                                         </td>
                                         <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
-                                        <td>
-                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}" 
-                                                title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
-                                                <input type="hidden" name="elements[]" value="{{ element.id }}">
-                                            </a>
-                                        </td>
                                     </tr>
                                     {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                                     {% set elementVersions = elementVersions|merge({(loop.index0): element.id ~ "_" ~ elementVersionMap[element.id]}) %}
@@ -278,7 +285,7 @@
                 <input type="hidden" id="originalTranslatorId" value="{{ order.translatorId }}" data-id="{{ defaultTranslatorId|default(0) }}">
 
                 {# <hr> #}
-                
+
                 {# {{ forms.lightswitchField({
                     label: 'Track changes<p class="fw-400">Track source content updates. \
                         Recomended for continuous translation workflows.</p>'|t
@@ -406,13 +413,13 @@
                                 <tr>
                                     {% if entriesCountByElementCompleted > 0 %}
                                         <td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
-                                            <input class="checkbox" id="element-0" type="checkbox">
-                                            <label class="checkbox" for="element-0"></label>
+                                            <input class="checkbox" id="file-0" type="checkbox">
+                                            <label class="checkbox" for="file-0"></label>
                                         </td>
                                     {% else %}
                                         <td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
-                                            <input class="checkbox" id="element-0" type="checkbox" disabled="disabled">
-                                            <label class="checkbox" for="element-0"></label>
+                                            <input class="checkbox" id="file-0" type="checkbox" disabled="disabled">
+                                            <label class="checkbox" for="file-0"></label>
                                         </td>
                                     {% endif %}
                                     <th>{{ 'Title'|t }}</th>
@@ -454,6 +461,11 @@
                                                                 element.className != constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
                                                                 <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
                                                             {% endif %}
+                                                            {% if tempElementId in isSourceChanged and canUpdateFiles %}
+                                                                <span class="warning duplicate-warning ml-10">
+                                                                    {{ 'Source content has changed since order is created.' }}
+                                                                </span>
+                                                            {% endif %}
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -481,7 +493,7 @@
                                                 {% endif %}
 
                                             </td>
-                                            
+
                                             <td>
                                                 <table>
                                                     <tr>
@@ -496,7 +508,7 @@
                                                 <table>
                                                     <tr>
                                                         <td class="inline-flex align-center">
-                                                            <span class="status {{ file.statusColor }}" 
+                                                            <span class="status {{ file.statusColor }}"
                                                                 style="position: absolute;left: -10px;"
                                                                 data-status="{{ attribute(fileDifference,file.id)|default(0) }}">
                                                                 </span>{{ file.statusLabel }}
@@ -741,7 +753,7 @@
             value: 'preview'
         }) }}
 
-        <a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %} 
+        <a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %}
             onclick="this.closest('form').submit();return false;" {% else %} {{ exportImportStatus }} {% endif %}>{{ "Rebuild draft previews"|t('app') }}
         </a>
     </form>
