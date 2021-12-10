@@ -299,16 +299,16 @@
         $changedFields = $changedFields.length > 0 ? JSON.stringify($changedFields) : "";
         $('input[name=updatedFields]').val($changedFields);
     }
-    
+
     function toggleTranslatorBasedFields(status = false) {
         if (status) {
             $('#extra-fields').removeClass('hidden non-editable disabled');
-            
+
             if (!isNew) {
                 // required these class else the input fields will not be disabled
                 $('#comments').addClass('non-editable noClick');
                 $('#requestedDueDate-date').addClass('non-editable noClick');
-                
+
                 $('#comments-field').addClass('disabled non-editable');
                 $('#comments-field').prop('title', 'This field cannot be edited.');
                 $('#requestedDueDate-field').addClass('disabled non-editable');
@@ -415,8 +415,47 @@
     }
 
     Craft.Translations.OrderDetails = {
+        $headerContainer: null,
+        $files: null,
+        $isMobile: null,
+
+        updateFixedHeader: function($top) {
+            if (this.$headerContainer.height() > this.$files[0].getBoundingClientRect().top - 10) {
+                if (this.$isMobile) {
+                    $top = 0;
+                }
+                this.$files.find('#text-field').css({
+                    "position": "sticky",
+                    "top": $top+"px",
+                    "z-index": "100",
+                    "background-color": "white",
+                    "max-height": "70px",
+                    "box-shadow": "inset 0 -1px 0 rgba(63, 77, 90, 0.1);",
+                });
+                this.$files.find('#text-field div.heading').css({
+                    "padding-top": "20px",
+                    "padding-bottom": "20px"
+                });
+            } else {
+                this.$files.find('#text-field').css({
+                    "position": "",
+                    "top": "",
+                    "z-index": "",
+                    "background-color": "",
+                    "max-height": "",
+                    "box-shadow": "",
+                });
+                this.$files.find('#text-field div.heading').css({
+                    "padding-top": "",
+                    "padding-bottom": "",
+                });
+            }
+        },
         init: function() {
-            self = this;
+            var self = this;
+            this.$headerContainer = $('#header-container');
+            this.$files = $('#files');
+            this.$isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
 
             if (isDefaultTranslator) {
                 toggleTranslatorBasedFields();
@@ -456,13 +495,13 @@
                         $(':checkbox[name="targetSites[]"]').prop('disabled', true);
                     }
                     var targetSitesLabels = [];
-    
+
                     $checkboxes.each(function() {
                         var $el = $(this);
                         var label = $.trim($el.next('label').text());
                         targetSitesLabels.push(label);
                     });
-                
+
                     $('[data-order-attribute=targetSites]').html(targetSitesLabels.join(', '));
                 }
 
@@ -555,12 +594,12 @@
                 var $button = $(this);
                 var $table = $button.closest('table');
                 var $row = $button.closest('tr');
-    
+
                 e.preventDefault();
-    
+
                 if (confirm(Craft.t('app', 'Are you sure you want to remove this entry from the order?'))) {
                     $row.remove();
-    
+
                     if ($table.find('tbody tr').length === 0) {
                         $table.remove();
                     }
@@ -578,7 +617,7 @@
                     });
 
                     $('[data-order-attribute=entriesCount]').text(entriesCount);
-    
+
                     $('[data-order-attribute=wordCount]').text(wordCount);
 
                     var currentElementIds = $('#currentElementIds').val().split(",");
@@ -614,7 +653,7 @@
                 $(window).off('beforeunload.windowReload');
                 var site = $("#sourceSiteSelect").val();
                 var url = window.location.href.split('?')[0];
-    
+
                 var currentElementIds = [];
                 if (typeof $('#currentElementIds').val() !== 'undefined') {
                     currentElementIds = $('#currentElementIds').val().split(',');
@@ -625,7 +664,7 @@
                 }
 
                 syncSites();
-                
+
                 if (currentElementIds.length > 1) {
                     currentElementIds.forEach(function (element) {
                         url += '&elements[]='+element;
@@ -658,11 +697,11 @@
             $("input[id^=requestedDueDate]").datepicker('option', 'minDate', +1);
 
             $(".addEntries").on('click', function (e) {
-    
+
                 elementIds = currentElementIds = [];
-    
+
                 var site = $("#sourceSiteSelect").val();
-    
+
                 var currentElementIds = [];
 
                 if (typeof $('#currentElementIds').val() !== 'undefined') {
@@ -671,7 +710,7 @@
 
                 var $url = removeParams(window.location.href);
                 setUnloadEvent(false);
-    
+
                 this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
                     storageKey: null,
                     sources: null,
@@ -679,7 +718,7 @@
                     criteria: {siteId: this.elementSiteId},
                     multiSelect: 1,
                     disabledElementIds: currentElementIds,
-    
+
                     onSelect: $.proxy(function(elements) {
                         $('#content').addClass('elements busy');
                         if (elements.length) {
@@ -747,6 +786,16 @@
                     $cancelIcon.removeClass('asc');
                     $cancelIcon.addClass('desc');
                 }
+            });
+
+            $(window).on('scroll resize', function(e) {
+                $width = $(window).width();
+                if ($width < 973) {
+                    height = 104;
+                } else {
+                    height = 50;
+                }
+                self.updateFixedHeader(height);
             });
         },
         _addOrderTag: function($newTag, $tagId) {
@@ -1018,7 +1067,7 @@
                 setUnloadEvent(false);
                 if (confirm(Craft.t('app', 'Are you sure you want to cancel this order?'))) {
                     $form.find("input[type=hidden][name=action]").val('translations/order/cancel-order');
-    
+
                     $form.submit();
                 }
             });
