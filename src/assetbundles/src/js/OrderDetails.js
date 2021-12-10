@@ -791,9 +791,9 @@
             $(window).on('scroll resize', function(e) {
                 $width = $(window).width();
                 if ($width < 973) {
-                    height = 103;
+                    height = 104;
                 } else {
-                    height = 49;
+                    height = 50;
                 }
                 self.updateFixedHeader(height);
             });
