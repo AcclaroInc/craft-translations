@@ -204,7 +204,7 @@
                                         </td>
                                         <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                         <td>
-                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}" 
+                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}"
                                                 title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
                                                 <input type="hidden" name="elements[]" value="{{ element.id }}">
                                             </a>
@@ -278,7 +278,7 @@
                 <input type="hidden" id="originalTranslatorId" value="{{ order.translatorId }}" data-id="{{ defaultTranslatorId|default(0) }}">
 
                 {# <hr> #}
-                
+
                 {# {{ forms.lightswitchField({
                     label: 'Track changes<p class="fw-400">Track source content updates. \
                         Recomended for continuous translation workflows.</p>'|t
@@ -481,7 +481,7 @@
                                                 {% endif %}
 
                                             </td>
-                                            
+
                                             <td>
                                                 <table>
                                                     <tr>
@@ -496,7 +496,7 @@
                                                 <table>
                                                     <tr>
                                                         <td class="inline-flex align-center">
-                                                            <span class="status {{ file.statusColor }}" 
+                                                            <span class="status {{ file.statusColor }}"
                                                                 style="position: absolute;left: -10px;"
                                                                 data-status="{{ attribute(fileDifference,file.id)|default(0) }}">
                                                                 </span>{{ file.statusLabel }}
@@ -565,13 +565,30 @@
             </div>
             <div class="input ltr">
                 <label class='float-right'>
-                    {{sourceSiteObject.name}}
-                    <span class="light">
-                        ({{ sourceSiteObject.language }})
-                    </span>
+                    <span {% if sourceSiteObject.enabled %} class="status live" {% else %} class="status" {% endif %} style="margin-right: 2px;"></span>
+                    {{sourceSiteObject.name}} ({{ sourceSiteObject.language }})
                 </label>
             </div>
         </div>
+        {% if orderId and orderTargetSitesObject %}
+            <div class="field">
+                <div class="heading">
+                    <label>Target Site(s)</label>
+                </div>
+                <div class="input ltr">
+                    <ul>
+                        <label class="float-right">
+                        {% for target in orderTargetSitesObject %}
+                            <li>
+                                <span {% if target.enabled %} class="status live" {% else %} class="status" {% endif %} style="margin-right: 2px;"></span>
+                                {{ target.name }} ({{ target.language }})
+                            </li>
+                        {% endfor %}
+                        </label>
+                     </ul>
+                </div>
+            </div>
+        {% endif %}
         {% if author %}
             <div class="data field">
                 <h5 class="heading">{{ 'Author'|t('app') }}</h5>
@@ -603,7 +620,6 @@
             <div class="input ltr">
                 <div class="float-right">
                     <label> {{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }} </label>
-                    {# <label class="pl-10"> {{ order.requestedDueDate ? order.requestedDueDate|date('H:i A') : '' }} </label> #}
                 </div>
             </div>
         </div>
@@ -741,7 +757,7 @@
             value: 'preview'
         }) }}
 
-        <a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %} 
+        <a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %}
             onclick="this.closest('form').submit();return false;" {% else %} {{ exportImportStatus }} {% endif %}>{{ "Rebuild draft previews"|t('app') }}
         </a>
     </form>
