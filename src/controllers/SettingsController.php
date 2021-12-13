@@ -37,7 +37,7 @@ class SettingsController extends Controller
     {
         $this->renderTemplate('translations/settings/index');
     }
-    
+
     /**
      * @return mixed
      */
@@ -49,45 +49,9 @@ class SettingsController extends Controller
         }
 
         $variables = array();
-        $supportedFieldTypes = [
-            'craft\fields\Tags',
-            'craft\fields\Table',
-            'craft\fields\Assets',
-            'craft\fields\Matrix',
-            'craft\fields\Number',
-            'craft\fields\Entries',
-            'craft\fields\Dropdown',
-            'craft\fields\PlainText',
-            'craft\fields\Categories',
-            'craft\fields\Checkboxes',
-            'craft\fields\MultiSelect',
-            'craft\fields\RadioButtons',
-            'benf\neo\Field',
-            'typedlinkfield\fields\LinkField',
-            'craft\redactor\Field',
-            'fruitstudios\linkit\fields\LinkitField',
-            'luwes\codemirror\fields\CodeMirrorField',
-            'verbb\supertable\fields\SuperTableField',
-            'nystudio107\seomatic\fields\SeoSettings',
-            'lenz\linkfield\fields\LinkField',
-            'newism\fields\fields\Telephone',
-            'newism\fields\fields\Address',
-            'newism\fields\fields\Email',
-            'newism\fields\fields\Embed',
-            'newism\fields\fields\PersonName',
-            'newism\fields\fields\Gender',
-            'ether\seo\fields\SeoField'
-        ];
+        $supportedFieldTypes = Constants::SUPPORTED_FIELD_TYPES;
 
-        $unrelatedFieldTypes = [
-            'craft\fields\Color',
-            'craft\fields\Date',
-            'craft\fields\Email',
-            'craft\fields\Lightswitch',
-            'craft\fields\Time',
-            'craft\fields\Url',
-            'craft\fields\Users'
-        ];
+        $unrelatedFieldTypes = Constants::UNRELATED_FIELD_TYPES;
 
         $variables['settings'] = [];
 
@@ -157,7 +121,7 @@ class SettingsController extends Controller
         try {
             foreach ($orders as $key => $orderId) {
                 $order = Translations::$plugin->orderRepository->getOrderById($orderId);
-        
+
                 if ($order) {
                     $drafts = [];
                     foreach ($order->getFiles() as $file) {
@@ -169,7 +133,7 @@ class SettingsController extends Controller
                             'drafts' => $drafts,
                         ]));
                     }
-        
+
                     Craft::$app->getElements()->deleteElementById($orderId);
                 }
             }
@@ -203,7 +167,7 @@ class SettingsController extends Controller
         }
 
         $logFiles = array_diff(scandir(Craft::$app->path->getLogPath()), array('.', '..'));
-        
+
         foreach ($logFiles as $key => $file) {
             $file_contents = file_get_contents(Craft::$app->path->getLogPath() .'/'. $file);
 
@@ -227,7 +191,7 @@ class SettingsController extends Controller
                 'filename' => $zipDest
 			]));
         }
-        
+
         Craft::$app->getResponse()->sendFile($zipDest, null, ['inline' => true]);
 
         return FileHelper::unlink($zipDest);
@@ -242,6 +206,7 @@ class SettingsController extends Controller
 
         $settings = Translations::getInstance()->settings;
         $variables['chkDuplicateEntries'] = $settings->chkDuplicateEntries;
+        $variables['trackSourceChanges'] = $settings->trackSourceChanges;
         $variables['uploadVolume'] = $settings->uploadVolume;
         $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
         $variables['twigSearchFilterDoubleQuote'] = !empty($settings->twigSearchFilterDoubleQuote) ? $settings->twigSearchFilterDoubleQuote : "";
@@ -274,6 +239,7 @@ class SettingsController extends Controller
 
         $request = Craft::$app->getRequest();
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
+        $trackSourceChanges = $request->getParam('trackSourceChanges');
         $selectedVolume = $request->getParam('uploadVolume');
         $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
         $twigSearchFilterDoubleQuote = $request->getParam('twigSearchFilterDoubleQuote');
@@ -283,7 +249,17 @@ class SettingsController extends Controller
 
             $pluginService = Craft::$app->getPlugins();
             $plugin  = $pluginService->getPlugin(Constants::PLUGIN_HANDLE);
-            if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries, 'uploadVolume' => $selectedVolume, 'twigSearchFilterSingleQuote' => $twigSearchFilterSingleQuote, 'twigSearchFilterDoubleQuote' => $twigSearchFilterDoubleQuote, 'targetStringPosition' => $targetStringPosition])) {
+
+            $settings = [
+                'chkDuplicateEntries'           => $duplicateEntries,
+                'trackSourceChanges'            => $trackSourceChanges,
+                'uploadVolume'                  => $selectedVolume,
+                'twigSearchFilterSingleQuote'   => $twigSearchFilterSingleQuote,
+                'twigSearchFilterDoubleQuote'   => $twigSearchFilterDoubleQuote,
+                'targetStringPosition'          => $targetStringPosition
+            ];
+
+            if (!$pluginService->savePluginSettings($plugin, $settings)) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
             } else {
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Setting saved.'));

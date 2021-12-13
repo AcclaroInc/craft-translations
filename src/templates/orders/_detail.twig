@@ -177,7 +177,7 @@
                                         </td>
                                         <td>{% include "_elements/element" with {'element': element} only %}
                                             {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
-                                                <span class="warning duplicate-warning">
+                                                <span class="order-warning font-size-15" data-icon="info">
                                                     {{ 'This entry is included<br>in the following orders:' }}
                                                     <ul style="list-style:disc;padding:5px 0 0 15px;">
                                                         {% for orderId in duplicateEntries[element.id] %}
@@ -462,7 +462,7 @@
                                                                 <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
                                                             {% endif %}
                                                             {% if tempElementId in isSourceChanged and canUpdateFiles %}
-                                                                <span class="warning duplicate-warning ml-10">
+                                                                <span class="warning order-warning pl-10 font-size-15" data-icon="alert">
                                                                     {{ 'Source entry content has been modified since order was created.' }}
                                                                 </span>
                                                             {% endif %}
@@ -577,13 +577,30 @@
             </div>
             <div class="input ltr">
                 <label class='float-right'>
-                    {{sourceSiteObject.name}}
-                    <span class="light">
-                        ({{ sourceSiteObject.language }})
-                    </span>
+                    <span {% if sourceSiteObject.enabled %} class="status live" {% else %} class="status" {% endif %} style="margin-right: 2px;"></span>
+                    {{sourceSiteObject.name}} ({{ sourceSiteObject.language }})
                 </label>
             </div>
         </div>
+        {% if orderId and orderTargetSitesObject %}
+            <div class="field">
+                <div class="heading">
+                    <label>Target Site(s)</label>
+                </div>
+                <div class="input ltr">
+                    <ul>
+                        <label class="float-right">
+                        {% for target in orderTargetSitesObject %}
+                            <li>
+                                <span {% if target.enabled %} class="status live" {% else %} class="status" {% endif %} style="margin-right: 2px;"></span>
+                                {{ target.name }} ({{ target.language }})
+                            </li>
+                        {% endfor %}
+                        </label>
+                     </ul>
+                </div>
+            </div>
+        {% endif %}
         {% if author %}
             <div class="data field">
                 <h5 class="heading">{{ 'Author'|t('app') }}</h5>
@@ -615,7 +632,6 @@
             <div class="input ltr">
                 <div class="float-right">
                     <label> {{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }} </label>
-                    {# <label class="pl-10"> {{ order.requestedDueDate ? order.requestedDueDate|date('H:i A') : '' }} </label> #}
                 </div>
             </div>
         </div>

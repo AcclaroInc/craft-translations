@@ -424,7 +424,42 @@
         $elementCheckboxes: null,
         $allElementCheckbox: null,
         $hasActions: null,
+        $headerContainer: null,
+        $files: null,
+        $isMobile: null,
 
+        updateFixedHeader: function($top) {
+            if (this.$headerContainer.height() > this.$files[0].getBoundingClientRect().top - 10) {
+                if (this.$isMobile) {
+                    $top = 0;
+                }
+                this.$files.find('#text-field').css({
+                    "position": "sticky",
+                    "top": $top+"px",
+                    "z-index": "100",
+                    "background-color": "white",
+                    "max-height": "70px",
+                    "box-shadow": "inset 0 -1px 0 rgba(63, 77, 90, 0.1);",
+                });
+                this.$files.find('#text-field div.heading').css({
+                    "padding-top": "20px",
+                    "padding-bottom": "20px"
+                });
+            } else {
+                this.$files.find('#text-field').css({
+                    "position": "",
+                    "top": "",
+                    "z-index": "",
+                    "background-color": "",
+                    "max-height": "",
+                    "box-shadow": "",
+                });
+                this.$files.find('#text-field div.heading').css({
+                    "padding-top": "",
+                    "padding-bottom": "",
+                });
+            }
+        },
         toggleUpdateActionButton: function() {
             $updateButton = $('#order-element-action-menu').find('.update-element');
             // enable only if checked checkbox entry has the updated source
@@ -453,9 +488,11 @@
                 $('#toolbar').hide();
             }
         },
-
         init: function() {
             var self = this;
+            this.$headerContainer = $('#header-container');
+            this.$files = $('#files');
+            this.$isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
 
             // For elements checkboxes
             this.$allElementCheckbox = $('.all-element-checkbox :checkbox');
@@ -604,7 +641,7 @@
                 window.location.href = "/admin/translations/orders/create";
             });
 
-            $('.duplicate-warning', '#global-container').infoicon();
+            $('.order-warning', '#global-container').infoicon();
 
             // Source Site Ajax
             $("#sourceSiteSelect").change(function (e) {
@@ -744,6 +781,16 @@
                     $cancelIcon.removeClass('asc');
                     $cancelIcon.addClass('desc');
                 }
+            });
+
+            $(window).on('scroll resize', function(e) {
+                $width = $(window).width();
+                if ($width < 973) {
+                    height = 104;
+                } else {
+                    height = 50;
+                }
+                self.updateFixedHeader(height);
             });
         },
         _addOrderTag: function($newTag, $tagId) {

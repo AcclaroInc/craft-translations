@@ -226,4 +226,44 @@ class Constants
         'zh-Hant' => 'zh-TW',
         'es-419' => 'es-la'
     ];
+
+    const SUPPORTED_FIELD_TYPES = [
+        'craft\fields\Tags',
+        'craft\fields\Table',
+        'craft\fields\Assets',
+        'craft\fields\Matrix',
+        'craft\fields\Number',
+        'craft\fields\Entries',
+        'craft\fields\Dropdown',
+        'craft\fields\PlainText',
+        'craft\fields\Categories',
+        'craft\fields\Checkboxes',
+        'craft\fields\MultiSelect',
+        'craft\fields\RadioButtons',
+        'benf\neo\Field',
+        'typedlinkfield\fields\LinkField',
+        'craft\redactor\Field',
+        'fruitstudios\linkit\fields\LinkitField',
+        'luwes\codemirror\fields\CodeMirrorField',
+        'verbb\supertable\fields\SuperTableField',
+        'nystudio107\seomatic\fields\SeoSettings',
+        'lenz\linkfield\fields\LinkField',
+        'newism\fields\fields\Telephone',
+        'newism\fields\fields\Address',
+        'newism\fields\fields\Email',
+        'newism\fields\fields\Embed',
+        'newism\fields\fields\PersonName',
+        'newism\fields\fields\Gender',
+        'ether\seo\fields\SeoField'
+    ];
+
+    const UNRELATED_FIELD_TYPES = [
+        'craft\fields\Color',
+        'craft\fields\Date',
+        'craft\fields\Email',
+        'craft\fields\Lightswitch',
+        'craft\fields\Time',
+        'craft\fields\Url',
+        'craft\fields\Users'
+    ];
 }

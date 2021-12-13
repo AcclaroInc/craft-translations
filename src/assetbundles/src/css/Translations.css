@@ -460,18 +460,22 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     padding: 12px;
 }
 
-.duplicate-warning {
+.font-size-15 {
+    font-size: 15px;
+}
+
+.order-warning {
     cursor: pointer;
     display: inline-flex;
     height: 1.375em;
     overflow: hidden;
     text-align: center;
-    vertical-align: baseline;
+    vertical-align: middle;
     width: 1em;
 }
 
-.duplicate-warning:before {
-    content: 'alert';
+.order-warning:before {
+    /* content: 'info'; */
     direction: ltr;
     display: inline-block;
     font-family: 'Craft';
@@ -485,7 +489,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     text-rendering: optimizeLegibility;
     text-transform: none;
     user-select: none;
-    vertical-align: baseline;
+    vertical-align: middle;
     width: 100%;
     word-wrap: normal !important;
 }
@@ -796,10 +800,6 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 
 .p-0 {
     padding: 0 !important;
-}
-
-.ml-10 {
-    margin-left: 10px;
 }
 
 .df {

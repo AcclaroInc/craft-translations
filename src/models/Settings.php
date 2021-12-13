@@ -21,6 +21,8 @@ class Settings extends Model
 {
     public $chkDuplicateEntries = true;
 
+    public $trackSourceChanges = true;
+
     public $twigSearchFilterSingleQuote = "";
 
     public $twigSearchFilterDoubleQuote = "";

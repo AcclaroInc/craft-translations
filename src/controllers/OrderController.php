@@ -21,12 +21,10 @@ use craft\elements\Entry;
 use craft\web\Controller;
 use yii\web\HttpException;
 
-use acclaro\translations\Translations;
 use acclaro\translations\Constants;
-use acclaro\translations\services\Services;
+use acclaro\translations\Translations;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
-use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\repository\OrderRepository;
 
 /**
@@ -196,8 +194,8 @@ class OrderController extends Controller
 
         $variables['sourceSiteObject'] = Craft::$app->getSites()->getSiteById($variables['order']['sourceSite']);
 
+        $variables['orderTargetSitesObject'] = array();
         if ($variables['order']->targetSites) {
-            $variables['orderTargetSitesObject'] = array();
             foreach (json_decode($variables['order']->targetSites) as $key => $site) {
                 $variables['orderTargetSitesObject'][] =
                     (Craft::$app->getSites()->getSiteById($site) ?: [ 'language' => 'Deleted']);
@@ -470,10 +468,9 @@ class OrderController extends Controller
             }
         }
 
-        $variables['isSubmitted'] = ($variables['order']->status !== Constants::ORDER_STATUS_NEW &&
-            $variables['order']->status !== Constants::ORDER_STATUS_FAILED);
+        $variables['isSubmitted'] = !in_array($variables['order']->status, [Constants::ORDER_STATUS_NEW, Constants::ORDER_STATUS_FAILED]);
 
-        if ($variables['isSubmitted']) {
+        if (Translations::getInstance()->settings->trackSourceChanges && $variables['isSubmitted']) {
             $variables['isSourceChanged'] = Translations::$plugin->orderRepository->getIsSourceChanged($variables['order']);
         }
 
@@ -1632,9 +1629,11 @@ class OrderController extends Controller
         $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {
+            $changeLog = [];
             foreach ($order->files as $file) {
                 if (in_array($file->elementId, $elements)) {
                     $element = Craft::$app->getElements()->getElementById($file->elementId);
+
                     $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
                         Constants::FILE_FORMAT_XML,
@@ -1646,10 +1645,16 @@ class OrderController extends Controller
                         ]
                     );
                     Translations::$plugin->fileRepository->saveFile($file);
+
+                    if (!in_array($element->id, $changeLog)) {
+                        array_push($changeLog, $element->id);
+                        $order->logActivity(Translations::$plugin->translator->translate('app', "Source content updated [$element->title]."));
+                        Craft::$app->getElements()->saveElement($order, true, true, false);
+                    }
                 }
             }
             $transaction->commit();
-            Craft::$app->getSession()->setNotice('Order files updated.');
+            Craft::$app->getSession()->setNotice('Success, Updates to source content may not reflect in delivered translations.');
         } catch (\Exception $e) {
             $transaction->rollBack();
             return $this->asJson(['success' => false, 'message' => 'Error updating source. Error: ' . $e->getMessage()]);
