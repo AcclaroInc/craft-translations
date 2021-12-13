@@ -216,6 +216,14 @@
 
                                         </td>
                                         <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
+
+                                        <td>
+                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}"
+                                                title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
+                                                <input type="hidden" name="elements[]" value="{{ element.id }}">
+                                            </a>
+                                        </td>
+
                                     </tr>
                                     {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                                     {% set elementVersions = elementVersions|merge({(loop.index0): element.id ~ "_" ~ elementVersionMap[element.id]}) %}

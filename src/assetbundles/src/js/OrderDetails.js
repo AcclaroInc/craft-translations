@@ -421,9 +421,11 @@
     }
 
     Craft.Translations.OrderDetails = {
+
         $elementCheckboxes: null,
         $allElementCheckbox: null,
         $hasActions: null,
+
         $headerContainer: null,
         $files: null,
         $isMobile: null,
@@ -460,6 +462,7 @@
                 });
             }
         },
+          
         toggleUpdateActionButton: function() {
             $updateButton = $('#order-element-action-menu').find('.update-element');
             // enable only if checked checkbox entry has the updated source
@@ -488,6 +491,7 @@
                 $('#toolbar').hide();
             }
         },
+
         init: function() {
             var self = this;
             this.$headerContainer = $('#header-container');
@@ -510,6 +514,7 @@
                 );
                 self.toggleElementAction();
             });
+
 
             if (isDefaultTranslator) {
                 toggleTranslatorBasedFields();
@@ -642,6 +647,66 @@
             });
 
             $('.order-warning', '#global-container').infoicon();
+
+            // Delete an entry
+            $('.translations-order-delete-entry').on('click', function(e) {
+                var $button = $(this);
+                var $table = $button.closest('table');
+                var $row = $button.closest('tr');
+
+                e.preventDefault();
+
+                if (confirm(Craft.t('app', 'Are you sure you want to remove this entry from the order?'))) {
+                    $row.remove();
+
+                    if ($table.find('tbody tr').length === 0) {
+                        $table.remove();
+                    }
+
+                    var entriesCount = $('input[name="elements[]"]').length;
+
+                    if (entriesCount === 0) {
+                        $('.translations-order-submit').addClass('disabled').prop('disabled', true);
+                    }
+
+                    var wordCount = 0;
+
+                    $('[data-word-count]').each(function() {
+                        wordCount += Number($(this).data('word-count'));
+                    });
+
+                    $('[data-order-attribute=entriesCount]').text(entriesCount);
+
+                    $('[data-order-attribute=wordCount]').text(wordCount);
+
+                    var currentElementIds = $('#currentElementIds').val().split(",");
+                    currentElementIds = currentElementIds.filter(function(itm, i, currentElementIds) {
+                        if (itm != "" && itm != $button.attr('data-element')) {
+                            return i == currentElementIds.indexOf(itm);
+                        }
+                    }).join(",");
+
+                    $originalElementIds = $('#originalElementIds').val().split(',');
+
+                    if (shouldCreateNewOrder()) {
+                        setButtonText('.translations-submit-order.submit', 'Create new order');
+                    } else {
+                        if (! isOrderChanged({source: 'source', target: 'target'})) {
+                            setButtonText('.translations-submit-order.submit', 'Update order');
+                        }
+                    }
+
+                    if (currentElementIds != "" && validateForm()) {
+                        setSubmitButtonStatus(true);
+                    } else {
+                        setSubmitButtonStatus(false);
+                    }
+
+                    $('#currentElementIds').val(currentElementIds);
+                    syncElementVersions();
+                }
+            });
+
 
             // Source Site Ajax
             $("#sourceSiteSelect").change(function (e) {
