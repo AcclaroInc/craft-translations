@@ -34,51 +34,51 @@ use acclaro\translations\elements\actions\OrderEdit;
 class Order extends Element
 {
     public $actionButton = true;
-    
+
     protected $elementType = 'Order';
-    
+
     protected $_elements = array();
-    
+
     protected $_files;
 
     public $id;
-    
+
     public $title;
 
     public $translatorId;
-    
+
     public $ownerId;
-    
+
     public $sourceSite;
-    
+
     public $targetSites;
-    
+
     public $status;
-    
+
     public $statusColour;
 
     public $statusLabel;
-    
+
     public $requestedDueDate;
 
     public $orderDueDate;
 
     public $comments;
-    
+
     public $activityLog;
-    
+
     public $dateOrdered;
 
     public $dateUpdated;
-    
+
     public $serviceOrderId;
-    
+
     public $entriesCount;
-    
+
     public $wordCount;
-    
+
     public $elementIds;
-    
+
     public $siteId;
 
     public $trackChanges;
@@ -311,7 +311,7 @@ class Order extends Element
                 }
 
                 return $languages;
-              
+
             case 'title':
             case 'entriesCount':
             case 'wordCount':
@@ -325,7 +325,7 @@ class Order extends Element
 
                 $translator = $this->getTranslator();
 
-                if (!$translator) 
+                if (!$translator)
                 {
                     return $value ? $value : sprintf('#%s', $this->id);
                 }
@@ -351,7 +351,7 @@ class Order extends Element
 
             case 'ownerId':
                 return $this->getOwner() ? $this->getOwner()->username : '';
-           
+
             case 'translatorId':
                 if (!$this->getTranslator()) {
                     return 'N/A';
@@ -456,14 +456,14 @@ class Order extends Element
     public function getTranslator()
     {
         $translator = $this->translatorId ? Translations::$plugin->translatorRepository->getTranslatorById($this->translatorId) : null;
-        
+
         return $translator;
     }
 
     public function getOwner()
     {
         $owner = $this->ownerId ? Translations::$plugin->userRepository->getUserById($this->ownerId) : null;
-        
+
         return $owner;
     }
 
@@ -579,7 +579,7 @@ class Order extends Element
         if (!$isNew) {
             $record = OrderRecord::findOne($this->id);
             if (!$record) {
-                throw new Exception('Invalid entry ID: ' . $this->id);
+                throw new \Exception('Invalid entry ID: ' . $this->id);
             }
         } else {
             $record = new OrderRecord();
@@ -601,9 +601,10 @@ class Order extends Element
         $record->wordCount =  $this->wordCount;
         $record->elementIds =  $this->elementIds;
         $record->tags =  $this->tags;
+        $record->trackChanges =  $this->trackChanges;
 
         $record->save(false);
-        
+
         parent::afterSave($isNew);
     }
 

@@ -15,14 +15,12 @@ use Exception;
 use craft\db\Query;
 use craft\db\Table;
 use craft\helpers\Db;
-use craft\helpers\App;
 use craft\elements\Tag;
 use craft\records\Element;
 use craft\elements\Asset;
 use craft\elements\Category;
 use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
-use craft\elements\db\ElementQuery;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -31,6 +29,7 @@ use acclaro\translations\records\OrderRecord;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
+use craft\helpers\ElementHelper;
 
 class OrderRepository
 {
@@ -76,7 +75,7 @@ class OrderRepository
     }
 
     /**
-     * @return \craft\elements\db\ElementQuery
+     * @return array
      */
     public function getAllOrderIds()
     {
@@ -111,10 +110,10 @@ class OrderRepository
                 Constants::ORDER_STATUS_COMPLETE
             )))
             ->all();
-            
+
         return $openOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -128,10 +127,10 @@ class OrderRepository
                 Constants::ORDER_STATUS_IN_PROGRESS
             )))
             ->all();
-            
+
         return $inProgressOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -143,7 +142,7 @@ class OrderRepository
 
         return $pendingOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -153,7 +152,6 @@ class OrderRepository
         return $results;
     }
 
-    // ! TODO: check if this is of any use
     public function getOrderStatuses()
     {
         return array(
@@ -176,12 +174,12 @@ class OrderRepository
         $order = new Order();
 
         $order->status = Constants::ORDER_STATUS_NEW;
-        
+
         $order->sourceSite = $sourceSite ?: Craft::$app->sites->getPrimarySite()->id;
-        
+
         return $order;
     }
-    
+
     /**
      * @param \acclaro\translations\elements\Order $order
      * @throws \Exception
@@ -389,7 +387,7 @@ class OrderRepository
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
-            if ($element instanceof GlobalSetModel) {
+            if ($element instanceof GlobalSet) {
                 $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             } else if ($element instanceof Asset) {
                 $assetFilename = $element->getFilename();
@@ -445,7 +443,7 @@ class OrderRepository
             Translations::$plugin->fileRepository->saveFile($file);
         }
     }
-    
+
     /**
      * saveOrderName
      *
@@ -454,7 +452,7 @@ class OrderRepository
      * @return void
      */
     public function saveOrderName($orderId, $name) {
-        
+
         $order = $this->getOrderById($orderId);
         $order->title = $name;
         Craft::$app->getElements()->saveElement($order);
@@ -557,5 +555,55 @@ class OrderRepository
         }
 
         return $draftElement->title ?? '';
+    }
+
+    /**
+     * Checks if source entry of elements in order has changed
+     *
+     * @return array $result
+     */
+    public function getIsSourceChanged($order): ?array
+    {
+        $canonicalIds = [];
+        $originalIds = [];
+
+        if ($elements = $order->elements) {
+            foreach ($order->files as $file) {
+                if (! $file->source || in_array($file->elementId, $originalIds)) continue;
+
+                try {
+                    $element = $canonicalElement = $elements[$file->elementId];
+                    $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+                    $converter = Translations::$plugin->elementToFileConverter;
+
+                    $currentContent = $converter->convert(
+                        $element,
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    => $order->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'wordCount'     => $wordCount,
+                            'orderId'       => $order->id
+                        ]
+                    );
+
+                    $sourceContent = json_decode($converter->xmlToJson($file->source), true);
+                    $currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+                    $sourceContent = json_encode(array_values($sourceContent['content']));
+                    $currentContent = json_encode(array_values($currentContent['content']));
+
+                    if ($element->getIsDraft()) $canonicalElement = $element->getCanonical();
+                    if (md5($sourceContent) !== md5($currentContent)) {
+                        array_push($originalIds, $element->id);
+                        array_push($canonicalIds, $canonicalElement->id);
+                    }
+                } catch (Exception $e) {
+                    throw new Exception("Source entry changes check, Error: " . $e->getMessage(), 1);
+                }
+            }
+        }
+
+        return ['canonicalIds' => $canonicalIds, 'originalIds' => $originalIds];
     }
 }

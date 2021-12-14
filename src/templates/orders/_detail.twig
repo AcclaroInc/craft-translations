@@ -20,6 +20,9 @@
                         orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
 %}
 
+{% set canUpdateFiles = orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
+                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+
 {# For Export/Import and regenrate preview url's buttons #}
 {% set exportImportStatus = '' %}
 {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
@@ -43,7 +46,8 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}" data-submitted="{{ isSubmitted }}"
+                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}"
+                data-submitted="{{ isSubmitted }}" data-hasSourceChanges="{{ sourceChangedElementIds|join(',')|default('') }}"
                 data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>
@@ -140,8 +144,8 @@
 
                 {% set elementIds = {} %}
                 {% set elementVersions = {} %}
-                <div id="text-field" class="field">
-                    <div class="heading">
+                <div id="text-field" class="field" style="margin-top: -20px">
+                    <div class="heading" style="min-height: 40px;">
                         <label id="entries-label" for="entries">
                             Source entries
                             <span class="required"></span>
@@ -149,9 +153,13 @@
                     </div>
                     {% if elements %}
                         <div class="input ltr scroll-x-auto">
-                            <table class="data fullwidth" dir="ltr">
+                            <table id="elements-table" class="data fullwidth" dir="ltr">
                                 <thead>
                                 <tr>
+                                    <th class="thin checkbox-cell all-element-checkbox">
+                                        <input class="checkbox" id="element-0" type="checkbox" name="elements[]"/>
+                                        <label class="checkbox" for="element-0"></label>
+                                    </th>
                                     <th>{{ 'Title'|t }}</th>
                                     <th>{{ 'Version'|t }}</th>
                                     <th>{{ 'Section'|t }}</th>
@@ -162,9 +170,14 @@
                                 <tbody>
                                 {% for element in elements %}
                                     <tr data-word-count="{{ elementWordCounts[element.id] }}">
+                                        <td class="thin checkbox-cell element">
+                                            <input class="checkbox" data-element="{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"/>
+                                            <label class="checkbox" for="element-{{ element.id }}"></label>
+                                        </td>
+                                        </td>
                                         <td>{% include "_elements/element" with {'element': element} only %}
                                             {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
-                                                <span class="warning duplicate-warning">
+                                                <span class="order-warning font-size-15" data-icon="info">
                                                     {{ 'This entry is included<br>in the following orders:' }}
                                                     <ul style="list-style:disc;padding:5px 0 0 15px;">
                                                         {% for orderId in duplicateEntries[element.id] %}
@@ -173,7 +186,12 @@
                                                         </li>
                                                         {% endfor %}
                                                     </ul>
-                                                    </span>
+                                                </span>
+                                            {% endif %}
+                                            {% if element.id in isSourceChanged and canUpdateFiles %}
+                                                <span class="warning order-warning font-size-15" data-icon="alert">
+                                                    {{ 'Source entry content has been modified since order was created.' }}
+                                                </span>
                                             {% endif %}
                                         </td>
                                         <td>
@@ -203,12 +221,7 @@
 
                                         </td>
                                         <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
-                                        <td>
-                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}"
-                                                title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
-                                                <input type="hidden" name="elements[]" value="{{ element.id }}">
-                                            </a>
-                                        </td>
+                                        <td>&nbsp;</td>
                                     </tr>
                                     {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                                     {% set elementVersions = elementVersions|merge({(loop.index0): element.id ~ "_" ~ elementVersionMap[element.id]}) %}
@@ -277,25 +290,89 @@
                 }) }}
                 <input type="hidden" id="originalTranslatorId" value="{{ order.translatorId }}" data-id="{{ defaultTranslatorId|default(0) }}">
 
-                {# <hr> #}
+                <div>
+                    <table id="advance-options" class="data fullwidth">
+                        <thead><tr>
+                            <th class="cursor-pointer">Advanced</th>
+                            <th class="icon ordered desc cursor-pointer" style="background-color: #f3f7fc"></th>
+                            <td class="cursor-pointer" style="width: 20px"></td>
+                        </tr></thead>
+                    </table>
+                    <div id="advance-fields" class="field hidden">
+                        {{ forms.lightswitchField({
+                            label: 'Track source content changes<p class="fw-400">\
+                                Recomended for continuous translation workflows.</p>'|t('app'),
+                            id: "trackChanges",
+                            name: "trackChanges",
+                            on: order.trackChanges
+                        }) }}
+
+                        <input type="hidden" id="originalTrackChanges" value="{{ order.trackChanges }}">
+
+                        <div id="extra-fields">
+                            {{ forms.dateField({
+                                label: 'Requested due date'|t,
+                                value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
+                                name: 'requestedDueDate',
+                                id: 'requestedDueDate',
+                                size: 20,
+                                placeholder: 'Optional',
+                            }) }}
+                            <input type="hidden" id="originalRequestedDueDate" value="{{ date(order.requestedDueDate) | date('m/d/Y') }}">
+
+                            {{ forms.textareaField({
+                                label: 'Order notes'|t,
+                                value: order.comments,
+                                name: 'comments',
+                                placeholder: 'Additional comments and instructions',
+                                id: 'comments',
+                                maxlength: 2000,
+                                size: 20
+                            }) }}
+                            <input type="hidden" id="originalComments" value="{{ order.comments }}">
+
+                            {% set orderTags = {} %}
+                            <div id="fields" class="{{ isEditable }}">
+                                <div id="tab-tag" class="flex-fields">
+                                    <div id="fields-tag-field" class="field width-100">
+                                        <div class="heading">
+                                            <label id="fields-tag-label" for="fields-tag">Order tags</label>
+                                        </div>
+                                        <div class="input ltr">
+                                            <div id="fields-tags" class="elementselect tagselect">
+                                                <div id="elementTags" class="elements">
+                                                    {% if hasTags %}
+                                                        {% for tag in tags %}
+                                                            <div class="element small removable" data-editable="1" data-id="{{ tag.id }}" data-label="{{ tag.title }}">
+                                                                <input type="hidden" name="tags[]" value="{{ tag.id }}"/>
+                                                                <a class="delete icon custom-tag" data-label="{{ tag.title }}" data-id="{{ tag.id }}" title="Remove"></a>
+                                                                <div class="label">
+                                                                    <span class="title">{{ tag.title }}</span>
+                                                                </div>
+                                                            </div>
+                                                            {% set orderTags = orderTags|merge({(loop.index0):tag.title}) %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </div>
+                                                <div class="texticon add icon">
+                                                    {{ text({
+                                                        placeholder: 'Add a tag',
+                                                        size: 10
+                                                    }) }}
+                                                    <div class="spinner hidden"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="originalTags" value="{{ orderTags|join(',') }}">
+                            <input type="hidden" id="tagGroupId" value="{{ tagGroup.id|default('') }}">
+                        </div>
+                    </div>
+                </div>
 
                 {# {{ forms.lightswitchField({
-                    label: 'Track changes<p class="fw-400">Track source content updates. \
-                        Recomended for continuous translation workflows.</p>'|t
-                    (tag('button', {
-                        type: 'button',
-                        id: 'expand-status-btn',
-                        class: ['btn'],
-                        data: {
-                            icon: 'ellipsis',
-                        },
-                    })),
-                    id: "trackChanges",
-                    name: "trackChanges",
-                    on: order.trackChanges
-                }) }}
-
-                {{ forms.lightswitchField({
                     label: 'Asynchronous publishing<p class="fw-400">Creates a seprate translation draft \
                         for each target language that can be published independently.</p>'|t
                         (tag('button', {
@@ -310,68 +387,6 @@
                     name: "asynchronousPublishing",
                     on: order.asynchronousPublishing
                 }) }} #}
-
-                <div id="extra-fields">
-                    <hr>
-                    {{ forms.dateField({
-                        label: 'Requested due date'|t,
-                        value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
-                        name: 'requestedDueDate',
-                        id: 'requestedDueDate',
-                        size: 20,
-                        placeholder: 'Optional',
-                    }) }}
-                    <input type="hidden" id="originalRequestedDueDate" value="{{ date(order.requestedDueDate) | date('m/d/Y') }}">
-
-                    {{ forms.textareaField({
-                        label: 'Order notes'|t,
-                        value: order.comments,
-                        name: 'comments',
-                        placeholder: 'Additional comments and instructions',
-                        id: 'comments',
-                        maxlength: 2000,
-                        size: 20
-                    }) }}
-                    <input type="hidden" id="originalComments" value="{{ order.comments }}">
-
-                    {% set orderTags = {} %}
-                    <div id="fields" class="{{ isEditable }}">
-                        <div id="tab-tag" class="flex-fields">
-                            <div id="fields-tag-field" class="field width-100">
-                                <div class="heading">
-                                    <label id="fields-tag-label" for="fields-tag">Order tags</label>
-                                </div>
-                                <div class="input ltr">
-                                    <div id="fields-tags" class="elementselect tagselect">
-                                        <div id="elementTags" class="elements">
-                                            {% if hasTags %}
-                                                {% for tag in tags %}
-                                                    <div class="element small removable" data-editable="1" data-id="{{ tag.id }}" data-label="{{ tag.title }}">
-                                                        <input type="hidden" name="tags[]" value="{{ tag.id }}"/>
-                                                        <a class="delete icon custom-tag" data-label="{{ tag.title }}" data-id="{{ tag.id }}" title="Remove"></a>
-                                                        <div class="label">
-                                                            <span class="title">{{ tag.title }}</span>
-                                                        </div>
-                                                    </div>
-                                                    {% set orderTags = orderTags|merge({(loop.index0):tag.title}) %}
-                                                {% endfor %}
-                                            {% endif %}
-                                        </div>
-                                        <div class="texticon add icon">
-                                            {{ text({
-                                                placeholder: 'Add a tag',
-                                                size: 10
-                                            }) }}
-                                            <div class="spinner hidden"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="originalTags" value="{{ orderTags|join(',') }}">
-                    <input type="hidden" id="tagGroupId" value="{{ tagGroup.id|default('') }}">
-                </div>
             </div>
         </form>
 
@@ -406,13 +421,13 @@
                                 <tr>
                                     {% if entriesCountByElementCompleted > 0 %}
                                         <td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
-                                            <input class="checkbox" id="element-0" type="checkbox">
-                                            <label class="checkbox" for="element-0"></label>
+                                            <input class="checkbox" id="file-0" type="checkbox">
+                                            <label class="checkbox" for="file-0"></label>
                                         </td>
                                     {% else %}
                                         <td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
-                                            <input class="checkbox" id="element-0" type="checkbox" disabled="disabled">
-                                            <label class="checkbox" for="element-0"></label>
+                                            <input class="checkbox" id="file-0" type="checkbox" disabled="disabled">
+                                            <label class="checkbox" for="file-0"></label>
                                         </td>
                                     {% endif %}
                                     <th>{{ 'Title'|t }}</th>
@@ -453,6 +468,11 @@
                                                                 element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') and
                                                                 element.className != constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
                                                                 <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                                            {% endif %}
+                                                            {% if tempElementId in isSourceChanged and canUpdateFiles %}
+                                                                <span class="warning order-warning pl-10 font-size-15" data-icon="alert">
+                                                                    {{ 'Source entry content has been modified since order was created.' }}
+                                                                </span>
                                                             {% endif %}
                                                         </td>
                                                     </tr>

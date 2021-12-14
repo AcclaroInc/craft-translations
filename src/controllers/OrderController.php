@@ -21,12 +21,10 @@ use craft\elements\Entry;
 use craft\web\Controller;
 use yii\web\HttpException;
 
-use acclaro\translations\Translations;
 use acclaro\translations\Constants;
-use acclaro\translations\services\Services;
+use acclaro\translations\Translations;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
-use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\repository\OrderRepository;
 
 /**
@@ -112,6 +110,7 @@ class OrderController extends Controller
         $variables['inputSourceSite'] = Craft::$app->getRequest()->getQueryParam('sourceSite');
 
         $variables['elementIds'] = Craft::$app->getRequest()->getParam('elements');
+        $variables['isSourceChanged'] = [];
 
         if (empty($variables['inputSourceSite'])) {
             $variables['inputSourceSite'] = Craft::$app->getRequest()->getParam('sourceSite');
@@ -183,6 +182,10 @@ class OrderController extends Controller
 
             if ($orderTranslatorId= Craft::$app->getRequest()->getQueryParam('translatorId')) {
                 $newOrder->translatorId = $orderTranslatorId;
+            }
+
+            if ($orderTrackChanges= Craft::$app->getRequest()->getQueryParam('trackChanges')) {
+                $newOrder->trackChanges = $orderTrackChanges;
             }
 
             $variables['order'] = $newOrder;
@@ -469,8 +472,15 @@ class OrderController extends Controller
             }
         }
 
-        $variables['isSubmitted'] = ($variables['order']->status !== Constants::ORDER_STATUS_NEW &&
-            $variables['order']->status !== Constants::ORDER_STATUS_FAILED);
+        $variables['isSubmitted'] = !in_array($variables['order']->status, [Constants::ORDER_STATUS_NEW, Constants::ORDER_STATUS_FAILED]);
+
+        $variables['sourceChangedElementIds'] = [];
+        if ($variables['order']->trackChanges && $variables['isSubmitted']) {
+            $sourceChanges = Translations::$plugin->orderRepository->getIsSourceChanged($variables['order']);
+
+            $variables['isSourceChanged'] = $sourceChanges['canonicalIds'];
+            $variables['sourceChangedElementIds'] = $sourceChanges['originalIds'];
+        }
 
         $this->renderTemplate('translations/orders/_detail', $variables);
     }
@@ -488,6 +498,7 @@ class OrderController extends Controller
         $flow = explode("_", Craft::$app->getRequest()->getParam('flow'));
         $backToNew = count($flow) > 1;
 
+        /** @var craft\elements\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $elementVersions = trim(Craft::$app->getRequest()->getParam('elementVersions'), ',') ?? array();
@@ -556,6 +567,7 @@ class OrderController extends Controller
 
             $order->tags = json_encode($orderTags ?? []);
             $order->title = Craft::$app->getRequest()->getParam('title');
+            $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
             $order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
@@ -813,6 +825,7 @@ class OrderController extends Controller
         $newOrder = $this->service->makeNewOrder($variables['sourceSite']);
 
         $newOrder->title = $data['title'] ?? '';
+        $newOrder->trackChanges = $data['trackChanges'] ?? null;
         $newOrder->targetSites = json_encode($data['targetSites'] ?? '');
         $newOrder->elementIds = $variables['elementIds'];
         $newOrder->comments = $data['comments'] ?? '';
@@ -955,6 +968,7 @@ class OrderController extends Controller
         $newData = Craft::$app->getRequest()->getBodyParams();
         $resetStatus = false;
 
+        /** @var craft\elements\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $elementVersions = trim(Craft::$app->getRequest()->getParam('elementVersions'), ',') ?? array();
@@ -1193,6 +1207,7 @@ class OrderController extends Controller
         $this->requirePostRequest();
         $action = Craft::$app->getRequest()->getParam('submit');
 
+        /** @var craft\elements\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if (!$currentUser->can('translations:orders:create')) {
@@ -1398,8 +1413,14 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * Sync order from translator service
+     *
+     * @return void
+     */
     public function actionSyncOrders()
     {
+        /** @var craft\elements\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if (!$currentUser->can('translations:orders:import')) {
@@ -1465,6 +1486,7 @@ class OrderController extends Controller
         $this->requireLogin();
         $this->requirePostRequest();
 
+        /** @var craft\elements\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $elementVersions = trim(Craft::$app->getRequest()->getParam('elementVersions'), ',') ?? array();
@@ -1536,6 +1558,7 @@ class OrderController extends Controller
 
             $order->tags = $orderTags ? json_encode($orderTags) : '';
             $order->title = $title;
+            $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
             $order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
@@ -1609,5 +1632,60 @@ class OrderController extends Controller
             Craft::$app->getSession()->setError(Translations::$plugin->translator
                 ->translate('app', 'Error saving draft. Error: '.$e->getMessage()));
         }
+    }
+
+    /**
+     * Update source content changes to order source
+     *
+     * @return JsonResponse
+     */
+    public function actionUpdateOrderFilesSource()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
+
+        if (! $order) return $this->asJson(['success' => false, 'message' => 'Order not found']);
+
+        $elements = Craft::$app->getRequest()->getBodyParam('update-elements');
+        if ($elements) $elements = json_decode($elements, true);
+
+        $transaction = Craft::$app->getDb()->beginTransaction();
+
+        try {
+            $changeLog = [];
+            foreach ($order->files as $file) {
+                if (in_array($file->elementId, $elements)) {
+                    $element = Craft::$app->getElements()->getElementById($file->elementId);
+
+                    $file->source = Translations::$plugin->elementToFileConverter->convert(
+                        $element,
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    => $file->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'wordCount'     => $file->wordCount,
+                            'orderId'       => $orderId,
+                        ]
+                    );
+                    Translations::$plugin->fileRepository->saveFile($file);
+
+                    if (!in_array($element->id, $changeLog)) {
+                        array_push($changeLog, $element->id);
+                        $order->logActivity(Translations::$plugin->translator->translate('app', "Source content updated [$element->title]."));
+                        Craft::$app->getElements()->saveElement($order, true, true, false);
+                    }
+                }
+            }
+            $transaction->commit();
+            Craft::$app->getSession()->setNotice('Success, Updates to source content may not reflect in delivered translations.');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return $this->asJson(['success' => false, 'message' => 'Error updating source. Error: ' . $e->getMessage()]);
+        }
+
+        return $this->asJson(['success' => true, 'message' => 'Order files updated.']);
     }
 }

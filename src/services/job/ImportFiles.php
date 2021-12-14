@@ -25,6 +25,7 @@ class ImportFiles extends BaseJob
     public $order;
     public $totalFiles;
     public $fileFormat;
+    public $disacradElements;
 
     /**
      * Map of assetId v/s file name
@@ -43,7 +44,7 @@ class ImportFiles extends BaseJob
 
             $this->setProgress($queue, $currentFile++ / $this->totalFiles);
             //Process Files
-            $this->processFile($asset, $this->order, $this->fileFormat, $this->fileNames);
+            $this->processFile($asset, $this->order, $this->fileFormat, $this->fileNames, $this->disacradElements);
 
             Craft::$app->getElements()->deleteElement($asset);
         }
@@ -58,7 +59,7 @@ class ImportFiles extends BaseJob
      * Process each file entry per order
      * Validates
      */
-    public function processFile( Asset $asset, $order = null , $fileFormat = null, $fileNames = null)
+    public function processFile( Asset $asset, $order = null , $fileFormat = null, $fileNames = null, $disacradElements = [])
     {
         if (empty($this->order)) {
             $this->order = $order;
@@ -66,6 +67,10 @@ class ImportFiles extends BaseJob
 
         if (empty($this->fileNames)) {
             $this->fileNames = $fileNames;
+        }
+
+        if (empty($this->disacradElements)) {
+            $this->disacradElements = $disacradElements;
         }
 
         if (! $this->fileFormat) {
@@ -136,11 +141,17 @@ class ImportFiles extends BaseJob
         $sourceSite = (string)$file_content['source-site'];
         $targetSite = (string)$file_content['target-site'];
 
-        //Source & Target Languages
-        $sourceLanguage = (string)$file_content['source-language'];
-        $targetLanguage = (string)$file_content['target-language'];
-
         $elementId = $file_content['elementId'];
+
+        if (in_array($elementId, $this->disacradElements)) {
+            $this->order->logActivity(
+                Translations::$plugin->translator->translate(
+                    'app', ($this->fileNames[$asset->id] ?? $asset->getFilename()) ." has source entry changes, please update source and try uploading again."
+                )
+            );
+            Translations::$plugin->orderRepository->saveOrder($this->order);
+            return false;
+        }
 
         $order_file = null;
 
@@ -267,16 +278,6 @@ class ImportFiles extends BaseJob
         $sourceSite = (string)$sites->getAttribute('source-site');
         $targetSite = (string)$sites->getAttribute('target-site');
 
-        // Source & Target Languages
-        $langs = $dom->getElementsByTagName('langs');
-        if ($langs->length == 0) {
-            $this->logError(($this->fileNames[$asset->id] ?? $asset->getFilename())." is missing langs key.");
-            return false;
-        }
-        $langs = isset($langs[0]) ? $langs[0] : $langs;
-        $sourceLanguage = (string)$langs->getAttribute('source-language');
-        $targetLanguage = (string)$langs->getAttribute('target-language');
-        
         // Meta ElementId
         $element = $dom->getElementsByTagName('meta');
         if ($element->length == 0) {
@@ -285,6 +286,17 @@ class ImportFiles extends BaseJob
         }
         $element = isset($element[0]) ? $element[0] : $element;
         $elementId = (string)$element->getAttribute('elementId');
+
+        if (in_array($elementId, $this->disacradElements)) {
+            $this->order->logActivity(
+                Translations::$plugin->translator->translate(
+                    'app', ($this->fileNames[$asset->id] ?? $asset->getFilename()) ." has source entry changes, please update source and try uploading again."
+                )
+            );
+            Translations::$plugin->orderRepository->saveOrder($this->order);
+            return false;
+        }
+
         $orderId = (string)$element->getAttribute('orderId');
 
         foreach ($this->order->files as $file)
@@ -379,16 +391,22 @@ class ImportFiles extends BaseJob
         if (! $file_content) {
             return false;
         }
-        
+
         //Source & Target Sites
         $sourceSite = (string)$file_content['source-site'];
         $targetSite = (string)$file_content['target-site'];
 
-        //Source & Target Languages
-        $sourceLanguage = (string)$file_content['source-language'];
-        $targetLanguage = (string)$file_content['target-language'];
-
         $elementId = $file_content['elementId'];
+
+        if (in_array($elementId, $this->disacradElements)) {
+            $this->order->logActivity(
+                Translations::$plugin->translator->translate(
+                    'app', ($this->fileNames[$asset->id] ?? $asset->getFilename()) ." has source entry changes, please update source and try uploading again."
+                )
+            );
+            Translations::$plugin->orderRepository->saveOrder($this->order);
+            return false;
+        }
 
         $order_file = null;
 
@@ -546,7 +564,7 @@ class ImportFiles extends BaseJob
     {
     	$errors = array();
     	$libErros = libxml_get_errors();
-    	
+
     	$msg = false;
     	if ($libErros && isset($libErros[0]))
     	{
@@ -631,7 +649,7 @@ class ImportFiles extends BaseJob
             foreach ($targetContent['content'] as $key => $value) {
                 $data['target'][$key] = $key;
             }
-    
+
             foreach ($sourceContent['content'] as $key => $value) {
                 $data['source'][$key] = $key;
             }

@@ -10,6 +10,7 @@
     var isCompleted = $("#order-attr").data("status") === "complete";
     var isCanceled = $("#order-attr").data("status") === "canceled";
     var isPublished = $("#order-attr").data("status") === "published";
+    var sourceChanged = String($("#order-attr").data("hassourcechanges"));
     var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
     var defaultTranslatorId = $("#originalTranslatorId").data("id");
 
@@ -132,6 +133,20 @@
                     $responseData.push("title");
                 }
             }
+            // Validate Track Changes
+            if (key == "trackChanges" || key == "all") {
+                $originalTrackChanges = $('#originalTrackChanges').val();
+                var currentTrackChanges = $('input[type=hidden][name=trackChanges]').val();
+
+                if (currentTrackChanges == undefined || currentTrackChanges == '') {
+                    currentTrackChanges = 0;
+                }
+
+                if ($originalTrackChanges != currentTrackChanges) {
+                    if (!$needData) return true;
+                    $responseData.push("trackChanges");
+                }
+            }
             // Validate Translator
             if (key == "translator" || key == "all") {
                 $originalTranslatorId = $('#originalTranslatorId').val().split(',');
@@ -204,6 +219,7 @@
 
     function getFieldValuesAsUrlParams() {
         title = $('#title').val();
+        trackChanges = $('input[type=hidden][name=trackChanges]').val();;
         tags = $('input[name="tags[]"]');
         translatorId = $('#translatorId').val();
         targetSites = '';
@@ -237,6 +253,8 @@
                 url += "&tags[]="+$(this).val()
             });
         }
+
+        url += "&trackChanges="+trackChanges
         return url
     }
 
@@ -414,7 +432,15 @@
         }
     }
 
+    function getSelectedElements()
+    {
+        return Craft.Translations.OrderDetails.$elementCheckboxes.filter(':checked');
+    }
+
     Craft.Translations.OrderDetails = {
+        $elementCheckboxes: null,
+        $allElementCheckbox: null,
+        $hasActions: null,
         $headerContainer: null,
         $files: null,
         $isMobile: null,
@@ -451,11 +477,56 @@
                 });
             }
         },
+        toggleUpdateActionButton: function() {
+            $updateButton = $('#order-element-action-menu').find('.update-element');
+            // enable only if checked checkbox entry has the updated source
+            selectedHasChanges = false;
+            $.each(this.$elementCheckboxes.filter(':checked'), function() {
+                if (! selectedHasChanges) {
+                    selectedHasChanges = sourceChanged.includes($(this).data('element'));
+                }
+            });
+            if (sourceChanged && selectedHasChanges && !isPublished && !isCanceled) {
+                $updateButton.removeClass('disabled noClick');
+            } else {
+                $updateButton.addClass('disabled noClick');
+            }
+        },
+        toggleElementAction: function($show = true) {
+            if ($show && this.$elementCheckboxes.filter(':checked').length > 0) {
+                if (! this.$hasActions) {
+                    this._buildElementActions();
+                    this.$hasActions = true;
+                } else {
+                    $('#toolbar').show();
+                }
+                this.toggleUpdateActionButton();
+            } else {
+                $('#toolbar').hide();
+            }
+        },
         init: function() {
             var self = this;
             this.$headerContainer = $('#header-container');
             this.$files = $('#files');
             this.$isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+
+            // For elements checkboxes
+            this.$allElementCheckbox = $('.all-element-checkbox :checkbox');
+            this.$elementCheckboxes = $('tbody .element :checkbox');
+
+            this.$allElementCheckbox.on('change', function() {
+                self.$elementCheckboxes.prop('checked', $(this).is(':checked'));
+                self.toggleElementAction();
+            });
+
+            this.$elementCheckboxes.on('change', function() {
+                self.$allElementCheckbox.prop(
+                    'checked',
+                    self.$elementCheckboxes.filter(':checked').length === self.$elementCheckboxes.length
+                );
+                self.toggleElementAction();
+            });
 
             if (isDefaultTranslator) {
                 toggleTranslatorBasedFields();
@@ -556,6 +627,14 @@
                 }
             });
 
+            $('#trackChanges').on('change', function() {
+                if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
+                    setSubmitButtonStatus(true);
+                } else {
+                    setSubmitButtonStatus(false);
+                }
+            });
+
             $('#title').on('change, keyup', function() {
                 if (validateForm() && (isNew || isOrderChanged({all: "all"}))) {
                     setSubmitButtonStatus(true);
@@ -587,66 +666,7 @@
                 window.location.href = "/admin/translations/orders/create";
             });
 
-            $('.duplicate-warning', '#global-container').infoicon();
-
-            // Delete an entry
-            $('.translations-order-delete-entry').on('click', function(e) {
-                var $button = $(this);
-                var $table = $button.closest('table');
-                var $row = $button.closest('tr');
-
-                e.preventDefault();
-
-                if (confirm(Craft.t('app', 'Are you sure you want to remove this entry from the order?'))) {
-                    $row.remove();
-
-                    if ($table.find('tbody tr').length === 0) {
-                        $table.remove();
-                    }
-
-                    var entriesCount = $('input[name="elements[]"]').length;
-
-                    if (entriesCount === 0) {
-                        $('.translations-order-submit').addClass('disabled').prop('disabled', true);
-                    }
-
-                    var wordCount = 0;
-
-                    $('[data-word-count]').each(function() {
-                        wordCount += Number($(this).data('word-count'));
-                    });
-
-                    $('[data-order-attribute=entriesCount]').text(entriesCount);
-
-                    $('[data-order-attribute=wordCount]').text(wordCount);
-
-                    var currentElementIds = $('#currentElementIds').val().split(",");
-                    currentElementIds = currentElementIds.filter(function(itm, i, currentElementIds) {
-                        if (itm != "" && itm != $button.attr('data-element')) {
-                            return i == currentElementIds.indexOf(itm);
-                        }
-                    }).join(",");
-
-                    $originalElementIds = $('#originalElementIds').val().split(',');
-
-                    if (shouldCreateNewOrder()) {
-                        setButtonText('.translations-submit-order.submit', 'Create new order');
-                    } else {
-                        if (! isOrderChanged({source: 'source', target: 'target'})) {
-                            setButtonText('.translations-submit-order.submit', 'Update order');
-                        }
-                    }
-
-                    if (currentElementIds != "" && validateForm()) {
-                        setSubmitButtonStatus(true);
-                    } else {
-                        setSubmitButtonStatus(false);
-                    }
-
-                    $('#currentElementIds').val(currentElementIds);
-                    syncElementVersions();
-                }
-            });
+            $('.order-warning', '#global-container').infoicon();
 
             // Source Site Ajax
             $("#sourceSiteSelect").change(function (e) {
@@ -796,6 +816,11 @@
                     height = 50;
                 }
                 self.updateFixedHeader(height);
+            });
+
+            $('#advance-options').on('click', '.cursor-pointer', function() {
+                $('#advance-options').find('.ordered').toggleClass('desc asc');
+                $('#advance-fields').toggleClass('hidden');
             });
         },
         _addOrderTag: function($newTag, $tagId) {
@@ -1082,6 +1107,142 @@
                 $('li[data-id=order]').attr('title', 'This order is no longer editable. The corresponding My Acclaro order is complete.');
                 $('#tab-order').addClass('noClick');
             }
+        },
+        _buildElementActions: function() {
+            var $toolbar = $('<div>', {'id': 'toolbar', 'class': 'btngroup flex flex-nowrap margin-left'});
+            $toolbar.insertAfter('#text-field #entries-label');
+
+            $menubtn = $('<div class="btn menubtn" data-icon=settings title=Actions></div>');
+            $toolbar.append($menubtn);
+
+            $menubtn.on('click', function(e) {
+                e.preventDefault();
+            });
+
+            $menu = $('<div>', {'class': 'menu', 'id': 'order-element-action-menu'});
+            $menu.appendTo($toolbar);
+
+            $dropdown = $('<ul>', {'class': ''});
+            $menu.append($dropdown);
+
+            $updateLi = $('<li>');
+            $dropdown.append($updateLi);
+
+            $updateAction = $('<a>', {
+                'class': 'update-element disabled noClick',
+                'href': '#',
+                'text': 'Update',
+            });
+            $updateLi.append($updateAction);
+            this._addUpdateElementAction($updateAction);
+
+            $dropdown.append($('<hr>'));
+            $deleteLi = $('<li>');
+            $dropdown.append($deleteLi);
+
+            $deleteAction = $('<a>', {
+                'class': 'remove-element error',
+                'href': '#',
+                'text': 'Remove',
+            });
+            $deleteLi.append($deleteAction);
+            this._addDeleteElementAction($deleteAction);
+        },
+        _addUpdateElementAction: function(that) {
+            $(that).on('click', function(e) {
+                e.preventDefault();
+                $form = $('#order-form');
+
+                if (! isDefaultTranslator) {
+                    Craft.cp.displayNotice(Craft.t('app', 'Please place a new order for updated source'));
+                    return;
+                }
+
+                elements = [];
+                $rows = getSelectedElements();
+                $rows.each(function() {
+                    elements.push($(this).data('element'));
+                });
+
+                $hiddenFlow = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'update-elements',
+                    'value': JSON.stringify(elements)
+                });
+                $hiddenFlow.appendTo($form);
+                Craft.postActionRequest('translations/order/update-order-files-source', $form.serialize(), function(response, textStatus) {
+                    if (textStatus === 'success') {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            Craft.cp.displayError(Craft.t('app', response.message));
+                        }
+                    }
+                });
+            });
+        },
+        _addDeleteElementAction: function(that) {
+            var self = this;
+            $(that).on('click', function(e) {
+                var $table = $('#elements-table');
+                var $rows = getSelectedElements();
+
+                e.preventDefault();
+
+                if (confirm(Craft.t('app', 'Are you sure you want to remove this entry from the order?'))) {
+                    $removedElements = {};
+
+                    $rows.each(function() {
+                        $removedElements[$(this).data('element')] = $(this).data('element');
+                        $(this).closest('tr').remove();
+                    });
+
+                    if ($table.find('tbody tr').length === 0) {
+                        $table.remove();
+                    }
+
+                    var entriesCount = $('input[name="elements[]"]').length;
+
+                    if (entriesCount === 0) {
+                        $('.translations-order-submit').addClass('disabled').prop('disabled', true);
+                    }
+
+                    var wordCount = 0;
+
+                    $('[data-word-count]').each(function() {
+                        wordCount += Number($(this).data('word-count'));
+                    });
+
+                    $('[data-order-attribute=entriesCount]').text(entriesCount);
+
+                    $('[data-order-attribute=wordCount]').text(wordCount);
+
+                    var currentElementIds = $('#currentElementIds').val().split(",");
+                    currentElementIds = currentElementIds.filter(function(itm, i, currentElementIds) {
+                        if (itm != "" && !(itm in $removedElements)) {
+                            return i == currentElementIds.indexOf(itm);
+                        }
+                    }).join(",");
+
+                    if (shouldCreateNewOrder()) {
+                        setButtonText('.translations-submit-order.submit', 'Create new order');
+                    } else {
+                        if (! isOrderChanged({source: 'source', target: 'target'})) {
+                            setButtonText('.translations-submit-order.submit', 'Update order');
+                        }
+                    }
+
+                    if (currentElementIds != "" && validateForm()) {
+                        setSubmitButtonStatus(true);
+                    } else {
+                        setSubmitButtonStatus(false);
+                    }
+
+                    $('#currentElementIds').val(currentElementIds);
+                    syncElementVersions();
+                    self.toggleElementAction(false);
+                }
+            });
         }
     }
 
