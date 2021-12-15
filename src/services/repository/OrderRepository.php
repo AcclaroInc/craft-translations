@@ -15,14 +15,13 @@ use Exception;
 use craft\db\Query;
 use craft\db\Table;
 use craft\helpers\Db;
-use craft\helpers\App;
 use craft\elements\Tag;
 use craft\records\Element;
 use craft\elements\Asset;
 use craft\elements\Category;
 use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
-use craft\elements\db\ElementQuery;
+use craft\helpers\ElementHelper;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -76,7 +75,7 @@ class OrderRepository
     }
 
     /**
-     * @return \craft\elements\db\ElementQuery
+     * @return [\craft\elements\db\ElementQuery]
      */
     public function getAllOrderIds()
     {
@@ -111,10 +110,10 @@ class OrderRepository
                 Constants::ORDER_STATUS_COMPLETE
             )))
             ->all();
-            
+
         return $openOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -128,10 +127,10 @@ class OrderRepository
                 Constants::ORDER_STATUS_IN_PROGRESS
             )))
             ->all();
-            
+
         return $inProgressOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -143,7 +142,7 @@ class OrderRepository
 
         return $pendingOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -176,12 +175,12 @@ class OrderRepository
         $order = new Order();
 
         $order->status = Constants::ORDER_STATUS_NEW;
-        
+
         $order->sourceSite = $sourceSite ?: Craft::$app->sites->getPrimarySite()->id;
-        
+
         return $order;
     }
-    
+
     /**
      * @param \acclaro\translations\elements\Order $order
      * @throws \Exception
@@ -345,7 +344,6 @@ class OrderRepository
             $order->title,
             $comments,
             $dueDate,
-            $order->id,
             $order->wordCount
         );
 
@@ -389,7 +387,7 @@ class OrderRepository
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
-            if ($element instanceof GlobalSetModel) {
+            if ($element instanceof GlobalSet) {
                 $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
             } else if ($element instanceof Asset) {
                 $assetFilename = $element->getFilename();
@@ -409,7 +407,6 @@ class OrderRepository
                 $order->serviceOrderId,
                 $sourceSite,
                 $targetSite,
-                $file->id,
                 $path
             );
 
@@ -445,7 +442,7 @@ class OrderRepository
             Translations::$plugin->fileRepository->saveFile($file);
         }
     }
-    
+
     /**
      * saveOrderName
      *
@@ -454,7 +451,7 @@ class OrderRepository
      * @return void
      */
     public function saveOrderName($orderId, $name) {
-        
+
         $order = $this->getOrderById($orderId);
         $order->title = $name;
         Craft::$app->getElements()->saveElement($order);

@@ -23,10 +23,8 @@ use yii\web\HttpException;
 
 use acclaro\translations\Translations;
 use acclaro\translations\Constants;
-use acclaro\translations\services\Services;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
-use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\repository\OrderRepository;
 
 /**
@@ -488,6 +486,7 @@ class OrderController extends Controller
         $flow = explode("_", Craft::$app->getRequest()->getParam('flow'));
         $backToNew = count($flow) > 1;
 
+        /** @var \Yii\web\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $elementVersions = trim(Craft::$app->getRequest()->getParam('elementVersions'), ',') ?? array();
@@ -955,6 +954,7 @@ class OrderController extends Controller
         $newData = Craft::$app->getRequest()->getBodyParams();
         $resetStatus = false;
 
+        /** @var \Yii\web\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $elementVersions = trim(Craft::$app->getRequest()->getParam('elementVersions'), ',') ?? array();
@@ -976,10 +976,13 @@ class OrderController extends Controller
             }
         }
 
-        $orderTags = Craft::$app->getRequest()->getParam('tags');
-
         if (!$currentUser->can('translations:orders:create')) {
-            return $this->asJson(["success" => false, "message" => "User does not have permission to perform this action."]);
+            return $this->asJson(
+                [
+                    "success" => false,
+                    "message" => "User does not have permission to perform this action."
+                ]
+            );
         }
 
         $orderId = Craft::$app->getRequest()->getParam('id');
@@ -996,11 +999,15 @@ class OrderController extends Controller
         $sourceSite = $sourceSite ?: $order->sourceSite;
         // Authenticate service
         $translator = $order->getTranslator();
-        $service = $translator->service;
-        $settings = $translator->getSettings();
-        $authenticate = Translations::$plugin->services->authenticateService($service, $settings);
 
-        if (!$authenticate && $service !== Constants::TRANSLATOR_DEFAULT) {
+        $authenticate = Translations::$plugin->services->authenticateService(
+          $translator->service,
+          $translator->getSettings()
+        );
+
+        $isDefaultTranslator = $translator->service === Constants::TRANSLATOR_DEFAULT;
+
+        if (!$authenticate && !$isDefaultTranslator) {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
             return $this->asJson(["success" => false, "message" => $message]);
         }
@@ -1021,12 +1028,12 @@ class OrderController extends Controller
         try {
             $updatedFields = json_decode($newData['updatedFields']) ?? [];
 
-            $isDefaultTranslator = $order->getTranslator()->service === Constants::TRANSLATOR_DEFAULT;
             if (!$isDefaultTranslator) {
+                /** @var \acclaro\translations\services\translator\AcclaroTranslationService $translatorService */
                 $translatorService = Translations::$plugin->translatorFactory
                     ->makeTranslationService(
-                        $order->getTranslator()->service,
-                        json_decode($order->getTranslator()->settings, true)
+                        $translator->service,
+                        json_decode($translator->settings, true)
                     );
             }
 
@@ -1065,7 +1072,7 @@ class OrderController extends Controller
                         $updated = !empty($updatedTagIds) ? json_encode($updatedTagIds) : '';
                         // Make Api Request to update tags
                         if (! $isDefaultTranslator) {
-                            $translatorService->editOrderTags($order, $settings, $updatedTags);
+                            $translatorService->editOrderTags($order, $updatedTags);
                         }
                     }
                 }
@@ -1095,7 +1102,7 @@ class OrderController extends Controller
 
             // Logic to update dueDate and comments in acclaro order
             // if (! empty($editOrderRequest) && ! $isDefaultTranslator) {
-            //     $translatorService->editOrder($order, $settings, $editOrderRequest);
+            //     $translatorService->editOrder($order, $editOrderRequest);
             // }
 
             if (! empty($oldData)) {
@@ -1109,7 +1116,7 @@ class OrderController extends Controller
                             $files = Translations::$plugin->fileRepository->getFilesByElementId($elementId, $order->id);
                             foreach ($files as $file) {
                                 if (! $isDefaultTranslator) {
-                                    $translatorService->addFileComment($order, $settings, $file, "CANCEL FILE");
+                                    $translatorService->addFileComment($order, $file, "CANCEL FILE");
                                 }
                                 Translations::$plugin->fileRepository->deleteById($file->id);
                             }
@@ -1126,8 +1133,8 @@ class OrderController extends Controller
                             foreach ($targetSites as $site) {
                                 $file = Translations::$plugin->fileRepository->createOrderFile($order, $elementId, $site);
                                 if (! $isDefaultTranslator) {
-                                    $translatorService->sendOrderFile($order, $file, $settings);
-                                    $translatorService->addFileComment($order, $settings, $file, "NEW FILE");
+                                    $translatorService->sendOrderFile($order, $file);
+                                    $translatorService->addFileComment($order, $file, "NEW FILE");
                                 } else {
                                     Translations::$plugin->fileRepository->saveFile($file);
                                 }
@@ -1146,8 +1153,8 @@ class OrderController extends Controller
                         foreach ($orderElements as $elementId) {
                             $file = Translations::$plugin->fileRepository->createOrderFile($order, $elementId, $site);
                             if (! $isDefaultTranslator) {
-                                $translatorService->sendOrderFile($order, $file, $settings);
-                                $translatorService->addFileComment($order, $settings, $file, "NEW FILE");
+                                $translatorService->sendOrderFile($order, $file);
+                                $translatorService->addFileComment($order, $file, "NEW FILE");
                             } else {
                                 Translations::$plugin->fileRepository->saveFile($file);
                             }
@@ -1193,6 +1200,7 @@ class OrderController extends Controller
         $this->requirePostRequest();
         $action = Craft::$app->getRequest()->getParam('submit');
 
+        /** @var \Yii\web\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if (!$currentUser->can('translations:orders:create')) {
@@ -1319,7 +1327,7 @@ class OrderController extends Controller
                     json_decode($order->getTranslator()->settings, true)
                 );
 
-            $res = $translatorService->cancelOrder($order, $translator->getSettings());
+            $res = $translatorService->cancelOrder($order);
 
             if (empty($res)) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator
@@ -1400,6 +1408,7 @@ class OrderController extends Controller
 
     public function actionSyncOrders()
     {
+        /** @var \Yii\web\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if (!$currentUser->can('translations:orders:import')) {
@@ -1465,6 +1474,7 @@ class OrderController extends Controller
         $this->requireLogin();
         $this->requirePostRequest();
 
+        /** @var \Yii\web\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $elementVersions = trim(Craft::$app->getRequest()->getParam('elementVersions'), ',') ?? array();

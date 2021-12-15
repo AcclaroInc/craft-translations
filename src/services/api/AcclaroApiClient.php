@@ -27,11 +27,23 @@ class AcclaroApiClient
         ]);
     }
 
+    /**
+     * Get Api Client
+     *
+     * @return Client
+     */
     public function getClient()
     {
         return $this->client;
     }
 
+    /**
+     * Log api request call
+     *
+     * @param Request $request
+     * @param string $endpoint
+     * @return void
+     */
     public function logRequest($request, $endpoint)
     {
         $tempPath = Craft::$app->getPath()->getTempPath().'/translations';
@@ -51,9 +63,16 @@ class AcclaroApiClient
         fclose($handle);
     }
 
+    /**
+     * Log api response data
+     *
+     * @param JsonResponse $response
+     * @param [type] $endpoint
+     * @return void
+     */
     public function logResponse($response, $endpoint)
     {
-        Craft::$app->path->getTempPath().'/translations';
+        $tempPath = Craft::$app->path->getTempPath().'/translations';
 
         if (!is_dir($tempPath)) {
             mkdir($tempPath);
@@ -70,6 +89,13 @@ class AcclaroApiClient
         fclose($handle);
     }
 
+    /**
+     * Add query params to api endpoint
+     *
+     * @param string $endpoint
+     * @param array $query
+     * @return string
+     */
     private function prepareEndpoint($endpoint, $query)
     {
         $result = $endpoint;
@@ -83,10 +109,17 @@ class AcclaroApiClient
         return $result;
     }
 
+    /**
+     * Create a request object and send the api request
+     *
+     * @param string $method
+     * @param string $endpoint
+     * @param array $query
+     * @param array $files
+     * @return void|object
+     */
     public function request($method, $endpoint, $query = array(), $files = array())
     {
-        $output = [];
-
         $endpoint = $this->prepareEndpoint($endpoint, $query);
 
         if ($files) {
@@ -102,7 +135,6 @@ class AcclaroApiClient
                             ]
                         ]
                     ]);
-                    continue;
                 }
             }
         } else {
@@ -148,23 +180,54 @@ class AcclaroApiClient
         return (object) $responseJson['data'];
     }
 
+    /**
+     * Create and send a GET api request
+     *
+     * @param string $endpoint
+     * @param array $query
+     * @return void|object
+     */
     public function get($endpoint, $query = array())
     {
         return $this->request(Constants::REQUEST_METHOD_GET, $endpoint, $query);
     }
 
+    /**
+     * Create and send a POST api request
+     *
+     * @param string $endpoint
+     * @param array $query
+     * @param array $files
+     * @return void|object
+     */
     public function post($endpoint, $query = array(), $files = array())
     {
         return $this->request(Constants::REQUEST_METHOD_POST, $endpoint, $query, $files);
     }
 
+    /**
+     * Get acclaro account details
+     *
+     * @return void|object
+     */
     public function getAccount()
     {
         return $this->get(Constants::ACCLARO_API_GET_ACCOUNT);
     }
 
     // Order Endpoints
-    public function createOrder($name, $comments, $dueDate, $craftOrderId, $wordCount)
+
+    /**
+     * Create a new order
+     *
+     * @param string $name
+     * @param string $comments
+     * @param string $dueDate
+     * @param int|string $craftOrderId
+     * @param int|string $wordCount
+     * @return void|object
+     */
+    public function createOrder($name, $comments, $dueDate, $wordCount)
     {
         $order = $this->post(Constants::ACCLARO_API_CREATE_ORDER, array(
             'name' => $name,
@@ -180,6 +243,13 @@ class AcclaroApiClient
         return $order;
     }
 
+    /**
+     * Request an order callback
+     *
+     * @param int|string $orderId
+     * @param string $url
+     * @return void|object
+     */
     public function requestOrderCallback($orderId, $url)
     {
         return $this->post(Constants::ACCLARO_API_REQUEST_ORDER_CALLBACK, array(
@@ -188,6 +258,12 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Get Order
+     *
+     * @param int|string $orderId
+     * @return void|object
+     */
     public function getOrder($orderId)
     {
         return $this->get(Constants::ACCLARO_API_GET_ORDER, array(
@@ -195,6 +271,12 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Submit order
+     *
+     * @param int|string $orderId
+     * @return void|object
+     */
     public function submitOrder($orderId)
     {
         return $this->post(Constants::ACCLARO_API_SUBMIT_ORDER, array(
@@ -202,6 +284,13 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Edit order name
+     *
+     * @param int|string $orderId
+     * @param string $name
+     * @return void|object
+     */
     public function editOrderName($orderId, $name)
     {
         return $this->post(Constants::ACCLARO_API_EDIT_ORDER, array(
@@ -211,6 +300,13 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Add tags to order
+     *
+     * @param int|string $orderId
+     * @param null|string $tags
+     * @return void|object
+     */
     public function addOrderTags($orderId, $tags = null)
     {
         return $this->post(Constants::ACCLARO_API_ADD_ORDER_TAG, array(
@@ -219,6 +315,13 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Remove order tags
+     *
+     * @param int|string $orderId
+     * @param null|string $tag
+     * @return void|object
+     */
     public function removeOrderTags($orderId, $tag)
     {
         return $this->post(Constants::ACCLARO_API_DELETE_ORDER_TAG, array(
@@ -227,6 +330,13 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Add order comment
+     *
+     * @param int|string $orderId
+     * @param string $comment
+     * @return void|object
+     */
     public function addOrderComment($orderId, $comment)
     {
         return $this->post(Constants::ACCLARO_API_ADD_ORDER_COMMENT, array(
@@ -236,6 +346,15 @@ class AcclaroApiClient
     }
 
     // File Endpoints
+
+    /**
+     * Add file comment
+     *
+     * @param int|string $orderId
+     * @param int|string $fileId
+     * @param string $comment
+     * @return void|object
+     */
     public function addFileComment($orderId, $fileId, $comment)
     {
         return $this->post(Constants::ACCLARO_API_ADD_FILE_COMMENT, array(
@@ -245,6 +364,14 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Add review url
+     *
+     * @param int|string $orderId
+     * @param int|string $fileId
+     * @param string $url
+     * @return void|object
+     */
     public function addReviewUrl($orderId, $fileId, $url)
     {
         return $this->post(Constants::ACCLARO_API_ADD_FILE_REVIEW_URL, array(
@@ -254,7 +381,17 @@ class AcclaroApiClient
         ));
     }
 
-    public function sendSourceFile($orderId, $sourceSite, $targetSite, $craftOrderId, $sourceFile)
+    /**
+     * Send source file
+     *
+     * @param int|string $orderId
+     * @param string $sourceSite
+     * @param string $targetSite
+     * @param int|string $craftOrderId
+     * @param string|binary $sourceFile
+     * @return void|object
+     */
+    public function sendSourceFile($orderId, $sourceSite, $targetSite, $sourceFile)
     {
         return $this->post(Constants::ACCLARO_API_SEND_SOURCE_FILE, array(
             'orderid' => $orderId,
@@ -266,6 +403,13 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Get file status
+     *
+     * @param int|string $orderId
+     * @param int|string $fileId
+     * @return void|object
+     */
     public function getFileStatus($orderId, $fileId)
     {
         return $this->get(Constants::ACCLARO_API_GET_FILE_STATUS, array(
@@ -274,6 +418,12 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Get file info
+     *
+     * @param int|string $orderId
+     * @return void|object
+     */
     public function getFileInfo($orderId)
     {
         return $this->get(Constants::ACCLARO_API_GET_ORDER_FILES_INFO, array(
@@ -281,13 +431,20 @@ class AcclaroApiClient
         ));
     }
 
+    /**
+     * Get file
+     *
+     * @param int|string $orderId
+     * @param int|string $fileId
+     * @return void|object
+     */
     public function getFile($orderId, $fileId)
     {
         $query = array(
             'orderid' => $orderId,
             'fileid' => $fileId,
         );
-        
+
         $endpoint = $this->prepareEndpoint(Constants::ACCLARO_API_GET_FILE, $query);
 
         $request = new Request(Constants::REQUEST_METHOD_GET, $endpoint.'?'.http_build_query($query, '', '&'));
@@ -300,7 +457,6 @@ class AcclaroApiClient
             $response = $this->client->send($request, ['timeout' => 2]);
         } catch (Exception $e) {
             //@TODO
-            var_dump($e);
             return null;
         }
 
@@ -318,6 +474,14 @@ class AcclaroApiClient
         return $body->getContents();
     }
 
+    /**
+     * Request a file callback
+     *
+     * @param int|string $orderId
+     * @param int|string $fileId
+     * @param string $url
+     * @return void|object
+     */
     public function requestFileCallback($orderId, $fileId, $url)
     {
         return $this->post(Constants::ACCLARO_API_REQUEST_FILE_CALLBACK, array(
@@ -326,12 +490,23 @@ class AcclaroApiClient
             'url' => $url,
         ));
     }
-    
+
+    /**
+     * Get Languages
+     *
+     * @return void|object
+     */
     public function getLanguages()
     {
         return $this->get(Constants::ACCLARO_API_GET_LANGUAGES);
     }
-    
+
+    /**
+     * Get language pairs
+     *
+     * @param string $sourceLang
+     * @return void|object
+     */
     public function getLanguagePairs($sourceLang)
     {
         return $this->get(Constants::ACCLARO_API_GET_LANGUAGE_PAIRS, array(

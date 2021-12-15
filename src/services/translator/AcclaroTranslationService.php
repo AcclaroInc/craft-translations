@@ -12,9 +12,8 @@ namespace acclaro\translations\services\translator;
 
 use Craft;
 use craft\elements\Asset;
-use craft\elements\Entry;
-use craft\elements\Category;
 use craft\elements\GlobalSet;
+use craft\helpers\ElementHelper;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -30,12 +29,12 @@ class AcclaroTranslationService implements TranslationServiceInterface
      * @var boolean
      */
     protected $sandboxMode = false;
-    
+
     /**
      * @var acclaro\translations\services\api\AcclaroApiClient
      */
     protected $acclaroApiClient;
-    
+
     /**
      * @var array
      */
@@ -70,7 +69,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $response = $this->acclaroApiClient->getAccount();
 
-        return !empty($response->plunetid);
+        return !empty($response);
     }
 
     /**
@@ -115,7 +114,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             if ($file->status === Constants::FILE_STATUS_CANCELED) return;
 
             $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
-            
+
             if (!is_array($fileInfoResponse)) {
                 return;
             }
@@ -124,25 +123,26 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 if ($fileInfo->fileid == $file->serviceFileId) {
                     break;
                 }
-    
+
                 $fileInfo = null;
             }
-    
+
+            /** @var object $fileInfo */
             if (empty($fileInfo->targetfile)) {
                 return;
             }
-    
+
             $targetFileId = $fileInfo->targetfile;
-    
+
             $fileStatusResponse = $this->acclaroApiClient->getFileStatus($order->serviceOrderId, $targetFileId);
-    
-            $file->status = $fileStatusResponse->status == Constants::FILE_STATUS_COMPLETE ? 
+
+            $file->status = $fileStatusResponse->status == Constants::FILE_STATUS_COMPLETE ?
                 Constants::FILE_STATUS_REVIEW_READY : $fileStatusResponse->status;
             $file->dateDelivered = new \DateTime();
-    
+
             // download the file
             $target = $this->acclaroApiClient->getFile($order->serviceOrderId, $targetFileId);
-    
+
             if ($target) {
                 $file->target = $target;
             }
@@ -162,7 +162,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
         return ! empty($orderResponse) ? $orderResponse->status : null;
     }
- 
+
     /**
      * {@inheritdoc}
      */
@@ -177,7 +177,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         return $job;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -202,7 +202,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         return $this->acclaroApiClient->getLanguages();
     }
-    
+
     public function getLanguagePairs($source)
     {
         return $this->acclaroApiClient->getLanguagePairs($source);
@@ -213,13 +213,10 @@ class AcclaroTranslationService implements TranslationServiceInterface
         return $this->acclaroApiClient->editOrderName($orderId, $name);
     }
 
-    public function sendOrderFile($order, $file, $settings) {
+    public function sendOrderFile($order, $file) {
 
         $tempPath = Craft::$app->path->getTempPath();
-        $acclaroApiClient = new AcclaroApiClient(
-            $settings['apiToken'],
-            !empty($settings['sandboxMode'])
-        );
+        $acclaroApiClient = $this->acclaroApiClient;
 
         $orderData = [
             'acclaroOrderId'    => $order->serviceOrderId,
@@ -255,14 +252,13 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $order->serviceOrderId,
                 $sourceSite,
                 $targetSite,
-                $file->id,
                 $path
             );
 
             $file->serviceFileId = $fileResponse->fileid ? $fileResponse->fileid : $file->id;
             $file->status = $fileResponse->status;
 
-            $fileCallbackResponse = $acclaroApiClient->requestFileCallback(
+            $acclaroApiClient->requestFileCallback(
                 $order->serviceOrderId,
                 $file->serviceFileId,
                 Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
@@ -288,7 +284,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      *
      * @return void
      */
-    public function editOrder($order, $settings, $data)
+    public function editOrder($order, $data)
     {
         $res = $this->acclaroApiClient->editOrder(
             $order->serviceOrderId,
@@ -307,7 +303,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      *
      * @return void
      */
-    public function cancelOrder($order, $settings)
+    public function cancelOrder($order)
     {
         return $this->acclaroApiClient->addOrderComment($order->serviceOrderId, Constants::ACCLARO_ORDER_CANCEL);
     }
@@ -317,7 +313,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      *
      * @return void
      */
-    public function addFileComment($order, $settings, $file, $comment)
+    public function addFileComment($order, $file, $comment)
     {
         $this->acclaroApiClient->addFileComment($order->serviceOrderId, $file->serviceFileId, $comment);
     }
@@ -327,7 +323,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      *
      * @return void
      */
-    public function editOrderTags($order, $settings, $newTags)
+    public function editOrderTags($order, $newTags)
     {
         $oldTags = [];
 
