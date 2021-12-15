@@ -47,7 +47,7 @@
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
                 <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}"
-                data-submitted="{{ isSubmitted }}" data-hasSourceChanges="{{ sourceChangedElementIds|join(',')|default('') }}"
+                data-submitted="{{ isSubmitted }}" data-hasSourceChanges="{{ sourceChangedElementIds|join(',')|default('') }}" data-hasSourceChangesCanonical="{{ isSourceChanged|join(',')|default('') }}"
                 data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>

@@ -483,7 +483,8 @@
             selectedHasChanges = false;
             $.each(this.$elementCheckboxes.filter(':checked'), function() {
                 if (! selectedHasChanges) {
-                    selectedHasChanges = sourceChanged.includes($(this).data('element'));
+                    totalElementIds = sourceChanged + "," + String($("#order-attr").data("hassourcechangesCanonical"));
+                    selectedHasChanges = $.inArray($(this).data('element'), totalElementIds.split(','));
                 }
             });
             if (sourceChanged && selectedHasChanges && !isPublished && !isCanceled) {
@@ -816,11 +817,6 @@
                     height = 50;
                 }
                 self.updateFixedHeader(height);
-            });
-
-            $('#advance-options').on('click', '.cursor-pointer', function() {
-                $('#advance-options').find('.ordered').toggleClass('desc asc');
-                $('#advance-fields').toggleClass('hidden');
             });
         },
         _addOrderTag: function($newTag, $tagId) {
