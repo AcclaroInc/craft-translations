@@ -30,7 +30,7 @@ class BaseController extends Controller
      * @access protected
      */
     protected $allowAnonymous = true;
-    
+
     /**
      * @var int
      */
@@ -38,7 +38,7 @@ class BaseController extends Controller
 
     // Public Methods
     // =========================================================================
-    
+
     public function __construct(
         $id,
         $module = null
@@ -82,12 +82,12 @@ class BaseController extends Controller
         }
 
         // don't process published orders
-        if ($order->status === Constants::ORDER_STATUS_PUBLISHED) {
+        if ($order->isPublished()) {
             Craft::$app->end('Order already published');
         }
 
         // don't process canceled orders
-        if ($order->status === Constants::ORDER_STATUS_CANCELED) {
+        if ($order->isCanceled()) {
             Craft::$app->end('Can not update canceled order');
         }
 
@@ -172,7 +172,6 @@ class BaseController extends Controller
 
         echo 'Updating file'.PHP_EOL;
 
-        
         $success = Translations::$plugin->fileRepository->saveFile($file);
 
         if (!$success) {
@@ -229,17 +228,17 @@ class BaseController extends Controller
         }
 
         $orderId = Craft::$app->getRequest()->getParam('id');
-        
+
         $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
 
-        
+
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
-        
+
         if (!$order) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Invalid Order'));
             return;
         }
-        
+
         if (!Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Source site is not supported'));
             return;
@@ -281,7 +280,7 @@ class BaseController extends Controller
                                 $element->title,
                                 $element->section->name
                             );
-        
+
                             Craft::$app->getSession()->setError($message);
                             return;
                         }
@@ -332,7 +331,7 @@ class BaseController extends Controller
         $service = $translator->service;
         $settings = $translator->getSettings();
         $authenticate = (new Services())->authenticateService($service, $settings);
-        
+
         if (!$authenticate && $service === Constants::TRANSLATOR_ACCLARO) {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
             Craft::$app->getSession()->setError($message);

@@ -25,7 +25,6 @@ use yii\web\NotFoundHttpException;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\ImportFiles;
-use acclaro\translations\services\repository\SiteRepository;
 
 /**
  * @author    Acclaro
@@ -55,13 +54,11 @@ class FilesController extends Controller
         $fileFormat = $params['format'] ?? Constants::FILE_FORMAT_XML;
 
         $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
-        $files = Translations::$plugin->fileRepository->getFilesByOrderId($params['orderId'], null);
 
-        $siteRepository = new SiteRepository(Craft::$app);
-        $tempPath = Craft::$app->path->getTempPath();
         $errors = array();
 
         $orderAttributes = $order->getAttributes();
+        $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
 
         //Filename Zip Folder
         $zipName = $this->getZipName($orderAttributes);
@@ -76,17 +73,26 @@ class FilesController extends Controller
         if ($zip->open($zipDest, $zip::CREATE) !== true)
         {
             $errors[] = 'Unable to create zip file: '.$zipDest;
-            Craft::log( '['. __METHOD__ .'] Unable to create zip file: '.$zipDest, LogLevel::Error, 'translations' );
+            Craft::error('['. __METHOD__ .'] Unable to create zip file: '.$zipDest, 'translations');
             return false;
+        }
+
+        $transaction = Craft::$app->getDb()->beginTransaction();
+        if ($isDefaultTranslator && ($order->isNew() || $order->isModified())) {
+            $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
+            $order->logActivity(sprintf(
+                Translations::$plugin->translator->translate('app', 'Order/Files status changed to %s'),
+                $order->getStatusLabel()
+            ));
         }
 
         //Iterate over each file on this order
         if ($order->files)
         {
-            foreach ($order->files as $file)
+            foreach ($order->GetFiles() as $file)
             {
                 // skip failed files
-                if ($file->status === Constants::FILE_STATUS_CANCELED) continue;
+                if ($file->isCanceled()) continue;
 
                 $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
@@ -103,8 +109,6 @@ class FilesController extends Controller
                     $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
                 }
 
-                $path = $tempPath . $filename;
-
                 if ($fileFormat === Constants::FILE_FORMAT_JSON) {
                     $fileContent = Translations::$plugin->elementToFileConverter->xmlToJson($file->source);
                 } else if ($fileFormat === Constants::FILE_FORMAT_CSV) {
@@ -117,6 +121,16 @@ class FilesController extends Controller
                     $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
                     Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
                 }
+
+                if ($isDefaultTranslator && ($file->isNew() || $file->isModified())) {
+                    $file->status = Constants::FILE_STATUS_IN_PROGRESS;
+                    Translations::$plugin->fileRepository->saveFile($file);
+                }
+            }
+
+            if ($order->status !== ($newStatus = Translations::$plugin->orderRepository->getNewStatus($order))) {
+                $order->status = $newStatus;
+                $order->logActivity(sprintf('Order status changed to %s', $order->getStatusLabel()));
             }
         }
 
@@ -125,12 +139,18 @@ class FilesController extends Controller
 
         if(count($errors) > 0)
         {
+            $transaction->rollBack();
             return $errors;
         }
 
-        return $this->asJson([
-            'translatedFiles' => $zipDest
-        ]);
+        if (Craft::$app->getElements()->saveElement($order, true, true, false)) {
+            $transaction->commit();
+            return $this->asJson(['translatedFiles' => $zipDest]);
+        } else {
+            $transaction->rollBack();
+            return false;
+        }
+
     }
 
     /**
@@ -371,7 +391,6 @@ class FilesController extends Controller
      */
     public function actionGetFileDiff()
     {
-        $variables = Craft::$app->getRequest()->resolve()[1];
         $success = false;
         $error = null;
         $data = ['previewClass' => 'disabled', 'originalUrl' => '', 'newUrl' => ''];

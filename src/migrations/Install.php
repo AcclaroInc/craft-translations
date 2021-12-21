@@ -123,7 +123,7 @@ class Install extends Migration
                     'ownerId'           => $this->integer()->notNull(),
                     'sourceSite'        => $this->integer()->notNull(),
                     'targetSites'       => $this->string(1020)->notNull()->defaultValue(''),
-                    'status'            => $this->enum('status', Constants::ORDER_STATUSES)->defaultValue(Constants::ORDER_STATUS_NEW),
+                    'status'            => $this->enum('status', Constants::ORDER_STATUSES)->defaultValue(Constants::ORDER_STATUS_PENDING),
                     'requestedDueDate'  => $this->dateTime(),
                     'orderDueDate'      => $this->dateTime(),
                     'comments'          => $this->text(),
@@ -179,7 +179,7 @@ class Install extends Migration
                 ]
             );
         }
-        
+
         $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_WIDGET);
         if ($tableSchema === null) {
             $tablesCreated = true;
@@ -218,7 +218,7 @@ class Install extends Migration
                 ]
             );
         }
-        
+
         $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_ASSET_DRAFT);
         if ($tableSchema === null) {
             $tablesCreated = true;
@@ -299,9 +299,9 @@ class Install extends Migration
         $this->dropTableIfExists(Constants::TABLE_FILES);
 
         $this->dropTableIfExists(Constants::TABLE_GLOBAL_SET_DRAFT);
-        
+
         $this->dropTableIfExists(Constants::TABLE_CATEGORY_DRAFT);
-        
+
         $this->dropTableIfExists(Constants::TABLE_ASSET_DRAFT);
 
         $this->dropTableIfExists(Constants::TABLE_ORDERS);
@@ -309,7 +309,7 @@ class Install extends Migration
         $this->dropTableIfExists(Constants::TABLE_TRANSLATORS);
 
         $this->dropTableIfExists(Constants::TABLE_TRANSLATIONS);
-        
+
         $this->dropTableIfExists(Constants::TABLE_WIDGET);
     }
 

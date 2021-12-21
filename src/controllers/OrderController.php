@@ -322,13 +322,11 @@ class OrderController extends Controller
 
                 foreach ($variables['files'][$element->id] as $file) {
                     $translatedElement = Craft::$app->getElements()->getElementById($element->id, null, $file->targetSite);
-                    if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
-                        $isElementPublished = false;
-                    }
+                    if (!$file->isPublished()) $isElementPublished = false;
 
-                    if ($file->status === Constants::FILE_STATUS_COMPLETE) {
+                    if ($file->isComplete()) {
                         $variables['translatedFiles'][$file->id] = $this->service->getFileTitle($file);
-                    } else if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+                    } else if ($file->isPublished()) {
                         $variables['translatedFiles'][$file->id] = $translatedElement->title;
                     } else {
                         $variables['translatedFiles'][$file->id] = $tempElement->title;
@@ -436,21 +434,12 @@ class OrderController extends Controller
             ) $variables['isEditable'] = false;
         }
 
-        $variables['targetSiteCheckboxOptions'] = array();
-
-        foreach ($targetSites as $key => $site) {
-            $site = Craft::$app->getSites()->getSiteById($site);
-            $variables['targetSiteCheckboxOptions'][] = array(
-                'value' => $site->id,
-                'label' => $site->name . ' (' . $site->language . ')'
-            );
-        }
-
         if (
             !is_null($variables['translator']) &&
             $variables['translator']->service !== Constants::TRANSLATOR_DEFAULT &&
-            $variables['order']->status !== Constants::ORDER_STATUS_NEW
+            !$variables['order']->isPending()
         ) {
+            /** @var \acclaro\translations\services\translator\AcclaroTranslationService */
             $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
                 $variables['translator']->service,
                 json_decode($variables['translator']->settings, true)
@@ -459,20 +448,24 @@ class OrderController extends Controller
             $translatorUrl = $translationService->getOrderUrl($variables['order']);
             $variables['translator_url'] = $translatorUrl;
             $orderStatus = $translationService->getOrderStatus($variables['order']);
-            if ($variables['order']->status == Constants::ORDER_STATUS_CANCELED) {
+            if ($variables['order']->isCanceled()) {
                 $variables['isEditable'] = false;
             }
             if ($orderStatus === Constants::ORDER_STATUS_COMPLETE) {
                 $variables['isEditable'] = false;
-                if ($variables['order']->status === Constants::ORDER_STATUS_PUBLISHED) {
+                if ($variables['order']->isPublished()) {
                     $variables['orderRecentStatus'] = Constants::ORDER_STATUS_PUBLISHED;
                 } else {
                     $variables['orderRecentStatus'] = $orderStatus;
                 }
             }
+
+            if ($orderStatus !== Constants::ORDER_STATUS_COMPLETE) {
+                $variables['isUpdateable'] = true;
+            }
         }
 
-        $variables['isSubmitted'] = !in_array($variables['order']->status, [Constants::ORDER_STATUS_NEW, Constants::ORDER_STATUS_FAILED]);
+        $variables['isSubmitted'] = !($variables['order']->isPending() || $variables['order']->isFailed());
 
         $variables['sourceChangedElementIds'] = [];
         if ($variables['order']->trackChanges && $variables['isSubmitted']) {
@@ -480,6 +473,7 @@ class OrderController extends Controller
 
             $variables['isSourceChanged'] = $sourceChanges['canonicalIds'];
             $variables['sourceChangedElementIds'] = $sourceChanges['originalIds'];
+            $variables['canonicalOriginalMap'] = json_encode($sourceChanges['canonicalOriginalMap']);
         }
 
         $this->renderTemplate('translations/orders/_detail', $variables);
@@ -707,7 +701,7 @@ class OrderController extends Controller
 
                     return $this->asJson(["success" => false, "message" => "Error saving order."]);
                 } else {
-                    $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
+                    $order->status = Constants::ORDER_STATUS_NEW;
                     $order->dateOrdered = new DateTime();
 
                     $success = Craft::$app->getElements()->saveElement($order, true, true, false);
@@ -912,7 +906,6 @@ class OrderController extends Controller
         $allSites = Craft::$app->getSites()->getAllSiteIds();
         $variables['sourceSites'] = array();
         $variables['targetSites'] = array();
-        $variables['targetSiteCheckboxOptions'] = array();
 
         foreach ($allSites as $key => $site) {
             $site = Craft::$app->getSites()->getSiteById($site);
@@ -920,11 +913,10 @@ class OrderController extends Controller
                 'value' => $site->id,
                 'label' => $site->name . '(' . $site->language . ')'
             );
-            $variables['targetSiteCheckboxOptions'][] = array(
+            $variables['targetSites'][] = array(
                 'value' => $site->id,
                 'label' => $site->name . ' (' . $site->language . ')'
             );
-            $variables['targetSites'][] = $site;
         }
 
         $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
@@ -989,8 +981,6 @@ class OrderController extends Controller
                 }
             }
         }
-
-        $orderTags = Craft::$app->getRequest()->getParam('tags');
 
         if (!$currentUser->can('translations:orders:create')) {
             return $this->asJson(["success" => false, "message" => "User does not have permission to perform this action."]);
@@ -1106,11 +1096,6 @@ class OrderController extends Controller
                 }
                 if ($field == 'comments') $editOrderRequest['comment'] = $updated;
             }
-
-            // Logic to update dueDate and comments in acclaro order
-            // if (! empty($editOrderRequest) && ! $isDefaultTranslator) {
-            //     $translatorService->editOrder($order, $settings, $editOrderRequest);
-            // }
 
             if (! empty($oldData)) {
                 $resetStatus = true;
@@ -1476,6 +1461,7 @@ class OrderController extends Controller
     }
 
     // Order Draft Methods
+
     /**
      * Save Order Draft Action
      *
@@ -1497,7 +1483,6 @@ class OrderController extends Controller
             return;
         }
 
-        $orderId = Craft::$app->getRequest()->getParam('id');
         $sourceSite = Craft::$app->getRequest()->getParam('sourceSiteSelect');
 
         if ($sourceSite && !Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
@@ -1652,12 +1637,39 @@ class OrderController extends Controller
         $elements = Craft::$app->getRequest()->getBodyParam('update-elements');
         if ($elements) $elements = json_decode($elements, true);
 
+        $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
+        // Authenticate service
+        if (! $isDefaultTranslator) {
+            $translator = $order->getTranslator();
+            $authenticate = Translations::$plugin->services->authenticateService(
+                $translator->service,
+                $translator->getSettings()
+            );
+
+            if (!$authenticate && $translator->service !== Constants::TRANSLATOR_DEFAULT) {
+                $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
+                return $this->asJson(["success" => false, "message" => $message]);
+            }
+        }
+
         $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {
+
+            if (! $isDefaultTranslator) {
+                /** @var \acclaro\translations\services\translator\AcclaroTranslationService */
+                $translatorService = Translations::$plugin->translatorFactory
+                    ->makeTranslationService(
+                        $translator->service,
+                        $translator->getSettings()
+                    );
+            }
+
             $changeLog = [];
-            foreach ($order->files as $file) {
+            foreach ($order->getFiles() as $file) {
                 if (in_array($file->elementId, $elements)) {
+                    if ($file->isPublished()) continue;
+
                     $element = Craft::$app->getElements()->getElementById($file->elementId);
 
                     $file->source = Translations::$plugin->elementToFileConverter->convert(
@@ -1670,22 +1682,59 @@ class OrderController extends Controller
                             'orderId'       => $orderId,
                         ]
                     );
+
+                    $file->status = Constants::FILE_STATUS_MODIFIED;
                     Translations::$plugin->fileRepository->saveFile($file);
 
                     if (!in_array($element->id, $changeLog)) {
                         array_push($changeLog, $element->id);
                         $order->logActivity(Translations::$plugin->translator->translate('app', "Source content updated [$element->title]."));
-                        Craft::$app->getElements()->saveElement($order, true, true, false);
+                    }
+
+                    if ($isDefaultTranslator && !$order->isModified()) {
+                        $order->status = Constants::ORDER_STATUS_MODIFIED;
+                        $order->logActivity(sprintf(
+                            Translations::$plugin->translator->translate('app', 'Order status changed to %s'),
+                            $order->getStatusLabel()
+                        ));
+                    }
+
+                    // Cancel old file and send new files to translator
+                    if (! $isDefaultTranslator) {
+                        $translatorService->addFileComment($order, $translator->getSettings(), $file, "CANCEL FILE");
+                        $translatorService->sendOrderFile($order, $file, $translator->getSettings());
+                        $translatorService->addFileComment($order, $translator->getSettings(), $file, "NEW FILE");
                     }
                 }
             }
+
+            if (! $isDefaultTranslator) {
+                $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
+
+                $order->logActivity(sprintf(
+                    Translations::$plugin->translator->translate('app', 'Order status changed to %s'),
+                    $order->getStatusLabel()
+                ));
+
+                if (! $order->isNew()) {
+                    foreach ($order->getFiles() as $file) {
+                        if ($file->isNew()) {
+                            $file->status = Constants::FILE_STATUS_IN_PROGRESS;
+                            Translations::$plugin->fileRepository->saveFile($file);
+                        }
+                    }
+                }
+            }
+
+            Craft::$app->getElements()->saveElement($order, true, true, false);
             $transaction->commit();
-            Craft::$app->getSession()->setNotice('Success, Updates to source content may not reflect in delivered translations.');
+
+            Craft::$app->getSession()->setNotice('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
             return $this->asJson(['success' => false, 'message' => 'Error updating source. Error: ' . $e->getMessage()]);
         }
 
-        return $this->asJson(['success' => true, 'message' => 'Order files updated.']);
+        return $this->asJson(['success' => true, 'message' => 'Entries updated.']);
     }
 }

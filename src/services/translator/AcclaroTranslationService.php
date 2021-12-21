@@ -12,8 +12,6 @@ namespace acclaro\translations\services\translator;
 
 use Craft;
 use craft\elements\Asset;
-use craft\elements\Entry;
-use craft\elements\Category;
 use craft\elements\GlobalSet;
 
 use acclaro\translations\Constants;
@@ -23,6 +21,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
 use acclaro\translations\services\job\acclaro\UpdateReviewFileUrls;
+use craft\helpers\ElementHelper;
 
 class AcclaroTranslationService implements TranslationServiceInterface
 {
@@ -30,12 +29,12 @@ class AcclaroTranslationService implements TranslationServiceInterface
      * @var boolean
      */
     protected $sandboxMode = false;
-    
+
     /**
-     * @var acclaro\translations\services\api\AcclaroApiClient
+     * @var \acclaro\translations\services\api\AcclaroApiClient
      */
     protected $acclaroApiClient;
-    
+
     /**
      * @var array
      */
@@ -43,7 +42,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
     /**
      * @param array                                                         $settings
-     * @param acclaro\translations\services\api\AcclaroApiClient    $acclaroApiClient
+     * @param \acclaro\translations\services\api\AcclaroApiClient    $acclaroApiClient
      */
     public function __construct(
         array $settings,
@@ -78,12 +77,21 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
-        if ($order->status === Constants::ORDER_STATUS_CANCELED) return;
+        if ($order->isCanceled()) return;
 
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
         if (empty($orderResponse->status)) {
             return;
+        }
+
+        if ($orderResponse->status === Constants::ORDER_STATUS_IN_PROGRESS && $order->isNew()) {
+            foreach ($order->getFiles() as $file) {
+                if ($file->isNew()) {
+                    $file->status = Constants::FILE_STATUS_IN_PROGRESS;
+                    Translations::$plugin->fileRepository->saveFile($file);
+                }
+            }
         }
 
         $orderStatus = Translations::$plugin->orderRepository->getNewStatus($order);
@@ -112,40 +120,38 @@ class AcclaroTranslationService implements TranslationServiceInterface
     public function updateFile(Order $order, FileModel $file)
     {
         try {
-            if ($file->status === Constants::FILE_STATUS_CANCELED) return;
+            if ($file->isCanceled()) return;
 
             $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
-            
+
             if (!is_array($fileInfoResponse)) {
                 return;
             }
             // find the matching file
             foreach ($fileInfoResponse as $fileInfo) {
-                if ($fileInfo->fileid == $file->serviceFileId) {
-                    break;
-                }
-    
+                if ($fileInfo->fileid == $file->serviceFileId) break;
+
                 $fileInfo = null;
             }
-    
+
+            /** @var object $fileInfo */
             if (empty($fileInfo->targetfile)) {
                 return;
             }
-    
+
             $targetFileId = $fileInfo->targetfile;
-    
+
             $fileStatusResponse = $this->acclaroApiClient->getFileStatus($order->serviceOrderId, $targetFileId);
-    
-            $file->status = $fileStatusResponse->status == Constants::FILE_STATUS_COMPLETE ? 
+
+            $file->status = $fileStatusResponse->status === Constants::FILE_STATUS_COMPLETE ?
                 Constants::FILE_STATUS_REVIEW_READY : $fileStatusResponse->status;
             $file->dateDelivered = new \DateTime();
-    
+
             // download the file
             $target = $this->acclaroApiClient->getFile($order->serviceOrderId, $targetFileId);
-    
-            if ($target) {
-                $file->target = $target;
-            }
+
+            if ($target) $file->target = $target;
+
         } catch (\Exception $e) {
             Craft::error(  '['. __METHOD__ .'] Couldn’t update file. Error: '.$e->getMessage(), 'translations' );
         }
@@ -155,14 +161,14 @@ class AcclaroTranslationService implements TranslationServiceInterface
      * Get order status on acclaro
      *
      * @param [type] $order
-     * @return void
+     * @return void|string
      */
     public function getOrderStatus($order)
     {
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
-        return ! empty($orderResponse) ? $orderResponse->status : null;
+        return empty($orderResponse) || is_array($orderResponse) ? null : $orderResponse->status;
     }
- 
+
     /**
      * {@inheritdoc}
      */
@@ -177,7 +183,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         return $job;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -202,7 +208,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         return $this->acclaroApiClient->getLanguages();
     }
-    
+
     public function getLanguagePairs($source)
     {
         return $this->acclaroApiClient->getLanguagePairs($source);
@@ -260,9 +266,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
             );
 
             $file->serviceFileId = $fileResponse->fileid ? $fileResponse->fileid : $file->id;
-            $file->status = $fileResponse->status;
+            $file->status = Constants::FILE_STATUS_NEW;
 
-            $fileCallbackResponse = $acclaroApiClient->requestFileCallback(
+            $acclaroApiClient->requestFileCallback(
                 $order->serviceOrderId,
                 $file->serviceFileId,
                 Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
@@ -279,26 +285,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
             fclose($stream);
 
             unlink($path);
-        }
-
-    }
-
-    /**
-     * Update Order details on Acclaro
-     *
-     * @return void
-     */
-    public function editOrder($order, $settings, $data)
-    {
-        $res = $this->acclaroApiClient->editOrder(
-            $order->serviceOrderId,
-            $data['title'] ?? $order->title,
-            $data['comment'] ?? null,
-            $data['requestedDueDate'] ?? null
-        );
-
-        if (empty($res)) {
-            throw new \Exception('Error updating order', 1);
         }
     }
 

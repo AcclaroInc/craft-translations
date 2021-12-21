@@ -13,21 +13,20 @@
     order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
     {% set isDefaultTranslator = false %}
 {% endif %}
-{% set isCancellable =  orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
+{% set isCancellable =  orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PENDING') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
 %}
 
 {% set canUpdateFiles = orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
+%}
 
 {# For Export/Import and regenrate preview url's buttons #}
 {% set exportImportStatus = '' %}
-{% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
-    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+{% if order.isPending or order.isFailed or order.isPublished %}
     {% set exportImportStatus = 'disabled' %}
 {% endif %}
 
@@ -46,8 +45,8 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}"
-                data-submitted="{{ isSubmitted }}" data-hasSourceChanges="{{ sourceChangedElementIds|join(',')|default('') }}" data-hasSourceChangesCanonical="{{ isSourceChanged|join(',')|default('') }}"
+                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}" data-isUpdateable="{{ isUpdateable|default('') }}"
+                data-submitted="{{ isSubmitted }}" data-canonicalOriginalMap="{{ canonicalOriginalMap|default('') }}" data-hasSourceChanges="{{ sourceChangedElementIds|default([])|join(',') }}"
                 data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>
@@ -155,17 +154,16 @@
                         <div class="input ltr scroll-x-auto">
                             <table id="elements-table" class="data fullwidth" dir="ltr">
                                 <thead>
-                                <tr>
-                                    <th class="thin checkbox-cell all-element-checkbox">
-                                        <input class="checkbox" id="element-0" type="checkbox" name="elements[]"/>
-                                        <label class="checkbox" for="element-0"></label>
-                                    </th>
-                                    <th>{{ 'Title'|t }}</th>
-                                    <th>{{ 'Version'|t }}</th>
-                                    <th>{{ 'Section'|t }}</th>
-                                    <th>{{ 'Date Updated'|t }}</th>
-                                    <th>&nbsp;</th>
-                                </tr>
+                                    <tr>
+                                        <th class="thin checkbox-cell all-element-checkbox">
+                                            <input class="checkbox" id="element-0" type="checkbox"/>
+                                            <label class="checkbox" for="element-0"></label>
+                                        </th>
+                                        <th>{{ 'Title'|t }}</th>
+                                        <th>{{ 'Version'|t }}</th>
+                                        <th>{{ 'Section'|t }}</th>
+                                        <th>{{ 'Date Updated'|t }}</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
                                 {% for element in elements %}
@@ -173,7 +171,6 @@
                                         <td class="thin checkbox-cell element">
                                             <input class="checkbox" data-element="{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"/>
                                             <label class="checkbox" for="element-{{ element.id }}"></label>
-                                        </td>
                                         </td>
                                         <td>{% include "_elements/element" with {'element': element} only %}
                                             {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
@@ -188,7 +185,7 @@
                                                     </ul>
                                                 </span>
                                             {% endif %}
-                                            {% if element.id in isSourceChanged and canUpdateFiles %}
+                                            {% if element.id in isSourceChanged|default([]) and canUpdateFiles %}
                                                 <span class="warning order-warning font-size-15" data-icon="alert">
                                                     {{ 'Source entry content has been modified since order was created.' }}
                                                 </span>
@@ -220,8 +217,9 @@
                                             {% endif %}
 
                                         </td>
-                                        <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
-                                        <td>&nbsp;</td>
+                                        <td>
+                                            {{ element.dateUpdated ? element.dateUpdated|date('M j, Y g:i a') : '--' }}
+                                        </td>
                                     </tr>
                                     {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
                                     {% set elementVersions = elementVersions|merge({(loop.index0): element.id ~ "_" ~ elementVersionMap[element.id]}) %}
@@ -443,9 +441,7 @@
                                         <tr data-word-count="{{ elementWordCounts[tempElementId] }}" data-element-id="{{ tempElementId }}" class="diff-clone" data-file-id="{{ file.id }}">
 
                                             <td class="thin checkbox-cell translations-checkbox-cell">
-                                                {% if file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_COMPLETE') or
-                                                    file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_REVIEW_READY') or
-                                                    file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_PUBLISHED') %}
+                                                {% if file.isComplete or file.isReviewReady or file.isPublished %}
                                                     <input class="checkbox" data-element="{{ tempElementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}"/>
                                                 {% else %}
                                                     <input class="checkbox" data-element="{{ tempElementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}" disabled="disabled"/>
@@ -460,12 +456,10 @@
                                                             <a href="{{ fileUrls[file.id] }}">
                                                                 {{ translatedFiles[file.id] ?: element.title ?: element.name }}
                                                             </a>
-                                                            {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
-                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') and
-                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
+                                                            {% if element.className == constant('acclaro\\translations\\Constants::CLASS_ENTRY') %}
                                                                 <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
                                                             {% endif %}
-                                                            {% if tempElementId in isSourceChanged and canUpdateFiles %}
+                                                            {% if tempElementId in isSourceChanged and canUpdateFiles and not file.isPublished %}
                                                                 <span class="warning order-warning pl-10 font-size-15" data-icon="alert">
                                                                     {{ 'Source entry content has been modified since order was created.' }}
                                                                 </span>
@@ -502,7 +496,11 @@
                                                 <table>
                                                     <tr>
                                                         <td>
+                                                        {% if file.isReviewReady or file.isComplete or file.isPublished %}
                                                             {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
+                                                        {% else %}
+                                                            {{ '--' }}
+                                                        {% endif %}
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -545,7 +543,7 @@
             </div>
 
             <div class="input ltr">
-                {% if not isDefaultTranslator %}
+                {% if not isDefaultTranslator and not order.isPending %}
                     {% if order.serviceOrderId %}
                         {% if isCancellable %}
                             <table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
@@ -566,7 +564,7 @@
             </div>
             <div class="input ltr">
                 <div class="float-right">
-                {% if isSubmitted %}
+                {% if orderId %}
                     <a class="right" href="{{ url('translations/translators/detail/'~order.translatorId) }}"
                     > {{ translatorOptions[order.translatorId] }} </a>
                 {% else %}
@@ -707,8 +705,8 @@
                         }) }}
                     </form>
                 </div>
-                {% if not isCancellable and
-                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                {% if not isCancellable and (order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PENDING') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')) %}
                     <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
                 {% else %}
                     <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
@@ -746,7 +744,7 @@
     <h3 class="heading"><b>{{ "Activity Log"|t('app') }}</b></h3>
     <div class="data meta read-only activity-log">
         <ul class="bullets">
-            {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
+            {% if order.isPending() and not orderId %}
                 <li> {{ 'Pending submission'|t }} </li>
             {% else %}
                 {% for log in order.activityLogArray %}
