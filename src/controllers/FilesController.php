@@ -58,7 +58,6 @@ class FilesController extends Controller
         $errors = array();
 
         $orderAttributes = $order->getAttributes();
-        $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
 
         //Filename Zip Folder
         $zipName = $this->getZipName($orderAttributes);
@@ -78,7 +77,7 @@ class FilesController extends Controller
         }
 
         $transaction = Craft::$app->getDb()->beginTransaction();
-        if ($isDefaultTranslator && ($order->isNew() || $order->isModified())) {
+        if ($order->isNew() || $order->isModified()) {
             $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
             $order->logActivity(sprintf(
                 Translations::$plugin->translator->translate('app', 'Order/Files status changed to %s'),
@@ -122,7 +121,7 @@ class FilesController extends Controller
                     Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
                 }
 
-                if ($isDefaultTranslator && ($file->isNew() || $file->isModified())) {
+                if ($file->isNew() || $file->isModified()) {
                     $file->status = Constants::FILE_STATUS_IN_PROGRESS;
                     Translations::$plugin->fileRepository->saveFile($file);
                 }
@@ -272,7 +271,7 @@ class FilesController extends Controller
                                     'assets' => $assetIds,
                                     'fileFormat' => $fileInfo['extension'],
                                     'fileNames' => $fileNames,
-                                    'disacradElements' => $sourceChangedElements
+                                    'discardElements' => $sourceChangedElements
                                 ]));
 
                                 if ($job) {
@@ -344,7 +343,7 @@ class FilesController extends Controller
                                 'assets' => [$asset->id],
                                 'fileFormat' => $file->extension,
                                 'fileNames' => [$asset->id => $file->name],
-                                'disacradElements' => $sourceChangedElements
+                                'discardElements' => $sourceChangedElements
                             ]));
 
                             if ($job) {

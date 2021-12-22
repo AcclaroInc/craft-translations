@@ -182,21 +182,21 @@ class Order extends Element
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
-                'key' => 'new',
-                'label' => Translations::$plugin->translator->translate('app', 'New'),
-                'criteria' => [
-                    'status' => [
-                        Constants::ORDER_STATUS_NEW
-                    ]
-                ],
-                'defaultSort' => ['dateOrdered', 'desc']
-            ],
-            [
                 'key' => 'pending',
                 'label' => Translations::$plugin->translator->translate('app', 'Pending'),
                 'criteria' => [
                     'status' => [
                         Constants::ORDER_STATUS_PENDING
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+			[
+                'key' => 'new',
+                'label' => Translations::$plugin->translator->translate('app', 'New'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_NEW
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']

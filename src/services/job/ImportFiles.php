@@ -25,7 +25,7 @@ class ImportFiles extends BaseJob
     public $order;
     public $totalFiles;
     public $fileFormat;
-    public $disacradElements;
+    public $discardElements;
 
     /**
      * Map of assetId v/s file name
@@ -44,7 +44,7 @@ class ImportFiles extends BaseJob
 
             $this->setProgress($queue, $currentFile++ / $this->totalFiles);
             //Process Files
-            $this->processFile($asset, $this->order, $this->fileFormat, $this->fileNames, $this->disacradElements);
+            $this->processFile($asset, $this->order, $this->fileFormat, $this->fileNames, $this->discardElements);
 
             Craft::$app->getElements()->deleteElement($asset);
         }
@@ -59,13 +59,13 @@ class ImportFiles extends BaseJob
      * Process each file entry per order
      * Validates
      */
-    public function processFile(Asset $asset, $order = null , $fileFormat = null, $fileNames = null, $disacradElements = [])
+    public function processFile(Asset $asset, $order = null , $fileFormat = null, $fileNames = null, $discardElements = [])
     {
         $this->order = $this->order ?: $order;
 
         $this->fileNames = $this->fileNames ?: $fileNames;
 
-        $this->disacradElements = $this->disacradElements ?: $disacradElements;
+        $this->discardElements = $this->discardElements ?: $discardElements;
 
         $this->fileFormat = $this->fileFormat ?: $fileFormat;
 
@@ -133,7 +133,7 @@ class ImportFiles extends BaseJob
 
         $elementId = $file_content['elementId'];
 
-        if (in_array($elementId, $this->disacradElements)) {
+        if (in_array($elementId, $this->discardElements)) {
             $this->log(sprintf(
                 "File {%s} has source entry changes, please update source.",
                 $this->assetName($asset)
@@ -261,7 +261,7 @@ class ImportFiles extends BaseJob
         $element = isset($element[0]) ? $element[0] : $element;
         $elementId = (string)$element->getAttribute('elementId');
 
-        if (in_array($elementId, $this->disacradElements)) {
+        if (in_array($elementId, $this->discardElements)) {
             $this->log(sprintf(
                 "File {%s} has source entry changes, please update source..",
                 $this->assetName($asset)
@@ -365,7 +365,7 @@ class ImportFiles extends BaseJob
 
         $elementId = $file_content['elementId'];
 
-        if (in_array($elementId, $this->disacradElements)) {
+        if (in_array($elementId, $this->discardElements)) {
             $this->log(sprintf(
                 "File {%s} has source entry changes, please update source.",
                 $this->assetName($asset)
