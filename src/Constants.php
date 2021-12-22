@@ -4,7 +4,7 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.3.6';
+    const PLUGIN_SCHEMA_VERSION = '1.3.7';
     const CRAFT_MIN_VERSION = '3.7.9';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
@@ -20,6 +20,8 @@ class Constants
 
     // Orders
     const ORDER_STATUS_NEW              = 'new';
+    const ORDER_STATUS_PENDING          = 'pending';
+    const ORDER_STATUS_MODIFIED         = 'modified';
     const ORDER_STATUS_NEEDS_APPROVAL   = 'needs approval';
     const ORDER_STATUS_GETTING_QUOTE    = 'getting quote';
     const ORDER_STATUS_IN_REVIEW        = 'in review';
@@ -35,6 +37,7 @@ class Constants
     const CLASS_GLOBAL_SET  = 'craft\\elements\\GlobalSet';
     const CLASS_CATEGORY    = 'craft\\elements\\Category';
     const CLASS_ASSET       = 'craft\\elements\\Asset';
+    const CLASS_ENTRY       = 'craft\\elements\\Entry';
 
     // Urls
     const URL_ORDER_DETAIL          = 'translations/orders/detail/';
@@ -64,6 +67,7 @@ class Constants
     // Files status
     const FILE_STATUS_REVIEW_READY  = 'ready for review';
     const FILE_STATUS_NEW           = 'new';
+    const FILE_STATUS_MODIFIED      = 'modified';
     const FILE_STATUS_PREVIEW       = 'preview';
     const FILE_STATUS_COMPLETE      = 'complete';
     const FILE_STATUS_CANCELED      = 'canceled';
@@ -87,6 +91,7 @@ class Constants
 
     const FILE_STATUSES = [
         self::FILE_STATUS_NEW,
+        self::FILE_STATUS_MODIFIED,
         self::FILE_STATUS_IN_PROGRESS,
         self::FILE_STATUS_PREVIEW,
         self::FILE_STATUS_REVIEW_READY,
@@ -98,6 +103,8 @@ class Constants
 
     const ORDER_STATUSES = [
         self::ORDER_STATUS_NEW,
+        self::ORDER_STATUS_PENDING,
+        self::ORDER_STATUS_MODIFIED,
         self::ORDER_STATUS_GETTING_QUOTE,
         self::ORDER_STATUS_NEEDS_APPROVAL,
         self::ORDER_STATUS_IN_PREPARATION,
@@ -225,5 +232,45 @@ class Constants
         'zh-Hans-CN' => 'zh-CN',
         'zh-Hant' => 'zh-TW',
         'es-419' => 'es-la'
+    ];
+
+    const SUPPORTED_FIELD_TYPES = [
+        'craft\fields\Tags',
+        'craft\fields\Table',
+        'craft\fields\Assets',
+        'craft\fields\Matrix',
+        'craft\fields\Number',
+        'craft\fields\Entries',
+        'craft\fields\Dropdown',
+        'craft\fields\PlainText',
+        'craft\fields\Categories',
+        'craft\fields\Checkboxes',
+        'craft\fields\MultiSelect',
+        'craft\fields\RadioButtons',
+        'benf\neo\Field',
+        'typedlinkfield\fields\LinkField',
+        'craft\redactor\Field',
+        'fruitstudios\linkit\fields\LinkitField',
+        'luwes\codemirror\fields\CodeMirrorField',
+        'verbb\supertable\fields\SuperTableField',
+        'nystudio107\seomatic\fields\SeoSettings',
+        'lenz\linkfield\fields\LinkField',
+        'newism\fields\fields\Telephone',
+        'newism\fields\fields\Address',
+        'newism\fields\fields\Email',
+        'newism\fields\fields\Embed',
+        'newism\fields\fields\PersonName',
+        'newism\fields\fields\Gender',
+        'ether\seo\fields\SeoField'
+    ];
+
+    const UNRELATED_FIELD_TYPES = [
+        'craft\fields\Color',
+        'craft\fields\Date',
+        'craft\fields\Email',
+        'craft\fields\Lightswitch',
+        'craft\fields\Time',
+        'craft\fields\Url',
+        'craft\fields\Users'
     ];
 }

@@ -17,7 +17,7 @@
             var buttonId = 'import-tool';
             this.$importBtn = $('#'+buttonId);
             this.$status = this.$importBtn.find(".utility-status");
-            
+
             this.$importBtn.on('click',function(){
                 self._showImportHud();
             });
@@ -40,12 +40,12 @@
             var $label = $('<div class="mb-1"><label>Supported file formats<br>[ ZIP, XML, JSON, CSV ]</label></div>');
 
             $label.appendTo($form);
-            
+
             $label = $('<label for="import-formId"><strong>Select File to Import</strong></label>');
             $label.appendTo($form);
 
             var $divFile = $('<div class="input-file"></div>');
-            var $file = $('<input/>', {   
+            var $file = $('<input/>', {
                 'type': 'file',
                 'name': 'zip-upload',
                 'id': 'import-formId'
@@ -56,7 +56,7 @@
                 'text-overflow': 'clip',
                 'overflow': 'hidden'
             });
-            
+
             $file.appendTo($divFile);
             $divFile.appendTo($form);
 
@@ -81,6 +81,13 @@
             });
             $hiddenField.appendTo($form);
 
+            var $hiddenElements = $('<input/>', {
+                'type': 'hidden',
+                'name': 'elements',
+                'value': $('#order-attr').data('hassourcechanges')
+            });
+            $hiddenElements.appendTo($form);
+
             var $div = $('<div class="buttons"></div>');
             var $submit = $('<input>', {
                 'type': 'submit',
@@ -101,7 +108,7 @@
                 hud.hide();
                 self._showProgressBar();
             });
-    
+
             hud.on('hide', $.proxy(function() {
                 this.$importBtn.removeClass('active');
             }, this));

@@ -83,10 +83,6 @@
                         }, this)
                     });
 
-                if (this.$allDone) {
-                    this.$allDone.css('opacity', 0);
-                }
-
                 this.$trigger.addClass('processing').css('pointer-events', 'none');
                 this.$trigger.trigger('blur');
             }
@@ -98,13 +94,14 @@
             this.progressBar.setProgressPercentage(width);
         },
 
-        onComplete: function(showAllDone) {
+        onComplete: function(showAllDone = true) {
             this.progressBar.$progressBar.velocity({opacity: 0}, {
                 duration: 'fast', complete: $.proxy(function() {
 
                     this.$trigger.removeClass('processing').css('pointer-events', '');
                     this.$trigger.css('color', '#3f4d5a');
                     this.$trigger.trigger('focus');
+                    if (showAllDone) location.reload();
                 },
                 this)
             });
@@ -112,11 +109,11 @@
 
         _showExportHud: function() {
             this.$exportBtn.addClass('active');
-    
+
             var $form = $('<form/>', {
                 'class': 'export-form'
             });
-    
+
             var $formatField = Craft.ui.createSelectField({
                 label: Craft.t('app', 'Format'),
                 options: [
@@ -134,20 +131,20 @@
                 }).appendTo(this.$form);
             });
             $typeSelect.trigger('change');
-    
+
             $download = $('<button/>', {
                 type: 'submit',
                 'class': 'btn submit fullwidth',
                 'form': this.$formId,
                 text: Craft.t('app', 'Download')
             }).appendTo($form);
-    
+
             var hud = new Garnish.HUD(this.$exportBtn, $form);
 
             this.addListener($download, 'click', () => {
                 hud.hide();
             });
-    
+
             hud.on('hide', $.proxy(function() {
                 this.$exportBtn.removeClass('active');
             }, this));

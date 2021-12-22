@@ -55,7 +55,7 @@ class FileRepository
 
         return $file;
     }
-    
+
     /**
      * @param  int|string $draftId
      * @param  int|string $elementId
@@ -74,15 +74,15 @@ class FileRepository
         if (!$record) {
             return false;
         }
-        
+
         $file = new FileModel($record->toArray($this->defaultColumns));
 
         return $file;
     }
-    
+
     /**
      * @param  int|string $orderId
-     * @return \acclaro\translations\models\FileModel
+     * @return \acclaro\translations\models\FileModel[]
      */
     public function getFilesByOrderId(int $orderId, $elementId = null, $site=null)
     {
@@ -108,7 +108,7 @@ class FileRepository
 
         return $files ? $files : array();
     }
-    
+
     /**
      * @param  int|string $siteId
      * @return \acclaro\translations\models\FileModel
@@ -163,7 +163,7 @@ class FileRepository
 
     /**
      * @param  int|string $orderId
-     * @return \acclaro\translations\models\FileModel
+     * @return [ \acclaro\translations\models\FileModel ]
      */
     public function getFiles()
     {
@@ -232,7 +232,7 @@ class FileRepository
             }
             $record->setAttributes($att, false);
         }
-        
+
         if (!$record->validate()) {
             $file->addErrors($record->getErrors());
 
@@ -326,7 +326,7 @@ class FileRepository
             }
             $record->delete();
         }
-        
+
         return true;
     }
 
@@ -453,7 +453,7 @@ class FileRepository
                 $file->elementId = $element->id;
                 $file->sourceSite = $order->sourceSite;
                 $file->targetSite = $targetSite;
-                
+
                 $file->source = Translations::$plugin->elementToFileConverter->convert(
                     $element,
                     Constants::FILE_FORMAT_XML,
@@ -501,7 +501,7 @@ class FileRepository
     public function getUploadedFilesWordCount($asset, $format)
     {
         $fileContents = $asset->getContents();
-        
+
         $elementId = Translations::$plugin->elementToFileConverter->getElementIdFromData($fileContents, $format);
         if (! $elementId) {
             return 0;
@@ -519,7 +519,7 @@ class FileRepository
         $data = [];
         // Current entries XML
         $sourceContent = Translations::$plugin->elementTranslator->getTargetData($source, true);
-    
+
         // Translated file XML
         $targetContent = Translations::$plugin->elementTranslator->getTargetData($target, true);
 
@@ -545,11 +545,11 @@ class FileRepository
                 krsort($values);
                 foreach ($values as $class => $value) {
                     $content .= "<td class='$class'>";
-    
+
                     $content .= "<label class='diff-tl'> $key: </label>";
-                    
+
                     $content .= "<div class='diff-copy'> $copyIcon </div><br>";
-    
+
                     $content .= "<span class='diff-bl'> $value </span></td>";
                 }
 
@@ -562,7 +562,7 @@ class FileRepository
                 $content = '<tr><td class="source">';
 
                 $content .= "<label class='diff-tl'> $key: </label>";
-                
+
                 $content .= "<div class='diff-copy'> $copyIcon </div><br>";
 
                 $content .= "<span class='diff-bl'> $value </span>";

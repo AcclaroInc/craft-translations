@@ -13,18 +13,20 @@
     order.translator.service != constant('acclaro\\translations\\Constants::TRANSLATOR_DEFAULT') %}
     {% set isDefaultTranslator = false %}
 {% endif %}
-{% set isCancellable =  orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
-                        orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
+{% set isCancellable =  orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PENDING') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_COMPLETE') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
+%}
+
+{% set canUpdateFiles = orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_CANCELED') and
+    orderStatus != constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')
 %}
 
 {# For Export/Import and regenrate preview url's buttons #}
 {% set exportImportStatus = '' %}
-{% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') or
-    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_FAILED') or
-    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+{% if order.isPending or order.isFailed or order.isPublished %}
     {% set exportImportStatus = 'disabled' %}
 {% endif %}
 
@@ -43,7 +45,8 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}" data-submitted="{{ isSubmitted }}"
+                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}" data-isUpdateable="{{ isUpdateable|default('') }}"
+                data-submitted="{{ isSubmitted }}" data-canonicalOriginalMap="{{ canonicalOriginalMap|default('') }}" data-hasSourceChanges="{{ sourceChangedElementIds|default([])|join(',') }}"
                 data-changed="{{ isChanged }}" data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>
             </div>
@@ -140,8 +143,8 @@
 
                 {% set elementIds = {} %}
                 {% set elementVersions = {} %}
-                <div id="text-field" class="field">
-                    <div class="heading">
+                <div id="text-field" class="field" style="margin-top: -20px">
+                    <div class="heading" style="min-height: 40px;">
                         <label id="entries-label" for="entries">
                             Source entries
                             <span class="required"></span>
@@ -149,22 +152,29 @@
                     </div>
                     {% if elements %}
                         <div class="input ltr scroll-x-auto">
-                            <table class="data fullwidth" dir="ltr">
+                            <table id="elements-table" class="data fullwidth" dir="ltr">
                                 <thead>
-                                <tr>
-                                    <th>{{ 'Title'|t }}</th>
-                                    <th>{{ 'Version'|t }}</th>
-                                    <th>{{ 'Section'|t }}</th>
-                                    <th>{{ 'Date Updated'|t }}</th>
-                                    <th>&nbsp;</th>
-                                </tr>
+                                    <tr>
+                                        <th class="thin checkbox-cell all-element-checkbox">
+                                            <input class="checkbox" id="element-0" type="checkbox"/>
+                                            <label class="checkbox" for="element-0"></label>
+                                        </th>
+                                        <th>{{ 'Title'|t }}</th>
+                                        <th>{{ 'Version'|t }}</th>
+                                        <th>{{ 'Section'|t }}</th>
+                                        <th>{{ 'Date Updated'|t }}</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
                                 {% for element in elements %}
                                     <tr data-word-count="{{ elementWordCounts[element.id] }}">
+                                        <td class="thin checkbox-cell element">
+                                            <input class="checkbox" data-element="{{ element.id }}" id="element-{{ element.id }}" type="checkbox" name="elements[]" value="{{ element.id }}"/>
+                                            <label class="checkbox" for="element-{{ element.id }}"></label>
+                                        </td>
                                         <td>{% include "_elements/element" with {'element': element} only %}
                                             {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
-                                                <span class="warning duplicate-warning">
+                                                <span class="order-warning font-size-15" data-icon="info">
                                                     {{ 'This entry is included<br>in the following orders:' }}
                                                     <ul style="list-style:disc;padding:5px 0 0 15px;">
                                                         {% for orderId in duplicateEntries[element.id] %}
@@ -173,7 +183,12 @@
                                                         </li>
                                                         {% endfor %}
                                                     </ul>
-                                                    </span>
+                                                </span>
+                                            {% endif %}
+                                            {% if element.id in isSourceChanged|default([]) and canUpdateFiles %}
+                                                <span class="warning order-warning font-size-15" data-icon="alert">
+                                                    {{ 'Source entry content has been modified since order was created.' }}
+                                                </span>
                                             {% endif %}
                                         </td>
                                         <td>
@@ -202,12 +217,8 @@
                                             {% endif %}
 
                                         </td>
-                                        <td>{{ element.dateUpdated ? element.dateUpdated|date('n/j/y') : '' }}</td>
                                         <td>
-                                            <a class="icon delete translations-order-delete-entry {{ isEditable }}"
-                                                title="{{ 'Delete entry'|t }}" data-element="{{element.id}}">
-                                                <input type="hidden" name="elements[]" value="{{ element.id }}">
-                                            </a>
+                                            {{ element.dateUpdated ? element.dateUpdated|date('M j, Y g:i a') : '--' }}
                                         </td>
                                     </tr>
                                     {% set elementIds = elementIds|merge({(loop.index0):element.id}) %}
@@ -277,25 +288,85 @@
                 }) }}
                 <input type="hidden" id="originalTranslatorId" value="{{ order.translatorId }}" data-id="{{ defaultTranslatorId|default(0) }}">
 
-                {# <hr> #}
+                <hr>
+
+                <a class="fieldtoggle collapsed" data-target="advance-fields" style="margin-bottom: 0; margin-top: -7px">Advanced</a>
+                <div id="advance-fields" class="field hidden" style="margin-top: 20px">
+                    <div style="margin-bottom: 0">
+                        {{ forms.lightswitchField({
+                            label: 'Track source content changes<p class="fw-400">\
+                                Recomended for continuous translation workflows.</p>'|t('app'),
+                            id: "trackChanges",
+                            name: "trackChanges",
+                            on: order.trackChanges
+                        }) }}
+                    </div>
+
+                    <input type="hidden" id="originalTrackChanges" value="{{ order.trackChanges }}">
+
+                    <div id="extra-fields" style="margin-top: 20px">
+                        {{ forms.dateField({
+                            label: 'Requested due date'|t,
+                            value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
+                            name: 'requestedDueDate',
+                            id: 'requestedDueDate',
+                            size: 20,
+                            placeholder: 'Optional',
+                        }) }}
+                        <input type="hidden" id="originalRequestedDueDate" value="{{ date(order.requestedDueDate) | date('m/d/Y') }}">
+
+                        {{ forms.textareaField({
+                            label: 'Order notes'|t,
+                            value: order.comments,
+                            name: 'comments',
+                            placeholder: 'Additional comments and instructions',
+                            id: 'comments',
+                            maxlength: 2000,
+                            size: 20
+                        }) }}
+                        <input type="hidden" id="originalComments" value="{{ order.comments }}">
+
+                        {% set orderTags = {} %}
+                        <div id="fields" class="{{ isEditable }}">
+                            <div id="tab-tag" class="flex-fields">
+                                <div id="fields-tag-field" class="field width-100">
+                                    <div class="heading">
+                                        <label id="fields-tag-label" for="fields-tag">Order tags</label>
+                                    </div>
+                                    <div class="input ltr">
+                                        <div id="fields-tags" class="elementselect tagselect">
+                                            <div id="elementTags" class="elements">
+                                                {% if hasTags %}
+                                                    {% for tag in tags %}
+                                                        <div class="element small removable" data-editable="1" data-id="{{ tag.id }}" data-label="{{ tag.title }}">
+                                                            <input type="hidden" name="tags[]" value="{{ tag.id }}"/>
+                                                            <a class="delete icon custom-tag" data-label="{{ tag.title }}" data-id="{{ tag.id }}" title="Remove"></a>
+                                                            <div class="label">
+                                                                <span class="title">{{ tag.title }}</span>
+                                                            </div>
+                                                        </div>
+                                                        {% set orderTags = orderTags|merge({(loop.index0):tag.title}) %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                            <div class="texticon add icon">
+                                                {{ text({
+                                                    placeholder: 'Add a tag',
+                                                    size: 10
+                                                }) }}
+                                                <div class="spinner hidden"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="originalTags" value="{{ orderTags|join(',') }}">
+                        <input type="hidden" id="tagGroupId" value="{{ tagGroup.id|default('') }}">
+                    </div>
+                </div>
 
                 {# {{ forms.lightswitchField({
-                    label: 'Track changes<p class="fw-400">Track source content updates. \
-                        Recomended for continuous translation workflows.</p>'|t
-                    (tag('button', {
-                        type: 'button',
-                        id: 'expand-status-btn',
-                        class: ['btn'],
-                        data: {
-                            icon: 'ellipsis',
-                        },
-                    })),
-                    id: "trackChanges",
-                    name: "trackChanges",
-                    on: order.trackChanges
-                }) }}
-
-                {{ forms.lightswitchField({
                     label: 'Asynchronous publishing<p class="fw-400">Creates a seprate translation draft \
                         for each target language that can be published independently.</p>'|t
                         (tag('button', {
@@ -310,68 +381,6 @@
                     name: "asynchronousPublishing",
                     on: order.asynchronousPublishing
                 }) }} #}
-
-                <div id="extra-fields">
-                    <hr>
-                    {{ forms.dateField({
-                        label: 'Requested due date'|t,
-                        value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
-                        name: 'requestedDueDate',
-                        id: 'requestedDueDate',
-                        size: 20,
-                        placeholder: 'Optional',
-                    }) }}
-                    <input type="hidden" id="originalRequestedDueDate" value="{{ date(order.requestedDueDate) | date('m/d/Y') }}">
-
-                    {{ forms.textareaField({
-                        label: 'Order notes'|t,
-                        value: order.comments,
-                        name: 'comments',
-                        placeholder: 'Additional comments and instructions',
-                        id: 'comments',
-                        maxlength: 2000,
-                        size: 20
-                    }) }}
-                    <input type="hidden" id="originalComments" value="{{ order.comments }}">
-
-                    {% set orderTags = {} %}
-                    <div id="fields" class="{{ isEditable }}">
-                        <div id="tab-tag" class="flex-fields">
-                            <div id="fields-tag-field" class="field width-100">
-                                <div class="heading">
-                                    <label id="fields-tag-label" for="fields-tag">Order tags</label>
-                                </div>
-                                <div class="input ltr">
-                                    <div id="fields-tags" class="elementselect tagselect">
-                                        <div id="elementTags" class="elements">
-                                            {% if hasTags %}
-                                                {% for tag in tags %}
-                                                    <div class="element small removable" data-editable="1" data-id="{{ tag.id }}" data-label="{{ tag.title }}">
-                                                        <input type="hidden" name="tags[]" value="{{ tag.id }}"/>
-                                                        <a class="delete icon custom-tag" data-label="{{ tag.title }}" data-id="{{ tag.id }}" title="Remove"></a>
-                                                        <div class="label">
-                                                            <span class="title">{{ tag.title }}</span>
-                                                        </div>
-                                                    </div>
-                                                    {% set orderTags = orderTags|merge({(loop.index0):tag.title}) %}
-                                                {% endfor %}
-                                            {% endif %}
-                                        </div>
-                                        <div class="texticon add icon">
-                                            {{ text({
-                                                placeholder: 'Add a tag',
-                                                size: 10
-                                            }) }}
-                                            <div class="spinner hidden"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="originalTags" value="{{ orderTags|join(',') }}">
-                    <input type="hidden" id="tagGroupId" value="{{ tagGroup.id|default('') }}">
-                </div>
             </div>
         </form>
 
@@ -406,13 +415,13 @@
                                 <tr>
                                     {% if entriesCountByElementCompleted > 0 %}
                                         <td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
-                                            <input class="checkbox" id="element-0" type="checkbox">
-                                            <label class="checkbox" for="element-0"></label>
+                                            <input class="checkbox" id="file-0" type="checkbox">
+                                            <label class="checkbox" for="file-0"></label>
                                         </td>
                                     {% else %}
                                         <td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
-                                            <input class="checkbox" id="element-0" type="checkbox" disabled="disabled">
-                                            <label class="checkbox" for="element-0"></label>
+                                            <input class="checkbox" id="file-0" type="checkbox" disabled="disabled">
+                                            <label class="checkbox" for="file-0"></label>
                                         </td>
                                     {% endif %}
                                     <th>{{ 'Title'|t }}</th>
@@ -432,9 +441,7 @@
                                         <tr data-word-count="{{ elementWordCounts[tempElementId] }}" data-element-id="{{ tempElementId }}" class="diff-clone" data-file-id="{{ file.id }}">
 
                                             <td class="thin checkbox-cell translations-checkbox-cell">
-                                                {% if file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_COMPLETE') or
-                                                    file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_REVIEW_READY') or
-                                                    file.status == constant('acclaro\\translations\\Constants::FILE_STATUS_PUBLISHED') %}
+                                                {% if file.isComplete or file.isReviewReady or file.isPublished %}
                                                     <input class="checkbox" data-element="{{ tempElementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}"/>
                                                 {% else %}
                                                     <input class="checkbox" data-element="{{ tempElementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}" disabled="disabled"/>
@@ -449,10 +456,13 @@
                                                             <a href="{{ fileUrls[file.id] }}">
                                                                 {{ translatedFiles[file.id] ?: element.title ?: element.name }}
                                                             </a>
-                                                            {% if element.className != constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') and
-                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_CATEGORY') and
-                                                                element.className != constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
+                                                            {% if element.className == constant('acclaro\\translations\\Constants::CLASS_ENTRY') %}
                                                                 <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                                            {% endif %}
+                                                            {% if tempElementId in isSourceChanged and canUpdateFiles and not file.isPublished %}
+                                                                <span class="warning order-warning pl-10 font-size-15" data-icon="alert">
+                                                                    {{ 'Source entry content has been modified since order was created.' }}
+                                                                </span>
                                                             {% endif %}
                                                         </td>
                                                     </tr>
@@ -486,7 +496,11 @@
                                                 <table>
                                                     <tr>
                                                         <td>
+                                                        {% if file.isReviewReady or file.isComplete or file.isPublished %}
                                                             {{ file.dateDelivered ? file.dateDelivered|date('M j, Y g:i a') : '--' }}
+                                                        {% else %}
+                                                            {{ '--' }}
+                                                        {% endif %}
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -529,7 +543,7 @@
             </div>
 
             <div class="input ltr">
-                {% if not isDefaultTranslator %}
+                {% if not isDefaultTranslator and not order.isPending %}
                     {% if order.serviceOrderId %}
                         {% if isCancellable %}
                             <table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
@@ -550,7 +564,7 @@
             </div>
             <div class="input ltr">
                 <div class="float-right">
-                {% if isSubmitted %}
+                {% if orderId %}
                     <a class="right" href="{{ url('translations/translators/detail/'~order.translatorId) }}"
                     > {{ translatorOptions[order.translatorId] }} </a>
                 {% else %}
@@ -691,8 +705,8 @@
                         }) }}
                     </form>
                 </div>
-                {% if not isCancellable and
-                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED') %}
+                {% if not isCancellable and (order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PENDING') or
+                    order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')) %}
                     <button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
                 {% else %}
                     <button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
@@ -730,7 +744,7 @@
     <h3 class="heading"><b>{{ "Activity Log"|t('app') }}</b></h3>
     <div class="data meta read-only activity-log">
         <ul class="bullets">
-            {% if order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_NEW') %}
+            {% if order.isPending() and not orderId %}
                 <li> {{ 'Pending submission'|t }} </li>
             {% else %}
                 {% for log in order.activityLogArray %}

@@ -26,29 +26,29 @@ class FileModel extends Model
 {
 
     public $id;
-    
+
     public $orderId;
-    
+
     public $elementId;
-    
+
     public $draftId;
-    
+
     public $sourceSite;
-    
+
     public $targetSite;
-    
+
     public $status;
-    
+
     public $wordCount;
-    
+
     public $source;
-    
+
     public $target;
-    
+
     public $previewUrl;
-    
+
     public $serviceFileId;
-    
+
     public $dateUpdated;
 
     public $dateDelivered;
@@ -77,7 +77,8 @@ class FileModel extends Model
     public function getStatusLabel()
     {
         switch ($this->status) {
-            case Constants::FILE_STATUS_NEW:
+            case Constants::FILE_STATUS_MODIFIED:
+                return 'Modified';
             case Constants::FILE_STATUS_PREVIEW:
             case Constants::FILE_STATUS_IN_PROGRESS:
                 return 'In progress';
@@ -91,13 +92,16 @@ class FileModel extends Model
                 return 'Applied';
             case Constants::FILE_STATUS_FAILED:
                 return 'Failed';
+            default :
+                return 'New';
         }
     }
-    
+
     public function getStatusColor()
     {
         switch ($this->status) {
-            case Constants::FILE_STATUS_NEW:
+            case Constants::FILE_STATUS_MODIFIED:
+                return 'purple';
             case Constants::FILE_STATUS_PREVIEW:
             case Constants::FILE_STATUS_IN_PROGRESS:
                 return 'orange';
@@ -120,8 +124,33 @@ class FileModel extends Model
         return $this->draftId ?: null;
     }
 
+    public function isNew()
+    {
+        return $this->status === Constants::FILE_STATUS_NEW;
+    }
+
+    public function isModified()
+    {
+        return $this->status === Constants::FILE_STATUS_MODIFIED;
+    }
+
+    public function isCanceled()
+    {
+        return $this->status === Constants::FILE_STATUS_CANCELED;
+    }
+
     public function isComplete()
     {
         return $this->status === Constants::FILE_STATUS_COMPLETE;
+    }
+
+    public function isReviewReady()
+    {
+        return $this->status === Constants::FILE_STATUS_REVIEW_READY;
+    }
+
+    public function isPublished()
+    {
+        return $this->status === Constants::FILE_STATUS_PUBLISHED;
     }
 }

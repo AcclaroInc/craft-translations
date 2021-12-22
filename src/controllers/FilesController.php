@@ -25,7 +25,6 @@ use yii\web\NotFoundHttpException;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\ImportFiles;
-use acclaro\translations\services\repository\SiteRepository;
 
 /**
  * @author    Acclaro
@@ -51,24 +50,21 @@ class FilesController extends Controller
     public function actionCreateExportZip()
     {
         $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
-        
+
         $fileFormat = $params['format'] ?? Constants::FILE_FORMAT_XML;
 
         $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
-        $files = Translations::$plugin->fileRepository->getFilesByOrderId($params['orderId'], null);
 
-        $siteRepository = new SiteRepository(Craft::$app);
-        $tempPath = Craft::$app->path->getTempPath();
         $errors = array();
 
         $orderAttributes = $order->getAttributes();
 
         //Filename Zip Folder
         $zipName = $this->getZipName($orderAttributes);
-        
+
         // Set destination zip
         $zipDest = Craft::$app->path->getTempPath() . '/' . $zipName . '.' . Constants::FILE_FORMAT_ZIP;
-        
+
         // Create zip
         $zip = new \ZipArchive();
 
@@ -76,17 +72,26 @@ class FilesController extends Controller
         if ($zip->open($zipDest, $zip::CREATE) !== true)
         {
             $errors[] = 'Unable to create zip file: '.$zipDest;
-            Craft::log( '['. __METHOD__ .'] Unable to create zip file: '.$zipDest, LogLevel::Error, 'translations' );
+            Craft::error('['. __METHOD__ .'] Unable to create zip file: '.$zipDest, 'translations');
             return false;
+        }
+
+        $transaction = Craft::$app->getDb()->beginTransaction();
+        if ($order->isNew() || $order->isModified()) {
+            $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
+            $order->logActivity(sprintf(
+                Translations::$plugin->translator->translate('app', 'Order/Files status changed to %s'),
+                $order->getStatusLabel()
+            ));
         }
 
         //Iterate over each file on this order
         if ($order->files)
         {
-            foreach ($order->files as $file)
+            foreach ($order->GetFiles() as $file)
             {
                 // skip failed files
-                if ($file->status === Constants::FILE_STATUS_CANCELED) continue;
+                if ($file->isCanceled()) continue;
 
                 $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
@@ -103,8 +108,6 @@ class FilesController extends Controller
                     $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
                 }
 
-                $path = $tempPath . $filename;
-                
                 if ($fileFormat === Constants::FILE_FORMAT_JSON) {
                     $fileContent = Translations::$plugin->elementToFileConverter->xmlToJson($file->source);
                 } else if ($fileFormat === Constants::FILE_FORMAT_CSV) {
@@ -117,6 +120,16 @@ class FilesController extends Controller
                     $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
                     Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
                 }
+
+                if ($file->isNew() || $file->isModified()) {
+                    $file->status = Constants::FILE_STATUS_IN_PROGRESS;
+                    Translations::$plugin->fileRepository->saveFile($file);
+                }
+            }
+
+            if ($order->status !== ($newStatus = Translations::$plugin->orderRepository->getNewStatus($order))) {
+                $order->status = $newStatus;
+                $order->logActivity(sprintf('Order status changed to %s', $order->getStatusLabel()));
             }
         }
 
@@ -125,12 +138,18 @@ class FilesController extends Controller
 
         if(count($errors) > 0)
         {
+            $transaction->rollBack();
             return $errors;
         }
 
-        return $this->asJson([
-            'translatedFiles' => $zipDest
-        ]);
+        if (Craft::$app->getElements()->saveElement($order, true, true, false)) {
+            $transaction->commit();
+            return $this->asJson(['translatedFiles' => $zipDest]);
+        } else {
+            $transaction->rollBack();
+            return false;
+        }
+
     }
 
     /**
@@ -145,7 +164,7 @@ class FilesController extends Controller
                 'filename' => $filename
 			]));
         }
-        
+
         Craft::$app->getResponse()->sendFile($filename, null, ['inline' => true]);
 
         return FileHelper::unlink($filename);
@@ -156,19 +175,15 @@ class FilesController extends Controller
         $this->requireLogin();
         $this->requirePostRequest();
 
-        $currentUser = Craft::$app->getUser()->getIdentity();
-
         if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:import')) {
             return;
         }
-
-        //Track error and success messages.
-        $message = "";
 
         $file = UploadedFile::getInstanceByName('zip-upload');
 
         //Get Order Data
         $orderId = Craft::$app->getRequest()->getParam('orderId');
+        $sourceChangedElements = explode(",", Craft::$app->getRequest()->getParam('elements'));
 
         $this->order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
@@ -187,18 +202,18 @@ class FilesController extends Controller
                     if ($file->extension === Constants::FILE_FORMAT_ZIP) {
                         //Unzip File ZipArchive
                         $zip = new \ZipArchive();
-    
+
                         $assetPath = $file->saveAsTempFile();
-    
+
                         if ($zip->open($assetPath)) {
                             $xmlPath = $assetPath.$orderId;
-    
+
                             $zip->extractTo($xmlPath);
-    
+
                             $fileName = preg_replace('/\\.[^.\\s]{3,4}$/', '', Assets::prepareAssetName($file->name));
-    
+
                             $files = FileHelper::findFiles($assetPath.$orderId);
-    
+
                             $assetIds = [];
                             $fileNames = [];
                             $fileInfo = null;
@@ -206,24 +221,24 @@ class FilesController extends Controller
                             foreach ($files as $key => $file) {
                                 if (! is_bool(strpos($file, '__MACOSX'))) {
                                     unlink($file);
-                                    
+
                                     continue;
                                 }
-                                
+
                                 $filename = Assets::prepareAssetName($file);
-                                
+
                                 $fileInfo = pathinfo($filename);
-    
+
                                 $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
-    
+
                                 $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
-    
+
                                 $pathInfo = pathinfo($file);
-    
+
                                 $compatibleFilename = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.' . Constants::FILE_FORMAT_TXT;
-    
+
                                 rename($file, $compatibleFilename);
-    
+
                                 $asset = new Asset();
                                 $asset->tempFilePath = $compatibleFilename;
                                 $asset->filename = $compatibleFilename;
@@ -232,21 +247,21 @@ class FilesController extends Controller
                                 $asset->avoidFilenameConflicts = true;
                                 $asset->uploaderId = Craft::$app->getUser()->getId();
                                 $asset->setScenario(Asset::SCENARIO_CREATE);
-    
+
                                 if (! Craft::$app->getElements()->saveElement($asset)) {
                                     $errors = $asset->getFirstErrors();
-    
+
                                     return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                                 }
-    
+
                                 $assetIds[] = $asset->id;
                                 $fileInfo['basename'] ? $fileNames[$asset->id] = $fileInfo['basename'] : '';
                             }
-    
+
                             FileHelper::removeDirectory($assetPath.$orderId.'/'.$fileName);
-    
+
                             $zip->close();
-    
+
                             // Process files via job or directly based on order "size"
                             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                                 $job = Craft::$app->queue->push(new ImportFiles([
@@ -255,9 +270,10 @@ class FilesController extends Controller
                                     'totalFiles' => $total_files,
                                     'assets' => $assetIds,
                                     'fileFormat' => $fileInfo['extension'],
-                                    'fileNames' => $fileNames
+                                    'fileNames' => $fileNames,
+                                    'discardElements' => $sourceChangedElements
                                 ]));
-    
+
                                 if ($job) {
                                     $queueOrders = Craft::$app->getSession()->get('queueOrders');
                                     $queueOrders[$job] = $orderId;
@@ -276,7 +292,7 @@ class FilesController extends Controller
                                 $success = true;
                                 foreach ($assetIds as $key => $id) {
                                     $a = Craft::$app->getAssets()->getAssetById($id);
-                                    $res = $fileSvc->processFile($a, $this->order, $fileInfo['extension'], $fileNames);
+                                    $res = $fileSvc->processFile($a, $this->order, $fileInfo['extension'], $fileNames, $sourceChangedElements);
                                     Craft::$app->getElements()->deleteElement($a);
                                     if ($res === false) $success = false;
                                 }
@@ -292,15 +308,15 @@ class FilesController extends Controller
                         }
                     } else {
                         $filename = Assets::prepareAssetName($file->name);
-    
+
                         $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
-    
+
                         $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
-    
+
                         $compatibleFilename = $file->tempName . '.' . Constants::FILE_FORMAT_TXT;
-    
+
                         rename($file->tempName, $compatibleFilename);
-    
+
                         $asset = new Asset();
                         $asset->tempFilePath = $compatibleFilename;
                         $asset->filename = $compatibleFilename;
@@ -309,15 +325,15 @@ class FilesController extends Controller
                         $asset->avoidFilenameConflicts = true;
                         $asset->uploaderId = Craft::$app->getUser()->getId();
                         $asset->setScenario(Asset::SCENARIO_CREATE);
-    
+
                         if (! Craft::$app->getElements()->saveElement($asset)) {
                             $errors = $asset->getFirstErrors();
-    
+
                             return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                         }
-    
+
                         $totalWordCount = Translations::$plugin->fileRepository->getUploadedFilesWordCount($asset, $file->extension);
-    
+
                         // Process files via job or directly based on file "size"
                         if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                             $job = Craft::$app->queue->push(new ImportFiles([
@@ -326,9 +342,10 @@ class FilesController extends Controller
                                 'totalFiles' => $total_files,
                                 'assets' => [$asset->id],
                                 'fileFormat' => $file->extension,
-                                'fileNames' => [$asset->id => $file->name]
+                                'fileNames' => [$asset->id => $file->name],
+                                'discardElements' => $sourceChangedElements
                             ]));
-    
+
                             if ($job) {
                                 $queueOrders = Craft::$app->getSession()->get('queueOrders');
                                 $queueOrders[$job] = $orderId;
@@ -345,7 +362,7 @@ class FilesController extends Controller
                         } else {
                             $fileSvc = new ImportFiles();
                             $a = Craft::$app->getAssets()->getAssetById($asset->id);
-                            $res = $fileSvc->processFile($a, $this->order, $file->extension, [$asset->id => $file->name]);
+                            $res = $fileSvc->processFile($a, $this->order, $file->extension, [$asset->id => $file->name], $sourceChangedElements);
                             Craft::$app->getElements()->deleteElement($a);
 
                             if($res !== false){
@@ -361,7 +378,7 @@ class FilesController extends Controller
                 Craft::$app->getSession()->set('fileImportError', 1);
                 $this->showUserMessages("The file you are trying to import is empty.");
             }
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             $this->showUserMessages($exception->getMessage());
         }
     }
@@ -373,7 +390,6 @@ class FilesController extends Controller
      */
     public function actionGetFileDiff()
     {
-        $variables = Craft::$app->getRequest()->resolve()[1];
         $success = false;
         $error = null;
         $data = ['previewClass' => 'disabled', 'originalUrl' => '', 'newUrl' => ''];
@@ -399,7 +415,7 @@ class FilesController extends Controller
 
                     $error = null;
                     $success = true;
-                } catch(Exception $e) {
+                } catch(\Exception $e) {
                     $error = $e->getMessage();
                 }
             }
@@ -421,7 +437,7 @@ class FilesController extends Controller
 			Craft::$app->session->setNotice(Craft::t('app', $message));
     	} else {
     		Craft::$app->session->setError(Craft::t('app', $message));
-    	}	
+    	}
     }
 
     /**

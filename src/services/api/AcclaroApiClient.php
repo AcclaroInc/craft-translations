@@ -287,7 +287,7 @@ class AcclaroApiClient
             'orderid' => $orderId,
             'fileid' => $fileId,
         );
-        
+
         $endpoint = $this->prepareEndpoint(Constants::ACCLARO_API_GET_FILE, $query);
 
         $request = new Request(Constants::REQUEST_METHOD_GET, $endpoint.'?'.http_build_query($query, '', '&'));
@@ -326,12 +326,12 @@ class AcclaroApiClient
             'url' => $url,
         ));
     }
-    
+
     public function getLanguages()
     {
         return $this->get(Constants::ACCLARO_API_GET_LANGUAGES);
     }
-    
+
     public function getLanguagePairs($sourceLang)
     {
         return $this->get(Constants::ACCLARO_API_GET_LANGUAGE_PAIRS, array(
