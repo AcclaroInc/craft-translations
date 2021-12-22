@@ -22,7 +22,6 @@ use craft\elements\Category;
 use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
 use craft\helpers\ElementHelper;
-
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
@@ -30,6 +29,7 @@ use acclaro\translations\records\OrderRecord;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
+use acclaro\translations\services\translator\AcclaroTranslationService;
 
 class OrderRepository
 {
@@ -152,7 +152,6 @@ class OrderRepository
         return $results;
     }
 
-    // ! TODO: check if this is of any use
     public function getOrderStatuses()
     {
         return array(
@@ -174,7 +173,7 @@ class OrderRepository
     {
         $order = new Order();
 
-        $order->status = Constants::ORDER_STATUS_NEW;
+        $order->status = Constants::ORDER_STATUS_PENDING;
 
         $order->sourceSite = $sourceSite ?: Craft::$app->sites->getPrimarySite()->id;
 
@@ -261,7 +260,7 @@ class OrderRepository
     }
 
     /**
-     * @param $order
+     * @param \acclaro\translations\elements\Order $order
      * @param $queue
      * @throws Exception
      */
@@ -278,18 +277,12 @@ class OrderRepository
         }
 
         $syncOrderSvc = new SyncOrder();
-        foreach ($order->files as $file) {
+        foreach ($order->getFiles() as $file) {
             if ($queue) {
                 $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
             }
             // Let's make sure we're not updating canceled/complete/published files
-            if (in_array($file->status, [
-                Constants::FILE_STATUS_CANCELED,
-                Constants::FILE_STATUS_COMPLETE,
-                Constants::FILE_STATUS_PUBLISHED
-            ])) {
-                continue;
-            }
+            if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
 
             $translationService->updateFile($order, $file);
 
@@ -315,7 +308,7 @@ class OrderRepository
     }
 
     /**
-     * @param $order
+     * @param \acclaro\translations\elements\Order $order
      * @param $settings
      * @param null $queue
      * @throws \Throwable
@@ -353,12 +346,12 @@ class OrderRepository
         ];
 
         $order->serviceOrderId = $orderData['acclaroOrderId'];
-        $order->status = (!is_null($orderResponse)) ? $orderResponse->status : '';
 
-        $orderCallbackResponse = $acclaroApiClient->requestOrderCallback(
+        $acclaroApiClient->requestOrderCallback(
             $order->serviceOrderId,
             Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
         );
+
         if ($order->tags) {
             $tags = [];
             foreach (json_decode($order->tags, true) as $tagId) {
@@ -368,79 +361,27 @@ class OrderRepository
                 }
             }
             if (! empty($tags)) {
-                $res = $acclaroApiClient->addOrderTags($orderResponse->orderid, implode(",", $tags));
+                $acclaroApiClient->addOrderTags($orderResponse->orderid, implode(",", $tags));
             }
         }
 
-        $tempPath = Craft::$app->path->getTempPath();
-
         $sendOrderSvc = new SendOrder();
-        foreach ($order->files as $file) {
+        $translationService = new AcclaroTranslationService($settings, $acclaroApiClient);
+        foreach ($order->getFiles() as $file) {
             if ($queue) {
                 $sendOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
             }
 
-            $file->source = Translations::$plugin->elementToFileConverter->addDataToSourceXML($file->source, $orderData);
-
-            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-
-            $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
-            $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
-
-            if ($element instanceof GlobalSet) {
-                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
-            } else if ($element instanceof Asset) {
-                $assetFilename = $element->getFilename();
-                $fileInfo = pathinfo($element->getFilename());
-                $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' .Constants::FILE_FORMAT_XML;
-            } else {
-                $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
-            }
-
-            $path = $tempPath .'/'. $file->elementId .'-'. $filename;
-
-            $stream = fopen($path, 'w+');
-
-            fwrite($stream, $file->source);
-
-            $fileResponse = $acclaroApiClient->sendSourceFile(
-                $order->serviceOrderId,
-                $sourceSite,
-                $targetSite,
-                $path
-            );
-
-            $file->serviceFileId = $fileResponse->fileid ? $fileResponse->fileid : $file->id;
-            $file->status = $fileResponse->status;
-
-            $fileCallbackResponse = $acclaroApiClient->requestFileCallback(
-                $order->serviceOrderId,
-                $file->serviceFileId,
-                Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
-            );
-
-            $acclaroApiClient->addReviewUrl(
-                $order->serviceOrderId,
-                $file->serviceFileId,
-                $file->previewUrl
-            );
-
-            fclose($stream);
-
-            unlink($path);
+            $translationService->sendOrderFile($order, $file, $settings);
         }
 
-        $submitOrderResponse = $acclaroApiClient->submitOrder($order->serviceOrderId);
+        $acclaroApiClient->submitOrder($order->serviceOrderId);
 
-        $order->status = $submitOrderResponse->status;
+        $order->status = Constants::ORDER_STATUS_NEW;
 
         $order->dateOrdered = new \DateTime();
 
-        $success = Craft::$app->getElements()->saveElement($order);
-
-        foreach ($order->files as $file) {
-            Translations::$plugin->fileRepository->saveFile($file);
-        }
+        Craft::$app->getElements()->saveElement($order);
     }
 
     /**
@@ -503,13 +444,18 @@ class OrderRepository
         return $orderIds;
     }
 
+    /**
+     * Get order status based on files statuses
+     *
+     * @param Order $order
+     * @return string
+     */
     public function getNewStatus($order)
     {
         $fileStatuses = [];
-        $files = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
         $publishedFiles = 0;
 
-        foreach ($files as $file) {
+        foreach ($order->getFiles() as $file) {
             if ($file->status === Constants::FILE_STATUS_PUBLISHED) $publishedFiles++;
 
             if (! in_array($file->status, $fileStatuses)) {
@@ -517,8 +463,10 @@ class OrderRepository
             }
         }
 
-        if ($publishedFiles == count(($files))) {
+        if ($publishedFiles == count(($order->files))) {
             return Constants::ORDER_STATUS_PUBLISHED;
+        } else if (in_array('Modified', $fileStatuses)) {
+            return Constants::ORDER_STATUS_MODIFIED;
         } else if (in_array('Ready to apply', $fileStatuses)) {
             return Constants::ORDER_STATUS_COMPLETE;
         } else if (in_array('Ready for review', $fileStatuses)) {
@@ -531,7 +479,7 @@ class OrderRepository
             return Constants::ORDER_STATUS_CANCELED;
         } else {
             // Default Status in case of any issue
-            return Constants::ORDER_STATUS_IN_PROGRESS;
+            return Constants::ORDER_STATUS_NEW;
         }
     }
 
@@ -554,5 +502,62 @@ class OrderRepository
         }
 
         return $draftElement->title ?? '';
+    }
+
+    /**
+     * Checks if source entry of elements in order has changed
+     *
+     * @param Order $order
+     * @return array $result
+     */
+    public function getIsSourceChanged($order): ?array
+    {
+        $canonicalIds = [];
+        $originalIds = [];
+        $canonicalOriginalMap = [];
+
+        if ($elements = $order->elements) {
+            foreach ($order->getFiles() as $file) {
+                if ($file->isPublished() || ! $file->source || in_array($file->elementId, $originalIds)) continue;
+
+                try {
+                    $element = $canonicalElement = $elements[$file->elementId];
+                    $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+                    $converter = Translations::$plugin->elementToFileConverter;
+
+                    $currentContent = $converter->convert(
+                        $element,
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    => $order->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'wordCount'     => $wordCount,
+                            'orderId'       => $order->id
+                        ]
+                    );
+
+                    $sourceContent = json_decode($converter->xmlToJson($file->source), true);
+                    $currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+                    $sourceContent = json_encode(array_values($sourceContent['content']));
+                    $currentContent = json_encode(array_values($currentContent['content']));
+
+                    if ($element->getIsDraft()) $canonicalElement = $element->getCanonical();
+                    if (md5($sourceContent) !== md5($currentContent)) {
+                        array_push($originalIds, $element->id);
+                        array_push($canonicalIds, $canonicalElement->id);
+                        $canonicalOriginalMap[$canonicalElement->id] = $element->id;
+                    }
+                } catch (Exception $e) {
+                    throw new Exception("Source entry changes check, Error: " . $e->getMessage(), 1);
+                }
+            }
+        }
+
+        return [
+            'canonicalIds' => $canonicalIds,
+            'originalIds' => $originalIds,
+            'canonicalOriginalMap' => $canonicalOriginalMap
+        ];
     }
 }

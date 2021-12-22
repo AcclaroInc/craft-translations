@@ -39,6 +39,8 @@ use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\services\job\DeleteDrafts;
+use craft\errors\MigrationException;
+use yii\web\User;
 
 class Translations extends Plugin
 {
@@ -127,7 +129,7 @@ class Translations extends Plugin
                 $this->_onBeforePublishDraft($event);
             }
         );
-        
+
         Event::on(
             Drafts::class,
             Drafts::EVENT_AFTER_APPLY_DRAFT,
@@ -150,7 +152,7 @@ class Translations extends Plugin
                     '['. __METHOD__ .'] Elements::EVENT_AFTER_SAVE_ELEMENT',
                     'translations'
                 );
-                
+
                 $this->_onSaveEntry($event);
             }
         );
@@ -232,6 +234,7 @@ class Translations extends Plugin
     {
         $subNavs = [];
         $navItem = parent::getCpNavItem();
+        /** @var User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if ($currentUser->can('translations:dashboard')) {
@@ -317,7 +320,7 @@ class Translations extends Plugin
             if (Craft::$app->request->getIsCpRequest()) {
                 $this->_includeResources(Craft::$app->getRequest()->getPathInfo());
             }
-            
+
             self::$plugin->translationRepository->loadTranslations();
 
             Event::on(
@@ -432,7 +435,7 @@ class Translations extends Plugin
         self::$view->registerJs("$(function(){ Craft.Translations });");
         self::$view->registerJs("$(function(){ Craft.Translations.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
     }
-    
+
     private function _includeEditDraftResource($draftId)
     {
         $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
@@ -446,7 +449,7 @@ class Translations extends Plugin
             self::$view->registerJs("$(function(){ Craft.Translations.ApplyTranslations.init({$draftId}, {$response}); });");
         }
     }
-    
+
     private function _includeEntryResources()
     {
         $orders = array();
@@ -474,9 +477,9 @@ class Translations extends Plugin
             'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus(Constants::PLUGIN_HANDLE)
         ];
         $data = json_encode($data);
-        
+
         self::$view->registerAssetBundle(EntryAssets::class);
-        
+
         self::$view->registerJs("$(function(){ Craft.Translations.AddEntriesToTranslationOrder.init({$data}); });");
     }
 
@@ -503,7 +506,7 @@ class Translations extends Plugin
 
         self::$view->registerJs("$(function(){ Craft.Translations.CategoryTranslations.init({$orders}, {$categoryId}); });");
     }
-    
+
     private function _includeGlobalSetResources($globalSetHandle, $site = null)
     {
         $globalSet = self::$plugin->globalSetRepository->getSetByHandle($globalSetHandle, $site);
@@ -557,14 +560,14 @@ class Translations extends Plugin
 
         if (!$request->getIsConsoleRequest()) {
             $draft = $event->draft;
-    
+
             $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
-    
+
             $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
-    
+
             $action = $request->getActionSegments();
             $action = end($action);
-    
+
             $applyDraftActions = [
                 'apply-drafts',
                 'save-draft-and-publish',
@@ -573,7 +576,7 @@ class Translations extends Plugin
             ];
 
             if(!empty($response) && !in_array($action, $applyDraftActions)) {
-    
+
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
                 $path = $craft->request->getFullPath();
                 $params = $craft->request->getQueryParams();
@@ -626,7 +629,7 @@ class Translations extends Plugin
                         Translations::$plugin->orderRepository->saveOrder($order);
                     }
 
-                    $currentFile->status = 'canceled';
+                    $currentFile->status = Constants::FILE_STATUS_CANCELED;
 
                     self::$plugin->fileRepository->saveFile($currentFile);
                 }
@@ -640,6 +643,7 @@ class Translations extends Plugin
 
         if ($order = Translations::$plugin->orderRepository->isTranslationOrder($event->element->id) && $event->hardDelete) {
             $drafts = [];
+            /** @var Order|null $order */
             foreach ($order->getFiles() as $file) {
                 $drafts[] = $file->draftId;
             }
