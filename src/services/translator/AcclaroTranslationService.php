@@ -13,6 +13,7 @@ namespace acclaro\translations\services\translator;
 use Craft;
 use craft\elements\Asset;
 use craft\elements\GlobalSet;
+use craft\helpers\ElementHelper;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -69,7 +70,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $response = $this->acclaroApiClient->getAccount();
 
-        return !empty($response->plunetid);
+        return !empty($response);
     }
 
     /**
@@ -129,6 +130,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             }
             // find the matching file
             foreach ($fileInfoResponse as $fileInfo) {
+
                 if ($fileInfo->fileid == $file->serviceFileId) break;
 
                 $fileInfo = null;
@@ -219,13 +221,10 @@ class AcclaroTranslationService implements TranslationServiceInterface
         return $this->acclaroApiClient->editOrderName($orderId, $name);
     }
 
-    public function sendOrderFile($order, $file, $settings) {
+    public function sendOrderFile($order, $file) {
 
         $tempPath = Craft::$app->path->getTempPath();
-        $acclaroApiClient = new AcclaroApiClient(
-            $settings['apiToken'],
-            !empty($settings['sandboxMode'])
-        );
+        $acclaroApiClient = $this->acclaroApiClient;
 
         $orderData = [
             'acclaroOrderId'    => $order->serviceOrderId,
@@ -261,7 +260,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $order->serviceOrderId,
                 $sourceSite,
                 $targetSite,
-                $file->id,
                 $path
             );
 
@@ -289,11 +287,31 @@ class AcclaroTranslationService implements TranslationServiceInterface
     }
 
     /**
+     * Update Order details on Acclaro
+     *
+     * @return void
+     */
+    public function editOrder($order, $data)
+    {
+        $res = $this->acclaroApiClient->editOrder(
+            $order->serviceOrderId,
+            $data['title'] ?? $order->title,
+            $data['comment'] ?? null,
+            $data['requestedDueDate'] ?? null
+        );
+
+        if (empty($res)) {
+            throw new \Exception('Error updating order', 1);
+        }
+
+    }
+
+    /**
      * Cancel an Acclaro order.
      *
      * @return void
      */
-    public function cancelOrder($order, $settings)
+    public function cancelOrder($order)
     {
         return $this->acclaroApiClient->addOrderComment($order->serviceOrderId, Constants::ACCLARO_ORDER_CANCEL);
     }
@@ -303,7 +321,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      *
      * @return void
      */
-    public function addFileComment($order, $settings, $file, $comment)
+    public function addFileComment($order, $file, $comment)
     {
         $this->acclaroApiClient->addFileComment($order->serviceOrderId, $file->serviceFileId, $comment);
     }
@@ -313,7 +331,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      *
      * @return void
      */
-    public function editOrderTags($order, $settings, $newTags)
+    public function editOrderTags($order, $newTags)
     {
         $oldTags = [];
 

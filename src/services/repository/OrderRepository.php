@@ -21,7 +21,7 @@ use craft\elements\Asset;
 use craft\elements\Category;
 use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
-
+use craft\helpers\ElementHelper;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
@@ -75,7 +75,7 @@ class OrderRepository
     }
 
     /**
-     * @return array
+     * @return [\craft\elements\db\ElementQuery]
      */
     public function getAllOrderIds()
     {
@@ -337,7 +337,6 @@ class OrderRepository
             $order->title,
             $comments,
             $dueDate,
-            $order->id,
             $order->wordCount
         );
 

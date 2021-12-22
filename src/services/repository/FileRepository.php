@@ -82,7 +82,7 @@ class FileRepository
 
     /**
      * @param  int|string $orderId
-     * @return \acclaro\translations\models\FileModel[]
+     * @return [\acclaro\translations\models\FileModel]
      */
     public function getFilesByOrderId(int $orderId, $elementId = null, $site=null)
     {
