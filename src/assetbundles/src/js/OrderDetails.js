@@ -528,7 +528,7 @@
             });
 
 			// this is to make right side settings tab not shrink when scrolling
-			$('#details').addClass('overflow-y-unset');
+			$('#details').addClass('unset-width');
 
             this.$elementCheckboxes.on('change', function() {
                 self.$allElementCheckbox.prop(

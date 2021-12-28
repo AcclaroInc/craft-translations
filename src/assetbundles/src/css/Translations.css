@@ -951,6 +951,6 @@ td.target{
     font-size: 16px;
 }
 
-.overflow-y-unset {
-	overflow-y: unset !important;
+.unset-width.fixed {
+	min-width: 404px !important;
 }
