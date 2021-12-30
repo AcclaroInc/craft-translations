@@ -7,6 +7,8 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use acclaro\translations\Constants;
+use GuzzleHttp\HandlerStack;
+use Spatie\GuzzleRateLimiterMiddleware\RateLimiterMiddleware;
 
 class AcclaroApiClient
 {
@@ -17,13 +19,17 @@ class AcclaroApiClient
         $sandboxMode = false,
         Client $client = null
     ) {
+		$stack = HandlerStack::create();
+		$stack->push(RateLimiterMiddleware::perSecond(3));
+
         $this->client = $client ?: new Client([
             'base_uri' => $sandboxMode ? Constants::SANDBOX_URL : Constants::PRODUCTION_URL,
             'headers' => array(
                 'Authorization' => sprintf('Bearer %s', $apiToken),
                 'Accept' => 'application/json',
                 'User-Agent' => 'Craft'
-            )
+			),
+			'handler' => $stack
         ]);
     }
 
@@ -159,6 +165,8 @@ class AcclaroApiClient
 
         if ($response->getStatusCode() != 200) {
             //@TODO
+			Craft::info('Acclaro Api Error Response. ErrorCode:'. $response->getStatusCode());
+			Craft::error('Acclaro Api Error Response. Error'. $response->getBody());
             return null;
         }
 
