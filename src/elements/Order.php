@@ -212,6 +212,16 @@ class Order extends Element
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
+                'key' => 'modified',
+                'label' => Translations::$plugin->translator->translate('app', 'Modified'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_MODIFIED
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
                 'key' => 'in-progress',
                 'label' => Translations::$plugin->translator->translate('app', 'In progress'),
                 'criteria' => [
@@ -476,6 +486,38 @@ class Order extends Element
         }
 
         return $this->_files;
+    }
+
+    /**
+     * Checks if any file in order is complete
+     *
+     * @return bool
+     */
+    public function hasCompletedFiles()
+    {
+		$files = Translations::$plugin->fileRepository->getFilesByOrderId($this->id);
+
+        foreach ($files as $file) {
+			if ($file->isComplete() || $file->isReviewReady() || $file->isPublished()) return true;
+		}
+
+		return false;
+    }
+
+	/**
+     * Returns files in fileIds associated with order
+     *
+     * @return \acclaro\translations\models\FileModel[]
+     */
+    public function getFilesById($fileIds)
+    {
+		$files = Translations::$plugin->fileRepository->getFilesByOrderId($this->id);
+		$result = [];
+		foreach ($files as $file) {
+			if (in_array($file->id, $fileIds)) $result[$file->id] = $file;
+		}
+
+        return $result;
     }
 
     public function getTranslator()

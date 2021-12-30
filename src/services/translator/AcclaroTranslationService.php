@@ -13,7 +13,6 @@ namespace acclaro\translations\services\translator;
 use Craft;
 use craft\elements\Asset;
 use craft\elements\GlobalSet;
-use craft\helpers\ElementHelper;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -130,7 +129,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
             }
             // find the matching file
             foreach ($fileInfoResponse as $fileInfo) {
-
                 if ($fileInfo->fileid == $file->serviceFileId) break;
 
                 $fileInfo = null;
@@ -284,26 +282,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             unlink($path);
         }
-    }
-
-    /**
-     * Update Order details on Acclaro
-     *
-     * @return void
-     */
-    public function editOrder($order, $data)
-    {
-        $res = $this->acclaroApiClient->editOrder(
-            $order->serviceOrderId,
-            $data['title'] ?? $order->title,
-            $data['comment'] ?? null,
-            $data['requestedDueDate'] ?? null
-        );
-
-        if (empty($res)) {
-            throw new \Exception('Error updating order', 1);
-        }
-
     }
 
     /**

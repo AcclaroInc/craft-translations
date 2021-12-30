@@ -58,6 +58,7 @@ class FilesController extends Controller
         $errors = array();
 
         $orderAttributes = $order->getAttributes();
+        $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
 
         //Filename Zip Folder
         $zipName = $this->getZipName($orderAttributes);
@@ -77,13 +78,6 @@ class FilesController extends Controller
         }
 
         $transaction = Craft::$app->getDb()->beginTransaction();
-        if ($order->isNew() || $order->isModified()) {
-            $order->status = Constants::ORDER_STATUS_IN_PROGRESS;
-            $order->logActivity(sprintf(
-                Translations::$plugin->translator->translate('app', 'Order/Files status changed to %s'),
-                $order->getStatusLabel()
-            ));
-        }
 
         //Iterate over each file on this order
         if ($order->files)

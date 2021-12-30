@@ -21,7 +21,6 @@ use craft\elements\Asset;
 use craft\elements\Category;
 use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
-use craft\helpers\ElementHelper;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
@@ -75,7 +74,7 @@ class OrderRepository
     }
 
     /**
-     * @return [\craft\elements\db\ElementQuery]
+     * @return array
      */
     public function getAllOrderIds()
     {
@@ -435,7 +434,8 @@ class OrderRepository
     {
         $orderIds = [];
         foreach ($elements as $element) {
-            $orders = Translations::$plugin->fileRepository->getOrdersByElement($element->id);
+			$canonicalElement = $element->getIsDraft() ? $element->getCanonical() : $element;
+            $orders = Translations::$plugin->fileRepository->getOrdersByElement($canonicalElement->id);
             if ($orders) {
                 $orderIds[$element->id] = $orders;
             }
@@ -454,8 +454,9 @@ class OrderRepository
     {
         $fileStatuses = [];
         $publishedFiles = 0;
+		$files = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
 
-        foreach ($order->getFiles() as $file) {
+        foreach ($files as $file) {
             if ($file->status === Constants::FILE_STATUS_PUBLISHED) $publishedFiles++;
 
             if (! in_array($file->status, $fileStatuses)) {
@@ -463,7 +464,7 @@ class OrderRepository
             }
         }
 
-        if ($publishedFiles == count(($order->files))) {
+        if ($publishedFiles == count(($files))) {
             return Constants::ORDER_STATUS_PUBLISHED;
         } else if (in_array('Modified', $fileStatuses)) {
             return Constants::ORDER_STATUS_MODIFIED;
@@ -512,16 +513,14 @@ class OrderRepository
      */
     public function getIsSourceChanged($order): ?array
     {
-        $canonicalIds = [];
         $originalIds = [];
-        $canonicalOriginalMap = [];
 
-        if ($elements = $order->elements) {
+        if ($elements = $order->getElements()) {
             foreach ($order->getFiles() as $file) {
                 if ($file->isPublished() || ! $file->source || in_array($file->elementId, $originalIds)) continue;
 
                 try {
-                    $element = $canonicalElement = $elements[$file->elementId];
+                    $element = $elements[$file->elementId];
                     $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
                     $converter = Translations::$plugin->elementToFileConverter;
 
@@ -542,11 +541,8 @@ class OrderRepository
                     $sourceContent = json_encode(array_values($sourceContent['content']));
                     $currentContent = json_encode(array_values($currentContent['content']));
 
-                    if ($element->getIsDraft()) $canonicalElement = $element->getCanonical();
                     if (md5($sourceContent) !== md5($currentContent)) {
                         array_push($originalIds, $element->id);
-                        array_push($canonicalIds, $canonicalElement->id);
-                        $canonicalOriginalMap[$canonicalElement->id] = $element->id;
                     }
                 } catch (Exception $e) {
                     throw new Exception("Source entry changes check, Error: " . $e->getMessage(), 1);
@@ -554,10 +550,6 @@ class OrderRepository
             }
         }
 
-        return [
-            'canonicalIds' => $canonicalIds,
-            'originalIds' => $originalIds,
-            'canonicalOriginalMap' => $canonicalOriginalMap
-        ];
+        return $originalIds;
     }
 }

@@ -14,6 +14,7 @@ use Craft;
 use craft\base\Model;
 use yii\validators\NumberValidator;
 use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 use craft\validators\SiteIdValidator;
 use craft\validators\DateTimeValidator;
 
@@ -153,4 +154,47 @@ class FileModel extends Model
     {
         return $this->status === Constants::FILE_STATUS_PUBLISHED;
     }
+
+	public function getCpEditUrl()
+	{
+		return Translations::$plugin->urlGenerator->generateFileUrl($this->getElement(), $this);
+	}
+
+	public function getUiLabel()
+	{
+		if ($this->isComplete()) {
+			return Translations::$plugin->orderRepository->getFileTitle($this);
+		}
+		if ($element = $this->getElement($this->isPublished())) {
+			if (isset($element->title)) return $element->title;
+			if (isset($element->name)) return $element->name;
+		}
+		return 'Not Found!';
+	}
+
+	public function getPreviewUrl()
+	{
+		$previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($this->getElement($this->isPublished()), $this);
+
+		if ($this->isPublished()) return $previewUrl;
+
+		return $this->previewUrl ?? $previewUrl;
+	}
+
+	public function hasSourceTargetDiff()
+	{
+		$hasDiff = false;
+		if ($this->isReviewReady() || $this->isComplete() || $this->isPublished()) {
+			$hasDiff = (bool) Translations::$plugin->fileRepository->getSourceTargetDifferences(
+				$this->source, $this->target);
+		}
+
+		return $hasDiff;
+	}
+
+	public function getElement($forTarget = null)
+	{
+		$site = $forTarget ? $this->targetSite : $this->sourceSite;
+		return Craft::$app->getElements()->getElementById($this->elementId, null, $site);
+	}
 }

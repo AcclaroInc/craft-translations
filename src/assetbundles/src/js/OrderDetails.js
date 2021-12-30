@@ -7,32 +7,28 @@
     var isSubmitted = $("#order-attr").data("submitted");
     var hasOrderId = $("input[type=hidden][name=id]").val() != '';
     var isPending = $("#order-attr").data("status") === "pending" || $("#order-attr").data("status") === "failed";
-    var isUpdateable = $("#order-attr").data("isupdateable") !== "";
+    var isUpdateable = $("#order-attr").data("isupdateable");
     var isCompleted = $("#order-attr").data("status") === "complete";
     var isCanceled = $("#order-attr").data("status") === "canceled";
     var isPublished = $("#order-attr").data("status") === "published";
-    var sourceChanged = String($("#order-attr").data("hassourcechanges"));
     var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
     var defaultTranslatorId = $("#originalTranslatorId").data("id");
 
     function validateForm() {
         var buttonStatus = true;
         setUnloadEvent();
-        var $entries = $('#currentElementIds').val().split(',');
-        if ($entries[0] == "") {
-            $entries.splice(0);
-        }
+        $entries = getEntryIds();
         var $targetLang = $(':checkbox[name="targetSites[]"]:checked');
 
         if ($('#title').val() == "") {
             buttonStatus = false;
         }
 
-        if ($entries.length < 1) {
+        if (!$entries.length > 0) {
             buttonStatus = false;
         }
 
-        if ($("#sourceSiteSelect").val() == "") {
+        if ($("#sourceSite").val() == "") {
             buttonStatus = false;
         }
 
@@ -100,20 +96,20 @@
             // Validate Source Site
             if (key == "source" || key == "all") {
                 var originalSourceSite = $('#originalSourceSiteId').val();
-                var site = $("#sourceSiteSelect").val();
+                var site = $("#sourceSite").val();
                 if (typeof originalSourceSite !== 'undefined') {
                     originalSourceSite = originalSourceSite.split(",");
                 }
 
                 if (haveDifferences(originalSourceSite, site.split(","))) {
                     if (!$needData) return true;
-                    $responseData.push("sourceSiteSelect");
+                    $responseData.push("sourceSite");
                 }
             }
             // Validate Entries
             if (key == "entry" || key == "all") {
                 $originalElementIds = $('#originalElementIds').val().split(',');
-                var currentElementIds = $('#currentElementIds').val().split(",");
+                var currentElementIds = getEntryIds(false, true);
 
                 if (haveDifferences($originalElementIds, currentElementIds)) {
                     if (!$needData) return true;
@@ -197,15 +193,6 @@
                     $responseData.push("tags");
                 }
             }
-            // Validate entry version
-            if (key== "version" || key == "all") {
-                var currentElementVersions = $('#elementVersions').val().split(",");
-                var originalElementVersions = $('#originalElementVersions').val().split(",");
-                if (haveDifferences(originalElementVersions, currentElementVersions)) {
-                    if (!$needData) return true;
-                    $responseData.push("version");
-                }
-            }
         };
 
         return $needData ? $responseData : false;
@@ -280,7 +267,7 @@
     function shouldCreateNewOrder() {
         // Source Site Check
         var originalSourceSite = $('#originalSourceSiteId').val();
-        var site = $("#sourceSiteSelect").val();
+        var site = $("#sourceSite").val();
 
         if (typeof originalSourceSite !== 'undefined') originalSourceSite = originalSourceSite.split(",");
 
@@ -338,21 +325,8 @@
         }
     }
 
-    function syncElementVersions() {
-        var currentElementIds = $('#currentElementIds').val().split(",");
-        var elementVersions = $('#elementVersions').val().split(",");
-        var updatedVersions = [];
-        $.each(elementVersions, function(key, value) {
-            elementId = value.split('_')[0];
-            if ($.inArray(elementId, currentElementIds) > -1) {
-                updatedVersions.push(value);
-            }
-        });
-        $('#elementVersions').val(updatedVersions.join(','));
-    }
-
     function syncSites($all = false) {
-        var source = $("#sourceSiteSelect").val();
+        var source = $("#sourceSite").val();
         var targetCheckboxes = $(':checkbox[name="targetSites[]"]');
         targetCheckboxes.each(function() {
             siteId = $(this).val();
@@ -371,7 +345,7 @@
         if ($all) {
             let $all = $(':checkbox[name="targetSites[]"]').length;
             let $checked = $(':checkbox[name="targetSites[]"]:checked').not(':disabled').length;
-            let $source = $("#sourceSiteSelect").val() == '' ? 0 : 1;
+            let $source = $("#sourceSite").val() == '' ? 0 : 1;
             if (($all-$source) == $checked) {
                 $(':checkbox[name=targetSites]').prop('checked', true);
                 $(':checkbox[name="targetSites[]"]').prop('disabled', true);
@@ -385,8 +359,7 @@
 
             title = $('#title').val();
             tags = $('input[name="tags[]"]');
-            elementIds = $('#currentElementIds').val();
-            elementIds = elementIds != '' ? elementIds.split(',') : [];
+            elementIds = getEntryIds();
 
             targetSites = [];
             var $all = $(':checkbox[name="targetSites"]');
@@ -433,85 +406,41 @@
         }
     }
 
-    function getSelectedElements()
-    {
-        return Craft.Translations.OrderDetails.$elementCheckboxes.filter(':checked');
+    function getEntries($selected = false) {
+		if ($selected) {
+			return Craft.Translations.OrderDetails.$elementCheckboxes.filter(':checked').closest('tr');
+		}
+        return Craft.Translations.OrderDetails.$elementCheckboxes.closest('tr');
     }
+
+	function getEntryIds($canonical = false, $current = false) {
+		$entries = getEntries();
+		$result = [];
+		if ($current) {
+			$entries.each(function() {
+				$entryId = String($(this).find('input[name="elements[]"]').val());
+				$result.push($entryId);
+			});
+		} else {
+			$entries.each(function() {
+				$entryId = String($(this).data('element-id'));
+				if ($canonical) {
+					$entryId = String($(this).data('canonical-id'));
+				}
+				$result.push($entryId);
+			});
+		}
+		return $result;
+	}
 
     Craft.Translations.OrderDetails = {
         $elementCheckboxes: null,
         $allElementCheckbox: null,
-        $hasActions: null,
+        $elementActions: null,
         $headerContainer: null,
         $files: null,
         $isMobile: null,
 
-        updateFixedHeader: function($top) {
-            if (this.$headerContainer.height() > this.$files[0].getBoundingClientRect().top - 10) {
-                if (this.$isMobile) {
-                    $top = 0;
-                }
-                this.$files.find('#text-field').css({
-                    "position": "sticky",
-                    "top": $top+"px",
-                    "z-index": "100",
-                    "background-color": "white",
-                    "max-height": "70px",
-                    "box-shadow": "inset 0 -1px 0 rgba(63, 77, 90, 0.1);",
-                });
-                this.$files.find('#text-field div.heading').css({
-                    "padding-top": "20px",
-                    "padding-bottom": "20px"
-                });
-            } else {
-                this.$files.find('#text-field').css({
-                    "position": "",
-                    "top": "",
-                    "z-index": "",
-                    "background-color": "",
-                    "max-height": "",
-                    "box-shadow": "",
-                });
-                this.$files.find('#text-field div.heading').css({
-                    "padding-top": "",
-                    "padding-bottom": "",
-                });
-            }
-        },
-        toggleUpdateActionButton: function() {
-            $updateButton = $('#order-element-action-menu').find('.update-element');
-            // enable only if checked checkbox entry has the updated source
-            selectedHasChanges = false;
-            $.each(this.$elementCheckboxes.filter(':checked'), function() {
-                if (! selectedHasChanges) {
-                    totalElementIds = $.map($('#order-attr').data('canonicaloriginalmap'), function(val, key) {
-                        key = parseInt(key);
-                        val = parseInt(val);
-                        return key == val ? key : [key, val];
-                    });
-
-                    selectedHasChanges = $.inArray($(this).data('element'), totalElementIds) >= 0;
-                }
-            });
-            if (sourceChanged && selectedHasChanges && !isPublished && !isCanceled) {
-                $updateButton.removeClass('disabled noClick');
-            } else {
-                $updateButton.addClass('disabled noClick');
-            }
-        },
-        toggleElementAction: function($show = true) {
-            if ($show && this.$elementCheckboxes.filter(':checked').length > 0) {
-                if (! this.$hasActions) {
-                    this._buildElementActions();
-                    this.$hasActions = true;
-                } else {
-                    $('#toolbar').show();
-                }
-                this.toggleUpdateActionButton();
-            } else {
-                $('#toolbar').hide();
-            }
-        },
         init: function() {
             var self = this;
             this.$headerContainer = $('#header-container');
@@ -566,7 +495,7 @@
                 } else {
                     var $all = $(':checkbox[name="targetSites[]"]');
                     var $checkboxes = $(':checkbox[name="targetSites[]"]:checked:not(:disabled)');
-                    var $sourceSite = $("#sourceSiteSelect").val();
+                    var $sourceSite = $("#sourceSite").val();
                     $sourceSite = $sourceSite == '' ? 0 : 1;
 
                     if (($all.length - $sourceSite) == $checkboxes.length) {
@@ -603,17 +532,7 @@
 
             // Order Elements Version script
             $('select[name=version]').on('change', function() {
-                var elementVersions = $('#elementVersions').val().split(",");
-                var elementId = $(this).attr('id').replace('version_', '');
-                var $key = elementId+'_'+$(this).val();
-                elementVersions = elementVersions.filter(function(val, key) {
-                    return !val.startsWith(elementId+'_');
-                });
-
-                elementVersions.push($key);
-                elementVersions.join(',');
-
-                $('#elementVersions').val(elementVersions);
+				$(this).closest('tr').find('input[name="elements[]"]').val($(this).val());
 
                 if (validateForm() && (isPending || isOrderChanged({all: "all"}))) {
                     setSubmitButtonStatus(true);
@@ -677,27 +596,10 @@
             $('.order-warning', '#global-container').infoicon();
 
             // Source Site Ajax
-            $("#sourceSiteSelect").change(function (e) {
+            $("#sourceSite").change(function (e) {
                 $(window).off('beforeunload.windowReload');
-                var site = $("#sourceSiteSelect").val();
-                var url = window.location.href.split('?')[0];
-
-                var currentElementIds = [];
-                if (typeof $('#currentElementIds').val() !== 'undefined') {
-                    currentElementIds = $('#currentElementIds').val().split(',');
-                }
-
-                if (site != "") {
-                    url += '?sourceSite='+site;
-                }
 
                 syncSites();
-
-                if (currentElementIds.length > 1) {
-                    currentElementIds.forEach(function (element) {
-                        url += '&elements[]='+element;
-                    })
-                }
 
                 if (shouldCreateNewOrder()) {
                     setButtonText('.translations-submit-order.submit', 'Create new order');
@@ -710,8 +612,6 @@
                 } else {
                     setSubmitButtonStatus(false);
                 }
-
-                window.history.pushState("", "", url);
             });
 
             $('.translations-order-form').on('submit', function(e) {
@@ -726,15 +626,12 @@
 
             $(".addEntries").on('click', function (e) {
 
-                elementIds = currentElementIds = [];
+                elementIds = [];
 
-                var site = $("#sourceSiteSelect").val();
+                var site = $("#sourceSite").val();
 
-                var currentElementIds = [];
-
-                if (typeof $('#currentElementIds').val() !== 'undefined') {
-                    currentElementIds = $('#currentElementIds').val().split(',');
-                }
+                var currentElementIds = getEntryIds(false, true);
+                var canonicalElementIds = getEntryIds(true);
 
                 var $url = removeParams(window.location.href);
                 setUnloadEvent(false);
@@ -745,7 +642,7 @@
                     elementIndex: null,
                     criteria: {siteId: this.elementSiteId},
                     multiSelect: 1,
-                    disabledElementIds: currentElementIds,
+                    disabledElementIds: canonicalElementIds,
 
                     onSelect: $.proxy(function(elements) {
                         $('#content').addClass('elements busy');
@@ -1187,23 +1084,10 @@
 
                 self.onStart();
                 elements = [];
-                $rows = getSelectedElements();
+                $rows = getEntries(true);
                 $rows.each(function() {
-                    $elementId = $(this).data('element');
-
-                    $canonicalOriginalMap = $('#order-attr').data('canonicaloriginalmap');
-                    totalElementIds = $.map($canonicalOriginalMap, function(val, key) {
-                        key = parseInt(key);
-                        val = parseInt(val);
-                        return key == val ? key : [key, val];
-                    } );
-
-                    if ($.inArray($elementId, totalElementIds) >= 0) {
-                        if ($elementId.toString() in $canonicalOriginalMap) {
-                            $elementId = $canonicalOriginalMap[$elementId];
-                        }
-                        elements.push($elementId);
-                    }
+                    if ($(this).data('is-updated'))
+						elements.push($(this).data('element-id'));
                 });
 
                 $hiddenFlow = $('<input>', {
@@ -1231,23 +1115,20 @@
             var self = this;
             $(that).on('click', function(e) {
                 var $table = $('#elements-table');
-                var $rows = getSelectedElements();
+                var $rows = getEntries(true);
 
                 e.preventDefault();
 
                 if (confirm(Craft.t('app', 'Are you sure you want to remove this entry from the order?'))) {
-                    $removedElements = {};
-
                     $rows.each(function() {
-                        $removedElements[$(this).data('element')] = $(this).data('element');
-                        $(this).closest('tr').remove();
+                        $(this).remove();
                     });
 
                     if ($table.find('tbody tr').length === 0) {
                         $table.remove();
                     }
 
-                    var entriesCount = $('input[name="elements[]"]').length;
+                    var entriesCount = getEntryIds().length;
 
                     if (entriesCount === 0) {
                         $('.translations-order-submit').addClass('disabled').prop('disabled', true);
@@ -1263,13 +1144,6 @@
 
                     $('[data-order-attribute=wordCount]').text(wordCount);
 
-                    var currentElementIds = $('#currentElementIds').val().split(",");
-                    currentElementIds = currentElementIds.filter(function(itm, i, currentElementIds) {
-                        if (itm != "" && !(itm in $removedElements)) {
-                            return i == currentElementIds.indexOf(itm);
-                        }
-                    }).join(",");
-
                     if (shouldCreateNewOrder()) {
                         setButtonText('.translations-submit-order.submit', 'Create new order');
                     } else {
@@ -1278,14 +1152,12 @@
                         }
                     }
 
-                    if (currentElementIds != "" && validateForm()) {
+                    if (validateForm()) {
                         setSubmitButtonStatus(true);
                     } else {
                         setSubmitButtonStatus(false);
                     }
 
-                    $('#currentElementIds').val(currentElementIds);
-                    syncElementVersions();
                     self.toggleElementAction(false);
                 }
             });
@@ -1333,6 +1205,65 @@
         onStart: function() {
             $('#toolbar').addClass('disabled noClick');
             $('#text-field').find('.translations-loader').toggleClass('spinner hidden');
+        },
+		updateFixedHeader: function($top) {
+            if (this.$headerContainer.height() > this.$files[0].getBoundingClientRect().top - 10) {
+                if (this.$isMobile) {
+                    $top = 0;
+                }
+                this.$files.find('#text-field').css({
+                    "position": "sticky",
+                    "top": $top+"px",
+                    "z-index": "100",
+                    "background-color": "white",
+                    "max-height": "70px",
+                    "box-shadow": "inset 0 -1px 0 rgba(63, 77, 90, 0.1);",
+                });
+                this.$files.find('#text-field div.heading').css({
+                    "padding-top": "20px",
+                    "padding-bottom": "20px"
+                });
+            } else {
+                this.$files.find('#text-field').css({
+                    "position": "",
+                    "top": "",
+                    "z-index": "",
+                    "background-color": "",
+                    "max-height": "",
+                    "box-shadow": "",
+                });
+                this.$files.find('#text-field div.heading').css({
+                    "padding-top": "",
+                    "padding-bottom": "",
+                });
+            }
+        },
+        toggleUpdateActionButton: function() {
+            $updateButton = this.$elementActions.find('.update-element');
+            // enable only if checked checkbox entry has the updated source
+            var selectedHasChanges = false;
+            $.each(getEntries(true), function() {
+				if (!selectedHasChanges) selectedHasChanges = $(this).data('is-updated') == 1;
+            });
+
+            if (selectedHasChanges && !isPublished && !isCanceled) {
+                $updateButton.removeClass('disabled noClick');
+            } else {
+                $updateButton.addClass('disabled noClick');
+            }
+        },
+        toggleElementAction: function($show = true) {
+            if ($show && this.$elementCheckboxes.filter(':checked').length > 0) {
+                if (! this.$elementActions) {
+                    this._buildElementActions();
+                    this.$elementActions = $('#order-element-action-menu');
+                } else {
+                    $('#toolbar').show();
+                }
+                this.toggleUpdateActionButton();
+            } else {
+                $('#toolbar').hide();
+            }
         }
     }
 

@@ -82,7 +82,7 @@ class FileRepository
 
     /**
      * @param  int|string $orderId
-     * @return [\acclaro\translations\models\FileModel]
+     * @return \acclaro\translations\models\FileModel[]
      */
     public function getFilesByOrderId(int $orderId, $elementId = null, $site=null)
     {
@@ -98,7 +98,7 @@ class FileRepository
             $attributes['targetSite'] = $site;
         }
 
-        $records = FileRecord::find()->where($attributes)->all();
+        $records = FileRecord::find()->where($attributes)->orderBy('elementId')->all();
 
         $files = array();
 
@@ -405,7 +405,7 @@ class FileRepository
 
     /**
      * @param  int|string $elementId
-     * @return \acclaro\translations\models\FileModel
+     * @return int[]
      */
     public function getOrdersByElement(int $elementId)
     {
@@ -420,7 +420,9 @@ class FileRepository
                 Constants::ORDER_STATUS_GETTING_QUOTE,
                 Constants::ORDER_STATUS_NEEDS_APPROVAL,
                 Constants::ORDER_STATUS_IN_PREPARATION,
-                Constants::ORDER_STATUS_IN_PROGRESS
+                Constants::ORDER_STATUS_IN_PROGRESS,
+                Constants::ORDER_STATUS_REVIEW_READY,
+                Constants::ORDER_STATUS_COMPLETE
                 ]])
             ->andWhere(['dateDeleted' => null])
             ->groupBy('orderId')

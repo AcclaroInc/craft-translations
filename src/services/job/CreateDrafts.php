@@ -17,18 +17,15 @@ use acclaro\translations\Translations;
 class CreateDrafts extends BaseJob
 {
 
-    public $mySetting;
     public $orderId;
     public $wordCounts;
-    public $defaultCreator;
     public $publish;
-    public $elementIds;
     public $fileIds;
 
     public function execute($queue)
     {
         Translations::$plugin->draftRepository->createOrderDrafts(
-            $this->orderId, $this->wordCounts, $queue, $this->publish, $this->elementIds, $this->fileIds
+            $this->orderId, $this->wordCounts, $this->publish, $this->fileIds, $queue
         );
     }
 
