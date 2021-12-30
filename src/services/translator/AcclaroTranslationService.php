@@ -22,7 +22,6 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
 use acclaro\translations\services\job\acclaro\UpdateReviewFileUrls;
-use craft\helpers\ElementHelper;
 
 class AcclaroTranslationService implements TranslationServiceInterface
 {
