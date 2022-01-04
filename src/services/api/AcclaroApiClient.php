@@ -7,12 +7,13 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 use GuzzleHttp\HandlerStack;
 use Spatie\GuzzleRateLimiterMiddleware\RateLimiterMiddleware;
 
 class AcclaroApiClient
 {
-    protected $loggingEnabled = false;
+    protected $loggingEnabled;
 
     public function __construct(
         $apiToken,
@@ -31,6 +32,8 @@ class AcclaroApiClient
 			),
 			'handler' => $stack
         ]);
+
+		$this->loggingEnabled = Translations::getInstance()->settings->apiLogging;
     }
 
     /**
@@ -44,55 +47,28 @@ class AcclaroApiClient
     }
 
     /**
-     * Log api request call
+     * Log api call
      *
-     * @param Request $request
-     * @param string $endpoint
+     * @param Request|\GuzzleHttp\Psr7\Response $object
      * @return void
      */
-    public function logRequest($request, $endpoint)
+    public function log($object, $endpoint)
     {
-        $tempPath = Craft::$app->getPath()->getTempPath().'/translations';
-
-        if (!is_dir($tempPath)) {
-            mkdir($tempPath);
-        }
-
-        $filename = 'api-request-'.$endpoint.'-'.date('YmdHis').'.txt';
-
-        $filePath = $tempPath.'/'.$filename;
-
-        $handle = fopen($filePath, 'w+');
-
-        fwrite($handle, (string) $request);
-
-        fclose($handle);
-    }
-
-    /**
-     * Log api response data
-     *
-     * @param JsonResponse $response
-     * @param [type] $endpoint
-     * @return void
-     */
-    public function logResponse($response, $endpoint)
-    {
-        $tempPath = Craft::$app->path->getTempPath().'/translations';
-
-        if (!is_dir($tempPath)) {
-            mkdir($tempPath);
-        }
-
-        $filename = 'api-response-'.$endpoint.'-'.date('YmdHis').'.' . Constants::FILE_FORMAT_TXT;
-
-        $filePath = $tempPath.'/'.$filename;
-
-        $handle = fopen($filePath, 'w+');
-
-        fwrite($handle, (string) $response);
-
-        fclose($handle);
+		if ($object instanceof Request) {
+			Craft::info(
+				sprintf("AcclaroApi: [%s], Request: {%s}", $endpoint, $object->getUri()), Constants::PLUGIN_HANDLE
+			);
+		} else {
+			if ($object->getStatusCode() != 200) {
+				Craft::info(
+					sprintf("AcclaroApi: [%s], Error: {%s}", $endpoint, $object->getBody()), Constants::PLUGIN_HANDLE
+				);
+			} else {
+				Craft::info(
+					sprintf("AcclaroApi: [%s], Response: {%s}", $endpoint, $object->getBody()), Constants::PLUGIN_HANDLE
+				);
+			}
+		}
     }
 
     /**
@@ -146,35 +122,30 @@ class AcclaroApiClient
         } else {
             $request = new Request($method, $endpoint.'?'.http_build_query($query, '', '&'));
 
-            if ($this->loggingEnabled) {
-                $this->logRequest($request, $endpoint);
-            }
+            if ($this->loggingEnabled) $this->log($request, $endpoint);
 
             try {
                 $response = $this->client->send($request, ['timeout' => 0]);
             } catch (Exception $e) {
                 //@TODO
-
+				Craft::error($e, Constants::PLUGIN_HANDLE);
                 return null;
             }
         }
 
-        if ($this->loggingEnabled) {
-            $this->logResponse($response, $endpoint);
-        }
+        if ($this->loggingEnabled) $this->log($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
             //@TODO
-			Craft::info('Acclaro Api Error Response. ErrorCode:'. $response->getStatusCode());
-			Craft::error('Acclaro Api Error Response. Error'. $response->getBody());
             return null;
         }
 
         $body = $response->getBody();
 
-        $responseJson = json_decode($body->getContents(), true);
+        $responseJson = json_decode($body, true);
 
         if (!isset($responseJson['data']) || $responseJson['success'] === false) {
+			Craft::error($body, Constants::PLUGIN_HANDLE);
             return null;
         }
 
@@ -457,20 +428,17 @@ class AcclaroApiClient
 
         $request = new Request(Constants::REQUEST_METHOD_GET, $endpoint.'?'.http_build_query($query, '', '&'));
 
-        if ($this->loggingEnabled) {
-            $this->logRequest($request, $endpoint);
-        }
+        if ($this->loggingEnabled) $this->log($request, $endpoint);
 
         try {
             $response = $this->client->send($request, ['timeout' => 2]);
         } catch (Exception $e) {
             //@TODO
+			Craft::error($e, Constants::PLUGIN_HANDLE);
             return null;
         }
 
-        if ($this->loggingEnabled) {
-            $this->logResponse($response, $endpoint);
-        }
+        if ($this->loggingEnabled) $this->log($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
             //@TODO
