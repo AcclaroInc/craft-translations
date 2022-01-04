@@ -24,7 +24,7 @@
         </div>
         <div class="item" data-position="left" data-colspan="1">
             <div class="buttons">
-                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('new') }}" data-isUpdateable="{{ isUpdateable|default('') }}"
+                <input type="hidden" id="order-attr" data-status="{{ orderRecentStatus|default('pending') }}" data-isUpdateable="{{ isUpdateable|default('') }}"
                 data-submitted="{{ isSubmitted }}" data-changed="{{ isChanged }}"
 				data-translator="{{ order.translator.service|default('export_import') }}"/>
                 <div id="new-order-button-group" class="btngroup submit"></div>

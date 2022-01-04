@@ -482,7 +482,7 @@ class Order extends Element
     public function getFiles()
     {
         if (is_null($this->_files)) {
-            $this->_files = Translations::$plugin->fileRepository->getFilesByOrderId($this->id);
+            $this->_files = Translations::$plugin->fileRepository->getFiles($this->id);
         }
 
         return $this->_files;
@@ -495,7 +495,7 @@ class Order extends Element
      */
     public function hasCompletedFiles()
     {
-		$files = Translations::$plugin->fileRepository->getFilesByOrderId($this->id);
+		$files = Translations::$plugin->fileRepository->getFiles($this->id);
 
         foreach ($files as $file) {
 			if ($file->isComplete() || $file->isReviewReady() || $file->isPublished()) return true;
@@ -511,7 +511,7 @@ class Order extends Element
      */
     public function getFilesById($fileIds)
     {
-		$files = Translations::$plugin->fileRepository->getFilesByOrderId($this->id);
+		$files = Translations::$plugin->fileRepository->getFiles($this->id);
 		$result = [];
 		foreach ($files as $file) {
 			if (in_array($file->id, $fileIds)) $result[$file->id] = $file;

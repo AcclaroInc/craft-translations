@@ -98,7 +98,7 @@ class CategoryController extends Controller
         }
 
         $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
-        
+
         $fields = $this->request->getParam('fields') ?? [];
 
         if ($fields) {
@@ -169,19 +169,19 @@ class CategoryController extends Controller
         try {
             if ($file) {
                 $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
-    
+
                 $file->status = Constants::FILE_STATUS_PUBLISHED;
                 $file->draftId = 0;
-    
+
                 Translations::$plugin->fileRepository->saveFile($file);
-    
+
                 $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
                 Translations::$plugin->orderRepository->saveOrder($order);
             }
-    
+
             if (Translations::$plugin->categoryDraftRepository->publishDraft($draft)) {
                 $this->redirect($category->getCpEditUrl(), 302, true);
-    
+
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
                 $transaction->commit();
 
@@ -224,7 +224,7 @@ class CategoryController extends Controller
 
         Translations::$plugin->categoryDraftRepository->deleteDraft($draft);
 
-        Translations::$plugin->fileRepository->delete($draftId, $elementId);
+        Translations::$plugin->fileRepository->deleteByDraftId($draftId, $elementId);
 
         Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
 

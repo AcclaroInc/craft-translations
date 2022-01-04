@@ -33,7 +33,7 @@ class AssetController extends BaseController
         $variables['assetId'] = $assetId;
         $variables['asset'] = $asset;
         $variables['selectedSubnavItem'] = 'orders';
-        
+
         $draft = Translations::$plugin->assetDraftRepository->getDraftById($data['draftId']);
         $variables['element'] = $draft;
 
@@ -60,7 +60,7 @@ class AssetController extends BaseController
     public function actionSaveDraft()
     {
         $this->requirePostRequest();
-        
+
         $assetId = $this->request->getParam('assetId');
         $siteId = $this->request->getParam('site');
         $asset = Craft::$app->assets->getAssetById($assetId, $siteId);
@@ -81,7 +81,7 @@ class AssetController extends BaseController
         } else {
             $draft = Translations::$plugin->assetDraftRepository->makeNewDraft();
         }
-        
+
         $draft->id = $asset->id;
         $draft->title = $this->request->getParam('title') ?? $asset->title;
         $draft->site = $siteId;
@@ -91,9 +91,9 @@ class AssetController extends BaseController
         if ($fields) {
             $draft->setFieldValues($fields);
         }
-        
+
         Craft::$app->getElements()->saveElement($draft);
-        
+
         if (Translations::$plugin->assetDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
 
@@ -140,7 +140,7 @@ class AssetController extends BaseController
         if ($fields) {
             $draft->setFieldValues($fields);
         }
-        
+
         // restore the original name
         $draft->name = $asset->title;
 
@@ -151,19 +151,19 @@ class AssetController extends BaseController
         try {
             if ($file) {
                 $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
-    
+
                 $file->status = Constants::ORDER_STATUS_PUBLISHED;
                 $file->draftId = 0;
-    
+
                 Translations::$plugin->fileRepository->saveFile($file);
-    
+
                 $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
                 Translations::$plugin->orderRepository->saveOrder($order);
             }
-    
+
             if (Translations::$plugin->assetDraftRepository->publishDraft($draft)) {
                 $this->redirect($asset->getCpEditUrl(), 302, true);
-    
+
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
                 $transaction->commit();
 
@@ -205,7 +205,7 @@ class AssetController extends BaseController
 
         Translations::$plugin->assetDraftRepository->deleteDraft($draft);
 
-        Translations::$plugin->fileRepository->delete($draftId, $elementId);
+        Translations::$plugin->fileRepository->deleteByDraftId($draftId, $elementId);
 
         Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
 

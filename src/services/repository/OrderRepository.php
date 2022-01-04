@@ -454,7 +454,7 @@ class OrderRepository
     {
         $fileStatuses = [];
         $publishedFiles = 0;
-		$files = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
+		$files = Translations::$plugin->fileRepository->getFiles($order->id);
 
         foreach ($files as $file) {
             if ($file->status === Constants::FILE_STATUS_PUBLISHED) $publishedFiles++;

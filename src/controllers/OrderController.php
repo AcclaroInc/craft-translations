@@ -775,13 +775,12 @@ class OrderController extends Controller
     {
         $this->requireLogin();
         $this->requirePostRequest();
-        $newData = Craft::$app->getRequest()->getBodyParams();
 
         /** @var craft\elements\User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
-        $elementIds = Craft::$app->getRequest()->getBodyParam('elements', []);
-        $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
+        $elementIds = Craft::$app->getRequest()->getBodyParam('elements');
+        $sourceSite = Craft::$app->getRequest()->getBodyParam('sourceSite');
 
         if (!$currentUser->can('translations:orders:create')) {
             return $this->asJson(
@@ -829,150 +828,122 @@ class OrderController extends Controller
         }
 
         try {
-            $updatedFields = json_decode($newData['updatedFields']) ?? [];
+			$translatorService = Translations::$plugin->translatorFactory->makeTranslationService(
+				$translator->service,
+				json_decode($translator->settings, true)
+			);
 
-			$translatorService = Translations::$plugin->translatorFactory
-				->makeTranslationService(
-					$translator->service,
-					json_decode($translator->settings, true)
-				);
+			// Set Tags to order
+			if (! $isDefaultTranslator) {
+				if ($newTags = Craft::$app->getRequest()->getParam('tags')) {
+					$updatedTags = [];
+					foreach ($newTags as $tagId) {
+						$tag = Craft::$app->getTags()->getTagById((int) $tagId);
+						if ($tag) {
+							$updatedTags[$tag->id] = $tag->title;
+						}
+					}
 
-            $oldData = [];
-            $editOrderRequest = [];
-            foreach ($updatedFields as $field) {
-                $updated = $newData[$field] ?? '';
-				if ($field == 'comments') $field = 'comment';
-                if ($field == "requestedDueDate") {
-                    if ($updated['date']) {
-                        $updated = DateTime::createFromFormat('n/j/Y', $updated['date'])->format("Y-n-j");
-                    } else {
-                        $updated = '';
-                    }
-                    $editOrderRequest[$field] = $updated;
-                }
-                if ($field == "elements") {
-					$updated = json_encode($elementIds);
-					$oldData['elements'] = $order->elementIds;
-					$field = 'elementIds';
-                }
-                if ($field == "tags") {
-                    if ($tags = isset($newData[$field]) ? $newData[$field] : []) {
-                        $updatedTags = [];
-                        $updatedTagIds = [];
-                        foreach ($tags as $tagId) {
-                            $tag = Craft::$app->getTags()->getTagById((int) $tagId);
-                            if ($tag) {
-                                array_push($updatedTagIds, $tag->id);
-                                array_push($updatedTags, $tag->title);
-                            }
-                        }
-                        $updated = !empty($updatedTagIds) ? json_encode($updatedTagIds) : '';
-                        // Make Api Request to update tags
-                        if (! $isDefaultTranslator) {
-                            $translatorService->editOrderTags($order, $updatedTags);
-                        }
-                    }
-                }
-                if ($field == "targetSites") {
-                    $targetSites = $newData[$field];
-                    if ($targetSites === '*') {
-                        $targetSites = Craft::$app->getSites()->getAllSiteIds();
+					if ($updatedTags) {
+						$order->tags = json_encode(array_keys($updatedTags));
+						$translatorService->editOrderTags($order, array_values($updatedTags));
+					}
+				}
+			}
 
-                        if (($key = array_search($sourceSite, $targetSites)) !== false) {
-                            unset($targetSites[$key]);
-                            $targetSites = array_values($targetSites);
-                        }
-                    }
-                    $newData['targetSites'] = $targetSites;
-                    $updated = json_encode($targetSites);
-                    $oldData['targetSites'] = $order->targetSites;
-                }
-                $order->$field = $updated;
+			// Set order title
+			if ($order->title != $newTitle = trim(Craft::$app->getRequest()->getBodyParam('title'))) {
+				$order->title = $newTitle;
 
-                // Make Api Request to update title
-                if ($field == 'title' && ! $isDefaultTranslator) {
-                    $translatorService->editOrderName($order->serviceOrderId, trim($updated));
-                }
+				if (! $isDefaultTranslator) {
+					$translatorService->editOrderName($order->serviceOrderId, trim($newTitle));
+				}
+			}
+
+			// Update entry, targetSites and order file
+			$targetSites = Craft::$app->getRequest()->getBodyParam('targetSites');
+			if ($targetSites === '*') {
+				$targetSites = Craft::$app->getSites()->getAllSiteIds();
+
+				if (($key = array_search($sourceSite, $targetSites)) !== false) {
+					unset($targetSites[$key]);
+					$targetSites = array_values($targetSites);
+				}
+			}
+
+			$removedSites = array_diff(json_decode($order->targetSites, true), $targetSites);
+			$addedSites = array_diff($targetSites, json_decode($order->targetSites, true));
+			$removedEntries = array_diff(json_decode($order->elementIds, true), $elementIds);
+			$addedEntries = array_diff($elementIds, json_decode($order->elementIds, true));
+
+            if ($removedSites) {
+				foreach ($removedSites as $site) {
+					if (! $isDefaultTranslator) {
+						$files = Translations::$plugin->fileRepository->getFiles($order->id, null, $site);
+						foreach ($files as $file) {
+							$translatorService->addFileComment($order, $file, "CANCEL FILE");
+						}
+					}
+					Translations::$plugin->fileRepository->delete($order->id, null, $site);
+				}
             }
 
-            if (! empty($oldData)) {
-                if ($oldData['elements'] ?? null) {
-                    $oldElementIds = json_decode($oldData['elements'] ?? null);
-                    $added = array_diff($elementIds, $oldElementIds);
-                    $removed = array_diff($oldElementIds, $elementIds);
-                    if (!empty($removed)) {
-                        foreach ($removed as $elementId) {
-                            $files = Translations::$plugin->fileRepository->getFilesByElementId($elementId, $order->id);
-                            foreach ($files as $file) {
-                                if (! $isDefaultTranslator) {
-                                    $translatorService->addFileComment($order, $file, "CANCEL FILE");
-                                }
-                                Translations::$plugin->fileRepository->deleteById($file->id);
-                            }
-                        }
-                    }
+			if ($removedEntries) {
+				foreach ($removedEntries as $entryId) {
+					if (! $isDefaultTranslator) {
+						$files = Translations::$plugin->fileRepository->getFiles($order->id, $entryId);
+						foreach ($files as $file) {
+							$translatorService->addFileComment($order, $file, "CANCEL FILE");
+						}
+					}
+					Translations::$plugin->fileRepository->delete($order->id, $entryId);
+				}
+			}
 
-                    if (!empty($added)) {
-                        if ($targetSites = $oldData['targetSites'] ?? null) {
-                            $targetSites = json_decode($oldData['targetSites'], true);
-                        } else {
-                            $targetSites = json_decode($order->targetSites, true);
-                        }
-                        foreach ($added as $elementId) {
-                            foreach ($targetSites as $site) {
-                                $file = Translations::$plugin->fileRepository->createOrderFile($order, $elementId, $site);
-                                if (! $isDefaultTranslator) {
-                                    $translatorService->sendOrderFile($order, $file);
-                                    $translatorService->addFileComment($order, $file, "NEW FILE");
-                                } else {
-                                    Translations::$plugin->fileRepository->saveFile($file);
-                                }
-                            }
-                        }
-                    }
-                }
+            if ($addedSites) {
+				foreach ($addedSites as $site) {
+					foreach ($order->getElements() as $entry) {
+						if (in_array($entry->id, $removedEntries)) continue;
+						$file = Translations::$plugin->fileRepository->createOrderFile($order, $entry->id, $site);
+						Translations::$plugin->fileRepository->saveFile($file);
+						if (! $isDefaultTranslator) {
+							$files = Translations::$plugin->fileRepository->getFiles($order->id, $entry->id, $site);
+							foreach ($files as $file) {
+								$translatorService->sendOrderFile($order, $file);
+								$translatorService->addFileComment($order, $file, "NEW FILE");
+							}
+						}
+					}
+				}
+            }
 
-                if ($oldData['targetSites'] ?? null) {
-                    $oldTargetSites = json_decode($oldData['targetSites'], true);
-                    $newTargetSites = array_diff($newData['targetSites'], $oldTargetSites);
-                    $removedTargetSites = array_diff($oldTargetSites, $newData['targetSites']);
-
-                    foreach ($newTargetSites as $site) {
-                        $orderElements = $newData['elements'];
-                        foreach ($orderElements as $elementId) {
-                            $file = Translations::$plugin->fileRepository->createOrderFile($order, $elementId, $site);
-                            if (! $isDefaultTranslator) {
-                                $translatorService->sendOrderFile($order, $file);
-                                $translatorService->addFileComment($order, $file, "NEW FILE");
-                            } else {
-                                Translations::$plugin->fileRepository->saveFile($file);
-                            }
-                        }
-                    }
-
-                    if ($isDefaultTranslator) {
-                        foreach ($removedTargetSites as $site) {
-                            Translations::$plugin->fileRepository->deleteByOrderId($order->id, $site);
-                        }
-                    }
-                }
+            if ($addedEntries) {
+				foreach ($addedEntries as $entryId) {
+					foreach ($targetSites as $site) {
+						$file = Translations::$plugin->fileRepository->createOrderFile($order, $entryId, $site);
+						Translations::$plugin->fileRepository->saveFile($file);
+						if (! $isDefaultTranslator) {
+							$files = Translations::$plugin->fileRepository->getFiles($order->id, $entryId, $site);
+							foreach ($files as $file) {
+								$translatorService->sendOrderFile($order, $file);
+								$translatorService->addFileComment($order, $file, "NEW FILE");
+							}
+						}
+					}
+				}
             }
 
             // Update Order Status
+			$order->elementIds = json_encode($elementIds);
+			$order->targetSites = json_encode($targetSites);
+			$order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$translatorService->updateOrder($order);
+
+			Craft::$app->getElements()->saveElement($order);
+
+			return $this->asJson(['success' => true, 'message' => "Order updated."]);
         } catch (Exception $e) {
             return $this->asJson(["success" => false, "message" => $e->getMessage()]);
-        }
-        if (Craft::$app->getElements()->saveElement($order, true, true, false)) {
-            return $this->asJson([
-                'success' => true,
-                'message' => "Order updated."
-            ]);
-        } else {
-            return $this->asJson([
-                'success' => false,
-                'message' => "Error saving order."
-            ]);
         }
     }
 
@@ -1466,9 +1437,9 @@ class OrderController extends Controller
 
                     // Cancel old file and send new files to translator
                     if (! $isDefaultTranslator) {
-                        $translatorService->addFileComment($order, $translator->getSettings(), $file, "CANCEL FILE");
-                        $translatorService->sendOrderFile($order, $file, $translator->getSettings());
-                        $translatorService->addFileComment($order, $translator->getSettings(), $file, "NEW FILE");
+                        $translatorService->addFileComment($order, $file, "CANCEL FILE");
+                        $translatorService->sendOrderFile($order, $file);
+                        $translatorService->addFileComment($order, $file, "NEW FILE");
                     }
                 }
             }
@@ -1497,6 +1468,7 @@ class OrderController extends Controller
             Craft::$app->getSession()->setNotice('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
+			Craft::debug($e, 'bhu123');
             return $this->asJson(['success' => false, 'message' => 'Error updating source. Error: ' . $e->getMessage()]);
         }
 

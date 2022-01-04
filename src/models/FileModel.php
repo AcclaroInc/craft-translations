@@ -192,9 +192,14 @@ class FileModel extends Model
 		return $hasDiff;
 	}
 
-	public function getElement($forTarget = null)
+	public function getElement($isApplied = null)
 	{
-		$site = $forTarget ? $this->targetSite : $this->sourceSite;
-		return Craft::$app->getElements()->getElementById($this->elementId, null, $site);
+		$site = $isApplied ? $this->targetSite : $this->sourceSite;
+		$element = Craft::$app->getElements()->getElementById($this->elementId, null, $site);
+		if ($isApplied && $element->getIsDraft()) {
+			$element = $element->getCanonical();
+		}
+
+		return $element;
 	}
 }

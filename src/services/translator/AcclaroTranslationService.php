@@ -85,7 +85,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             return;
         }
 
-        if ($orderResponse->status === Constants::ORDER_STATUS_IN_PROGRESS && $order->isNew()) {
+        if ($orderResponse->status === Constants::ORDER_STATUS_IN_PROGRESS) {
             foreach ($order->getFiles() as $file) {
                 if ($file->isNew()) {
                     $file->status = Constants::FILE_STATUS_IN_PROGRESS;
@@ -224,16 +224,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
         $tempPath = Craft::$app->path->getTempPath();
         $acclaroApiClient = $this->acclaroApiClient;
 
-        $orderData = [
-            'acclaroOrderId'    => $order->serviceOrderId,
-            'orderId'      => $order->id
-        ];
-
         if ($file) {
 
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-
-            $file->source = Translations::$plugin->elementToFileConverter->addDataToSourceXML($file->source, $orderData);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
