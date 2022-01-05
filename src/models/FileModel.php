@@ -196,6 +196,10 @@ class FileModel extends Model
 	{
 		$site = $isApplied ? $this->targetSite : $this->sourceSite;
 		$element = Craft::$app->getElements()->getElementById($this->elementId, null, $site);
+
+		if (! $element) {
+			$element = Craft::$app->getElements()->getElementById($this->elementId, null, $this->sourceSite);
+		}
 		if ($isApplied && $element->getIsDraft()) {
 			$element = $element->getCanonical();
 		}

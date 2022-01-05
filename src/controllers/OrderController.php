@@ -1406,7 +1406,7 @@ class OrderController extends Controller
                 if (in_array($file->elementId, $elements)) {
                     if ($file->isPublished()) continue;
 
-                    $element = Craft::$app->getElements()->getElementById($file->elementId);
+                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
                     $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,

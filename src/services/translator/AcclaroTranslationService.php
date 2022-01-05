@@ -263,12 +263,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
             );
 
-            $acclaroApiClient->addReviewUrl(
-                $order->serviceOrderId,
-                $file->serviceFileId,
-                $file->previewUrl
-            );
-
             Translations::$plugin->fileRepository->saveFile($file);
 
             fclose($stream);
