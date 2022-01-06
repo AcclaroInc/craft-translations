@@ -11,6 +11,7 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
+use Exception;
 use craft\elements\GlobalSet;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -38,9 +39,9 @@ class GlobalSetDraftRepository
             'data'
         ]));
 
-        
+
         $globalSetDraft->draftId = $globalSetDraft->id;
-        
+
         $globalSetData = json_decode($record['data'], true);
         $fieldContent = isset($globalSetData['fields']) ? $globalSetData['fields'] : null;
 
@@ -60,7 +61,7 @@ class GlobalSetDraftRepository
 
         return $globalSetDraft;
     }
-    
+
     public function getDraftsByGlobalSetId($globalSetId, $site = null)
     {
         $attributes = array(
@@ -115,7 +116,7 @@ class GlobalSetDraftRepository
                     array(':globalSetId' => $draft->id, ':site' => $draft->site)
                 )
                 ->count('id');
-            
+
             $draft->name = Translations::$plugin->translator->translate('app', 'Draft {num}', array('num' => $totalDrafts + 1));
         }
 
@@ -138,7 +139,7 @@ class GlobalSetDraftRepository
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
-                if (isset($content[$field->handle]) && $content[$field->handle] !== null) { 
+                if (isset($content[$field->handle]) && $content[$field->handle] !== null) {
                     $data['fields'][$field->id] = $content[$field->handle];
                 }
             }
@@ -155,7 +156,7 @@ class GlobalSetDraftRepository
                 }
 
                 $draft->draftId = $record->id;
-                
+
                 return true;
             }
         } catch (Exception $e) {
@@ -178,11 +179,11 @@ class GlobalSetDraftRepository
         foreach ($draft->getDirtyFields() as $key => $fieldHandle) {
             $post[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
         }
-        
+
         $globalSet->setFieldValues($post);
-        
+
         $success = Craft::$app->elements->saveElement($globalSet);
-        
+
         if (!$success) {
             Craft::error( '['. __METHOD__ .'] Couldn’t publish draft "'.$draft->title.'"', 'translations' );
             return false;
@@ -206,7 +207,7 @@ class GlobalSetDraftRepository
                 if ($transaction !== null) {
                     $transaction->commit();
                 }
-                
+
                 return true;
             }
         } catch (Exception $e) {

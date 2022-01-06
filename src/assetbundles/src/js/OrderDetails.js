@@ -605,7 +605,7 @@
 
                             $originalElementIds = $('#originalElementIds').val().split(',');
 
-                            if (haveDifferences($originalElementIds, elementIds)) {
+                            if (! isSubmitted || haveDifferences($originalElementIds, elementIds)) {
                                 elementUrl += "&changed=1";
                             }
 

@@ -12,9 +12,7 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
-use craft\db\Query;
 use craft\elements\Asset;
-use craft\models\Section;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;

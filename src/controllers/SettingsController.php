@@ -161,8 +161,9 @@ class SettingsController extends Controller
         // Open zip
         if ($zip->open($zipDest, $zip::CREATE) !== true)
         {
-            $errors[] = 'Unable to create zip file: '.$zipDest;
-            Craft::log( '['. __METHOD__ .'] Unable to create zip file: '.$zipDest, LogLevel::Error, 'translations' );
+            $error = 'Unable to create zip file: '.$zipDest;
+            $errors[] = $error;
+            Craft::error('['. __METHOD__ .'] ' . $error, 'translations' );
             return false;
         }
 
@@ -173,8 +174,9 @@ class SettingsController extends Controller
 
             if (!$zip->addFromString($file, $file_contents))
             {
-                $errors[] = 'There was an error adding the file '.$file.' to the zip: '.$zipName;
-                Craft::log( '['. __METHOD__ .'] There was an error adding the file '.$file.' to the zip: '.$zipName, LogLevel::Error, 'translations' );
+                $error = 'There was an error adding the file '.$file.' to the zip: '.$zipName;
+                $errors[] = $error;
+                Craft::error('['. __METHOD__ .'] ' . $error, 'translations');
             }
         }
 
@@ -206,6 +208,7 @@ class SettingsController extends Controller
 
         $settings = Translations::getInstance()->settings;
         $variables['chkDuplicateEntries'] = $settings->chkDuplicateEntries;
+        $variables['apiLogging'] = $settings->apiLogging;
         $variables['uploadVolume'] = $settings->uploadVolume;
         $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
         $variables['twigSearchFilterDoubleQuote'] = !empty($settings->twigSearchFilterDoubleQuote) ? $settings->twigSearchFilterDoubleQuote : "";
@@ -238,6 +241,7 @@ class SettingsController extends Controller
 
         $request = Craft::$app->getRequest();
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
+        $apiLogging = $request->getParam('apiLogging');
         $selectedVolume = $request->getParam('uploadVolume');
         $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
         $twigSearchFilterDoubleQuote = $request->getParam('twigSearchFilterDoubleQuote');
@@ -250,6 +254,7 @@ class SettingsController extends Controller
 
             $settings = [
                 'chkDuplicateEntries'           => $duplicateEntries,
+                'apiLogging'		            => $apiLogging,
                 'uploadVolume'                  => $selectedVolume,
                 'twigSearchFilterSingleQuote'   => $twigSearchFilterSingleQuote,
                 'twigSearchFilterDoubleQuote'   => $twigSearchFilterDoubleQuote,
