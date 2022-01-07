@@ -180,7 +180,7 @@ class ImportFiles extends BaseJob
             }
 
             $this->log(sprintf("File {%s} %s", $this->assetName($asset), $message));
-            return false;
+            return $file->isModified() ? false : '';
         }
 
         $translation_service = $this->order->translator->service;
@@ -312,7 +312,7 @@ class ImportFiles extends BaseJob
             }
             $this->log(sprintf("File {%s} %s", $this->assetName($asset), $message));
 
-            return false;
+            return $file->isModified() ? false : '';
         }
 
         $translation_service = $this->order->translator->service;
@@ -415,7 +415,7 @@ class ImportFiles extends BaseJob
             }
             $this->log(sprintf("File {%s} %s", $this->assetName($asset), $message));
 
-            return false;
+            return $file->isModified() ? false : '';
         }
 
         $translation_service = $this->order->translator->service;

@@ -34,6 +34,7 @@ class UpdateReviewFileUrls extends BaseJob
 
         foreach ($order->files as $file) {
             $this->setProgress($queue, $currentElement++ / $totalElements);
+			if (! $file->isComplete()) continue;
 
             try {
                 $acclaroApiClient->addReviewUrl(

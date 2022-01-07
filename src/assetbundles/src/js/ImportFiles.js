@@ -22,6 +22,17 @@
                 self._showImportHud();
             });
         },
+		getChangedEntriesId: function() {
+			$result = [];
+			$entries = $('input[type=hidden][name="elements[]"]');
+			$entries.each(function() {
+				if ($(this).closest('tr').data('is-updated') == 1) {
+					$result.push($(this).val());
+				}
+			});
+
+			return $result.join(',');
+		},
         _showImportHud: function()
         {
             var self = this;
@@ -84,7 +95,7 @@
             var $hiddenElements = $('<input/>', {
                 'type': 'hidden',
                 'name': 'elements',
-                'value': $('#order-attr').data('hassourcechanges')
+                'value': self.getChangedEntriesId()
             });
             $hiddenElements.appendTo($form);
 
