@@ -2,8 +2,6 @@
 
 namespace acclaro\translations\services;
 
-use acclaro\translations\services\api\AcclaroApiClient;
-use Craft;
 use acclaro\translations\Translations;
 
 /**
@@ -18,7 +16,7 @@ use acclaro\translations\Translations;
  * @author    Acclaro
  * @package   Translations
  */
-class AcclaroService
+class Services
 {
     /**
      * Authenticate Acclaro API Token

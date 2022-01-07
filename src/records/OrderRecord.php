@@ -10,10 +10,10 @@
 
 namespace acclaro\translations\records;
 
-use acclaro\translations\Translations;
-
-use Craft;
+use craft\records\Element;
 use craft\db\ActiveRecord;
+use yii\db\ActiveQueryInterface;
+use acclaro\translations\Constants;
 
 /**
  * @author    Acclaro
@@ -22,15 +22,12 @@ use craft\db\ActiveRecord;
  */
 class OrderRecord extends ActiveRecord
 {
-    // Public Static Methods
-    // =========================================================================
-
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return '{{%translations_orders}}';
+        return Constants::TABLE_ORDERS;
     }
 
     /**

@@ -12,12 +12,13 @@ namespace acclaro\translations\assetbundles;
 
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
+use acclaro\translations\Constants;
 
 class CategoryAssets extends AssetBundle
 {
     public function init()
     {
-        $this->sourcePath = '@acclaro/translations/assetbundles/src';
+        $this->sourcePath = Constants::URL_BASE_ASSETS;
 
         $this->depends = [
             CpAsset::class,

@@ -11,28 +11,20 @@
 namespace acclaro\translations\elements;
 
 use Craft;
-use DateTime;
-use craft\base\Model;
 use craft\base\Element;
-use craft\elements\Entry;
-use craft\models\Section;
-use craft\helpers\ElementHelper;
-use craft\elements\db\ElementQuery;
+use craft\helpers\StringHelper;
 use yii\validators\NumberValidator;
-use craft\validators\StringValidator;
-use craft\validators\UniqueValidator;
 use craft\validators\DateTimeValidator;
 use craft\validators\SiteIdValidator;
 use craft\elements\db\ElementQueryInterface;
-use craft\controllers\ElementIndexesController;
 use craft\elements\actions\Restore;
-use acclaro\translations\services\App;
-use acclaro\translations\elements\Order;
-use acclaro\translations\records\OrderRecord;
+
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\records\OrderRecord;
 use acclaro\translations\elements\db\OrderQuery;
 use acclaro\translations\elements\actions\OrderDelete;
-use craft\helpers\StringHelper;
+use acclaro\translations\elements\actions\OrderEdit;
 
 /**
  * @author    Acclaro
@@ -42,51 +34,51 @@ use craft\helpers\StringHelper;
 class Order extends Element
 {
     public $actionButton = true;
-    
+
     protected $elementType = 'Order';
-    
+
     protected $_elements = array();
-    
+
     protected $_files;
 
     public $id;
-    
+
     public $title;
 
     public $translatorId;
-    
+
     public $ownerId;
-    
+
     public $sourceSite;
-    
+
     public $targetSites;
-    
+
     public $status;
-    
+
     public $statusColour;
 
     public $statusLabel;
-    
+
     public $requestedDueDate;
 
     public $orderDueDate;
 
     public $comments;
-    
+
     public $activityLog;
-    
+
     public $dateOrdered;
 
     public $dateUpdated;
-    
+
     public $serviceOrderId;
-    
+
     public $entriesCount;
-    
+
     public $wordCount;
-    
+
     public $elementIds;
-    
+
     public $siteId;
 
     public $trackChanges;
@@ -149,7 +141,7 @@ class Order extends Element
 
     public function getIsEditable(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -167,9 +159,7 @@ class Order extends Element
 
     protected static function defineActions(string $source = null): array
     {
-        $actions = [];
-
-        $actions[] = OrderDelete::class;
+        $actions = [OrderDelete::class, OrderEdit::class];
 
         // Restore
         $actions[] = Craft::$app->getElements()->createAction([
@@ -196,7 +186,37 @@ class Order extends Element
                 'label' => Translations::$plugin->translator->translate('app', 'Pending'),
                 'criteria' => [
                     'status' => [
-                        'new'
+                        Constants::ORDER_STATUS_PENDING
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+			[
+                'key' => 'new',
+                'label' => Translations::$plugin->translator->translate('app', 'New'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_NEW
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'modified',
+                'label' => Translations::$plugin->translator->translate('app', 'Modified'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_MODIFIED
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+            [
+                'key' => 'modified',
+                'label' => Translations::$plugin->translator->translate('app', 'Modified'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_MODIFIED
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -206,7 +226,11 @@ class Order extends Element
                 'label' => Translations::$plugin->translator->translate('app', 'In progress'),
                 'criteria' => [
                     'status' => [
-                        'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval'
+                        Constants::ORDER_STATUS_IN_PROGRESS,
+                        Constants::ORDER_STATUS_IN_REVIEW,
+                        Constants::ORDER_STATUS_IN_PREPARATION,
+                        Constants::ORDER_STATUS_GETTING_QUOTE,
+                        Constants::ORDER_STATUS_NEEDS_APPROVAL
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -216,7 +240,7 @@ class Order extends Element
                 'label' => Translations::$plugin->translator->translate('app', 'Ready for review'),
                 'criteria' => [
                     'status' => [
-                        'ready for review'
+                        Constants::ORDER_STATUS_REVIEW_READY
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -226,7 +250,7 @@ class Order extends Element
                 'label' => Translations::$plugin->translator->translate('app', 'Ready to apply'),
                 'criteria' => [
                     'status' => [
-                        'complete'
+                        Constants::ORDER_STATUS_COMPLETE
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -236,7 +260,7 @@ class Order extends Element
                 'label' => Translations::$plugin->translator->translate('app', 'Applied'),
                 'criteria' => [
                     'status' => [
-                        'published'
+                        Constants::ORDER_STATUS_PUBLISHED
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -246,7 +270,7 @@ class Order extends Element
                 'label' => Translations::$plugin->translator->translate('app', 'Failed'),
                 'criteria' => [
                     'status' => [
-                        'failed'
+                        Constants::ORDER_STATUS_FAILED
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -256,7 +280,7 @@ class Order extends Element
                 'label' => Translations::$plugin->translator->translate('app', 'Canceled'),
                 'criteria' => [
                     'status' => [
-                        'canceled'
+                        Constants::ORDER_STATUS_CANCELED
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -317,26 +341,26 @@ class Order extends Element
                 }
 
                 return $languages;
-              
+
             case 'title':
             case 'entriesCount':
             case 'wordCount':
                 return $value ? $value : '';
 
             case 'serviceOrderId':
-                if (!$value && ( !is_null($this->getTranslator()) && $this->getTranslator()->service !== 'export_import'))
+                if (!$value && ( !is_null($this->getTranslator()) && $this->getTranslator()->service !== Constants::TRANSLATOR_DEFAULT))
                 {
                     return '';
                 }
 
                 $translator = $this->getTranslator();
 
-                if (!$translator) 
+                if (!$translator)
                 {
                     return $value ? $value : sprintf('#%s', $this->id);
                 }
 
-                if ($this->getTranslator()->service === 'export_import')
+                if ($this->getTranslator()->service === Constants::TRANSLATOR_DEFAULT)
                 {
                     return  sprintf('#%s', $this->id);
                 }
@@ -357,10 +381,10 @@ class Order extends Element
 
             case 'ownerId':
                 return $this->getOwner() ? $this->getOwner()->username : '';
-           
+
             case 'translatorId':
                 if (!$this->getTranslator()) {
-                    return 'N/a';
+                    return 'N/A';
                 }
                 return $this->getTranslator() ? ($this->getTranslator()->label ? $this->getTranslator()->label : $this->getTranslator()->service) : $this->getTranslator()->service;
         }
@@ -402,7 +426,7 @@ class Order extends Element
         return [
             'sourceSite'    => $this->string()->notNull()->defaultValue(''),
             'targetSites'   => $this->string()->notNull()->defaultValue(''),
-            'status' => $this->enum('values', ['new','getting quote','needs approval','in preparation','in progress','ready for review','complete','canceled','published'])->defaultValue('new'),
+            'status' => $this->enum('values', Constants::ORDER_STATUSES)->defaultValue(Constants::ORDER_STATUS_PENDING),
         ];
     }
 
@@ -412,7 +436,7 @@ class Order extends Element
         $rules[] = [['translatorId', 'ownerId', 'sourceSite', 'targetSites', 'activityLog', 'entriesCount', 'wordCount', 'elementIds',],'required'];
         $rules[] = [['sourceSite'], SiteIdValidator::class];
         $rules[] = [['wordCount', 'entriesCount'], NumberValidator::class];
-        $rules[] = ['status', 'default', 'value' => 'new'];
+        $rules[] = ['status', 'default', 'value' => 'pending'];
         $rules[] = ['sourceSite', 'default', 'value' => ''];
         $rules[] = ['targetSites', 'default', 'value' => ''];
         $rules[] = ['serviceOrderId', 'default', 'value' => ''];
@@ -445,26 +469,68 @@ class Order extends Element
         return $this->_elements;
     }
 
+    public function getUrl()
+    {
+        return Constants::URL_ORDER_DETAIL . $this->id;
+    }
+
+    /**
+     * Returns files associated with order
+     *
+     * @return \acclaro\translations\models\FileModel[]
+     */
     public function getFiles()
     {
         if (is_null($this->_files)) {
-            $this->_files = Translations::$plugin->fileRepository->getFilesByOrderId($this->id);
+            $this->_files = Translations::$plugin->fileRepository->getFiles($this->id);
         }
 
         return $this->_files;
     }
 
+    /**
+     * Checks if any file in order is complete
+     *
+     * @return bool
+     */
+    public function hasCompletedFiles()
+    {
+		$files = Translations::$plugin->fileRepository->getFiles($this->id);
+
+        foreach ($files as $file) {
+			if ($file->isComplete() || $file->isReviewReady() || $file->isPublished()) return true;
+		}
+
+		return false;
+    }
+
+	/**
+     * Returns files in fileIds associated with order
+     *
+     * @return \acclaro\translations\models\FileModel[]
+     */
+    public function getFilesById($fileIds)
+    {
+		$files = Translations::$plugin->fileRepository->getFiles($this->id);
+		$result = [];
+		foreach ($files as $file) {
+			if (in_array($file->id, $fileIds)) $result[$file->id] = $file;
+		}
+
+        return $result;
+    }
+
     public function getTranslator()
     {
         $translator = $this->translatorId ? Translations::$plugin->translatorRepository->getTranslatorById($this->translatorId) : null;
-        
+
         return $translator;
     }
 
     public function getOwner()
     {
         $owner = $this->ownerId ? Translations::$plugin->userRepository->getUserById($this->ownerId) : null;
-        
+
         return $owner;
     }
 
@@ -494,41 +560,42 @@ class Order extends Element
 
     public function getCpEditUrl()
     {
-        return Translations::$plugin->urlHelper->cpUrl('translations/orders/detail/'.$this->id);
+        return Translations::$plugin->urlHelper->cpUrl(Constants::URL_ORDER_DETAIL.$this->id);
     }
 
     public function getStatusLabel()
     {
         $statusLabel = '';
         switch ($this->status) {
-            case 'new':
+            case Constants::ORDER_STATUS_PENDING:
                 $statusLabel = 'Pending submission';
                 break;
-            case 'getting quote':
-            case 'needs approval':
-            case 'in preparation':
-            case 'in progress':
-            case 'in review':
+            case Constants::ORDER_STATUS_MODIFIED:
+                $statusLabel = 'Modified';
+                break;
+            case Constants::ORDER_STATUS_GETTING_QUOTE:
+            case Constants::ORDER_STATUS_NEEDS_APPROVAL:
+            case Constants::ORDER_STATUS_IN_PROGRESS:
+            case Constants::ORDER_STATUS_IN_REVIEW:
                 $statusLabel = 'In progress';
                 break;
-            case 'ready for review':
+            case Constants::ORDER_STATUS_REVIEW_READY:
                 $statusLabel = 'Ready for review';
                 break;
-            case 'complete':
+            case Constants::ORDER_STATUS_COMPLETE:
                 $statusLabel = 'Ready to apply';
                 break;
-            case 'canceled':
+            case Constants::ORDER_STATUS_CANCELED:
                 $statusLabel = 'Canceled';
                 break;
-            case 'published':
+            case Constants::ORDER_STATUS_PUBLISHED:
                 $statusLabel = 'Applied';
                 break;
-            case 'failed':
+            case Constants::ORDER_STATUS_FAILED:
                 $statusLabel = 'Failed';
                 break;
-            default:
-                $statusLabel = 'Pending submission';
-                break;
+            default :
+                $statusLabel = 'New';
         }
 
         $this->statusLabel = $this->statusLabel ?? $statusLabel;
@@ -538,33 +605,79 @@ class Order extends Element
     public function getStatusColour()
     {
         switch ($this->status) {
-            case 'new':
-                $statusColour = '';
+            case Constants::ORDER_STATUS_MODIFIED:
+                $statusColour = 'purple';
                 break;
-            case 'getting quote':
-            case 'needs approval':
-            case 'in preparation':
-            case 'in review':
-            case 'in progress':
+            case Constants::ORDER_STATUS_GETTING_QUOTE:
+            case Constants::ORDER_STATUS_NEEDS_APPROVAL:
+            case Constants::ORDER_STATUS_IN_PROGRESS:
+            case Constants::ORDER_STATUS_IN_REVIEW:
                 $statusColour = 'orange';
                 break;
-            case 'ready for review':
+            case Constants::ORDER_STATUS_REVIEW_READY:
                 $statusColour = 'yellow';
                 break;
-            case 'complete':
+            case Constants::ORDER_STATUS_COMPLETE:
                 $statusColour = 'blue';
                 break;
-            case 'published':
+            case Constants::ORDER_STATUS_PUBLISHED:
                 $statusColour = 'green';
                 break;
-            case 'canceled':
-            case 'failed':
+            case Constants::ORDER_STATUS_CANCELED:
+            case Constants::ORDER_STATUS_FAILED:
                 $statusColour = 'red';
                 break;
+            default :
+                $statusColour = '';
         }
 
         $this->statusColour = $this->statusColour ?? $statusColour;
         return $this->statusColour;
+    }
+
+    public function isNew()
+    {
+        return $this->status === Constants::ORDER_STATUS_NEW;
+    }
+
+    public function isInPreparation()
+    {
+        return $this->status === Constants::ORDER_STATUS_IN_PREPARATION;
+    }
+
+    public function isPending()
+    {
+        return $this->status === Constants::ORDER_STATUS_PENDING;
+    }
+
+    public function isFailed()
+    {
+        return $this->status === Constants::ORDER_STATUS_FAILED;
+    }
+
+    public function isCanceled()
+    {
+        return $this->status === Constants::ORDER_STATUS_CANCELED;
+    }
+
+    public function isModified()
+    {
+        return $this->status === Constants::ORDER_STATUS_MODIFIED;
+    }
+
+    public function isReviewReady()
+    {
+        return $this->status === Constants::ORDER_STATUS_REVIEW_READY;
+    }
+
+    public function isComplete()
+    {
+        return $this->status === Constants::ORDER_STATUS_COMPLETE;
+    }
+
+    public function isPublished()
+    {
+        return $this->status === Constants::ORDER_STATUS_PUBLISHED;
     }
 
     /**
@@ -580,7 +693,7 @@ class Order extends Element
         if (!$isNew) {
             $record = OrderRecord::findOne($this->id);
             if (!$record) {
-                throw new Exception('Invalid entry ID: ' . $this->id);
+                throw new \Exception('Invalid entry ID: ' . $this->id);
             }
         } else {
             $record = new OrderRecord();
@@ -602,9 +715,10 @@ class Order extends Element
         $record->wordCount =  $this->wordCount;
         $record->elementIds =  $this->elementIds;
         $record->tags =  $this->tags;
+        $record->trackChanges =  $this->trackChanges;
 
         $record->save(false);
-        
+
         parent::afterSave($isNew);
     }
 

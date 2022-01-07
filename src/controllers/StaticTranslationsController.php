@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use Craft;
 use craft\helpers\Path;
 use craft\web\Controller;
@@ -94,7 +95,7 @@ class StaticTranslationsController extends Controller
             $data .= '"' . $row->original . '","' . $trans . "\"\r\n";
         }
 
-        $file = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . 'StaticTranslations-'.$site->language.'-'.date('Ymdhis') . '.csv';
+        $file = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . 'StaticTranslations-'.$site->language.'-'.date('Ymdhis') . '.' . Constants::FILE_FORMAT_CSV;
         $fd = fopen($file, "w");
         fputs($fd, $data);
         fclose($fd);
@@ -171,22 +172,11 @@ class StaticTranslationsController extends Controller
      */
     public function validateFile($file)
     {
-        if ($file->getExtension() !== 'csv') {
+        if ($file->getExtension() !== Constants::FILE_FORMAT_CSV) {
             return false;
         }
 
-        $mimeTypes = [
-            'text/csv',
-            'text/plain',
-            'application/csv',
-            'application/txt',
-            'application/excel',
-            'application/vnd.msexcel',
-            'application/vnd.ms-excel',
-            'text/comma-separated-values',
-        ];
-
-        if (!in_array($file->type, $mimeTypes)) {
+        if (!in_array($file->type, Constants::STATIC_TRANSLATIONS_SUPPORTED_MIME_TYPES)) {
             return false;
         }
 

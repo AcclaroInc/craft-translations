@@ -460,18 +460,22 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     padding: 12px;
 }
 
-.duplicate-warning {
+.font-size-15 {
+    font-size: 15px;
+}
+
+.order-warning {
     cursor: pointer;
     display: inline-flex;
     height: 1.375em;
     overflow: hidden;
     text-align: center;
-    vertical-align: baseline;
+    vertical-align: middle;
     width: 1em;
 }
 
-.duplicate-warning:before {
-    content: 'alert';
+.order-warning:before {
+    /* content: 'info'; */
     direction: ltr;
     display: inline-block;
     font-family: 'Craft';
@@ -485,7 +489,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     text-rendering: optimizeLegibility;
     text-transform: none;
     user-select: none;
-    vertical-align: baseline;
+    vertical-align: middle;
     width: 100%;
     word-wrap: normal !important;
 }
@@ -798,10 +802,6 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     padding: 0 !important;
 }
 
-.ml-10 {
-    margin-left: 10px;
-}
-
 .df {
     display: flex;
     justify-content: flex-end;
@@ -853,6 +853,10 @@ select[name="version"] {
 
 .diff-tl {
     font-size: 10px;
+}
+
+.cursor-pointer {
+    cursor: pointer !important;
 }
 
 .diff-copy {
@@ -940,4 +944,13 @@ td.target{
 
 .display-none {
     display: none;
+}
+
+.source-change-icon {
+    color: #FFBF00 !important;
+    font-size: 16px;
+}
+
+.unset-width.fixed {
+	min-width: 404px !important;
 }

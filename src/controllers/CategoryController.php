@@ -12,10 +12,10 @@
 
 namespace acclaro\translations\controllers;
 
-use acclaro\translations\Constants;
-use acclaro\translations\Translations;
 use Craft;
 use craft\web\Controller;
+use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 
 class CategoryController extends Controller
 {
@@ -98,7 +98,7 @@ class CategoryController extends Controller
         }
 
         $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
-        
+
         $fields = $this->request->getParam('fields') ?? [];
 
         if ($fields) {
@@ -164,43 +164,39 @@ class CategoryController extends Controller
 
         $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $category->id);
 
-        if ($file) {
-            $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+        $transaction = Craft::$app->getDb()->beginTransaction();
 
-            $file->status = Constants::FILE_STATUS_PUBLISHED;
-            $file->draftId = 0;
+        try {
+            if ($file) {
+                $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
 
-            Translations::$plugin->fileRepository->saveFile($file);
+                $file->status = Constants::FILE_STATUS_PUBLISHED;
+                $file->draftId = 0;
 
-            $areAllFilesPublished = true;
+                Translations::$plugin->fileRepository->saveFile($file);
 
-            foreach ($order->files as $file) {
-                if ($file->status !== Constants::FILE_STATUS_PUBLISHED) {
-                    $areAllFilesPublished = false;
-                    break;
-                }
-            }
-
-            if ($areAllFilesPublished) {
-                $order->status = Constants::ORDER_STATUS_PUBLISHED;
-
+                $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
                 Translations::$plugin->orderRepository->saveOrder($order);
             }
-        }
 
-        if (Translations::$plugin->categoryDraftRepository->publishDraft($draft)) {
-            $this->redirect($category->getCpEditUrl(), 302, true);
+            if (Translations::$plugin->categoryDraftRepository->publishDraft($draft)) {
+                $this->redirect($category->getCpEditUrl(), 302, true);
 
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+                $transaction->commit();
 
-            return Translations::$plugin->categoryDraftRepository->deleteDraft($draft);
-        } else {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+                return Translations::$plugin->categoryDraftRepository->deleteDraft($draft);
+            } else {
+                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+                $transaction->rollBack();
 
-            // Send the draft back to the template
-            Craft::$app->urlManager->setRouteParams(array(
-                'draft' => $draft
-            ));
+                // Send the draft back to the template
+                Craft::$app->urlManager->setRouteParams(array(
+                    'draft' => $draft
+                ));
+            }
+        } catch (\Exception $e) {
+            $transaction->rollBack();
         }
     }
 
@@ -228,7 +224,7 @@ class CategoryController extends Controller
 
         Translations::$plugin->categoryDraftRepository->deleteDraft($draft);
 
-        Translations::$plugin->fileRepository->delete($draftId, $elementId);
+        Translations::$plugin->fileRepository->deleteByDraftId($draftId, $elementId);
 
         Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
 

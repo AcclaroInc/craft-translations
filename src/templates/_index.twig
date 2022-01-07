@@ -3,16 +3,17 @@
 
 {% set title = "Translation Dashboard"|t %}
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
-{% set licenseStatus = craft.app.plugins.getPluginLicenseKeyStatus('translations') %}
+{% set pluginHandle = constant('acclaro\\translations\\Constants::PLUGIN_HANDLE') %}
+{% set licenseStatus = craft.app.plugins.getPluginLicenseKeyStatus(pluginHandle) %}
 {% set edition = (licenseStatus == 'valid') ? 'Paid' : 'Free trial' %}
+{% set updates = craft.app.getApi().getUpdates().plugins.translations %}
 
 {% block toolbar %}
     <div id="edition-logo" title="Translations ({{ edition }})" aria-label="Translations ({{ edition }})" style="margin: 7px 0px 10px 15px;">
         <div class="edition-name">{{ edition }}</div>
-        <div class="edition-trial">{{ craft.app.getPlugins().getPlugin('translations').getVersion() }}</div>
+        <div class="edition-trial">{{ craft.app.getPlugins().getPlugin(pluginHandle).getVersion() }}</div>
     </div>
-    
-    {% if updates %}
+    {% if updates and updates.releases %}
         <a class="btn small go" href="utilities/updates" data-icon="info" style="margin: 7px 0px 10px 0px;"> Update available</a>
     {% endif %}
 {% endblock %}

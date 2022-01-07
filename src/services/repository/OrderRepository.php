@@ -10,27 +10,25 @@
 
 namespace acclaro\translations\services\repository;
 
-use acclaro\translations\Constants;
 use Craft;
-use craft\elements\Category;
-use DateTime;
 use Exception;
 use craft\db\Query;
+use craft\db\Table;
 use craft\helpers\Db;
+use craft\elements\Tag;
 use craft\records\Element;
-use craft\helpers\UrlHelper;
 use craft\elements\Asset;
+use craft\elements\Category;
+use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
-use craft\elements\db\ElementQuery;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
-use craft\db\Table;
-use craft\elements\Tag;
-use craft\helpers\App;
+use acclaro\translations\services\translator\AcclaroTranslationService;
 
 class OrderRepository
 {
@@ -76,13 +74,16 @@ class OrderRepository
     }
 
     /**
-     * @return \craft\elements\db\ElementQuery
+     * @return array
      */
     public function getAllOrderIds()
     {
         $orders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.status', array(
-                'published', 'complete', 'in preparation', 'in progress'
+                Constants::ORDER_STATUS_PUBLISHED,
+                Constants::ORDER_STATUS_COMPLETE,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_IN_PROGRESS
             )))
             ->all();
         $orderIds = [];
@@ -100,13 +101,18 @@ class OrderRepository
     {
         $openOrders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.status', array(
-                'in progress', 'in review', 'in preparation', 'getting quote', 'needs approval', 'complete'
+                Constants::ORDER_STATUS_IN_PROGRESS,
+                Constants::ORDER_STATUS_IN_REVIEW,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_GETTING_QUOTE,
+                Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                Constants::ORDER_STATUS_COMPLETE
             )))
             ->all();
-            
+
         return $openOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -114,13 +120,16 @@ class OrderRepository
     {
         $inProgressOrders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.status', array(
-                'getting quote', 'needs approval', 'in preparation', 'in progress'
+                Constants::ORDER_STATUS_GETTING_QUOTE,
+                Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_IN_PROGRESS
             )))
             ->all();
-            
+
         return $inProgressOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
@@ -132,16 +141,16 @@ class OrderRepository
 
         return $pendingOrders;
     }
-    
+
     /**
      * @return \craft\elements\db\ElementQuery
      */
     public function getCompleteOrders()
     {
-        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', 'complete'))->all();
+        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', Constants::ORDER_STATUS_COMPLETE))->all();
         return $results;
     }
-    
+
     public function getOrderStatuses()
     {
         return array(
@@ -163,13 +172,13 @@ class OrderRepository
     {
         $order = new Order();
 
-        $order->status = 'new';
-        
+        $order->status = Constants::ORDER_STATUS_PENDING;
+
         $order->sourceSite = $sourceSite ?: Craft::$app->sites->getPrimarySite()->id;
-        
+
         return $order;
     }
-    
+
     /**
      * @param \acclaro\translations\elements\Order $order
      * @throws \Exception
@@ -238,7 +247,10 @@ class OrderRepository
             $orderCount = Order::find()
                 ->andWhere(Db::parseParam('translations_orders.translatorId', $translators))
                 ->andWhere(Db::parseParam('translations_orders.status', array(
-                    'getting quote', 'needs approval', 'in preparation', 'in progress'
+                    Constants::ORDER_STATUS_GETTING_QUOTE,
+                    Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                    Constants::ORDER_STATUS_IN_PREPARATION,
+                    Constants::ORDER_STATUS_IN_PROGRESS
                 )))
                 ->count();
         }
@@ -247,7 +259,7 @@ class OrderRepository
     }
 
     /**
-     * @param $order
+     * @param \acclaro\translations\elements\Order $order
      * @param $queue
      * @throws Exception
      */
@@ -264,18 +276,12 @@ class OrderRepository
         }
 
         $syncOrderSvc = new SyncOrder();
-        foreach ($order->files as $file) {
+        foreach ($order->getFiles() as $file) {
             if ($queue) {
                 $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
             }
             // Let's make sure we're not updating canceled/complete/published files
-            if (in_array($file->status, [
-                Constants::FILE_STATUS_CANCELED,
-                Constants::FILE_STATUS_COMPLETE,
-                Constants::FILE_STATUS_PUBLISHED
-            ])) {
-                continue;
-            }
+            if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
 
             $translationService->updateFile($order, $file);
 
@@ -301,7 +307,7 @@ class OrderRepository
     }
 
     /**
-     * @param $order
+     * @param \acclaro\translations\elements\Order $order
      * @param $settings
      * @param null $queue
      * @throws \Throwable
@@ -330,7 +336,6 @@ class OrderRepository
             $order->title,
             $comments,
             $dueDate,
-            $order->id,
             $order->wordCount
         );
 
@@ -340,12 +345,12 @@ class OrderRepository
         ];
 
         $order->serviceOrderId = $orderData['acclaroOrderId'];
-        $order->status = (!is_null($orderResponse)) ? $orderResponse->status : '';
 
-        $orderCallbackResponse = $acclaroApiClient->requestOrderCallback(
+        $acclaroApiClient->requestOrderCallback(
             $order->serviceOrderId,
             Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
         );
+
         if ($order->tags) {
             $tags = [];
             foreach (json_decode($order->tags, true) as $tagId) {
@@ -355,82 +360,29 @@ class OrderRepository
                 }
             }
             if (! empty($tags)) {
-                $res = $acclaroApiClient->addOrderTags($orderResponse->orderid, implode(",", $tags));
+                $acclaroApiClient->addOrderTags($orderResponse->orderid, implode(",", $tags));
             }
         }
 
-        $tempPath = Craft::$app->path->getTempPath();
-
         $sendOrderSvc = new SendOrder();
-        foreach ($order->files as $file) {
+        $translationService = new AcclaroTranslationService($settings, $acclaroApiClient);
+        foreach ($order->getFiles() as $file) {
             if ($queue) {
                 $sendOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
             }
 
-            $file->source = Translations::$plugin->elementToFileConverter->addDataToSourceXML($file->source, $orderData);
-
-            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-
-            $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
-            $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
-
-            if ($element instanceof GlobalSetModel) {
-                $filename = ElementHelper::normalizeSlug($element->name).'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
-            } else if ($element instanceof Asset) {
-                $assetFilename = $element->getFilename();
-                $fileInfo = pathinfo($element->getFilename());
-                $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' .Constants::FILE_FORMAT_XML;
-            } else {
-                $filename = $element->slug.'-'.$targetSite.'.'.Constants::FILE_FORMAT_XML;
-            }
-
-            $path = $tempPath .'/'. $file->elementId .'-'. $filename;
-
-            $stream = fopen($path, 'w+');
-
-            fwrite($stream, $file->source);
-
-            $fileResponse = $acclaroApiClient->sendSourceFile(
-                $order->serviceOrderId,
-                $sourceSite,
-                $targetSite,
-                $file->id,
-                $path
-            );
-
-            $file->serviceFileId = $fileResponse->fileid ? $fileResponse->fileid : $file->id;
-            $file->status = $fileResponse->status;
-
-            $fileCallbackResponse = $acclaroApiClient->requestFileCallback(
-                $order->serviceOrderId,
-                $file->serviceFileId,
-                Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
-            );
-
-            $acclaroApiClient->addReviewUrl(
-                $order->serviceOrderId,
-                $file->serviceFileId,
-                $file->previewUrl
-            );
-
-            fclose($stream);
-
-            unlink($path);
+            $translationService->sendOrderFile($order, $file, $settings);
         }
 
-        $submitOrderResponse = $acclaroApiClient->submitOrder($order->serviceOrderId);
+        $acclaroApiClient->submitOrder($order->serviceOrderId);
 
-        $order->status = $submitOrderResponse->status;
+        $order->status = Constants::ORDER_STATUS_NEW;
 
-        $order->dateOrdered = new DateTime();
+        $order->dateOrdered = new \DateTime();
 
-        $success = Craft::$app->getElements()->saveElement($order);
-
-        foreach ($order->files as $file) {
-            Translations::$plugin->fileRepository->saveFile($file);
-        }
+        Craft::$app->getElements()->saveElement($order);
     }
-    
+
     /**
      * saveOrderName
      *
@@ -439,7 +391,7 @@ class OrderRepository
      * @return void
      */
     public function saveOrderName($orderId, $name) {
-        
+
         $order = $this->getOrderById($orderId);
         $order->title = $name;
         Craft::$app->getElements()->saveElement($order);
@@ -482,7 +434,8 @@ class OrderRepository
     {
         $orderIds = [];
         foreach ($elements as $element) {
-            $orders = Translations::$plugin->fileRepository->getOrdersByElement($element->id);
+			$canonicalElement = $element->getIsDraft() ? $element->getCanonical() : $element;
+            $orders = Translations::$plugin->fileRepository->getOrdersByElement($canonicalElement->id);
             if ($orders) {
                 $orderIds[$element->id] = $orders;
             }
@@ -491,11 +444,17 @@ class OrderRepository
         return $orderIds;
     }
 
+    /**
+     * Get order status based on files statuses
+     *
+     * @param Order $order
+     * @return string
+     */
     public function getNewStatus($order)
     {
         $fileStatuses = [];
-        $files = Translations::$plugin->fileRepository->getFilesByOrderId($order->id);
         $publishedFiles = 0;
+		$files = Translations::$plugin->fileRepository->getFiles($order->id);
 
         foreach ($files as $file) {
             if ($file->status === Constants::FILE_STATUS_PUBLISHED) $publishedFiles++;
@@ -507,6 +466,8 @@ class OrderRepository
 
         if ($publishedFiles == count(($files))) {
             return Constants::ORDER_STATUS_PUBLISHED;
+        } else if (in_array('Modified', $fileStatuses)) {
+            return Constants::ORDER_STATUS_MODIFIED;
         } else if (in_array('Ready to apply', $fileStatuses)) {
             return Constants::ORDER_STATUS_COMPLETE;
         } else if (in_array('Ready for review', $fileStatuses)) {
@@ -519,7 +480,7 @@ class OrderRepository
             return Constants::ORDER_STATUS_CANCELED;
         } else {
             // Default Status in case of any issue
-            return Constants::ORDER_STATUS_IN_PROGRESS;
+            return Constants::ORDER_STATUS_NEW;
         }
     }
 
@@ -542,5 +503,53 @@ class OrderRepository
         }
 
         return $draftElement->title ?? '';
+    }
+
+    /**
+     * Checks if source entry of elements in order has changed
+     *
+     * @param Order $order
+     * @return array $result
+     */
+    public function getIsSourceChanged($order): ?array
+    {
+        $originalIds = [];
+
+        if ($elements = $order->getElements()) {
+            foreach ($order->getFiles() as $file) {
+                if ($file->isPublished() || ! $file->source || in_array($file->elementId, $originalIds)) continue;
+
+                try {
+                    $element = $elements[$file->elementId];
+                    $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+                    $converter = Translations::$plugin->elementToFileConverter;
+
+                    $currentContent = $converter->convert(
+                        $element,
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    => $order->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'wordCount'     => $wordCount,
+                            'orderId'       => $order->id
+                        ]
+                    );
+
+                    $sourceContent = json_decode($converter->xmlToJson($file->source), true);
+                    $currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+                    $sourceContent = json_encode(array_values($sourceContent['content']));
+                    $currentContent = json_encode(array_values($currentContent['content']));
+
+                    if (md5($sourceContent) !== md5($currentContent)) {
+                        array_push($originalIds, $element->id);
+                    }
+                } catch (Exception $e) {
+                    throw new Exception("Source entry changes check, Error: " . $e->getMessage(), 1);
+                }
+            }
+        }
+
+        return $originalIds;
     }
 }

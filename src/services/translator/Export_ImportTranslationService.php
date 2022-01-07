@@ -11,18 +11,15 @@
 namespace acclaro\translations\services\translator;
 
 use Craft;
-use DateTime;
-use Exception;
+use craft\elements\Asset;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
+
 use acclaro\translations\Constants;
-use acclaro\translations\services\App;
+use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
-use acclaro\translations\Translations;
-use acclaro\translations\services\api\AcclaroApiClient;
-use craft\elements\Asset;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
@@ -140,7 +137,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
                 $draft->siteId = $targetSite;
-                
+
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
 
                 $draft->setFieldValues($post);
@@ -154,11 +151,11 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     return false;
                 }
                 break;
-            
+
             // Update GlobalSet Drafts
             case $draft instanceof GlobalSet:
                 $draft->siteId = $targetSite;
-               
+
                 // $element->siteId = $targetSite;
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
 
@@ -177,7 +174,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             case $draft instanceof Asset:
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->siteId = $targetSite;
-               
+
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
 
                 $draft->setFieldValues($post);
@@ -194,7 +191,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             default:
                 break;
         }
-        
+
         return true;
     }
 

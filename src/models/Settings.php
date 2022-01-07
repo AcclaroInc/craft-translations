@@ -10,11 +10,6 @@
 
 namespace acclaro\translations\models;
 
-use acclaro\translations\Translations;
-use acclaro\translations\services\App;
-
-
-use Craft;
 use craft\base\Model;
 
 /**
@@ -25,6 +20,8 @@ use craft\base\Model;
 class Settings extends Model
 {
     public $chkDuplicateEntries = true;
+
+    public $apiLogging;
 
     public $twigSearchFilterSingleQuote = "";
 

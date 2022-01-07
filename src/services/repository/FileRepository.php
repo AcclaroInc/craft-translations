@@ -10,17 +10,35 @@
 
 namespace acclaro\translations\services\repository;
 
-use acclaro\translations\Constants;
 use Craft;
 use Exception;
+use yii\db\Query;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
-use yii\db\Query;
 
 class FileRepository
 {
+    protected $defaultColumns = [
+        'id',
+        'orderId',
+        'elementId',
+        'draftId',
+        'sourceSite',
+        'targetSite',
+        'status',
+        'wordCount',
+        'source',
+        'target',
+        'previewUrl',
+        'serviceFileId',
+        'dateUpdated',
+        'dateDelivered',
+        'dateDeleted'
+    ];
+
     /**
      * @param  int|string $fileId
      * @return \acclaro\translations\models\FileModel
@@ -33,27 +51,11 @@ class FileRepository
             return false;
         }
 
-        $file = new FileModel($record->toArray([
-            'id',
-            'orderId',
-            'elementId',
-            'draftId',
-            'sourceSite',
-            'targetSite',
-            'status',
-            'wordCount',
-            'source',
-            'target',
-            'previewUrl',
-            'serviceFileId',
-            'dateUpdated',
-            'dateDelivered',
-            'dateDeleted',
-        ]));
+        $file = new FileModel($record->toArray($this->defaultColumns));
 
         return $file;
     }
-    
+
     /**
      * @param  int|string $draftId
      * @param  int|string $elementId
@@ -72,207 +74,33 @@ class FileRepository
         if (!$record) {
             return false;
         }
-        
-        $file = new FileModel($record->toArray([
-            'id',
-            'orderId',
-            'elementId',
-            'draftId',
-            'sourceSite',
-            'targetSite',
-            'status',
-            'wordCount',
-            'source',
-            'target',
-            'previewUrl',
-            'serviceFileId',
-            'dateDelivered',
-            'dateDeleted',
-        ]));
+
+        $file = new FileModel($record->toArray($this->defaultColumns));
 
         return $file;
     }
-    
-    /**
-     * @param  int|string $orderId
-     * @return \acclaro\translations\models\FileModel
-     */
-    public function getFilesByOrderId(int $orderId, $elementId = null, $site=null)
-    {
-        $attributes = array(
-            'orderId' => $orderId,
-            'dateDeleted' => null
-        );
-
-        if ($elementId) {
-            $attributes['elementId'] = $elementId;
-        }
-        if ($site) {
-            $attributes['targetSite'] = $site;
-        }
-
-        $records = FileRecord::find()->where($attributes)->all();
-
-        $files = array();
-
-        foreach ($records as $key => $record) {
-            $files[$key] = new FileModel($record->toArray([
-                'id',
-                'orderId',
-                'elementId',
-                'draftId',
-                'sourceSite',
-                'targetSite',
-                'status',
-                'wordCount',
-                'source',
-                'target',
-                'previewUrl',
-                'serviceFileId',
-                'dateUpdated',
-                'dateDelivered',
-                'dateDeleted',
-            ]));
-        }
-
-        return $files ? $files : array();
-    }
-    
-    /**
-     * @param  int|string $siteId
-     * @return \acclaro\translations\models\FileModel
-     */
-    public function getFilesByTargetSite(int $siteId, $elementId = null)
-    {
-        $attributes = array(
-            'targetSite' => $siteId,
-            'dateDeleted' => null
-        );
-
-        if ($elementId) {
-            $attributes['elementId'] = $elementId;
-        }
-
-        $records = FileRecord::find()->where($attributes)->all();
-
-        $files = array();
-
-        foreach ($records as $key => $record) {
-            $files[$key] = new FileModel($record->toArray([
-                'id',
-                'orderId',
-                'elementId',
-                'draftId',
-                'sourceSite',
-                'targetSite',
-                'status',
-                'wordCount',
-                'source',
-                'target',
-                'previewUrl',
-                'serviceFileId',
-                'dateDelivered',
-                'dateDeleted',
-            ]));
-        }
-
-        return $files ? $files : array();
-    }
-
-    /**
-     * @param  int|string $elementId
-     * @return \acclaro\translations\models\FileModel
-     */
-    public function getFilesByElementId(int $elementId, $orderId = null)
-    {
-        $attributes = array(
-            'elementId' => $elementId,
-            'dateDeleted' => null
-        );
-
-        if ($orderId) {
-            $attributes['orderId'] = $orderId;
-        }
-
-        $records = FileRecord::find()->where($attributes)->all();
-
-        $files = array();
-
-        foreach ($records as $key => $record) {
-            $files[$key] = new FileModel($record->toArray([
-                'id',
-                'orderId',
-                'elementId',
-                'draftId',
-                'sourceSite',
-                'targetSite',
-                'status',
-                'wordCount',
-                'source',
-                'target',
-                'previewUrl',
-                'serviceFileId',
-                'dateDelivered',
-                'dateDeleted',
-            ]));
-        }
-
-        return $files;
-    }
 
     /**
      * @param  int|string $orderId
-     * @return \acclaro\translations\models\FileModel
+     * @return [ \acclaro\translations\models\FileModel ]
      */
-    public function getFiles()
+    public function getFiles($orderId = null, $elementId = null, $targetSite = null)
     {
-        $records = FileRecord::find()
-            ->where(['dateDeleted' => null])
-            ->all();
+		$attributes = array('dateDeleted' => null);
+
+		if ($orderId) $attributes['orderId'] = $orderId;
+		if ($elementId) $attributes['elementId'] = $elementId;
+        if ($targetSite) $attributes['targetSite'] = $targetSite;
+
+        $records = FileRecord::find()->where($attributes)->orderBy('elementId')->all();
 
         $files = array();
 
         foreach ($records as $key => $record) {
-            $files[$key] = new FileModel($record->toArray([
-                'id',
-                'orderId',
-                'elementId',
-                'draftId',
-                'sourceSite',
-                'targetSite',
-                'status',
-                'wordCount',
-                'source',
-                'target',
-                'previewUrl',
-                'serviceFileId',
-                'dateUpdated',
-                'dateDelivered',
-                'dateDeleted',
-            ]));
+            $files[$key] = new FileModel($record->toArray($this->defaultColumns));
         }
 
         return $files ? $files : array();
-    }
-
-    /**
-     * Check if content in file's source column is in Xml or Json format
-     *
-     * @param string $sourceContent
-     * @return string
-     */
-    public function getFileSourceFormat(string $sourceContent)
-    {
-        // Check if source is valid xml
-        if(substr(trim($sourceContent), 0, 5) == "<?xml") {
-            return Constants::FILE_FORMAT_XML;
-        }
-
-        // Check for a valid json source
-        json_decode($sourceContent);
-        if (json_last_error() === JSON_ERROR_NONE) return Constants::FILE_FORMAT_JSON;
-
-        return null;
     }
 
     /**
@@ -307,7 +135,7 @@ class FileRepository
             }
             $record->setAttributes($att, false);
         }
-        
+
         if (!$record->validate()) {
             $file->addErrors($record->getErrors());
 
@@ -346,30 +174,11 @@ class FileRepository
     }
 
     /**
-     * @param $fileId
-     * @return false|int
-     * @throws \Throwable
-     */
-    public function deleteById($fileId)
-    {
-        $attributes = ['id' => (int) $fileId];
-
-        $record = FileRecord::findOne($attributes);
-
-        if ($record && $record->draftId) {
-            $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
-            Craft::$app->getElements()->deleteElement($element);
-        }
-
-        return $record->delete();
-    }
-
-    /**
      * @param $draftId
      * @return false|int
      * @throws \Throwable
      */
-    public function delete($draftId, $elementId=null)
+    public function deleteByDraftId($draftId, $elementId=null)
     {
         $attributes = ['draftId' => (int) $draftId];
         if ($elementId) {
@@ -386,10 +195,11 @@ class FileRepository
         return $record->delete();
     }
 
-    public function deleteByOrderId($orderId, $targetSite = null)
+    public function delete($orderId, $elementId = null, $targetSite = null)
     {
         $attributes = ['orderId' => (int) $orderId];
 
+        if ($elementId) $attributes['elementId'] = (int) $elementId;
         if ($targetSite) $attributes['targetSite'] = (int) $targetSite;
 
         $records = FileRecord::find()->where($attributes)->all();
@@ -401,7 +211,7 @@ class FileRepository
             }
             $record->delete();
         }
-        
+
         return true;
     }
 
@@ -456,7 +266,7 @@ class FileRepository
 
             $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
 
-            $translationService->udpateReviewFileUrls($order);
+            $translationService->updateReviewFileUrls($order);
         }
 
         return true;
@@ -480,17 +290,25 @@ class FileRepository
 
     /**
      * @param  int|string $elementId
-     * @return \acclaro\translations\models\FileModel
+     * @return int[]
      */
     public function getOrdersByElement(int $elementId)
     {
 
         $query = (new Query())
             ->select('files.orderId')
-            ->from(['{{%translations_orders}} translations_orders'])
-            ->innerJoin('{{%translations_files}} files', '[[files.orderId]] = [[translations_orders.id]]')
+            ->from([Constants::TABLE_ORDERS . ' translations_orders'])
+            ->innerJoin(Constants::TABLE_FILES . ' files', '[[files.orderId]] = [[translations_orders.id]]')
             ->where(['files.elementId' => $elementId,])
-            ->andWhere(['translations_orders.status' => ['new','getting quote','needs approval','in preparation','in progress']])
+            ->andWhere(['translations_orders.status' => [
+                Constants::ORDER_STATUS_NEW,
+                Constants::ORDER_STATUS_GETTING_QUOTE,
+                Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_IN_PROGRESS,
+                Constants::ORDER_STATUS_REVIEW_READY,
+                Constants::ORDER_STATUS_COMPLETE
+                ]])
             ->andWhere(['dateDeleted' => null])
             ->groupBy('orderId')
             ->all();
@@ -513,7 +331,7 @@ class FileRepository
     {
         // ? Create File for each element per target language
         foreach ($order->getTargetSitesArray() as $key => $targetSite) {
-            foreach ($order->getElements(false) as $element) {
+            foreach ($order->getElements() as $element) {
                 $wordCount = $wordCounts[$element->id] ?? 0;
 
                 $file = $this->makeNewFile();
@@ -522,7 +340,7 @@ class FileRepository
                 $file->elementId = $element->id;
                 $file->sourceSite = $order->sourceSite;
                 $file->targetSite = $targetSite;
-                
+
                 $file->source = Translations::$plugin->elementToFileConverter->convert(
                     $element,
                     Constants::FILE_FORMAT_XML,
@@ -564,15 +382,13 @@ class FileRepository
         );
         $file->wordCount = $wordCount;
 
-        // return without saving as acclaro order files are created later
-        // Translations::$plugin->fileRepository->saveFile($file);
         return $file;
     }
 
     public function getUploadedFilesWordCount($asset, $format)
     {
         $fileContents = $asset->getContents();
-        
+
         $elementId = Translations::$plugin->elementToFileConverter->getElementIdFromData($fileContents, $format);
         if (! $elementId) {
             return 0;
@@ -590,7 +406,7 @@ class FileRepository
         $data = [];
         // Current entries XML
         $sourceContent = Translations::$plugin->elementTranslator->getTargetData($source, true);
-    
+
         // Translated file XML
         $targetContent = Translations::$plugin->elementTranslator->getTargetData($target, true);
 
@@ -616,11 +432,11 @@ class FileRepository
                 krsort($values);
                 foreach ($values as $class => $value) {
                     $content .= "<td class='$class'>";
-    
+
                     $content .= "<label class='diff-tl'> $key: </label>";
-                    
+
                     $content .= "<div class='diff-copy'> $copyIcon </div><br>";
-    
+
                     $content .= "<span class='diff-bl'> $value </span></td>";
                 }
 
@@ -633,7 +449,7 @@ class FileRepository
                 $content = '<tr><td class="source">';
 
                 $content .= "<label class='diff-tl'> $key: </label>";
-                
+
                 $content .= "<div class='diff-copy'> $copyIcon </div><br>";
 
                 $content .= "<span class='diff-bl'> $value </span>";

@@ -11,70 +11,96 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
+use craft\elements\User;
 use craft\elements\Entry;
-use craft\base\ElementInterface;
+use craft\base\Component;
+use craft\services\Drafts;
+use craft\events\DraftEvent;
+use craft\behaviors\DraftBehavior;
 use acclaro\translations\Translations;
 
-class EntryRepository
+class EntryRepository extends Component
 {
-    /**
-     * @param  int|string $orderId
-     * @return \craft\elements\Entry|null
-     */
-    public function makeNewEntry()
+    public function createDraft(Entry $entry, $site, $orderName)
     {
-        return new Entry();
-    }
-    
-    /**
-     * @param  int|string $orderId
-     * @return \craft\elements\Entry
-     */
-    public function getEntryById($entryId, $siteId)
-    {
-        return Entry::$app->entries->getEntryById($entryId, $siteId);
-    }
+        $allSitesHandle = Translations::$plugin->siteRepository->getAllSitesHandle();
 
-    /**
-     * @return \craft\elements\Entry
-     */
-    public function getEntriesById($entryIds, $siteId)
-    {
-        $entries = Entry::find()->ids($entryIds)->siteId($siteId)->all();
-        return $entries;
-    }
+        try{
+            $handle = isset($allSitesHandle[$site]) ? $allSitesHandle[$site] : "";
+            $name = sprintf('%s [%s]', $orderName, $handle);
+            $notes = '';
+            $creator = User::find()
+                ->admin()
+                ->orderBy(['elements.id' => SORT_ASC])
+                ->one();
+            $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
 
-    public function saveEntry(Entry $entry)
-    {
-        $success = Craft::$app->elements->saveElement($entry);
-        if (!$success) {
-            Craft::error( '['. __METHOD__ .'] Couldn’t save the entry "'.$entry->title.'"', 'translations' );
+            $newAttributes = [
+                'siteId' => $site,
+                'uri' => $elementURI,
+            ];
+
+            $draft = $this->makeNewDraft($entry, $creator->id, $name, $notes, $newAttributes);
+
+            return $draft;
+        } catch (\Exception $e) {
+            Craft::error( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), 'translations' );
+            return [];
         }
     }
 
-    public function getSupportedSites(Entry $entry): array
-    {
-        $section = $this->getSection($entry->sectionId);
-        $sites = [];
-        foreach ($section->getSiteSettings() as $siteSettings) {
-            if ($section->propagateEntries || $siteSettings->siteId == $this->siteId) {
-                $sites[] = [
-                    'siteId' => $siteSettings->siteId,
-                    'enabledByDefault' => $siteSettings->enabledByDefault
-                ];
-            }
-        }
-        return $sites;
-    }
+	private function makeNewDraft($source, $creatorId, $name, $notes, $newAttributes, $provisional = false)
+	{
+		$canonical = $source->getIsDraft() ? $source->getCanonical() : $source;
+		// Fire a 'beforeCreateDraft' event
+        $event = new DraftEvent([
+            'source' => $source,
+            'creatorId' => $creatorId,
+            'provisional' => $provisional,
+            'draftName' => $name,
+            'draftNotes' => $notes,
+        ]);
+        $this->trigger('beforeCreateDraft', $event);
+        $name = $event->draftName;
+        $notes = $event->draftNotes;
 
-    public function getSection($id)
-    {
-        if ($id === null) {
-            throw new InvalidConfigException('Entry is missing its section ID');
+		$transaction = Craft::$app->getDb()->beginTransaction();
+        try {
+            // Create the draft row
+            $draftId = (new Drafts())->insertDraftRow($name, $notes, $creatorId, $canonical->id, $source::trackChanges(), $provisional);
+
+            // Duplicate the element
+            $newAttributes['isProvisionalDraft'] = $provisional;
+            $newAttributes['canonicalId'] = $canonical->id;
+            $newAttributes['draftId'] = $draftId;
+            $newAttributes['behaviors']['draft'] = [
+                'class' => DraftBehavior::class,
+                'creatorId' => $creatorId,
+                'draftName' => $name,
+                'draftNotes' => $notes,
+                'trackChanges' => $source::trackChanges(),
+            ];
+
+            $draft = Craft::$app->getElements()->duplicateElement($source, $newAttributes);
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
         }
-        if (($section = Craft::$app->getSections()->getSectionById($id)) === null) {
-            throw new InvalidConfigException('Invalid section ID: ' . $id);
+
+        // Fire an 'afterCreateDraft' event
+        if ($this->hasEventHandlers('afterCreateDraft')) {
+            $this->trigger('afterCreateDraft', new DraftEvent([
+                'source' => $source,
+                'creatorId' => $creatorId,
+                'provisional' => $provisional,
+                'draftName' => $name,
+                'draftNotes' => $notes,
+                'draft' => $draft,
+            ]));
         }
-        return $section;
-    }
+
+        return $draft;
+	}
 }

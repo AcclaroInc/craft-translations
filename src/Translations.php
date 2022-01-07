@@ -11,7 +11,6 @@
 namespace acclaro\translations;
 
 use Craft;
-use craft\db\Table;
 use craft\events\RegisterUserPermissionsEvent;
 use craft\services\UserPermissions;
 use yii\base\Event;
@@ -24,7 +23,6 @@ use craft\helpers\UrlHelper;
 use craft\events\DraftEvent;
 use craft\services\Elements;
 use craft\events\PluginEvent;
-use craft\events\ElementEvent;
 use craft\services\Drafts;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
@@ -41,6 +39,8 @@ use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\services\job\DeleteDrafts;
+use craft\errors\MigrationException;
+use yii\web\User;
 
 class Translations extends Plugin
 {
@@ -129,7 +129,7 @@ class Translations extends Plugin
                 $this->_onBeforePublishDraft($event);
             }
         );
-        
+
         Event::on(
             Drafts::class,
             Drafts::EVENT_AFTER_APPLY_DRAFT,
@@ -152,7 +152,7 @@ class Translations extends Plugin
                     '['. __METHOD__ .'] Elements::EVENT_AFTER_SAVE_ELEMENT',
                     'translations'
                 );
-                
+
                 $this->_onSaveEntry($event);
             }
         );
@@ -211,7 +211,7 @@ class Translations extends Plugin
 
         if ($drafts) {
             Craft::$app->queue->push(new DeleteDrafts([
-                'description' => 'Deleting Translation Drafts',
+                'description' => Constants::JOB_DELETING_DRAFT,
                 'drafts' => $drafts,
             ]));
         }
@@ -234,37 +234,38 @@ class Translations extends Plugin
     {
         $subNavs = [];
         $navItem = parent::getCpNavItem();
+        /** @var User $currentUser */
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if ($currentUser->can('translations:dashboard')) {
             $subNavs['dashboard'] = [
                 'label' => 'Dashboard',
-                'url' => 'translations',
+                'url' => Constants::URL_TRANSLATIONS,
             ];
         }
         if ($currentUser->can('translations:orders')) {
             $subNavs['orders'] = [
                 'label' => 'Orders',
-                'url' => 'translations/orders',
+                'url' => Constants::URL_ORDERS,
             ];
         }
         if ($currentUser->can('translations:translator')) {
             $subNavs['translators'] = [
                 'label' => 'Translators',
-                'url' => 'translations/translators',
+                'url' => Constants::URL_TRANSLATOR,
             ];
         }
         if ($currentUser->can('translations:static-translations')) {
             $subNavs['static-translations'] = [
                 'label' => 'Static Translations',
-                'url' => 'translations/static-translations',
+                'url' => Constants::URL_STATIC_TRANSLATIONS,
             ];
         }
 
         if ($currentUser->can('translations:settings')) {
             $subNavs['settings'] = [
                 'label' => 'Settings',
-                'url' => 'translations/settings',
+                'url' => Constants::URL_SETTINGS,
             ];
         }
 
@@ -280,7 +281,7 @@ class Translations extends Plugin
     public function getSettingsResponse()
     {
         // Just redirect to the plugin settings page
-        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('translations/settings'));
+        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl(Constants::URL_SETTINGS));
     }
 
     protected function createSettingsModel()
@@ -319,7 +320,7 @@ class Translations extends Plugin
             if (Craft::$app->request->getIsCpRequest()) {
                 $this->_includeResources(Craft::$app->getRequest()->getPathInfo());
             }
-            
+
             self::$plugin->translationRepository->loadTranslations();
 
             Event::on(
@@ -434,7 +435,7 @@ class Translations extends Plugin
         self::$view->registerJs("$(function(){ Craft.Translations });");
         self::$view->registerJs("$(function(){ Craft.Translations.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
     }
-    
+
     private function _includeEditDraftResource($draftId)
     {
         $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
@@ -448,7 +449,7 @@ class Translations extends Plugin
             self::$view->registerJs("$(function(){ Craft.Translations.ApplyTranslations.init({$draftId}, {$response}); });");
         }
     }
-    
+
     private function _includeEntryResources()
     {
         $orders = array();
@@ -473,12 +474,12 @@ class Translations extends Plugin
             'orders' => $orders,
             'openOrders' => $openOrders,
             'sites' => Craft::$app->sites->getAllSiteIds(),
-            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus('translations')
+            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus(Constants::PLUGIN_HANDLE)
         ];
         $data = json_encode($data);
-        
+
         self::$view->registerAssetBundle(EntryAssets::class);
-        
+
         self::$view->registerJs("$(function(){ Craft.Translations.AddEntriesToTranslationOrder.init({$data}); });");
     }
 
@@ -505,7 +506,7 @@ class Translations extends Plugin
 
         self::$view->registerJs("$(function(){ Craft.Translations.CategoryTranslations.init({$orders}, {$categoryId}); });");
     }
-    
+
     private function _includeGlobalSetResources($globalSetHandle, $site = null)
     {
         $globalSet = self::$plugin->globalSetRepository->getSetByHandle($globalSetHandle, $site);
@@ -559,14 +560,14 @@ class Translations extends Plugin
 
         if (!$request->getIsConsoleRequest()) {
             $draft = $event->draft;
-    
+
             $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
-    
+
             $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
-    
+
             $action = $request->getActionSegments();
             $action = end($action);
-    
+
             $applyDraftActions = [
                 'apply-drafts',
                 'save-draft-and-publish',
@@ -575,7 +576,7 @@ class Translations extends Plugin
             ];
 
             if(!empty($response) && !in_array($action, $applyDraftActions)) {
-    
+
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
                 $path = $craft->request->getFullPath();
                 $params = $craft->request->getQueryParams();
@@ -628,7 +629,7 @@ class Translations extends Plugin
                         Translations::$plugin->orderRepository->saveOrder($order);
                     }
 
-                    $currentFile->status = 'canceled';
+                    $currentFile->status = Constants::FILE_STATUS_CANCELED;
 
                     self::$plugin->fileRepository->saveFile($currentFile);
                 }
@@ -642,13 +643,14 @@ class Translations extends Plugin
 
         if ($order = Translations::$plugin->orderRepository->isTranslationOrder($event->element->id) && $event->hardDelete) {
             $drafts = [];
+            /** @var Order|null $order */
             foreach ($order->getFiles() as $file) {
                 $drafts[] = $file->draftId;
             }
 
             if ($drafts) {
                 Craft::$app->queue->push(new DeleteDrafts([
-                    'description' => 'Deleting Translation Drafts',
+                    'description' => Constants::JOB_DELETING_DRAFT,
                     'drafts' => $drafts,
                 ]));
             }

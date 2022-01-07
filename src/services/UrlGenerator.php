@@ -10,24 +10,18 @@
 
 namespace acclaro\translations\services;
 
-use acclaro\translations\Constants;
 use Craft;
 use craft\base\Element;
-use craft\elements\Category;
-use craft\models\EntryDraft;
-use craft\elements\GlobalSet;
+use craft\elements\Asset;
 use craft\elements\Entry;
-use craft\helpers\UrlHelper;
+use craft\elements\Category;
+use craft\elements\GlobalSet;
+
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
-use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
-use acclaro\translations\models\GlobalSetDraftModel;
-use craft\elements\Asset;
-use craft\helpers\StringHelper;
-use DOMDocument;
-use DateTime;
-use yii\log\Target;
+use yii\web\ServerErrorHttpException;
 
 class UrlGenerator
 {
@@ -36,7 +30,7 @@ class UrlGenerator
         $key = sha1_file(Craft::$app->path->getConfigPath().'/license.key');
 
         $cpTrigger = '/'.Craft::$app->getConfig()->getGeneral()->cpTrigger;
-        
+
         $url = Translations::$plugin->urlHelper->actionUrl('translations/base/file-callback', array(
             'key' => $key,
             'fileId' => $file->id,
@@ -62,7 +56,7 @@ class UrlGenerator
     public function generateFileUrl(Element $element, FileModel $file)
     {
         if ($element instanceof GlobalSet) {
-            if ($file->draftId) {
+            if ($file->draftId && $file->isComplete()) {
                 return Translations::$plugin->urlHelper->cpUrl('translations/globals/'.$element->handle.'/drafts/'.$file->draftId);
             }
             return preg_replace(
@@ -75,7 +69,7 @@ class UrlGenerator
         if ($element instanceof Category) {
             $catUri = $element->id.'-'.$element->slug;
 
-            if ($file->draftId) {
+            if ($file->draftId && $file->isComplete()) {
                 return Translations::$plugin->urlHelper->cpUrl("translations/categories/".$element->getGroup()->handle."/".$catUri."/drafts/".$file->draftId);
             }
             return Translations::$plugin->urlHelper->url(
@@ -85,7 +79,7 @@ class UrlGenerator
         }
 
         if ($element instanceof Asset) {
-            if ($file->draftId) {
+            if ($file->draftId && $file->isComplete()) {
                 return Translations::$plugin->urlHelper->cpUrl('translations/assets/'.$element->id.'/drafts/'.$file->draftId);
             }
             return Translations::$plugin->urlHelper->url($element->getCpEditUrl(),
@@ -97,10 +91,10 @@ class UrlGenerator
             'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle,
         ];
 
-        if ($file->draftId) {
+        if ($file->draftId && $file->isComplete()) {
             $data['draftId'] = $file->draftId;
         }
-        if ($file->status == Constants::FILE_STATUS_PUBLISHED) {
+        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
             $element = $element->getIsDraft() ? $element->getCanonical(true) : $element;
         }
         return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), $data);
@@ -126,8 +120,6 @@ class UrlGenerator
 
     public function generateElementPreviewUrl(Element $element, $siteId = null)
     {
-        $params = array();
-
         if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
             return '';
         }

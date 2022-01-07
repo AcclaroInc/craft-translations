@@ -12,7 +12,6 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\elements\GlobalSet;
-use craft\base\ElementInterface;
 use acclaro\translations\Translations;
 
 class GlobalSetRepository

@@ -10,19 +10,18 @@
 
 namespace acclaro\translations\controllers;
 
+use acclaro\translations\Constants;
 use Craft;
-use ZipArchive;
-use craft\helpers\App as CraftApp;
 use craft\web\Controller;
 use craft\helpers\Path;
-use acclaro\translations\elements\Order;
-use acclaro\translations\services\App;
-use acclaro\translations\Translations;
-use yii\web\NotFoundHttpException;
 use craft\helpers\FileHelper;
-use acclaro\translations\models\Settings;
-use acclaro\translations\services\job\DeleteDrafts;
+use craft\helpers\App as CraftApp;
 use craft\base\VolumeInterface;
+use yii\web\NotFoundHttpException;
+
+use acclaro\translations\elements\Order;
+use acclaro\translations\Translations;
+use acclaro\translations\services\job\DeleteDrafts;
 
 /**
  * @author    Acclaro
@@ -38,7 +37,7 @@ class SettingsController extends Controller
     {
         $this->renderTemplate('translations/settings/index');
     }
-    
+
     /**
      * @return mixed
      */
@@ -46,49 +45,13 @@ class SettingsController extends Controller
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
-            return $this->redirect('translations', 302, true);
+            return $this->redirect(Constants::URL_TRANSLATIONS, 302, true);
         }
 
         $variables = array();
-        $supportedFieldTypes = [
-            'craft\fields\Tags',
-            'craft\fields\Table',
-            'craft\fields\Assets',
-            'craft\fields\Matrix',
-            'craft\fields\Number',
-            'craft\fields\Entries',
-            'craft\fields\Dropdown',
-            'craft\fields\PlainText',
-            'craft\fields\Categories',
-            'craft\fields\Checkboxes',
-            'craft\fields\MultiSelect',
-            'craft\fields\RadioButtons',
-            'benf\neo\Field',
-            'typedlinkfield\fields\LinkField',
-            'craft\redactor\Field',
-            'fruitstudios\linkit\fields\LinkitField',
-            'luwes\codemirror\fields\CodeMirrorField',
-            'verbb\supertable\fields\SuperTableField',
-            'nystudio107\seomatic\fields\SeoSettings',
-            'lenz\linkfield\fields\LinkField',
-            'newism\fields\fields\Telephone',
-            'newism\fields\fields\Address',
-            'newism\fields\fields\Email',
-            'newism\fields\fields\Embed',
-            'newism\fields\fields\PersonName',
-            'newism\fields\fields\Gender',
-            'ether\seo\fields\SeoField'
-        ];
+        $supportedFieldTypes = Constants::SUPPORTED_FIELD_TYPES;
 
-        $unrelatedFieldTypes = [
-            'craft\fields\Color',
-            'craft\fields\Date',
-            'craft\fields\Email',
-            'craft\fields\Lightswitch',
-            'craft\fields\Time',
-            'craft\fields\Url',
-            'craft\fields\Users'
-        ];
+        $unrelatedFieldTypes = Constants::UNRELATED_FIELD_TYPES;
 
         $variables['settings'] = [];
 
@@ -127,7 +90,7 @@ class SettingsController extends Controller
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
-            return $this->redirect('translations', 302, true);
+            return $this->redirect(Constants::URL_TRANSLATIONS, 302, true);
         }
 
         $variables['settings'] = [];
@@ -158,7 +121,7 @@ class SettingsController extends Controller
         try {
             foreach ($orders as $key => $orderId) {
                 $order = Translations::$plugin->orderRepository->getOrderById($orderId);
-        
+
                 if ($order) {
                     $drafts = [];
                     foreach ($order->getFiles() as $file) {
@@ -166,11 +129,11 @@ class SettingsController extends Controller
                     }
                     if ($drafts) {
                         Craft::$app->queue->push(new DeleteDrafts([
-                            'description' => 'Deleting Translation Drafts',
+                            'description' => Constants::JOB_DELETING_DRAFT,
                             'drafts' => $drafts,
                         ]));
                     }
-        
+
                     Craft::$app->getElements()->deleteElementById($orderId);
                 }
             }
@@ -185,33 +148,35 @@ class SettingsController extends Controller
     {
         $this->requireLogin();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
-            return $this->redirect('translations', 302, true);
+            return $this->redirect(Constants::URL_TRANSLATIONS, 302, true);
         }
 
         $zipName = 'logs';
-        $zipDest = Craft::$app->path->getTempPath().'/'. $zipName .'_'.time().'.zip';
+        $zipDest = Craft::$app->path->getTempPath().'/'. $zipName .'_'.time().'.' . Constants::FILE_FORMAT_ZIP;
         $errors = array();
 
         // Create zip
-        $zip = new ZipArchive();
+        $zip = new \ZipArchive();
 
         // Open zip
         if ($zip->open($zipDest, $zip::CREATE) !== true)
         {
-            $errors[] = 'Unable to create zip file: '.$zipDest;
-            Craft::log( '['. __METHOD__ .'] Unable to create zip file: '.$zipDest, LogLevel::Error, 'translations' );
+            $error = 'Unable to create zip file: '.$zipDest;
+            $errors[] = $error;
+            Craft::error('['. __METHOD__ .'] ' . $error, 'translations' );
             return false;
         }
 
         $logFiles = array_diff(scandir(Craft::$app->path->getLogPath()), array('.', '..'));
-        
+
         foreach ($logFiles as $key => $file) {
             $file_contents = file_get_contents(Craft::$app->path->getLogPath() .'/'. $file);
 
             if (!$zip->addFromString($file, $file_contents))
             {
-                $errors[] = 'There was an error adding the file '.$file.' to the zip: '.$zipName;
-                Craft::log( '['. __METHOD__ .'] There was an error adding the file '.$file.' to the zip: '.$zipName, LogLevel::Error, 'translations' );
+                $error = 'There was an error adding the file '.$file.' to the zip: '.$zipName;
+                $errors[] = $error;
+                Craft::error('['. __METHOD__ .'] ' . $error, 'translations');
             }
         }
 
@@ -228,7 +193,7 @@ class SettingsController extends Controller
                 'filename' => $zipDest
 			]));
         }
-        
+
         Craft::$app->getResponse()->sendFile($zipDest, null, ['inline' => true]);
 
         return FileHelper::unlink($zipDest);
@@ -243,6 +208,7 @@ class SettingsController extends Controller
 
         $settings = Translations::getInstance()->settings;
         $variables['chkDuplicateEntries'] = $settings->chkDuplicateEntries;
+        $variables['apiLogging'] = $settings->apiLogging;
         $variables['uploadVolume'] = $settings->uploadVolume;
         $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
         $variables['twigSearchFilterDoubleQuote'] = !empty($settings->twigSearchFilterDoubleQuote) ? $settings->twigSearchFilterDoubleQuote : "";
@@ -275,6 +241,7 @@ class SettingsController extends Controller
 
         $request = Craft::$app->getRequest();
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
+        $apiLogging = $request->getParam('apiLogging');
         $selectedVolume = $request->getParam('uploadVolume');
         $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
         $twigSearchFilterDoubleQuote = $request->getParam('twigSearchFilterDoubleQuote');
@@ -283,8 +250,18 @@ class SettingsController extends Controller
         try {
 
             $pluginService = Craft::$app->getPlugins();
-            $plugin  = $pluginService->getPlugin('translations');
-            if (!$pluginService->savePluginSettings($plugin, ['chkDuplicateEntries' => $duplicateEntries, 'uploadVolume' => $selectedVolume, 'twigSearchFilterSingleQuote' => $twigSearchFilterSingleQuote, 'twigSearchFilterDoubleQuote' => $twigSearchFilterDoubleQuote, 'targetStringPosition' => $targetStringPosition])) {
+            $plugin  = $pluginService->getPlugin(Constants::PLUGIN_HANDLE);
+
+            $settings = [
+                'chkDuplicateEntries'           => $duplicateEntries,
+                'apiLogging'		            => $apiLogging,
+                'uploadVolume'                  => $selectedVolume,
+                'twigSearchFilterSingleQuote'   => $twigSearchFilterSingleQuote,
+                'twigSearchFilterDoubleQuote'   => $twigSearchFilterDoubleQuote,
+                'targetStringPosition'          => $targetStringPosition
+            ];
+
+            if (!$pluginService->savePluginSettings($plugin, $settings)) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
             } else {
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Setting saved.'));

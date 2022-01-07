@@ -10,26 +10,22 @@
 
 namespace acclaro\translations\services\job;
 
-use Craft;
-use craft\elements\Entry;
 use craft\queue\BaseJob;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 
 class CreateDrafts extends BaseJob
 {
 
-    public $mySetting;
     public $orderId;
     public $wordCounts;
-    public $defaultCreator;
     public $publish;
-    public $elementIds;
     public $fileIds;
 
     public function execute($queue)
     {
         Translations::$plugin->draftRepository->createOrderDrafts(
-            $this->orderId, $this->wordCounts, $queue, $this->publish, $this->elementIds, $this->fileIds
+            $this->orderId, $this->wordCounts, $this->publish, $this->fileIds, $queue
         );
     }
 
@@ -39,7 +35,7 @@ class CreateDrafts extends BaseJob
 
     protected function defaultDescription()
     {
-        return $this->publish ? 'Publishing translation drafts' : 'Creating translation drafts';
+        return $this->publish ? Constants::JOB_APPLYING_DRAFT : Constants::JOB_CREATING_DRAFT;
     }
 
 }
