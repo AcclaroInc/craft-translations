@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.1.0 - 2022-01-07
+
+### Added
+- Ability to track source content changes ([AcclaroInc/#359](https://github.com/AcclaroInc/pm-craft-translations/issues/359))
+- Fetch ISO `$aliases` dynamically via GraphQL endpoint ([AcclaroInc/#40](https://github.com/AcclaroInc/pm-craft-translations/issues/40))
+- Compatibility with Guzzle 7 (#281)
+- Target sites meta to order sidebar ([AcclaroInc/#416](https://github.com/AcclaroInc/pm-craft-translations/issues/416))
+
+### Updated
+- Acclaro API to `v2.0` ([AcclaroInc/#400](https://github.com/AcclaroInc/pm-craft-translations/issues/400))
+- Desktop & mobile UX for "Review changes" action ([AcclaroInc/#415](https://github.com/AcclaroInc/pm-craft-translations/issues/415))
+- Refactor entries version mapping ([AcclaroInc/#427](https://github.com/AcclaroInc/pm-craft-translations/issues/427))
+
+### Fixed
+- Site "enabled" issue with custom propagation settings (#260)
+- Misc. bugs ([AcclaroInc/#423](https://github.com/AcclaroInc/pm-craft-translations/issues/423)), ([AcclaroInc/#419](https://github.com/AcclaroInc/pm-craft-translations/issues/419)), ([AcclaroInc/#414](https://github.com/AcclaroInc/pm-craft-translations/issues/414)), ([AcclaroInc/#425](https://github.com/AcclaroInc/pm-craft-translations/issues/425)), ([AcclaroInc/#426](https://github.com/AcclaroInc/pm-craft-translations/issues/426)), ([AcclaroInc/#430](https://github.com/AcclaroInc/pm-craft-translations/issues/430)), ([AcclaroInc/#366](https://github.com/AcclaroInc/pm-craft-translations/issues/366))
+
+### Chore
+- Code refactoring and cleanup ([AcclaroInc/#399](https://github.com/AcclaroInc/pm-craft-translations/issues/399))
+
 ## 2.0.5 - 2021-11-16
 
 ### Fixed
