@@ -1,0 +1,183 @@
+{% import '_includes/forms' as forms %}
+
+<div id="settings" class="meta">
+	<div class="field">
+		<div class="heading">
+			<label>Order ID</label>
+		</div>
+
+		<div class="input ltr">
+			{% if not isDefaultTranslator and not order.isPending %}
+				{% if order.serviceOrderId %}
+					{% if isCancelable %}
+						<table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
+					{% endif %}
+					<a class="right pt-5 mr--10" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
+				{% else %}
+					<label class="right">{{ 'N/A' }} </label>
+				{% endif %}
+			{% else %}
+				<label class="right">{{ order.id ? "##{order.id}" : 'N/A' }} </label>
+			{% endif %}
+
+		</div>
+	</div>
+	<div class="field">
+		<div class="heading">
+			<label>Translator</label>
+		</div>
+		<div class="input ltr">
+			<div class="float-right">
+			{% if orderId %}
+				<a class="right" href="{{ url('translations/translators/detail/'~order.translatorId) }}"
+				> {{ translatorOptions[order.translatorId] }} </a>
+			{% else %}
+				<label class="right"> {{ "N/A" }} </label>
+			{% endif %}
+			</div>
+		</div>
+	</div>
+	<div class="field">
+		<div class="heading">
+			<label>Source Site</label>
+		</div>
+		<div class="input ltr">
+			<label class='float-right'>
+				<span {% if siteObjects[order.sourceSite].enabled %} class="status live" {% else %} class="status" {% endif %} style="margin-right: 2px;"></span>
+				{{siteObjects[order.sourceSite].name}} ({{ siteObjects[order.sourceSite].language }})
+			</label>
+		</div>
+	</div>
+	{% if orderId %}
+		<div class="field">
+			<div class="heading">
+				<label>Target Site(s)</label>
+			</div>
+			<div class="input ltr">
+				<ul>
+					<label class="float-right">
+					{% for site in order.targetSitesArray %}
+						{% if siteObjects[site] is defined %}
+							{% set target = siteObjects[site] %}
+							<li>
+								<span {% if target.enabled %} class="status live" {% else %} class="status" {% endif %} style="margin-right: 2px;"></span>
+								{{ target.name }} ({{ target.language }})
+							</li>
+						{% endif %}
+					{% endfor %}
+					</label>
+					</ul>
+			</div>
+		</div>
+	{% endif %}
+	{% if author %}
+		<div class="data field">
+			<h5 class="heading">{{ 'Author'|t('app') }}</h5>
+			<div class="value input ltr" style="justify-content:flex-end" id="uploader-element">
+				{% include '_elements/element' with {
+					element: author,
+				} %}
+			</div>
+			{% js %}
+			new Craft.ElementThumbLoader().load($('#uploader-element'));
+			{% endjs %}
+		</div>
+	{% endif %}
+	<div class="field">
+		<div class="heading">
+			<label>Submitted</label>
+		</div>
+		<div class="input ltr">
+			<div class="float-right">
+				<label>{{ order.dateOrdered ? order.dateOrdered|date('n/j/Y') : 'N/A' }}</label>
+				<label class="pl-10">{{ order.dateOrdered ? order.dateOrdered|date('H:i A') : '' }}</label>
+			</div>
+		</div>
+	</div>
+	<div class="field">
+		<div class="heading">
+			<label>Due Date</label>
+		</div>
+		<div class="input ltr">
+			<div class="float-right">
+				<label> {{ order.requestedDueDate ? order.requestedDueDate|date('n/j/Y') : 'N/A' }} </label>
+			</div>
+		</div>
+	</div>
+	<div class="field">
+		<div class="heading">
+			<label>Est. word count</label>
+		</div>
+		<div class="input ltr">
+			<label class="float-right" id="wordCount"> {{ orderWordCount ?? 0 }} </label>
+		</div>
+	</div>
+
+	{# Export/Import And Sync Buttons #}
+	<div class="field" style="justify-content: space-between;">
+		<div class="heading">
+			<label id="source-files">Source files</label>
+			<form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
+				{{ csrfInput() }}
+				{{ forms.hidden({
+						name: 'action',
+						value: 'translations/files/create-export-zip',
+					}) }}
+
+				{{ forms.hidden({
+					name: 'orderId',
+					value: order.id
+				}) }}
+			</form>
+		</div>
+		<button type="button" id="export-btn" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }}
+			data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
+			<div class="utility-status"></div>
+		</button>
+	</div>
+
+	<div class="field" style="justify-content: space-between;">
+		<div class="heading">
+			<label id="translated-files">Translated files</label>
+			<div class="hud-wrapper hidden">
+				<div id="translations-import-form" class="form meta">
+					{{ forms.hidden({
+						name: 'orderId',
+						id: 'order_id',
+						value: orderId,
+					}) }}
+				</div>
+			</div>
+		</div>
+		<button type="button" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }} data-icon="upload"
+			value="submit" id="import-tool" style="width: 125px;">{{ "Upload"|t('app') }}
+			<div class="utility-status"></div>
+		</button>
+	</div>
+	{% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
+	{% if not isDefaultTranslator %}
+		<div class="field" style="justify-content: space-between;">
+			<div class="heading">
+				<label id="acclaro-sync">My Acclaro</label>
+				<form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
+					{{ csrfInput() }}
+					{{ forms.hidden({
+						name: 'action',
+						value: 'translations/order/sync-order',
+					}) }}
+
+					{{ forms.hidden({
+						name: 'orderId',
+						value: order.id
+					}) }}
+				</form>
+			</div>
+			{% if not isCancelable and (order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PENDING') or
+				order.status == constant('acclaro\\translations\\Constants::ORDER_STATUS_PUBLISHED')) %}
+				<button type="submit" form="sync-order" class="btn icon disabled" data-icon="refresh" disabled value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
+			{% else %}
+				<button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
+			{% endif %}
+		</div>
+	{% endif %}
+</div>

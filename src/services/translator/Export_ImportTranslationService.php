@@ -137,7 +137,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
                 $draft->siteId = $targetSite;
-                
+
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
 
                 $draft->setFieldValues($post);
@@ -151,11 +151,11 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     return false;
                 }
                 break;
-            
+
             // Update GlobalSet Drafts
             case $draft instanceof GlobalSet:
                 $draft->siteId = $targetSite;
-               
+
                 // $element->siteId = $targetSite;
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
 
@@ -174,7 +174,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             case $draft instanceof Asset:
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->siteId = $targetSite;
-               
+
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
 
                 $draft->setFieldValues($post);
@@ -191,7 +191,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             default:
                 break;
         }
-        
+
         return true;
     }
 

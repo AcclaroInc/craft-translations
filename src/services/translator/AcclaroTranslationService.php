@@ -13,7 +13,6 @@ namespace acclaro\translations\services\translator;
 use Craft;
 use craft\elements\Asset;
 use craft\elements\GlobalSet;
-use craft\helpers\ElementHelper;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -85,7 +84,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             return;
         }
 
-        if ($orderResponse->status === Constants::ORDER_STATUS_IN_PROGRESS && $order->isNew()) {
+        if ($orderResponse->status === Constants::ORDER_STATUS_IN_PROGRESS) {
             foreach ($order->getFiles() as $file) {
                 if ($file->isNew()) {
                     $file->status = Constants::FILE_STATUS_IN_PROGRESS;
@@ -129,7 +128,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
             }
             // find the matching file
             foreach ($fileInfoResponse as $fileInfo) {
-
                 if ($fileInfo->fileid == $file->serviceFileId) break;
 
                 $fileInfo = null;
@@ -225,16 +223,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
         $tempPath = Craft::$app->path->getTempPath();
         $acclaroApiClient = $this->acclaroApiClient;
 
-        $orderData = [
-            'acclaroOrderId'    => $order->serviceOrderId,
-            'orderId'      => $order->id
-        ];
-
         if ($file) {
 
             $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
-
-            $file->source = Translations::$plugin->elementToFileConverter->addDataToSourceXML($file->source, $orderData);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
@@ -271,38 +262,12 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
             );
 
-            $acclaroApiClient->addReviewUrl(
-                $order->serviceOrderId,
-                $file->serviceFileId,
-                $file->previewUrl
-            );
-
             Translations::$plugin->fileRepository->saveFile($file);
 
             fclose($stream);
 
             unlink($path);
         }
-    }
-
-    /**
-     * Update Order details on Acclaro
-     *
-     * @return void
-     */
-    public function editOrder($order, $data)
-    {
-        $res = $this->acclaroApiClient->editOrder(
-            $order->serviceOrderId,
-            $data['title'] ?? $order->title,
-            $data['comment'] ?? null,
-            $data['requestedDueDate'] ?? null
-        );
-
-        if (empty($res)) {
-            throw new \Exception('Error updating order', 1);
-        }
-
     }
 
     /**
