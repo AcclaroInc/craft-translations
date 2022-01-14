@@ -13,6 +13,7 @@ namespace acclaro\translations\services\translator;
 use Craft;
 use craft\elements\Asset;
 use craft\elements\GlobalSet;
+use craft\helpers\ElementHelper;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -96,8 +97,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
         $orderStatus = Translations::$plugin->orderRepository->getNewStatus($order);
 
         if ($order->status !== $orderStatus) {
+			$order->status = $orderStatus;
             $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $orderStatus)
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''), $order->getStatusLabel())
             );
         }
 
