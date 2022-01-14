@@ -57,8 +57,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
     {
         $newStatus = Translations::$plugin->orderRepository->getNewStatus($order);
         if ($order->status !== $newStatus) {
+			$order->status = $newStatus;
             $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to %s'), $newStatus)
+                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''), $order->getStatusLabel())
             );
 
         }
@@ -120,7 +121,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                             $errorMessage .= implode('; ', $r);
                         }
                         $order->logActivity(
-                            Translations::$plugin->translator->translate('app', 'error saving drafts content. Error: '.$errorMessage)
+                            Translations::$plugin->translator->translate('app', 'Error saving drafts content. Error: '.$errorMessage)
                         );
                     } else {
                         $order->logActivity(

@@ -211,10 +211,14 @@ class DraftRepository
             }
         }
 
-        $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
-
         if ($isNewDraft)
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
+			$order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
+
+		$newStatus = Translations::$plugin->orderRepository->getNewStatus($order);
+		if ($order->status != $newStatus) {
+			$order->status = $newStatus;
+			$order->logActivity(sprintf('Order status changed to \'%s\'', $order->getStatusLabel()));
+		}
 
         Translations::$plugin->orderRepository->saveOrder($order);
     }

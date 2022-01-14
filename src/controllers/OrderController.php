@@ -386,11 +386,11 @@ class OrderController extends Controller
             // This is for draft converting to order.
             $order = $this->service->getOrderById($orderId);
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order created'));
         } else {
             $order = $this->service->makeNewOrder($sourceSite);
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order created'));
         }
 
         $job = '';
@@ -597,7 +597,7 @@ class OrderController extends Controller
                 }
 
                 $order->logActivity(sprintf(
-                    Translations::$plugin->translator->translate('app', 'Order Submitted to %s'),
+                    Translations::$plugin->translator->translate('app', 'Order submitted to %s'),
                     $order->translator->getName()
                 ));
             }
@@ -1430,7 +1430,7 @@ class OrderController extends Controller
                     if ($isDefaultTranslator && !$order->isModified()) {
                         $order->status = Constants::ORDER_STATUS_MODIFIED;
                         $order->logActivity(sprintf(
-                            Translations::$plugin->translator->translate('app', 'Order status changed to %s'),
+                            Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''),
                             $order->getStatusLabel()
                         ));
                     }
@@ -1448,7 +1448,7 @@ class OrderController extends Controller
                 $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
 
                 $order->logActivity(sprintf(
-                    Translations::$plugin->translator->translate('app', 'Order status changed to %s'),
+                    Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''),
                     $order->getStatusLabel()
                 ));
 
@@ -1468,7 +1468,7 @@ class OrderController extends Controller
             Craft::$app->getSession()->setNotice('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
-			Craft::debug($e, 'bhu123');
+
             return $this->asJson(['success' => false, 'message' => 'Error updating source. Error: ' . $e->getMessage()]);
         }
 
