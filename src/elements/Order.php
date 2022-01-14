@@ -534,6 +534,11 @@ class Order extends Element
         return $owner;
     }
 
+	public function getTags()
+	{
+        return Translations::$plugin->tagRepository->getOrderTags($this);
+	}
+
     public function getTargetSitesArray()
     {
         return $this->targetSites ? json_decode($this->targetSites, true) : array();

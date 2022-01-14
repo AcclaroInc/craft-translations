@@ -156,14 +156,6 @@ class OrderController extends Controller
 				$order->targetSites = json_encode($orderTargetSites);
 			}
 
-			if (! empty(json_decode($order->tags, true))) {
-				$variables['tags'] = [];
-
-				foreach (json_decode($order->tags, true) as $tagId) {
-					$variables['tags'][] = Craft::$app->getTags()->getTagById($tagId);
-				}
-			}
-
 			if ($orderTags= Craft::$app->getRequest()->getQueryParam('tags') ?? Craft::$app->getRequest()->getParam('tags')) {
 				if (! is_array($orderTags)) {
 					$orderTags = explode(',', $orderTags);
