@@ -248,8 +248,8 @@
 							<div class="input ltr">
 								<div id="fields-tags" class="elementselect tagselect">
 									<div id="elementTags" class="elements">
-										{% if tags is defined %}
-											{% for tag in tags %}
+										{% if not order.getTags is empty %}
+											{% for tag in order.getTags %}
 												<div class="element small removable" data-editable="1" data-id="{{ tag.id }}" data-label="{{ tag.title }}">
 													<input type="hidden" name="tags[]" value="{{ tag.id }}"/>
 													<a class="delete icon custom-tag" data-label="{{ tag.title }}" data-id="{{ tag.id }}" title="Remove"></a>
