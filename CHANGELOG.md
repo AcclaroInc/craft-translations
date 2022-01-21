@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## Unreleased
   
+## 2.1.2 - 2022-01-21
+
+### Updated
+- Order activity log text format ([AcclaroInc/#371](https://github.com/AcclaroInc/pm-craft-translations/issues/371))
+- Activity log status format ([craft-translations/#290](https://github.com/AcclaroInc/craft-translations/pull/290))
+
+### Fixed
+- ISO alias mapping bug ([craft-translations/#289](https://github.com/AcclaroInc/craft-translations/issues/289))
+- Exclude non-localized Element titles ([craft-translations/#294](https://github.com/AcclaroInc/craft-translations/issues/294))
+- Tag label bug ([craft-translations/#292](https://github.com/AcclaroInc/craft-translations/pull/292))
+- Source site selection bug ([craft-translations/#297](https://github.com/AcclaroInc/craft-translations/pull/297))
+- Preview URL generation bug ([craft-translations/#298](https://github.com/AcclaroInc/craft-translations/pull/298))
+
 ## 2.1.1 - 2022-01-07
 
 ### Fixed
