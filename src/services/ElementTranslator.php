@@ -25,10 +25,9 @@ class ElementTranslator
     public function toTranslationSource(Element $element, $sourceSite=null)
     {
         $source = array();
-        
-        // if ($element instanceof Element || $element instanceof Tag || $element instanceof Category) {
+
         if ($element instanceof Element) {
-            if ($element->title) {
+            if ($element->title && $element->getIsTitleTranslatable()) {
                 $source['title'] = $element->title;
             }
             if ($element->slug) {
@@ -43,7 +42,7 @@ class ElementTranslator
 
             $source = array_merge($source, $fieldSource);
         }
-        
+
         return $source;
     }
 
@@ -72,14 +71,14 @@ class ElementTranslator
 
                     while ($parts) {
                         $key = array_shift($parts);
-    
+
                         if (!isset($container[$key])) {
                             $container[$key] = array();
                         }
-    
+
                         $container =& $container[$key];
                     }
-    
+
                     $container = $value;
                 } else {
                     $targetData[$name] = $value;
@@ -100,7 +99,7 @@ class ElementTranslator
 
         $contents = $dom->getElementsByTagName('content');
 
-        
+
         foreach ($contents as $content) {
             $name = (string) $content->getAttribute('resname');
             $value = (string) $content->nodeValue;
@@ -109,7 +108,7 @@ class ElementTranslator
                 $targetData[$name] = $value;
                 continue;
             }
-            
+
             if (strpos($name, '.') !== false) {
                 $parts = explode('.', $name);
                 $container =& $targetData;
@@ -140,7 +139,7 @@ class ElementTranslator
         foreach($element->getFieldLayout()->getFields() as $key => $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
             $fieldHandle = $field->handle;
-            
+
             $fieldType = $field;
 
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
