@@ -123,7 +123,7 @@ class FilesController extends Controller
 
             if ($order->status !== ($newStatus = Translations::$plugin->orderRepository->getNewStatus($order))) {
                 $order->status = $newStatus;
-                $order->logActivity(sprintf('Order status changed to %s', $order->getStatusLabel()));
+                $order->logActivity(sprintf('Order status changed to \'%s\'', $order->getStatusLabel()));
             }
         }
 

@@ -7,7 +7,7 @@ use acclaro\translations\Constants;
 use acclaro\translations\services\api\CraftApiClient;
 
 class SiteRepository
-{   
+{
     protected $supportedSites = array();
     protected $isoMapping;
 
@@ -27,9 +27,9 @@ class SiteRepository
         }
 
         $language = $site->language;
-        
+
         $language = $this->normalizeLanguage($site);
-        
+
         return $language;
     }
 
@@ -53,8 +53,6 @@ class SiteRepository
 
     public function normalizeLanguage($language)
     {
-        $language = mb_strtolower($language);
-
         $language = str_replace('_', '-', $language);
 
         if (! $this->isoMapping) {
@@ -90,7 +88,7 @@ class SiteRepository
     {
         $allSitesHandle = [];
         $allSites = Craft::$app->getSites()->getAllSites();
-        
+
         foreach($allSites as $site)
         {
             $allSitesHandle[$site->id] = $site->handle;

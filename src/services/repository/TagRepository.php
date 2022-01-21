@@ -12,6 +12,7 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\elements\Tag;
+use acclaro\translations\elements\Order;
 
 class TagRepository
 {
@@ -31,4 +32,22 @@ class TagRepository
             Craft::error( '['. __METHOD__ .'] Couldn’t save the tag "'.$tag->title.'"', 'translations' );
         }
     }
+
+	/**
+	 * Get Tags Object for an order
+	 *
+	 * @param Order $order
+	 * @return array
+	 */
+	public function getOrderTags(Order $order)
+	{
+		$orderTags = [];
+		if ($order->tags) {
+			foreach (json_decode($order->tags, true) as $tagId) {
+				$orderTags[$tagId] = Craft::$app->getTags()->getTagById($tagId);
+			}
+		}
+
+		return $orderTags;
+	}
 }

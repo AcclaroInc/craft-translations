@@ -120,10 +120,9 @@ class OrderController extends Controller
             }
         }
 
-		$SourceSite = Craft::$app->getRequest()->getBodyParam('sourceSite');
+        $sourceSite = Craft::$app->getRequest()->getQueryParam('sourceSite') ?? Craft::$app->getRequest()->getBodyParam('sourceSite');
 
-        if ($SourceSite && !Translations::$plugin->siteRepository->isSiteSupported($SourceSite)
-			) {
+        if ($sourceSite && !Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
 				Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Source site is not supported'));
 				return;
 		}
@@ -138,7 +137,7 @@ class OrderController extends Controller
                 throw new HttpException(404);
             }
         } else {
-            $order = $this->service->makeNewOrder($SourceSite);
+            $order = $this->service->makeNewOrder($sourceSite);
 
 			$orderElements= Craft::$app->getRequest()->getQueryParam('elements') ?? Craft::$app->getRequest()->getParam('elements');
 			$order->elementIds = json_encode($orderElements ?: []);
@@ -154,14 +153,6 @@ class OrderController extends Controller
 
 			if ($orderTargetSites= Craft::$app->getRequest()->getQueryParam('targetSite')) {
 				$order->targetSites = json_encode($orderTargetSites);
-			}
-
-			if (! empty(json_decode($order->tags, true))) {
-				$variables['tags'] = [];
-
-				foreach (json_decode($order->tags, true) as $tagId) {
-					$variables['tags'][] = Craft::$app->getTags()->getTagById($tagId);
-				}
 			}
 
 			if ($orderTags= Craft::$app->getRequest()->getQueryParam('tags') ?? Craft::$app->getRequest()->getParam('tags')) {
@@ -386,11 +377,11 @@ class OrderController extends Controller
             // This is for draft converting to order.
             $order = $this->service->getOrderById($orderId);
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order created'));
         } else {
             $order = $this->service->makeNewOrder($sourceSite);
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order Created'));
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order created'));
         }
 
         $job = '';
@@ -597,7 +588,7 @@ class OrderController extends Controller
                 }
 
                 $order->logActivity(sprintf(
-                    Translations::$plugin->translator->translate('app', 'Order Submitted to %s'),
+                    Translations::$plugin->translator->translate('app', 'Order submitted to %s'),
                     $order->translator->getName()
                 ));
             }
@@ -1430,7 +1421,7 @@ class OrderController extends Controller
                     if ($isDefaultTranslator && !$order->isModified()) {
                         $order->status = Constants::ORDER_STATUS_MODIFIED;
                         $order->logActivity(sprintf(
-                            Translations::$plugin->translator->translate('app', 'Order status changed to %s'),
+                            Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''),
                             $order->getStatusLabel()
                         ));
                     }
@@ -1448,7 +1439,7 @@ class OrderController extends Controller
                 $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
 
                 $order->logActivity(sprintf(
-                    Translations::$plugin->translator->translate('app', 'Order status changed to %s'),
+                    Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''),
                     $order->getStatusLabel()
                 ));
 
@@ -1468,7 +1459,7 @@ class OrderController extends Controller
             Craft::$app->getSession()->setNotice('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
-			Craft::debug($e, 'bhu123');
+
             return $this->asJson(['success' => false, 'message' => 'Error updating source. Error: ' . $e->getMessage()]);
         }
 
