@@ -228,7 +228,7 @@ class FileRepository
         $service = new RegeneratePreviewUrls();
         foreach ($order->files as $file) {
 
-            if (! ($file->hasDraft() || $file->isComplete())) continue;
+            if (! $file->isComplete()) continue;
 
             if ($queue) {
                 $service->updateProgress($queue, $currentElement++ / $totalElements);
@@ -239,18 +239,7 @@ class FileRepository
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
 
                 if ($draft) {
-                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
                     $file->previewUrl = $previewUrls[$file->id] ?? $draft->url;
-                    $file->source = Translations::$plugin->elementToFileConverter->convert(
-                        $element,
-                        Constants::FILE_FORMAT_XML,
-                        [
-                            'sourceSite'    => $file->sourceSite,
-                            'targetSite'    => $file->targetSite,
-                            'previewUrl'    => $file->previewUrl,
-                            'orderId'       => $file->orderId,
-                        ]
-                    );
                 }
 
                 Translations::$plugin->fileRepository->saveFile($file);
