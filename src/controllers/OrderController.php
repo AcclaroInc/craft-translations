@@ -120,10 +120,9 @@ class OrderController extends Controller
             }
         }
 
-		$SourceSite = Craft::$app->getRequest()->getBodyParam('sourceSite');
+        $sourceSite = Craft::$app->getRequest()->getQueryParam('sourceSite') ?? Craft::$app->getRequest()->getBodyParam('sourceSite');
 
-        if ($SourceSite && !Translations::$plugin->siteRepository->isSiteSupported($SourceSite)
-			) {
+        if ($sourceSite && !Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
 				Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Source site is not supported'));
 				return;
 		}
@@ -138,7 +137,7 @@ class OrderController extends Controller
                 throw new HttpException(404);
             }
         } else {
-            $order = $this->service->makeNewOrder($SourceSite);
+            $order = $this->service->makeNewOrder($sourceSite);
 
 			$orderElements= Craft::$app->getRequest()->getQueryParam('elements') ?? Craft::$app->getRequest()->getParam('elements');
 			$order->elementIds = json_encode($orderElements ?: []);
