@@ -212,16 +212,6 @@ class Order extends Element
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
             [
-                'key' => 'modified',
-                'label' => Translations::$plugin->translator->translate('app', 'Modified'),
-                'criteria' => [
-                    'status' => [
-                        Constants::ORDER_STATUS_MODIFIED
-                    ]
-                ],
-                'defaultSort' => ['dateOrdered', 'desc']
-            ],
-            [
                 'key' => 'in-progress',
                 'label' => Translations::$plugin->translator->translate('app', 'In progress'),
                 'criteria' => [
