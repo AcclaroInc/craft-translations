@@ -630,6 +630,24 @@ class Order extends Element
         return $this->statusColour;
     }
 
+	public function hasDefaultTranslator()
+	{
+		$response = false;
+
+		if ($translator = $this->getTranslator()) {
+			$response = $translator->service === Constants::TRANSLATOR_DEFAULT;
+		}
+
+		return $response;
+	}
+
+	public function isExportImportAllowed()
+	{
+		if ($this->isPublished() && !$this->hasDefaultTranslator()) return false;
+
+		return !$this->isPending() && !$this->isFailed();
+	}
+
     public function isNew()
     {
         return $this->status === Constants::ORDER_STATUS_NEW;

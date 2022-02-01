@@ -58,7 +58,6 @@ class FilesController extends Controller
         $errors = array();
 
         $orderAttributes = $order->getAttributes();
-        $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
 
         //Filename Zip Folder
         $zipName = $this->getZipName($orderAttributes);
@@ -115,7 +114,7 @@ class FilesController extends Controller
                     Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
                 }
 
-                if ($file->isNew() || $file->isModified()) {
+                if ($file->isNew() || $file->isModified() || $file->isPublished()) {
                     $file->status = Constants::FILE_STATUS_IN_PROGRESS;
                     Translations::$plugin->fileRepository->saveFile($file);
                 }

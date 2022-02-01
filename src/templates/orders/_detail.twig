@@ -5,7 +5,7 @@
 
 {# For Export/Import and regenrate preview url's buttons #}
 {% set exportImportStatus = '' %}
-{% if order.isPending or order.isFailed or order.isPublished %}
+{% if not order.isExportImportAllowed %}
     {% set exportImportStatus = 'disabled' %}
 {% endif %}
 
