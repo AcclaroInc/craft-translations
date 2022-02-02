@@ -25,24 +25,25 @@ use craft\fields\Checkboxes;
 use craft\fields\MultiSelect;
 use craft\fields\RadioButtons;
 
-use newism\fields\fields\Address;
+use ether\seo\fields\SeoField;
+use benf\neo\Field as NeoField;
 use newism\fields\fields\Email;
 use newism\fields\fields\Embed;
 use newism\fields\fields\Gender;
-use newism\fields\fields\PersonName;
-use newism\fields\fields\Telephone;
+use verbb\vizy\fields\VizyField;
 
-use benf\neo\Field as NeoField;
-use ether\seo\fields\SeoField;
+use newism\fields\fields\Address;
+use newism\fields\fields\Telephone;
+use newism\fields\fields\PersonName;
 use typedlinkfield\fields\LinkField;
-use lenz\linkfield\fields\LinkField as TypedLinkField;
+use acclaro\translations\Translations;
 use craft\redactor\Field as RedactorField;
 use fruitstudios\linkit\fields\LinkitField;
 use luwes\codemirror\fields\CodeMirrorField;
-use verbb\supertable\fields\SuperTableField;
 use nystudio107\seomatic\fields\SeoSettings;
 
-use acclaro\translations\Translations;
+use verbb\supertable\fields\SuperTableField;
+use lenz\linkfield\fields\LinkField as TypedLinkField;
 
 class Factory
 {
@@ -74,6 +75,7 @@ class Factory
         Telephone::class        => NsmFieldsTranslator::class,
         Gender::class           => NsmFieldsTranslator::class,
         Embed::class            => NsmFieldsTranslator::class,
+        VizyField::class  		=> VizyFieldTranslator::class
     );
 
     public function makeTranslator(Field $field)
