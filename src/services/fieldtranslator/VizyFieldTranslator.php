@@ -31,7 +31,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 			foreach ($blocks as $block) {
 				foreach ($block->getFieldLayout()->getFields() as $innerField) {
 					if ($this->isFieldTranslatable($innerField)) {
-						$key = sprintf('%s.%s', $field->handle, $innerField->handle);
+						$key = sprintf('%s.%s.%s', $field->handle, $block->getBlockType()->id, $innerField->handle);
 						$value = $block->getFieldvalue($innerField->handle);
 
 						if (is_string($value)) {
@@ -60,26 +60,30 @@ class VizyFieldTranslator extends GenericFieldTranslator
      */
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
     {
-        $fieldHandle = $field->handle;
+		$postArray = [];
 
-        $post= $this->getAttributeArray($element, $field);
+		$blocks = $element->getFieldValue($field->handle)->all();
 
-		foreach ($post[$fieldHandle] as $index => $block) {
-			foreach ($block['attrs']['values']['content']['fields'] as $key => $value) {
-				$translatedValue = $fieldData[$key] ?? $value;
+		foreach ($blocks as $index => $block) {
+			$blockArray = $block['rawNode'];
 
-				if (is_array($translatedValue)) {
-					$this->fieldToPostArrayTranslationTarget($block, $key, $value, $translatedValue);
-					continue;
+			foreach ($block->getFieldLayout()->getFields() as $innerField) {
+				if (isset($fieldData[$block->getBlockType()->id][$innerField->handle])) {
+					$value = $fieldData[$block->getBlockType()->id][$innerField->handle];
+
+					if (! is_string($value)) {
+						$innerBlock = $block['attrs']['values']['content']['fields'][$innerField->handle];
+
+						$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($innerField->handle), $innerBlock, $value);
+					}
+
+					$blockArray['attrs']['values']['content']['fields'][$innerField->handle] = $value;
 				}
-
-				$block['attrs']['values']['content']['fields'][$key] = $translatedValue;
 			}
-
-			$post[$fieldHandle][$index] = $block;
+			$postArray[$field->handle][$index] = $blockArray;
 		}
 
-		return $post;
+		return $postArray;
 	}
 
 	/**
@@ -95,7 +99,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 
 		foreach ($nestedField->type->getFieldLayout()->getFields() as $field) {
 			if ($this->isFieldTranslatable($field)) {
-				$newKey = sprintf('%s.%s.%s%s.%s', $key, $nestedField->type->handle, "new", $index, $field->handle);
+				$newKey = sprintf('%s.new%s.%s', $key, $index, $field->handle);
 
 				$value = $nestedField->getFieldvalue($field->handle);
 
@@ -118,39 +122,44 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		return $source;
 	}
 
-	private function fieldToPostArrayTranslationTarget(&$block, $key, $fields, $targetData)
+	/**
+	 * Converts Target data to post array
+	 *
+	 * @param mixed $nestedFields
+	 * @param array $attributes
+	 * @param array $targetData
+	 * @return array
+	 */
+	private function fieldToPostArrayFromTranslationTarget($nestedFields, $attributes, $targetData)
 	{
-		foreach ($fields as $nestedKey => $value) {
-			foreach ($value['fields'] as $handle => $handleValue) {
-				$blockId = $block['attrs']['values']['content']['fields'][$key][$nestedKey]['type'];
-				if ($key == "superTable") {
-					$blockId = sprintf("%s_%s", $key, --$blockId);
+		$postArray = $attributes;
+
+		foreach ($nestedFields->all() as $index => $block) {
+			$index = "new" . $index+1;
+
+			foreach ($block->getFieldLayout()->getFields() as $field) {
+				if (isset($targetData[$index][$field->handle])) {
+					$value = $targetData[$index][$field->handle];
+
+					if (! is_string($value)) {
+						$innerBlock = $attributes[$index]['fields'][$field->handle];
+						$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($field->handle), $innerBlock, $value);
+					}
+
+					$postArray[$index]['fields'][$field->handle] = $value;
 				}
-				$block['attrs']['values']['content']['fields'][$key][$nestedKey]['fields'][$handle] = $targetData[$blockId][$nestedKey][$handle] ?? $handleValue;
 			}
 		}
+
+		return $postArray;
 	}
 
-	private function getAttributeArray($element, $field)
-	{
-		$fieldHandle = $field->handle;
-
-        $blocks = $element->getFieldValue($fieldHandle)->all();
-
-		$attributes = array(
-			$fieldHandle => array()
-		);
-
-		foreach ($blocks as $block) {
-			$attributes[$fieldHandle][] = [
-				'type' => $block['rawNode']['type'],
-				'attrs' => $block['attrs']
-			];
-		}
-
-		return $attributes;
-	}
-
+	/**
+	 * Checks if a field can be translated
+	 *
+	 * @param [type] $field
+	 * @return boolean
+	 */
 	private function isFieldTranslatable($field)
 	{
 		return $field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES);
