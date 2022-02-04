@@ -44,6 +44,13 @@ class VizyFieldTranslator extends GenericFieldTranslator
 							continue;
 						}
 
+						if ($value instanceof \newism\fields\models\PersonNameModel) {
+							foreach ($value as $handle => $data) {
+								$source[$key.".".$handle] = $data;
+							}
+							continue;
+						}
+
 						foreach ($value->all() as $index => $nestedField) {
 							$source = array_merge($source, $this->fieldToTranslationSource($nestedField, $key, ++$index));
 						}
@@ -113,6 +120,13 @@ class VizyFieldTranslator extends GenericFieldTranslator
 					continue;
 				}
 
+				if ($value instanceof \newism\fields\models\PersonNameModel) {
+					foreach ($value as $handle => $data) {
+						$source[$newKey.".".$handle] = $data;
+					}
+					continue;
+				}
+
 				foreach ($value->all() as $nestedIndex => $innerField) {
 					$source = array_merge($source, $this->fieldToTranslationSource($innerField, $newKey, ++$nestedIndex));
 				}
@@ -133,6 +147,13 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	private function fieldToPostArrayFromTranslationTarget($nestedFields, $attributes, $targetData)
 	{
 		$postArray = $attributes;
+
+		if ($nestedFields instanceof \newism\fields\models\PersonNameModel) {
+			foreach ($nestedFields as $handle => $field) {
+				$postArray[$handle] = $targetData[$handle];
+			}
+			return $postArray;
+		}
 
 		foreach ($nestedFields->all() as $index => $block) {
 			$index = "new" . $index+1;
