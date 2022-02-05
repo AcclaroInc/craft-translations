@@ -15,6 +15,7 @@ use craft\base\Field;
 use craft\base\Element;
 use acclaro\translations\Constants;
 use acclaro\translations\services\ElementTranslator;
+use acclaro\translations\Translations;
 
 class VizyFieldTranslator extends GenericFieldTranslator
 {
@@ -34,30 +35,25 @@ class VizyFieldTranslator extends GenericFieldTranslator
 						$key = sprintf('%s.%s.%s', $field->handle, $block->getBlockType()->id, $innerField->handle);
 						$value = $block->getFieldvalue($innerField->handle);
 
-						if (is_string($value)) {
-							$source[$key] = $value;
-							continue;
-						}
-
-						if ($value instanceof craft\redactor\FieldData) {
-							$source[$key] = $value->getRawContent();
-							continue;
-						}
-
-						if ($value instanceof \newism\fields\models\PersonNameModel) {
-							foreach ($value as $handle => $data) {
-								$source[$key.".".$handle] = $data;
-							}
-							continue;
-						}
-
-						foreach ($value->all() as $index => $nestedField) {
-							$source = array_merge($source, $this->fieldToTranslationSource($nestedField, $key, ++$index));
+						switch ($value) {
+							case !is_object($value):
+								$source[$key] = $value ?? "";
+								break;
+							case $value instanceof craft\redactor\FieldData:
+								$source[$key] = $value->getRawContent();
+								break;
+							case $value instanceof \newism\fields\models\PersonNameModel:
+								foreach ($value as $handle => $data) {
+									$source[$key . "." . $handle] = $data;
+								}
+								break;
+							default:
+								$source = array_merge($source, $this->fieldToTranslationSource($value, $key));
 						}
 					}
 				}
 			}
-        }
+		}
 
         return $source;
     }
@@ -81,7 +77,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 					if (! is_string($value)) {
 						$innerBlock = $block['attrs']['values']['content']['fields'][$innerField->handle];
 
-						$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($innerField->handle), $innerBlock, $value);
+						$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($innerField->handle), $innerBlock, $value, $targetSite);
 					}
 
 					$blockArray['attrs']['values']['content']['fields'][$innerField->handle] = $value;
@@ -100,35 +96,37 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	 * @param string $key
 	 * @return array
 	 */
-	private function fieldToTranslationSource($nestedField, $key, $index)
+	private function fieldToTranslationSource($value, $key)
 	{
 		$source = [];
 
-		foreach ($nestedField->type->getFieldLayout()->getFields() as $field) {
-			if ($this->isFieldTranslatable($field)) {
-				$newKey = sprintf('%s.new%s.%s', $key, $index, $field->handle);
+		foreach ($value->all() as $index => $nestedField) {
+			$index += 1;
+			foreach ($nestedField->getFieldLayout()->getFields() as $field) {
+				if ($this->isFieldTranslatable($field)) {
+					$newKey = sprintf('%s.new%s.%s', $key, $index, $field->handle);
 
-				$value = $nestedField->getFieldvalue($field->handle);
+					$value = $nestedField->getFieldvalue($field->handle);
 
-				if (is_string($value)) {
-					$source[$newKey] = $value;
-					continue;
-				}
-
-				if ($value instanceof craft\redactor\FieldData) {
-					$source[$newKey] = $value->getRawContent();
-					continue;
-				}
-
-				if ($value instanceof \newism\fields\models\PersonNameModel) {
-					foreach ($value as $handle => $data) {
-						$source[$newKey.".".$handle] = $data;
+					switch ($value) {
+						case (!is_object($value)):
+							if ($nestedField instanceof craft\elements\Asset) {
+								$newKey = sprintf('%s.%s.%s', $key, $nestedField->id, $field->handle);
+								$source[sprintf('%s.%s.%s', $key, $nestedField->id, 'title')] = $nestedField->title;
+							}
+							$source[$newKey] = $value ?? "";
+							break;
+						case $value instanceof craft\redactor\FieldData:
+							$source[$newKey] = $value->getRawContent();
+							break;
+						case $value instanceof \newism\fields\models\PersonNameModel:
+							foreach ($value as $handle => $data) {
+								$source[$newKey . "." . $handle] = $data;
+							}
+							break;
+						default:
+							$source = array_merge($source, $this->fieldToTranslationSource($value, $newKey));
 					}
-					continue;
-				}
-
-				foreach ($value->all() as $nestedIndex => $innerField) {
-					$source = array_merge($source, $this->fieldToTranslationSource($innerField, $newKey, ++$nestedIndex));
 				}
 			}
 		}
@@ -144,13 +142,26 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	 * @param array $targetData
 	 * @return array
 	 */
-	private function fieldToPostArrayFromTranslationTarget($nestedFields, $attributes, $targetData)
+	private function fieldToPostArrayFromTranslationTarget($nestedFields, $attributes, $targetData, $targetSite)
 	{
 		$postArray = $attributes;
 
 		if ($nestedFields instanceof \newism\fields\models\PersonNameModel) {
 			foreach ($nestedFields as $handle => $field) {
 				$postArray[$handle] = $targetData[$handle];
+			}
+			return $postArray;
+		}
+
+		if ($nestedFields instanceof craft\elements\db\AssetQuery) {
+			foreach ($attributes as $assetId) {
+				$asset = Craft::$app->assets->getAssetById($assetId, $targetSite);
+				$asset->siteId = $targetSite;
+
+				foreach ($targetData[$assetId] as $handle => $value) {
+					$asset->$handle = $value;
+				}
+				Translations::$plugin->draftRepository->saveDraft($asset);
 			}
 			return $postArray;
 		}
@@ -164,7 +175,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 
 					if (! is_string($value)) {
 						$innerBlock = $attributes[$index]['fields'][$field->handle];
-						$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($field->handle), $innerBlock, $value);
+						$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($field->handle), $innerBlock, $value, $targetSite);
 					}
 
 					$postArray[$index]['fields'][$field->handle] = $value;
