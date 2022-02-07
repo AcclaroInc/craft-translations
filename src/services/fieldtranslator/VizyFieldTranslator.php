@@ -167,9 +167,9 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		}
 
 		foreach ($nestedFields->all() as $index => $block) {
-			$index = "new" . $index+1;
-
-			foreach ($block->getFieldLayout()->getFields() as $field) {
+            $index++;
+            $index = "new" . $index;
+            foreach ($block->getFieldLayout()->getFields() as $field) {
 				if (isset($targetData[$index][$field->handle])) {
 					$value = $targetData[$index][$field->handle];
 
