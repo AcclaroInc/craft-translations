@@ -29,34 +29,40 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		$blocks = $element->getFieldValue($field->handle)->all();
 
 		if ($blocks) {
-			foreach ($blocks as $block) {
-				foreach ($block->getFieldLayout()->getFields() as $innerField) {
-					if ($this->isFieldTranslatable($innerField)) {
-						$key = sprintf('%s.%s.%s', $field->handle, $block->getBlockType()->id, $innerField->handle);
-						$value = $block->getFieldvalue($innerField->handle);
+			foreach ($blocks as $index => $block) {
+				if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
+					foreach ($block->getFieldLayout()->getFields() as $innerField) {
+						if ($this->isFieldTranslatable($innerField)) {
+							$key = sprintf('%s.%s.%s', $field->handle, $block->getBlockType()->id, $innerField->handle);
+							$value = $block->getFieldvalue($innerField->handle);
 
-						switch ($value) {
-							case !is_object($value):
-								$source[$key] = $value ?? "";
-								break;
-							case $value instanceof craft\redactor\FieldData:
-								$source[$key] = $value->getRawContent();
-								break;
-							case $value instanceof \newism\fields\models\PersonNameModel:
-								foreach ($value as $handle => $data) {
-									$source[$key . "." . $handle] = $data;
-								}
-								break;
-							default:
-								$source = array_merge($source, $this->fieldToTranslationSource($value, $key));
+							switch ($value) {
+								case !is_object($value):
+									$source[$key] = $value ?? "";
+									break;
+								case $value instanceof craft\redactor\FieldData:
+									$source[$key] = $value->getRawContent();
+									break;
+								case $value instanceof \newism\fields\models\PersonNameModel:
+									foreach ($value as $handle => $data) {
+										$source[$key . "." . $handle] = $data;
+									}
+									break;
+								default:
+									$source = array_merge($source, $this->fieldToTranslationSource($value, $key));
+							}
 						}
 					}
+				} else {
+					$key = sprintf('%s.new%s', $field->handle, ++$index);
+					$data = $this->customFieldsToSourceArray($block->serializeValue(), $key);
+					$source = array_merge($source, $data);
 				}
 			}
 		}
 
-        return $source;
-    }
+		return $source;
+	}
 
 	/**
      * {@inheritdoc}
@@ -69,21 +75,26 @@ class VizyFieldTranslator extends GenericFieldTranslator
 
 		foreach ($blocks as $index => $block) {
 			$blockArray = $block['rawNode'];
+			if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
+				foreach ($block->getFieldLayout()->getFields() as $innerField) {
+					if (isset($fieldData[$block->getBlockType()->id][$innerField->handle])) {
+						$value = $fieldData[$block->getBlockType()->id][$innerField->handle];
 
-			foreach ($block->getFieldLayout()->getFields() as $innerField) {
-				if (isset($fieldData[$block->getBlockType()->id][$innerField->handle])) {
-					$value = $fieldData[$block->getBlockType()->id][$innerField->handle];
+						if (!is_string($value)) {
+							$innerBlock = $block['attrs']['values']['content']['fields'][$innerField->handle];
 
-					if (! is_string($value)) {
-						$innerBlock = $block['attrs']['values']['content']['fields'][$innerField->handle];
+							$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($innerField->handle), $innerBlock, $value, $targetSite);
+						}
 
-						$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($innerField->handle), $innerBlock, $value, $targetSite);
+						$blockArray['attrs']['values']['content']['fields'][$innerField->handle] = $value;
 					}
-
-					$blockArray['attrs']['values']['content']['fields'][$innerField->handle] = $value;
 				}
+				$postArray[$field->handle][$index] = $blockArray;
+			} else {
+				$key = sprintf('new%s', $index + 1);
+				$data = $this->customFieldToPostArray($blockArray, $fieldData[$key]);
+				$postArray[$field->handle][$index] = $data;
 			}
-			$postArray[$field->handle][$index] = $blockArray;
 		}
 
 		return $postArray;
@@ -195,5 +206,62 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	private function isFieldTranslatable($field)
 	{
 		return $field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES);
+	}
+
+	/**
+	 * function to parse cistome fields attribute to surce array
+	 *
+	 * @param array $attrs
+	 * @param string $key
+	 * @return array
+	 */
+	private function customFieldsToSourceArray($attrs, $key)
+	{
+		$source = [];
+		$type = $attrs['type'];
+
+		$key = sprintf('%s.%s', $key, $type);
+		switch ($type) {
+			case 'text':
+				$source[$key] = $attrs[$type];
+				break;
+			case 'image':
+				// Image does not have title as of now so skipping this type
+				$source[$key] = $attrs['attrs']['title'] ?? '';
+				break;
+			default:
+				foreach ($attrs['content'] as $value) {
+					$source = array_merge($source, $this->customFieldsToSourceArray($value, $key));
+				}
+		}
+
+		return $source;
+	}
+
+	/**
+	 * converts target data array to post array for custom fields
+	 *
+	 * @param array $attrs
+	 * @param array $fieldData
+	 * @return array
+	 */
+	private function customFieldToPostArray($attrs, $fieldData)
+	{
+		$type = $attrs['type'];
+
+		switch ($type) {
+			case 'text':
+				$attrs[$type] = $fieldData[$type];
+				break;
+			case 'image':
+				$attrs['attrs']['title'] = $fieldData[$type];
+				break;
+			default:
+				foreach ($attrs['content'] as $key => $value) {
+					$attrs['content'][$key] = $this->customFieldToPostArray($value, $fieldData[$type]);
+				}
+		}
+
+		return $attrs;
 	}
 }
