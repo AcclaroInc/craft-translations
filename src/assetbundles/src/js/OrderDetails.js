@@ -648,6 +648,23 @@
                 }
             });
 
+			$('#export-preview-links').on('click', function () {
+				if (hasOrderId) {
+					$data = {
+						'id': $("input[type=hidden][name=id]").val()
+					};
+
+					Craft.postActionRequest('translations/export/export-preview-links', $data, function (response, textStatus) {
+						if (response.success && response.previewFile) {
+							var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
+							$('#regenerate-preview-urls').append($iframe);
+						} else {
+							Craft.cp.displayError(Craft.t('app', 'Unable to download your file.'));
+						}
+					});
+				}
+			});
+
             $(window).on('scroll resize', function(e) {
                 $width = $(window).width();
                 if ($width < 973) {
