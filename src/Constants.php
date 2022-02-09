@@ -160,6 +160,7 @@ class Constants
     const NESTED_FIELD_TYPES = [
         'craft\fields\Matrix',
         'craft\fields\Assets',
+		'verbb\vizy\fields\VizyField',
         'verbb\supertable\fields\SuperTableField',
         'benf\neo\Field'
     ];
@@ -248,6 +249,7 @@ class Constants
         'craft\fields\MultiSelect',
         'craft\fields\RadioButtons',
         'benf\neo\Field',
+		'verbb\vizy\fields\VizyField',
         'typedlinkfield\fields\LinkField',
         'craft\redactor\Field',
         'fruitstudios\linkit\fields\LinkitField',
