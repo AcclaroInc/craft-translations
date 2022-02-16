@@ -54,12 +54,20 @@
 											<a href="{{ file.cpEditUrl }}">
 												{{ file.uiLabel }}
 											</a>
+											{% set sourceUpdated = file.elementId in isSourceChanged %}
+											{% set targetUpdated = file.id in isTargetChanged['files'] %}
 											{% if element.className == constant('acclaro\\translations\\Constants::CLASS_ENTRY') %}
 												<a href="{{ file.previewUrl }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 											{% endif %}
-											{% if file.elementId in isSourceChanged and canUpdateFiles and not file.isPublished %}
+											{% if canUpdateFiles and not file.isPublished and (sourceUpdated or targetUpdated) %}
 												<span class="warning order-warning font-size-15" data-icon="alert">
-													{{ 'Source entry content has been modified since order was created.' }}
+													{% if sourceUpdated %}
+														<li> {{ 'Source entry content has been modified since order was created.' }} </li>
+													{% endif %}
+
+													{% if targetUpdated %}
+														<li> {{ 'Target entry content has been modified since translations were delivered.' }} </li>
+													{% endif %}
 												</span>
 											{% endif %}
 										</td>

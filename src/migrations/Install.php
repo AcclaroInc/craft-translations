@@ -135,6 +135,7 @@ class Install extends Migration
                     'elementIds'        => $this->string(8160)->notNull()->defaultValue(''),
                     'tags'              => $this->string(8160)->notNull()->defaultValue(''),
                     'trackChanges'      => $this->integer()->defaultValue(0),
+					'trackTargetChanges'     => $this->integer()->defaultValue(0),
                     'asynchronousPublishing' => $this->integer()->defaultValue(0),
                     'dateCreated'       => $this->dateTime()->notNull(),
                     'dateUpdated'       => $this->dateTime()->notNull(),

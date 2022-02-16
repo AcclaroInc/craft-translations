@@ -550,6 +550,59 @@ class OrderRepository
             }
         }
 
-        return $originalIds;
-    }
+		return $originalIds;
+	}
+
+	/**
+	 * Checks if target data of elements in order is different than what is delivered
+	 *
+	 * @param Order $order
+	 * @return array $result
+	 */
+	public function getIsTargetChanged($order): ?array
+	{
+		$originalIds = ['elements' => [], 'files' => []];
+
+		foreach ($order->getFiles() as $file) {
+			if (!$file->isPublished()) continue;
+
+			try {
+				$elementRepository = Translations::$plugin->elementRepository;
+				$element = $elementRepository->getElementById($file->elementId, $file->targetSite);
+
+				if ($file->isComplete()) {
+					$element = $elementRepository->getElementByDraftId($file->draftId, $file->targetSite);
+				}
+
+				$wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+				$converter = Translations::$plugin->elementToFileConverter;
+
+				$currentContent = $converter->convert(
+					$element,
+					Constants::FILE_FORMAT_XML,
+					[
+						'sourceSite'    => $file->sourceSite,
+						'targetSite'    => $file->targetSite,
+						'wordCount'     => $wordCount,
+						'orderId'       => $file->orderId
+					]
+				);
+
+				$sourceContent = json_decode($converter->xmlToJson($file->source), true);
+				$currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+				$sourceContent = json_encode(array_values($sourceContent['content']));
+				$currentContent = json_encode(array_values($currentContent['content']));
+
+				if (md5($sourceContent) !== md5($currentContent)) {
+					array_push($originalIds['files'], $file->id);
+					array_push($originalIds['elements'], $file->elementId);
+				}
+			} catch (Exception $e) {
+				throw new Exception("Target data changes check, Error: " . $e->getMessage(), 1);
+			}
+		}
+
+		return $originalIds;
+	}
 }

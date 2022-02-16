@@ -73,8 +73,11 @@
 						{% for element in elements %}
 							{% set canonicalId = element.isDraft ? element.canonicalId : element.id %}
 							{% set sourceUpdated = element.id in isSourceChanged|default([]) %}
+							{% set targetUpdated = element.id in isTargetChanged['elements']|default([]) %}
 							<tr data-word-count="{{ elementWordCounts[element.id] }}"
-								data-element-id="{{ element.id }}" data-canonical-id="{{ canonicalId }}" data-is-updated="{% if sourceUpdated %} 1 {% else %} 0 {% endif %}">
+								data-element-id="{{ element.id }}" data-canonical-id="{{ canonicalId }}"
+								data-is-updated="{% if sourceUpdated %} 1 {% else %} 0 {% endif %}"
+								data-is-target-updated="{% if targetUpdated %} 1 {% else %} 0 {% endif %}">
 								{{ forms.hidden({
 									name: 'elements[]',
 									value: element.id
@@ -100,9 +103,16 @@
 														</ul>
 													</span>
 												{% endif %}
-												{% if sourceUpdated and canUpdateFiles %}
+												{% if canUpdateFiles and (sourceUpdated or targetUpdated) %}
 													<span class="warning order-warning font-size-15" data-icon="alert">
-														{{ 'Source entry content has been modified since order was created.' }}
+														<ul style="list-style:disc;padding:5px 0 0 15px;">
+															{% if sourceUpdated %}
+																{{ '<li>Source entry content has been modified since order was created.</li>' }}
+															{% endif %}
+															{% if targetUpdated %}
+																{{ '<li>Target entry content has been modified since translations were delivered.</li>' }}
+															{% endif %}
+														</ul>
 													</span>
 												{% endif %}
 											</span>
@@ -204,7 +214,7 @@
 
 		<a class="fieldtoggle collapsed" data-target="advance-fields" style="margin-bottom: 0; margin-top: -7px">Advanced</a>
 		<div id="advance-fields" class="field hidden" style="margin-top: 20px">
-			<div style="margin-bottom: 0">
+			<div style="margin-bottom: 10px">
 				{{ forms.lightswitchField({
 					label: 'Track source content changes<p class="fw-400">\
 						Recomended for continuous translation workflows.</p>'|t('app'),
@@ -215,6 +225,18 @@
 			</div>
 
 			<input type="hidden" id="originalTrackChanges" value="{{ order.trackChanges }}">
+
+			<div style="margin-bottom: 0">
+				{{ forms.lightswitchField({
+					label: 'Track target content changes<p class="fw-400">\
+						Recomended when making changes to translated target content.</p>'|t('app'),
+					id: "trackTargetChanges",
+					name: "trackTargetChanges",
+					on: order.trackTargetChanges
+				}) }}
+			</div>
+
+			<input type="hidden" id="originalTrackTargetChanges" value="{{ order.trackTargetChanges }}">
 
 			<div id="extra-fields" style="margin-top: 20px">
 				{{ forms.dateField({

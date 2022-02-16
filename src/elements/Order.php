@@ -83,6 +83,8 @@ class Order extends Element
 
     public $trackChanges;
 
+	public $trackTargetChanges;
+
     public $asynchronousPublishing;
 
     public $tags;
@@ -729,6 +731,7 @@ class Order extends Element
         $record->elementIds =  $this->elementIds;
         $record->tags =  $this->tags;
         $record->trackChanges =  $this->trackChanges;
+		$record->trackTargetChanges =  $this->trackTargetChanges;
 
         $record->save(false);
 

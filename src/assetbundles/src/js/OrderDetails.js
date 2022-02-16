@@ -122,6 +122,16 @@
 
 		if ($originalTrackChanges != currentTrackChanges) return true;
 
+		// Validate Track Target Changes
+		$originalTrackTargetChanges = $('#originalTrackTargetChanges').val();
+		var currentTrackTargetChanges = $('input[type=hidden][name=trackTargetChanges]').val();
+
+		if (currentTrackTargetChanges == undefined || currentTrackTargetChanges == '') {
+			currentTrackTargetChanges = 0;
+		}
+
+		if ($originalTrackTargetChanges != currentTrackTargetChanges) return true;
+
 		// Validate Translator
 		$originalTranslatorId = $('#originalTranslatorId').val().split(',');
 		var currentTranslatorId = $('#translatorId').val().split(",");
@@ -170,7 +180,8 @@
 
     function getFieldValuesAsUrlParams() {
         title = $('#title').val();
-        trackChanges = $('input[type=hidden][name=trackChanges]').val();;
+		trackChanges = $('input[type=hidden][name=trackChanges]').val();
+		trackTargetChanges = $('input[type=hidden][name=trackTargetChanges]').val();
         tags = $('input[name="tags[]"]');
         translatorId = $('#translatorId').val();
         targetSites = '';
@@ -205,7 +216,7 @@
             });
         }
 
-        url += "&trackChanges="+trackChanges
+		url += "&trackChanges=" + trackChanges + "&trackTargetChanges=" + trackTargetChanges
         return url
     }
 
@@ -489,7 +500,7 @@
                 }
             });
 
-            $('#trackChanges').on('change', function() {
+			$('#trackChanges, #trackTargetChanges').on('change', function () {
                 if (validateForm() && (isPending || isOrderChanged())) {
                     setSubmitButtonStatus(true);
                 } else {
