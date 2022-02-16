@@ -79,8 +79,6 @@ class Order extends Element
 
     public $elementIds;
 
-    public $siteId;
-
     public $trackChanges;
 
     public $asynchronousPublishing;
