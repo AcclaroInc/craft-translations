@@ -170,7 +170,7 @@ class DraftRepository
                 continue;
             }
 
-            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $order->siteId);
+            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $order->sourceSite);
             if ($queue) {
                 $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
             }
