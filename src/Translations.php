@@ -622,31 +622,19 @@ class Translations extends Plugin
 				$currentFile = self::$plugin->fileRepository->getFileByDraftId($event->element->draftId);
 
 				if ($currentFile) {
-					$currentFile->status 		= Constants::FILE_STATUS_CANCELED;
-					$currentFile->draftId 		= null;
-					$currentFile->target 		= null;
-					$currentFile->previewUrl	= null;
-
-					self::$plugin->fileRepository->saveFile($currentFile);
-
 					$order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
-					if ($order) {
-						$order->logActivity(self::$plugin->translator->translate('app', 'Draft ' . $event->element->draftId . ' deleted.'));
-						// Update order with new status
-						$newStatus = self::$plugin->orderRepository->getNewStatus($order);
-
-						if ($order->status !== $newStatus) {
-							$order->status = $newStatus;
-							self::$plugin->orderRepository->saveOrder($order);
-
-							$order->logActivity(sprintf('Order status changed to \'%s\'', $order->getStatusLabel($newStatus)));
-						}
-						self::$plugin->orderRepository->saveOrder($order);
+                    if ($order) {
+						$order->logActivity(Translations::$plugin->translator->translate('app', 'Draft ' . $event->element->draftId . ' deleted.'));
+						Translations::$plugin->orderRepository->saveOrder($order);
 					}
-				}
-			}
-		}
+
+					$currentFile->status = Constants::FILE_STATUS_CANCELED;
+
+					self::$plugin->fileRepository->saveFile($currentFile);
+                }
+            }
+        }
 
         $request = Craft::$app->getRequest();
         if (!$request->getIsConsoleRequest() && $request->getParam('hardDelete')) {

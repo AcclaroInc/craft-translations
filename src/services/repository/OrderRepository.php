@@ -490,7 +490,7 @@ class OrderRepository
      */
     public function getFileTitle($file) {
 
-        $element = Craft::$app->getElements()->getElementById($file->elementId);
+		$element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
         if ($element instanceof GlobalSet) {
             $draftElement = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
@@ -502,7 +502,7 @@ class OrderRepository
             $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
 
-        return $draftElement->title ?? '';
+		return $draftElement->title ?? $element->title;
     }
 
     /**
