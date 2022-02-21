@@ -170,18 +170,18 @@ class DraftRepository
                 continue;
             }
 
-            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $order->siteId);
+            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $order->sourceSite);
             if ($queue) {
                 $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
             }
 
-            // Create draft only if not already exist
-            if (! $file->draftId) {
-                $isNewDraft = true;
-                $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
-            } else {
+			// Create draft only if not already exist
+			if ($file->draftId && $this->getDraftById($file->draftId, $file->targetSite)) {
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
+			} else {
+				$isNewDraft = true;
+				$this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
             }
 
             try {

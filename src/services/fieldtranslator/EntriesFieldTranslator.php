@@ -66,18 +66,14 @@ class EntriesFieldTranslator extends GenericFieldTranslator
     {
         $fieldHandle = $field->handle;
 
-        $blocks = $element->getFieldValue($fieldHandle)->all();
-
         $post = [
             $fieldHandle => [],
         ];
 
-        $fieldData = array_values($fieldData);
-
-        foreach ($blocks as $i => $block) {
-            $blockData = isset($fieldData[$i]) ? $fieldData[$i] : [];
-
-            $post[$fieldHandle][$block->id] = $block->id;
+		foreach ($fieldData as $data) {
+			if ($entryId = $data['id'] ?? null) {
+				$post[$fieldHandle][$entryId] = $entryId;
+			}
         }
 
         return $post;

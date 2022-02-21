@@ -615,23 +615,23 @@ class Translations extends Plugin
 
     private function _onDeleteElement(Event $event)
     {
-        if (!empty($event->element->draftId)) {
-            $response = Translations::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
-            if ($response) {
+		if (!empty($event->element->draftId)) {
+			$response = self::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
+			if ($response) {
 
-                $currentFile = self::$plugin->fileRepository->getFileByDraftId($event->element->draftId);
+				$currentFile = self::$plugin->fileRepository->getFileByDraftId($event->element->draftId);
 
-                if ($currentFile) {
-                    $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
+				if ($currentFile) {
+					$order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
                     if ($order) {
-                        $order->logActivity(Translations::$plugin->translator->translate('app', 'Draft '. $event->element->draftId .' deleted.'));
-                        Translations::$plugin->orderRepository->saveOrder($order);
-                    }
+						$order->logActivity(Translations::$plugin->translator->translate('app', 'Draft ' . $event->element->draftId . ' deleted.'));
+						Translations::$plugin->orderRepository->saveOrder($order);
+					}
 
-                    $currentFile->status = Constants::FILE_STATUS_CANCELED;
+					$currentFile->status = Constants::FILE_STATUS_CANCELED;
 
-                    self::$plugin->fileRepository->saveFile($currentFile);
+					self::$plugin->fileRepository->saveFile($currentFile);
                 }
             }
         }

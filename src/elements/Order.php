@@ -78,9 +78,7 @@ class Order extends Element
     public $wordCount;
 
     public $elementIds;
-
-    public $siteId;
-
+    
     public $trackChanges;
 
     public $asynchronousPublishing;
