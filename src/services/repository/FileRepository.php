@@ -104,6 +104,25 @@ class FileRepository
     }
 
     /**
+     * @return array
+     */
+    public function getAllDraftIds()
+    {
+
+        $records = FileRecord::find()->where(['IS NOT', 'draftId', NULL])->all();
+
+        $draftIds = [];
+
+        foreach ($records as $key => $record) {
+            if(!empty($record->draftId)){
+                $draftIds[] = $record->draftId;
+            }
+        }
+
+        return $draftIds;
+    }
+
+    /**
      * @return \acclaro\translations\models\FileModel
      */
     public function makeNewFile()
