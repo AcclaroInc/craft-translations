@@ -165,8 +165,8 @@ class Constants
     ];
 
     // Craft Graphql data
-    const GRAPHQL_API_BASE_URI = 'https://acclarocraft3.com/api';
-    const GRAPHQL_ISO_MAPPING_TOKEN = 'G3LIVghEQhBwZEqDSaXYgTB6STSHDiqs';
+    const GRAPHQL_API_BASE_URI = 'https://acclarocraft.com/api';
+    const GRAPHQL_ISO_MAPPING_TOKEN = '6LBN7WdtRFHLAAgVv4G8LA3ifp63SgXm';
     const GRAPHQL_ISO_MAPPING_QUERY = 'query MyQuery {
       entry(slug: "translations-plugin-iso-mapping") {
         dateUpdated @formatDateTime (format: "Y-m-d H:m:s")
