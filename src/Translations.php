@@ -206,9 +206,7 @@ class Translations extends Plugin
     public function uninstall()
     {
         // Let's clean up the drafts table
-        $files = self::$plugin->fileRepository->getFiles();
-        $drafts = array_column($files, 'draftId');
-
+        $drafts = self::$plugin->fileRepository->getAllDraftIds();
         if ($drafts) {
             Craft::$app->queue->push(new DeleteDrafts([
                 'description' => Constants::JOB_DELETING_DRAFT,
