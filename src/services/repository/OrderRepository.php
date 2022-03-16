@@ -564,7 +564,7 @@ class OrderRepository
 		$originalIds = ['elements' => [], 'files' => []];
 
 		foreach ($order->getFiles() as $file) {
-			if (!$file->isPublished()) continue;
+			if ($file->isPublished()) continue;
 
 			try {
 				$elementRepository = Translations::$plugin->elementRepository;

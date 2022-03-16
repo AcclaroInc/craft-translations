@@ -421,10 +421,98 @@ class FilesController extends Controller
         ]);
     }
 
+    /**
+     * Create Zip of Translations memory alignment files
+     */
+    public function actionCreateTmExportZip() {
+        $orderId = Craft::$app->getRequest()->getParam('orderId');
+        $elements = json_decode(Craft::$app->getRequest()->getParam('elements'), true);
+
+        try {
+            $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+            $orderAttributes = $order->getAttributes();
+
+            //Filename Zip Folder
+            $zipName = $this->getZipName($orderAttributes) . '_TM';
+
+            // Set destination zip
+            $zipDest = Craft::$app->path->getTempPath() . '/' . $zipName . '.' . Constants::FILE_FORMAT_ZIP;
+
+            // Create zip
+            $zip = new \ZipArchive();
+
+            // Open zip
+            if ($zip->open($zipDest, $zip::CREATE) !== true) {
+                throw new \Exception('Unable to create zip file: '.$zipDest);
+            }
+
+            //Iterate over each file on this order
+            if ($order->files) {
+                foreach ($order->GetFiles() as $file) {
+                    if (! in_array($file->elementId, $elements)) continue;
+                    // TODO: skip failed files or check when to skip
+                    // if ($file->isCanceled()) continue;
+
+                    $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+
+                    $targetSite = $file->targetSite;
+
+                    $targetElement = Craft::$app->elements->getElementById($file->elementId, null, $targetSite);
+
+                    if ($file->isComplete()) {
+                        $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $targetSite);
+                        $targetElement = $draft ?: $targetElement;
+                    }
+
+                    if ($element instanceof GlobalSet) {
+                        $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
+                            '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+                    } else if ($element instanceof Asset) {
+                        $assetFilename = $element->getFilename();
+                        $fileInfo = pathinfo($element->getFilename());
+                        $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+                    } else {
+                        $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+                    }
+
+                    $TmData = [
+                        'sourceElement' => $element,
+                        'sourceElementSite' => $file->sourceSite,
+                        'targetElement' => $targetElement,
+                        'targetElementSite' => $targetSite
+                    ];
+
+                    $fileContent = Translations::$plugin->elementToFileConverter->createTmFileContent($TmData);
+
+                    if (! $fileContent || ! $zip->addFromString($filename, $fileContent)) {
+                        throw new \Exception('There was an error adding the file '.$filename.' to the zip: '.$zipName);
+                    }
+                }
+            }
+
+            // Close zip
+            $zip->close();
+        } catch(\Exception $e) {
+            Craft::error('['. __METHOD__ .']' . $e->getMessage(), 'translations');
+            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+        }
+
+        return $this->asJson(['success' => true, 'tmFiles' => $zipDest]);
+    }
+
+    /**
+     * Send Translation memory files to translation service provider
+     */
+    public function actionSyncTmFiles() {
+        // TODO: need to complete this asa we het api endpoint
+        return $this->asJson(['success' => true]);
+    }
+
+    // Private Methods
 	/**
      * Show Flash Notifications and Errors to the translator
 	 */
-    public function showUserMessages($message, $isSuccess = false)
+    private function showUserMessages($message, $isSuccess = false)
     {
     	if ($isSuccess) {
 			Craft::$app->session->setNotice(Craft::t('app', $message));
@@ -437,7 +525,7 @@ class FilesController extends Controller
      * @param $order
      * @return string
      */
-    public function getZipName($order) {
+    private function getZipName($order) {
 
         $title = str_replace(' ', '_', $order['title']);
         $title = preg_replace('/[^A-Za-z0-9\-_]/', '', $title);
@@ -447,5 +535,4 @@ class FilesController extends Controller
 
         return $zip_name;
     }
-
 }
