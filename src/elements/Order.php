@@ -360,7 +360,13 @@ class Order extends Element
                 return sprintf('<a href="%s" target="_blank">#%s</a>', $translationService->getOrderUrl($this), $value);
 
             case 'status':
-                return "<span class='status ". $this->getStatusColour() ."'></span>".Translations::$plugin->translator->translate('app', $this->getStatusLabel());
+                $html = sprintf(
+                    "<span class='status %s'></span>%s",
+                    $this->getStatusColour(),
+                    Translations::$plugin->translator->translate('app', $this->getStatusLabel())
+                ) . $this->getTargetAlertHtml();
+
+                return $html;
             case 'orderDueDate':
             case 'requestedDueDate':
             case 'dateOrdered':
@@ -418,6 +424,16 @@ class Order extends Element
             'targetSites'   => $this->string()->notNull()->defaultValue(''),
             'status' => $this->enum('values', Constants::ORDER_STATUSES)->defaultValue(Constants::ORDER_STATUS_PENDING),
         ];
+    }
+
+    private function getTargetAlertHtml() {
+        $html = '';
+        if (!$this->isPublished() && $this->hasTmMissAlignments()) {
+            $html .= '<span class="nowrap pl-5"><span class="warning order-warning font-size-15" data-icon="alert"> <li> Some files in this order have translation memory missaligned. </li>
+            </span></span>';
+        }
+
+        return $html;
     }
 
     public function rules()
@@ -595,6 +611,54 @@ class Order extends Element
 
         $this->statusLabel = $this->statusLabel ?? $statusLabel;
         return $this->statusLabel;
+    }
+
+    public function hasTmMissAlignments()
+    {
+        foreach ($this->getFiles() as $file) {
+            if ($file->isPublished()) continue;
+
+            try {
+				$elementRepository = Translations::$plugin->elementRepository;
+				$element = $elementRepository->getElementById($file->elementId, $file->targetSite);
+                $source = $file->source;
+
+				if ($file->isComplete()) {
+					$element = $elementRepository->getElementByDraftId($file->draftId, $file->targetSite);
+                    $source = $file->target;
+				}
+
+                // Skip incase entry doesn't exist for target site
+                if (!$element) continue;
+
+				$wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+				$converter = Translations::$plugin->elementToFileConverter;
+
+				$currentContent = $converter->convert(
+					$element,
+					Constants::FILE_FORMAT_XML,
+					[
+						'sourceSite'    => $file->sourceSite,
+						'targetSite'    => $file->targetSite,
+						'wordCount'     => $wordCount,
+						'orderId'       => $file->orderId
+					]
+				);
+
+				$sourceContent = json_decode($converter->xmlToJson($source), true);
+				$currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+				$sourceContent = json_encode(array_values($sourceContent['content']));
+				$currentContent = json_encode(array_values($currentContent['content']));
+
+				if (md5($sourceContent) !== md5($currentContent)) {
+					return true;
+				}
+			} catch (\Exception $e) {
+				throw new \Exception("Target data changes check, Error: " . $e->getMessage(), 1);
+			}
+        }
+        return false;
     }
 
     public function getStatusColour()

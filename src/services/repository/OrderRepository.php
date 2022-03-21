@@ -569,10 +569,15 @@ class OrderRepository
 			try {
 				$elementRepository = Translations::$plugin->elementRepository;
 				$element = $elementRepository->getElementById($file->elementId, $file->targetSite);
+                $source = $file->source;
 
 				if ($file->isComplete()) {
 					$element = $elementRepository->getElementByDraftId($file->draftId, $file->targetSite);
+                    $source = $file->target;
 				}
+
+                // Skip incase entry doesn't exist for target site
+                if (!$element) continue;
 
 				$wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
 				$converter = Translations::$plugin->elementToFileConverter;
@@ -588,7 +593,7 @@ class OrderRepository
 					]
 				);
 
-				$sourceContent = json_decode($converter->xmlToJson($file->source), true);
+				$sourceContent = json_decode($converter->xmlToJson($source), true);
 				$currentContent = json_decode($converter->xmlToJson($currentContent), true);
 
 				$sourceContent = json_encode(array_values($sourceContent['content']));

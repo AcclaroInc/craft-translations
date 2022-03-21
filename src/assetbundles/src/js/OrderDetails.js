@@ -586,8 +586,9 @@
                     storageKey: null,
                     sources: null,
                     elementIndex: null,
-                    criteria: {siteId: this.elementSiteId},
+                    criteria: {siteId: site},
                     multiSelect: 1,
+                    showSiteMenu: false,
                     disabledElementIds: canonicalElementIds,
 
                     onSelect: $.proxy(function(elements) {
