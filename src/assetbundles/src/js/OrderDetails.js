@@ -979,20 +979,8 @@
             }
         },
         _buildElementActions: function() {
-            var $toolbar = $('<div>', {'id': 'toolbar', 'class': 'btngroup flex flex-nowrap margin-left', 'style': 'max-width: 10px'});
-            $toolbar.insertAfter('#text-field #entries-label');
-
-            $menubtn = $('<div class="btn menubtn" data-icon=settings title=Actions></div>');
-            $toolbar.append($menubtn);
-
-            $('<div class="translations-loader hidden"></div>').insertAfter($toolbar);
-
-            $menubtn.on('click', function(e) {
-                e.preventDefault();
-            });
-
             $menu = $('<div>', {'class': 'menu', 'id': 'order-element-action-menu'});
-            $menu.appendTo($toolbar);
+            $menu.insertAfter($('#element-action-menu-icon'));
 
             $dropdown = $('<ul>', {'class': ''});
             $menu.append($dropdown);
@@ -1271,12 +1259,11 @@
                 if (! this.$elementActions) {
                     this._buildElementActions();
                     this.$elementActions = $('#order-element-action-menu');
-                } else {
-                    $('#toolbar').show();
                 }
+                $('#toolbar').removeClass('disabled noClick');
                 this.toggleUpdateActionButton();
             } else {
-                $('#toolbar').hide();
+                $('#toolbar').addClass('disabled noClick');
             }
         }
     }
