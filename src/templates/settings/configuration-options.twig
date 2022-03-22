@@ -27,7 +27,7 @@
 
         {{ forms.lightswitchField({
             first: true,
-            label: "Show warnings for duplicate Entries"|t('app'),
+            label: "Enable warnings for duplicate source entries"|t('app'),
             instructions: "Displays a warning if the source entry already exists in another order."|t('app'),
             id: 'chkDuplicateEntries',
             name: 'chkDuplicateEntries',
@@ -38,7 +38,7 @@
         <h3>{{ "Assets"|t('app') }}</h3>
 
         {{ forms.selectField({
-            label: "Upload Volume"|t('app'),
+            label: "Upload volume"|t('app'),
             instructions: "Specify an Asset Volume to use for uploads."|t('app'),
             id: 'uploadVolume',
             name: 'uploadVolume',
@@ -85,7 +85,8 @@
 
         {{ forms.lightswitchField({
             first: true,
-            label: "Enable Translator Logging"|t('app'),
+            label: "Enable debugging"|t('app'),
+            instructions: "Creates a translations log file to assist with troubleshooting."|t('app'),
             id: 'apiLogging',
             name: 'apiLogging',
             on: apiLogging,
