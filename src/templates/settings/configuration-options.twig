@@ -16,14 +16,14 @@
 <div class="readable">
     <h2>{{ "Configuration Options"|t('app') }}</h2>
 
-    <h3>{{ "General"|t('app') }}</h3>
-
     <form id="" class="utility" method="post" accept-charset="UTF-8">
         {{ csrfInput() }}
         {{ forms.hidden({
             name: 'action',
             value: 'translations/settings/save-configuration-options',
         }) }}
+
+        <h3>{{ "General"|t('app') }}</h3>
 
         {{ forms.lightswitchField({
             first: true,
@@ -33,6 +33,7 @@
             on: chkDuplicateEntries,
         }) }}
 
+        <hr>
         <h3>{{ "Assets"|t('app') }}</h3>
 
         {{ forms.selectField({
@@ -45,6 +46,7 @@
             toggle: true
         }) }}
 
+        <hr>
         <h3>{{ "Static Translations"|t('app') }}</h3>
 
         {{ forms.textField({
@@ -74,6 +76,7 @@
             size: '40',
         }) }}
 
+        <hr>
         <h3>{{ "Advanced"|t('app') }}</h3>
 
         {{ forms.lightswitchField({
