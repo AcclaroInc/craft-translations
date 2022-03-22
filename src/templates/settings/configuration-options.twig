@@ -16,6 +16,8 @@
 <div class="readable">
     <h2>{{ "Configuration Options"|t('app') }}</h2>
 
+    <h3>{{ "General"|t('app') }}</h3>
+
     <form id="" class="utility" method="post" accept-charset="UTF-8">
         {{ csrfInput() }}
         {{ forms.hidden({
@@ -31,13 +33,7 @@
             on: chkDuplicateEntries,
         }) }}
 
-        {{ forms.lightswitchField({
-            first: true,
-            label: "Enable Translator Logging"|t('app'),
-            id: 'apiLogging',
-            name: 'apiLogging',
-            on: apiLogging,
-        }) }}
+        <h3>{{ "Assets"|t('app') }}</h3>
 
         {{ forms.selectField({
             label: "Upload Volume"|t('app'),
@@ -76,6 +72,16 @@
             name: 'targetStringPosition',
             value: targetStringPosition ?? '',
             size: '40',
+        }) }}
+
+        <h3>{{ "Advanced"|t('app') }}</h3>
+
+        {{ forms.lightswitchField({
+            first: true,
+            label: "Enable Translator Logging"|t('app'),
+            id: 'apiLogging',
+            name: 'apiLogging',
+            on: apiLogging,
         }) }}
 
         <div class="buttons">
