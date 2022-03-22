@@ -123,10 +123,8 @@
 			{% endif %}
 		</ul>
 	</div>
-	<hr>
-	<a class="fieldtoggle collapsed" data-target="misc-buttons" style="margin-top: -7px">Advanced Actions</a>
 
-	<div id="misc-buttons" class="hidden" style="margin-top: 20px">
+	<div class="hidden" style="margin-top: 20px">
 
 		<form id="regenerate-preview-urls" class="utility" method="post" accept-charset="UTF-8">
 			{{ csrfInput() }}
@@ -144,13 +142,8 @@
 				name: 'isProcessing',
 				value: 'preview'
 			}) }}
-
-			<a class="btn w-100 {{ exportImportStatus }}" {% if not exportImportStatus %} onclick="this.closest('form').submit();return false;" {% else %} {{ exportImportStatus }} {% endif %}>{{ "Rebuild draft previews"|t('app') }}
 			</a>
 		</form>
-
-		<a id="export-preview-links" class="btn mt-10px mb-20px w-100">{{ "Download preview links"|t('app') }}</a>
-
 	</div>
 
 {% endblock %}

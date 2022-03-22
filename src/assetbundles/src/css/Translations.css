@@ -746,6 +746,10 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     padding-left: 10px;
 }
 
+.pr-10px {
+    padding-right: 10px;
+}
+
 .pl-5 {
     padding-left: 5px;
 }
