@@ -4,8 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 2.1.4 - 2022-03-14
+
+### Updated
+- ISO alias mapping API endpoint (https://github.com/AcclaroInc/craft-translations/pull/315)
+
+### Fixed
+- Plugin uninstallation bug (https://github.com/AcclaroInc/craft-translations/pull/313)
   
+## 2.1.3 - 2022-02-21
+
+### Fixed
+
+- Entry relation for disabled target reference ([AcclaroInc/#455](https://github.com/AcclaroInc/pm-craft-translations/issues/455))
+- `$order->siteId` to `$order->sourceSite` (https://github.com/AcclaroInc/craft-translations/issues/305)
+- Nested Supertable bug ([AcclaroInc/#451](https://github.com/AcclaroInc/pm-craft-translations/issues/451))
+- Missing title on "Merge into draft" bug ([AcclaroInc/#437](https://github.com/AcclaroInc/pm-craft-translations/issues/437))
+
 ## 2.1.2 - 2022-01-21
 
 ### Updated

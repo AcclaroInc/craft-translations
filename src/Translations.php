@@ -206,9 +206,7 @@ class Translations extends Plugin
     public function uninstall()
     {
         // Let's clean up the drafts table
-        $files = self::$plugin->fileRepository->getFiles();
-        $drafts = array_column($files, 'draftId');
-
+        $drafts = self::$plugin->fileRepository->getAllDraftIds();
         if ($drafts) {
             Craft::$app->queue->push(new DeleteDrafts([
                 'description' => Constants::JOB_DELETING_DRAFT,
@@ -615,23 +613,23 @@ class Translations extends Plugin
 
     private function _onDeleteElement(Event $event)
     {
-        if (!empty($event->element->draftId)) {
-            $response = Translations::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
-            if ($response) {
+		if (!empty($event->element->draftId)) {
+			$response = self::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
+			if ($response) {
 
-                $currentFile = self::$plugin->fileRepository->getFileByDraftId($event->element->draftId);
+				$currentFile = self::$plugin->fileRepository->getFileByDraftId($event->element->draftId);
 
-                if ($currentFile) {
-                    $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
+				if ($currentFile) {
+					$order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
                     if ($order) {
-                        $order->logActivity(Translations::$plugin->translator->translate('app', 'Draft '. $event->element->draftId .' deleted.'));
-                        Translations::$plugin->orderRepository->saveOrder($order);
-                    }
+						$order->logActivity(Translations::$plugin->translator->translate('app', 'Draft ' . $event->element->draftId . ' deleted.'));
+						Translations::$plugin->orderRepository->saveOrder($order);
+					}
 
-                    $currentFile->status = Constants::FILE_STATUS_CANCELED;
+					$currentFile->status = Constants::FILE_STATUS_CANCELED;
 
-                    self::$plugin->fileRepository->saveFile($currentFile);
+					self::$plugin->fileRepository->saveFile($currentFile);
                 }
             }
         }
