@@ -27,7 +27,8 @@
 
         {{ forms.lightswitchField({
             first: true,
-            label: "Show duplicate Entries warnings"|t('app'),
+            label: "Show warnings for duplicate Entries"|t('app'),
+            instructions: "Displays a warning if the source entry already exists in another order."|t('app'),
             id: 'chkDuplicateEntries',
             name: 'chkDuplicateEntries',
             on: chkDuplicateEntries,
@@ -51,6 +52,7 @@
 
         {{ forms.textField({
             label: "Twig search filter (single quote)"|t('app'),
+            instructions: "Define a custom RegEx for filtering Twig strings."|t('app'),
             placeholder: "Twig search filter (single quote)"|t('app'),
             id: 'twigSearchFilterSingleQuote',
             name: 'twigSearchFilterSingleQuote',
@@ -60,6 +62,7 @@
 
         {{ forms.textField({
             label: "Twig search filter (double quote)"|t('app'),
+            instructions: "Define a custom RegEx for filtering Twig strings."|t('app'),
             placeholder: "Twig search filter (double quote)"|t('app'),
             id: 'twigSearchFilterDoubleQuote',
             name: 'twigSearchFilterDoubleQuote',
@@ -69,6 +72,7 @@
 
         {{ forms.textField({
             label: "Target String Position"|t('app'),
+            instructions: "Define a custom RegEx position for filtering Twig strings."|t('app'),
             placeholder: "Target String Position"|t('app'),
             id: 'targetStringPosition',
             name: 'targetStringPosition',
