@@ -240,14 +240,14 @@ class FileRepository
      * @return bool
      * @throws \Throwable
      */
-    public function regeneratePreviewUrls($order, $previewUrls, $queue=null) {
+    public function regeneratePreviewUrls($order, $previewUrls, $files = [], $queue=null) {
         $totalElements = count($order->files);
         $currentElement = 0;
 
         $service = new RegeneratePreviewUrls();
         foreach ($order->files as $file) {
 
-            if (! $file->isComplete()) continue;
+            if (!($file->isComplete() || in_array($file->id, $files))) continue;
 
             if ($queue) {
                 $service->updateProgress($queue, $currentElement++ / $totalElements);

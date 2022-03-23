@@ -384,8 +384,10 @@ class ElementToFileConverter
      * @return string
      */
     public function createTmFileContent($data) {
-        $allSites = Translations::$plugin->siteRepository->getAllSitesHandle();
-        $tmContent = sprintf('"key","%s","%s"', $allSites[$data['sourceElementSite']], $allSites[$data['targetElementSite']]);
+        $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
+        $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
+
+        $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
 
         $source = Translations::$plugin->elementTranslator->toTranslationSource(
             $data['sourceElement'],
@@ -397,8 +399,9 @@ class ElementToFileConverter
         );
 
         foreach ($source as $key => $value) {
-            if ($value !== $target[$key] ?? '')
-                $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $target[$key] ?? '');
+            $targetValue = $target[$key] ?? '';
+            if ($value !== $targetValue)
+                $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $targetValue);
         }
 
         return $tmContent;

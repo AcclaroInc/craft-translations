@@ -83,6 +83,7 @@ class ExportController extends Controller
 
 		// Get the id param
 		$orderId = $request->getBodyParam('id');
+		$files = json_decode($request->getBodyParam('files'), true);
 
 		$order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
@@ -92,16 +93,18 @@ class ExportController extends Controller
 		fputcsv($previewFile, ['OrderId', 'Title', 'SourceSite', 'TargetSite', 'Status', 'DateOrdered', 'PreviewUrl']);
 
 		foreach ($order->getFiles() as $file) {
-			$row = [
-				$orderId,
-				$order->title,
-				$file->sourceSite,
-				$file->targetSite,
-				$file->status,
-				$order->dateOrdered,
-				$file->previewUrl ?? 'N/A'
-			];
-			fputcsv($previewFile, $row);
+            if (in_array($file->id, $files)) {
+                $row = [
+                    $orderId,
+                    $order->title,
+                    $file->sourceSite,
+                    $file->targetSite,
+                    $file->status,
+                    $order->dateOrdered,
+                    $file->previewUrl ?? 'N/A'
+                ];
+                fputcsv($previewFile, $row);
+            }
 		}
 
 		fclose($previewFile);

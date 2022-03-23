@@ -425,8 +425,8 @@ class FilesController extends Controller
      * Create Zip of Translations memory alignment files
      */
     public function actionCreateTmExportZip() {
-        $orderId = Craft::$app->getRequest()->getParam('orderId');
-        $elements = json_decode(Craft::$app->getRequest()->getParam('elements'), true);
+        $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
+        $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
 
         try {
             $order = Translations::$plugin->orderRepository->getOrderById($orderId);
@@ -449,9 +449,7 @@ class FilesController extends Controller
             //Iterate over each file on this order
             if ($order->files) {
                 foreach ($order->GetFiles() as $file) {
-                    if (! in_array($file->elementId, $elements)) continue;
-                    // TODO: skip failed files or check when to skip
-                    // if ($file->isCanceled()) continue;
+                    if (! in_array($file->id, $files)) continue;
 
                     $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 

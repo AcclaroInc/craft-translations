@@ -446,7 +446,7 @@
                 'text': 'Rebuild draft previews',
             });
             $updateLi.append($updateAction);
-            this._addRebuildDraftAction($updateAction);
+            this._addRebuildDraftPreviewAction($updateAction);
 
             // Download preview links as csv button
             $updateAndDownloadAction = $('<a>', {
@@ -469,10 +469,24 @@
             $downloadTmLi.append($downloadTmAction);
             this._addDownloadTmFilesAction($downloadTmAction);
 		},
-		_addRebuildDraftAction: function(that) {
+		_addRebuildDraftPreviewAction: function(that) {
 			var $form = $('#regenerate-preview-urls');
 			$(that).on('click', function(e) {
 				e.preventDefault();
+
+				var files = [];
+				$rows = self.getFiles(true);
+				$rows.each(function() {
+					files.push($(this).data('file-id'));
+				});
+
+				$hiddenFlow = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'files',
+                    'value': JSON.stringify(files)
+                });
+                $hiddenFlow.appendTo($form);
+
 				$form.submit();
 			});
 		},
@@ -480,8 +494,14 @@
 			$(that).on('click', function(e) {
 				e.preventDefault();
 				if (hasOrderId) {
+					var files = [];
+					$rows = self.getFiles(true);
+					$rows.each(function() {
+						files.push($(this).data('file-id'));
+					});
 					$data = {
-						'id': $("input[type=hidden][name=id]").val()
+						'id': $("input[type=hidden][name=id]").val(),
+						'files': JSON.stringify(files)
 					};
 
 					Craft.postActionRequest('translations/export/export-preview-links', $data, function (response, textStatus) {
@@ -501,14 +521,14 @@
             $(that).on('click', function(e) {
                 e.preventDefault();
 
-                var elements = [];
-                $rows = self.getEntries(true);
+                var files = [];
+                $rows = self.getFiles(true);
                 $rows.each(function() {
-                    elements.push($(this).data('element-id'));
+                    files.push($(this).data('file-id'));
                 });
 
                 $data = {
-                    elements: JSON.stringify(elements),
+                    files: JSON.stringify(files),
                     orderId: $("input[type=hidden][name=id]").val()
                 }
 
@@ -522,7 +542,7 @@
                         if (response.success && !isDefaultTranslator) {
                             Craft.cp.displayNotice('Translation memory files sent successfully.');
                         } else if (response.success && response.tmFiles) {
-                            let $downloadForm = $('#export-zip');
+                            let $downloadForm = $('#regenerate-preview-urls');
                             let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
                             $downloadForm.append($iframe);
                         } else {
@@ -534,8 +554,8 @@
                 });
             });
 		},
-		getEntries: function($selected = false) {
-			$elementCheckboxes = $('tbody .element :checkbox');
+		getFiles: function($selected = false) {
+			$elementCheckboxes = $('#files tbody .file :checkbox');
 			if ($selected) {
 				return $elementCheckboxes.filter(':checked').closest('tr');
 			}

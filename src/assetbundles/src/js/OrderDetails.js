@@ -535,10 +535,6 @@
                 }
             });
 
-            $('#createNewOrder').on('click', function () {
-                window.location.href = "/admin/translations/orders/create";
-            });
-
             $('.order-warning', '#global-container').infoicon();
 
             // Source Site Ajax
@@ -659,23 +655,6 @@
                     $cancelIcon.addClass('desc');
                 }
             });
-
-			$('#export-preview-links').on('click', function () {
-				if (hasOrderId) {
-					$data = {
-						'id': $("input[type=hidden][name=id]").val()
-					};
-
-					Craft.postActionRequest('translations/export/export-preview-links', $data, function (response, textStatus) {
-						if (response.success && response.previewFile) {
-							var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
-							$('#regenerate-preview-urls').append($iframe);
-						} else {
-							Craft.cp.displayError(Craft.t('app', 'Unable to download your file.'));
-						}
-					});
-				}
-			});
 
             $(window).on('scroll resize', function(e) {
                 $width = $(window).width();
@@ -1006,20 +985,6 @@
             $updateLi.append($updateAndDownloadAction);
             this._addUpdateElementAction($updateAndDownloadAction, true);
 
-            // Download/Sync TM Files Button
-            $dropdown.append($('<hr>'));
-            $downloadTmLi = $('<li>');
-            $dropdown.append($downloadTmLi);
-            $label = (isDefaultTranslator ? 'Download ' : 'Sync ') + 'memory alignment files';
-
-            $downloadTmAction = $('<a>', {
-                'class': 'download-tm-files',
-                'href': '#',
-                'text': $label,
-            });
-            $downloadTmLi.append($downloadTmAction);
-            this._addDownloadTmFilesAction($downloadTmAction);
-
             // Delete Button
             $dropdown.append($('<hr>'));
             $deleteLi = $('<li>');
@@ -1115,51 +1080,6 @@
 
                     self.toggleElementAction(false);
                 }
-            });
-        },
-        _addDownloadTmFilesAction: function(that) {
-            var self = this;
-            var action = isDefaultTranslator ? 'download' : 'sync';
-            $(that).on('click', function(e) {
-                e.preventDefault();
-
-                self.onStart();
-                var elements = [];
-                $rows = getEntries(true);
-                $rows.each(function() {
-                    // if ($(this).data('is-target-updated') == 1)
-                    elements.push($(this).data('element-id'));
-                });
-
-                $data = {
-                    elements: JSON.stringify(elements),
-                    orderId: $("input[type=hidden][name=id]").val()
-                }
-
-                actions = {
-                    download: 'translations/files/create-tm-export-zip',
-                    sync: 'translations/files/sync-tm-files'
-                }
-
-                Craft.postActionRequest(actions[action], $data, function(response, textStatus) {
-                    if (textStatus === 'success') {
-                        if (response.success && !isDefaultTranslator) {
-                            Craft.cp.displayNotice('Translation memory files sent successfully.');
-                        } else if (response.success && response.tmFiles) {
-                            let $downloadForm = $('#export-zip');
-                            let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
-                            $downloadForm.append($iframe);
-
-                            self.onComplete();
-                        } else {
-                            Craft.cp.displayError(Craft.t('app', response.message));
-                            self.onComplete();
-                        }
-                    } else {
-                        Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
-                        self.onComplete();
-                    }
-                });
             });
         },
         _downloadFiles: function() {
