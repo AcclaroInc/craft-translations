@@ -372,6 +372,10 @@ class OrderRepository
             }
 
             $translationService->sendOrderFile($order, $file, $settings);
+
+            if ($order->shouldIncludeTmFiles() && $file->hasTmMissAlignments()) {
+                $translationService->sendOrderReferenceFile($order, $file);
+            }
         }
 
         $acclaroApiClient->submitOrder($order->serviceOrderId);

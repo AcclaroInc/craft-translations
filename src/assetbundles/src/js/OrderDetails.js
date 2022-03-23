@@ -132,6 +132,16 @@
 
 		if ($originalTrackTargetChanges != currentTrackTargetChanges) return true;
 
+		// Validate Include Tm Files Changes
+		$originalIncludeTmFiles = $('#originalIncludeTmFiles').val();
+		var currentIncludeTmFiles = $('input[type=hidden][name=includeTmFiles]').val();
+
+		if (currentIncludeTmFiles == undefined || currentIncludeTmFiles == '') {
+			currentIncludeTmFiles = 0;
+		}
+
+		if ($originalIncludeTmFiles != currentIncludeTmFiles) return true;
+
 		// Validate Translator
 		$originalTranslatorId = $('#originalTranslatorId').val().split(',');
 		var currentTranslatorId = $('#translatorId').val().split(",");
@@ -182,6 +192,7 @@
         title = $('#title').val();
 		trackChanges = $('input[type=hidden][name=trackChanges]').val();
 		trackTargetChanges = $('input[type=hidden][name=trackTargetChanges]').val();
+		includeTmFiles = $('input[type=hidden][name=includeTmFiles]').val();
         tags = $('input[name="tags[]"]');
         translatorId = $('#translatorId').val();
         targetSites = '';
@@ -216,7 +227,7 @@
             });
         }
 
-		url += "&trackChanges=" + trackChanges + "&trackTargetChanges=" + trackTargetChanges
+		url += "&trackChanges=" + trackChanges + "&trackTargetChanges=" + trackTargetChanges + "&includeTmFiles=" + includeTmFiles
         return url
     }
 
@@ -500,7 +511,7 @@
                 }
             });
 
-			$('#trackChanges, #trackTargetChanges').on('change', function () {
+			$('#trackChanges, #trackTargetChanges, #includeTmFiles').on('change', function () {
                 if (validateForm() && (isPending || isOrderChanged())) {
                     setSubmitButtonStatus(true);
                 } else {

@@ -15,6 +15,9 @@ use craft\base\Model;
 use yii\validators\NumberValidator;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use craft\elements\Asset;
+use craft\elements\GlobalSet;
+use craft\helpers\ElementHelper;
 use craft\validators\SiteIdValidator;
 use craft\validators\DateTimeValidator;
 
@@ -206,4 +209,87 @@ class FileModel extends Model
 
 		return $element;
 	}
+
+    public function hasTmMissAlignments()
+    {
+        try {
+            $elementRepository = Translations::$plugin->elementRepository;
+            $element = $elementRepository->getElementById($this->elementId, $this->targetSite);
+            $source = $this->source;
+
+            if ($this->isComplete()) {
+                $element = $elementRepository->getElementByDraftId($this->draftId, $this->targetSite);
+                $source = $this->target;
+            }
+
+            // Skip incase entry doesn't exist for target site
+            if (!$element) throw new \Exception('Entry not found for files target Site');
+
+            $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+            $converter = Translations::$plugin->elementToFileConverter;
+
+            $currentContent = $converter->convert(
+                $element,
+                Constants::FILE_FORMAT_XML,
+                [
+                    'sourceSite'    => $this->sourceSite,
+                    'targetSite'    => $this->targetSite,
+                    'wordCount'     => $wordCount,
+                    'orderId'       => $this->orderId
+                ]
+            );
+
+            $sourceContent = json_decode($converter->xmlToJson($source), true);
+            $currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+            $sourceContent = json_encode(array_values($sourceContent['content']));
+            $currentContent = json_encode(array_values($currentContent['content']));
+
+            if (md5($sourceContent) !== md5($currentContent)) {
+                return true;
+            }
+        } catch (\Exception $e) {
+            Craft::error($e, Constants::PLUGIN_HANDLE);
+        }
+
+        return false;
+    }
+
+    public function getTmMissAlignmentFile()
+    {
+        $element = Craft::$app->elements->getElementById($this->elementId, null, $this->sourceSite);
+
+        $targetSite = $this->targetSite;
+
+        $targetElement = Craft::$app->elements->getElementById($this->elementId, null, $targetSite);
+
+        if ($this->isComplete()) {
+            $draft = Translations::$plugin->draftRepository->getDraftById($this->draftId, $targetSite);
+            $targetElement = $draft ?: $targetElement;
+        }
+
+        if ($element instanceof GlobalSet) {
+            $filename = $this->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
+                '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+        } else if ($element instanceof Asset) {
+            $assetFilename = $element->getFilename();
+            $fileInfo = pathinfo($element->getFilename());
+            $filename = $this->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+        } else {
+            $filename = $this->elementId . '-' . $element->slug . '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+        }
+
+        $TmData = [
+            'sourceElement' => $element,
+            'sourceElementSite' => $this->sourceSite,
+            'targetElement' => $targetElement,
+            'targetElementSite' => $targetSite
+        ];
+        $fileContent = Translations::$plugin->elementToFileConverter->createTmFileContent($TmData);
+
+        return [
+            'fileName' => $filename,
+            'fileContent' => $fileContent
+        ];
+    }
 }

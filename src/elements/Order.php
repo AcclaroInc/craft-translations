@@ -83,6 +83,10 @@ class Order extends Element
 
 	public $trackTargetChanges;
 
+    public $includeTmFiles;
+
+    public $tmSyncAt;
+
     public $asynchronousPublishing;
 
     public $tags;
@@ -429,8 +433,7 @@ class Order extends Element
     private function getTargetAlertHtml() {
         $html = '';
         if (!$this->isPublished() && $this->hasTmMissAlignments()) {
-            $html .= '<span class="nowrap pl-5"><span class="warning order-warning font-size-15" data-icon="alert"> <li> Some files in this order have translation memory missaligned. </li>
-            </span></span>';
+            $html .= '<span class="nowrap pl-5"><span class="warning order-warning font-size-15" data-icon="alert"> This order contains misaligned content that might affect translation memory accuracy. </span></span>';
         }
 
         return $html;
@@ -618,46 +621,9 @@ class Order extends Element
         foreach ($this->getFiles() as $file) {
             if ($file->isPublished()) continue;
 
-            try {
-				$elementRepository = Translations::$plugin->elementRepository;
-				$element = $elementRepository->getElementById($file->elementId, $file->targetSite);
-                $source = $file->source;
-
-				if ($file->isComplete()) {
-					$element = $elementRepository->getElementByDraftId($file->draftId, $file->targetSite);
-                    $source = $file->target;
-				}
-
-                // Skip incase entry doesn't exist for target site
-                if (!$element) continue;
-
-				$wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
-				$converter = Translations::$plugin->elementToFileConverter;
-
-				$currentContent = $converter->convert(
-					$element,
-					Constants::FILE_FORMAT_XML,
-					[
-						'sourceSite'    => $file->sourceSite,
-						'targetSite'    => $file->targetSite,
-						'wordCount'     => $wordCount,
-						'orderId'       => $file->orderId
-					]
-				);
-
-				$sourceContent = json_decode($converter->xmlToJson($source), true);
-				$currentContent = json_decode($converter->xmlToJson($currentContent), true);
-
-				$sourceContent = json_encode(array_values($sourceContent['content']));
-				$currentContent = json_encode(array_values($currentContent['content']));
-
-				if (md5($sourceContent) !== md5($currentContent)) {
-					return true;
-				}
-			} catch (\Exception $e) {
-				throw new \Exception("Target data changes check, Error: " . $e->getMessage(), 1);
-			}
+            if ($file->hasTmMissAlignments()) return true;
         }
+
         return false;
     }
 
@@ -704,6 +670,20 @@ class Order extends Element
 
 		return $response;
 	}
+
+    public function shouldTrackSourceContent()
+    {
+        if ($this->isPending()) return Translations::getInstance()->settings->trackSourceChanges;
+
+        return (bool) $this->trackChanges;
+    }
+
+    public function shouldTrackTargetContent()
+    {
+        if ($this->isPending()) return Translations::getInstance()->settings->trackTargetChanges;
+
+        return (bool) $this->trackTargetChanges;
+    }
 
 	public function isExportImportAllowed()
 	{
@@ -757,6 +737,11 @@ class Order extends Element
         return $this->status === Constants::ORDER_STATUS_PUBLISHED;
     }
 
+    public function shouldIncludeTmFiles()
+    {
+        return (bool) $this->includeTmFiles;
+    }
+
     /**
      * Events
      */
@@ -794,6 +779,8 @@ class Order extends Element
         $record->tags =  $this->tags;
         $record->trackChanges =  $this->trackChanges;
 		$record->trackTargetChanges =  $this->trackTargetChanges;
+		$record->includeTmFiles =  $this->includeTmFiles;
+		$record->tmSyncAt =  $this->tmSyncAt;
 
         $record->save(false);
 

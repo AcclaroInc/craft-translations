@@ -34,6 +34,22 @@
             on: chkDuplicateEntries,
         }) }}
 
+        {{ forms.lightswitchField({
+            label: "Track source content changes by default"|t('app'),
+            instructions: "Enables the \"Track source content updates\" settings by default on new submission."|t('app'),
+            id: 'trackSourceChanges',
+            name: 'trackSourceChanges',
+            on: trackSourceChanges,
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Track target content changes by default"|t('app'),
+            instructions: "Enables the \"Track target content updates\" settings by default on new submission."|t('app'),
+            id: 'trackTargetChanges',
+            name: 'trackTargetChanges',
+            on: trackTargetChanges,
+        }) }}
+
         <hr>
         <h3>{{ "Assets"|t('app') }}</h3>
 
@@ -102,7 +118,7 @@
 
 {% js %}
     $( document ).ready(function() {
-        $('#chkDuplicateEntries, #apiLogging').change(function() {
+        $('#chkDuplicateEntries, #apiLogging, #trackSourceChanges, #trackTargetChanges').change(function() {
             $('#save-configuration').toggleClass('submit');
         });
     });

@@ -91,14 +91,14 @@ class FilesController extends Controller
                 $targetSite = $file->targetSite;
 
                 if ($element instanceof GlobalSet) {
-                    $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
+                    $fileName = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
                         '-' . $targetSite . '.' . $fileFormat;
                 } else if ($element instanceof Asset) {
                     $assetFilename = $element->getFilename();
                     $fileInfo = pathinfo($element->getFilename());
-                    $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
+                    $fileName = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
                 } else {
-                    $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
+                    $fileName = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
                 }
 
                 if ($fileFormat === Constants::FILE_FORMAT_JSON) {
@@ -109,9 +109,19 @@ class FilesController extends Controller
                     $fileContent = $file->source;
                 }
 
-                if (! $fileContent || !$zip->addFromString($filename, $fileContent)) {
-                    $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
-                    Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
+                if ($order->includeTmFiles && $order->hasTmMissAlignments()) $fileName = "source/" . $fileName;
+
+                if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
+                    $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
+                    Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
+                } else if ($order->includeTmFiles && $file->hasTmMissAlignments()) {
+                    $tmFile = $file->getTmMissAlignmentFile();
+                    $fileName = $tmFile['fileName'];
+
+                    if (! $zip->addFromString("references/" . $fileName, $tmFile['fileContent'])) {
+                        $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
+                        Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
+                    }
                 }
 
                 if ($file->isNew() || $file->isModified() || $file->isPublished()) {
@@ -212,7 +222,7 @@ class FilesController extends Controller
                             $fileInfo = null;
 
                             foreach ($files as $key => $file) {
-                                if (! is_bool(strpos($file, '__MACOSX'))) {
+                                if (! is_bool(strpos($file, '__MACOSX')) || strpos($file, '/references/') > -1) {
                                     unlink($file);
 
                                     continue;
@@ -451,39 +461,12 @@ class FilesController extends Controller
                 foreach ($order->GetFiles() as $file) {
                     if (! in_array($file->id, $files)) continue;
 
-                    $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+                    $tmFile = $file->getTmMissAlignmentFile();
+                    $fileName = $tmFile['fileName'];
+                    $fileContent = $tmFile['fileContent'];
 
-                    $targetSite = $file->targetSite;
-
-                    $targetElement = Craft::$app->elements->getElementById($file->elementId, null, $targetSite);
-
-                    if ($file->isComplete()) {
-                        $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $targetSite);
-                        $targetElement = $draft ?: $targetElement;
-                    }
-
-                    if ($element instanceof GlobalSet) {
-                        $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
-                            '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
-                    } else if ($element instanceof Asset) {
-                        $assetFilename = $element->getFilename();
-                        $fileInfo = pathinfo($element->getFilename());
-                        $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
-                    } else {
-                        $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
-                    }
-
-                    $TmData = [
-                        'sourceElement' => $element,
-                        'sourceElementSite' => $file->sourceSite,
-                        'targetElement' => $targetElement,
-                        'targetElementSite' => $targetSite
-                    ];
-
-                    $fileContent = Translations::$plugin->elementToFileConverter->createTmFileContent($TmData);
-
-                    if (! $fileContent || ! $zip->addFromString($filename, $fileContent)) {
-                        throw new \Exception('There was an error adding the file '.$filename.' to the zip: '.$zipName);
+                    if (! $fileContent || ! $zip->addFromString($fileName, $fileContent)) {
+                        throw new \Exception('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
                     }
                 }
             }

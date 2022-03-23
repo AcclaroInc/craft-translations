@@ -224,23 +224,39 @@
 						Recommended for continuous translation workflows.</p>'|t('app'),
 					id: "trackChanges",
 					name: "trackChanges",
-					on: order.trackChanges
+					on: order.shouldTrackSourceContent
 				}) }}
 			</div>
 
 			<input type="hidden" id="originalTrackChanges" value="{{ order.trackChanges }}">
 
-			<div style="margin-bottom: 0">
+			<div style="margin-bottom: 10px">
 				{{ forms.lightswitchField({
 					label: 'Track target content changes<p class="fw-400">\
 						Recomended when making changes to translated target content.</p>'|t('app'),
 					id: "trackTargetChanges",
 					name: "trackTargetChanges",
-					on: order.trackTargetChanges
+					on: order.shouldTrackTargetContent
 				}) }}
 			</div>
 
 			<input type="hidden" id="originalTrackTargetChanges" value="{{ order.trackTargetChanges }}">
+
+			{% set includeTmFilesClass = "" %}
+			{% if not order.isPending %}
+				{% set includeTmFilesClass = "noClick disabled" %}
+			{% endif %}
+			<div style="margin-bottom: 0" class="{{ includeTmFilesClass }}">
+				{{ forms.lightswitchField({
+					label: 'Include translation memory alignment files<p class="fw-400">\
+						Include translation memory alignment files with order submission to prevent overwriting existing content edits.</p>'|t('app'),
+					id: "includeTmFiles",
+					name: "includeTmFiles",
+					on: order.includeTmFiles
+				}) }}
+			</div>
+
+			<input type="hidden" id="originalIncludeTmFiles" value="{{ order.includeTmFiles }}">
 
 			<div id="extra-fields" style="margin-top: 20px">
 				{{ forms.dateField({
