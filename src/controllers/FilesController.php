@@ -122,12 +122,13 @@ class FilesController extends Controller
                         $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
                         Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
                     }
+                    $file->dateTmSync = time();
                 }
 
                 if ($file->isNew() || $file->isModified() || $file->isPublished()) {
                     $file->status = Constants::FILE_STATUS_IN_PROGRESS;
-                    Translations::$plugin->fileRepository->saveFile($file);
                 }
+                Translations::$plugin->fileRepository->saveFile($file);
             }
 
             if ($order->status !== ($newStatus = Translations::$plugin->orderRepository->getNewStatus($order))) {
@@ -468,6 +469,9 @@ class FilesController extends Controller
                     if (! $fileContent || ! $zip->addFromString($fileName, $fileContent)) {
                         throw new \Exception('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
                     }
+
+                    $file->dateTmSync = time();
+                    Translations::$plugin->fileRepository->saveFile($file);
                 }
             }
 

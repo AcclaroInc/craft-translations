@@ -59,6 +59,8 @@ class FileModel extends Model
 
     public $dateDeleted;
 
+    public $dateTmSync;
+
     public function init()
     {
         parent::init();

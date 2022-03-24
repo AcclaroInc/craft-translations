@@ -89,6 +89,7 @@ class Install extends Migration
                     'dateUpdated'       => $this->dateTime()->notNull(),
                     'dateDelivered'     => $this->dateTime(),
                     'dateDeleted'       => $this->dateTime()->null(),
+                    'dateTmSync'        => $this->dateTime(),
                     'uid'               => $this->uid()
                 ]
             );
@@ -137,7 +138,6 @@ class Install extends Migration
                     'trackChanges'              => $this->integer()->defaultValue(0),
 					'trackTargetChanges'        => $this->integer()->defaultValue(0),
 					'includeTmFiles'            => $this->integer()->defaultValue(0),
-                    'tmSyncAt'                  => $this->dateTime(),
                     'asynchronousPublishing'    => $this->integer()->defaultValue(0),
                     'dateCreated'               => $this->dateTime()->notNull(),
                     'dateUpdated'               => $this->dateTime()->notNull(),

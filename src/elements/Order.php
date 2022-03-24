@@ -85,8 +85,6 @@ class Order extends Element
 
     public $includeTmFiles;
 
-    public $tmSyncAt;
-
     public $asynchronousPublishing;
 
     public $tags;
@@ -780,7 +778,6 @@ class Order extends Element
         $record->trackChanges =  $this->trackChanges;
 		$record->trackTargetChanges =  $this->trackTargetChanges;
 		$record->includeTmFiles =  $this->includeTmFiles;
-		$record->tmSyncAt =  $this->tmSyncAt;
 
         $record->save(false);
 

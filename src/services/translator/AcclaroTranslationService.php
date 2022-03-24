@@ -297,6 +297,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $path
             );
 
+            $file->dateTmSync = time();
+            Translations::$plugin->fileRepository->saveFile($file);
+
             fclose($stream);
             unlink($path);
         }

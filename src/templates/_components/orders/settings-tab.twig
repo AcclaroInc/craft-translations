@@ -243,10 +243,12 @@
 			<input type="hidden" id="originalTrackTargetChanges" value="{{ order.trackTargetChanges }}">
 
 			{% set includeTmFilesClass = "" %}
+			{% set includeTmFilesTitle = "" %}
 			{% if not order.isPending %}
-				{% set includeTmFilesClass = "noClick disabled" %}
+				{% set includeTmFilesClass = "non-editable disabled" %}
+				{% set includeTmFilesTitle = "This field cannot be edited." %}
 			{% endif %}
-			<div style="margin-bottom: 0" class="{{ includeTmFilesClass }}">
+			<div style="margin-bottom: 0" class="{{ includeTmFilesClass }}" title="{{ includeTmFilesTitle }}">
 				{{ forms.lightswitchField({
 					label: 'Include translation memory alignment files<p class="fw-400">\
 						Include translation memory alignment files with order submission to prevent overwriting existing content edits.</p>'|t('app'),
