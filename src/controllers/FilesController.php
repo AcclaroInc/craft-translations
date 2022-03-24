@@ -109,7 +109,7 @@ class FilesController extends Controller
                     $fileContent = $file->source;
                 }
 
-                if ($order->includeTmFiles && $order->hasTmMissAlignments()) $fileName = "source/" . $fileName;
+                if ($order->includeTmFiles && $file->hasTmMissAlignments()) $fileName = "source/" . $fileName;
 
                 if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
                     $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
@@ -122,7 +122,8 @@ class FilesController extends Controller
                         $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
                         Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
                     }
-                    $file->dateTmSync = time();
+
+                    $file->reference = $tmFile['fileContent'];
                 }
 
                 if ($file->isNew() || $file->isModified() || $file->isPublished()) {
@@ -470,7 +471,7 @@ class FilesController extends Controller
                         throw new \Exception('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
                     }
 
-                    $file->dateTmSync = time();
+                    $file->reference = $tmFile['fileContent'];
                     Translations::$plugin->fileRepository->saveFile($file);
                 }
             }
@@ -489,7 +490,23 @@ class FilesController extends Controller
      * Send Translation memory files to translation service provider
      */
     public function actionSyncTmFiles() {
-        // TODO: need to complete this asa we het api endpoint
+        $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
+        $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+
+        //Iterate over each file on this order
+        if ($order->files) {
+            foreach ($order->GetFiles() as $file) {
+                if (in_array($file->id, $files) && $file->hasTmMissAlignments()) {
+                    $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
+                        $order->getTranslator()->service,
+                        $order->getTranslator()->getSettings()
+                    );
+
+                    $translationService->sendOrderReferenceFile($order, $file);
+                }
+            }
+        }
         return $this->asJson(['success' => true]);
     }
 

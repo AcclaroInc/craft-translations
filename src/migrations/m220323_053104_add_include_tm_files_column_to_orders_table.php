@@ -15,10 +15,10 @@ class m220323_053104_add_include_tm_files_column_to_orders_table extends Migrati
      */
     public function safeUp()
     {
-        echo "Adding translations_orders includeTmFiles column...\n";
-		$this->addColumn(Constants::TABLE_ORDERS, 'includeTmFiles', $this->integer()->defaultValue(0));
-		$this->addColumn(Constants::TABLE_FILES, 'dateTmSync', $this->dateTime());
-		echo "Done adding translations_files includeTmFiles column...\n";
+        echo "Adding translations_orders includeTmFiles, reference column...\n";
+		$this->addColumn(Constants::TABLE_ORDERS, 'includeTmFiles', $this->integer()->defaultValue(0)->after('trackChanges'));
+		$this->addColumn(Constants::TABLE_FILES, 'reference', $this->longText()->after('source'));
+		echo "Done adding translations_files includeTmFiles,reference column...\n";
     }
 
     /**

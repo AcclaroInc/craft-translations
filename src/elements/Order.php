@@ -430,7 +430,7 @@ class Order extends Element
 
     private function getTargetAlertHtml() {
         $html = '';
-        if (!$this->isPublished() && $this->hasTmMissAlignments()) {
+        if (!$this->isPublished() && $this->hasTmMissAlignments() && $this->trackTargetChanges) {
             $html .= '<span class="nowrap pl-5"><span class="warning order-warning font-size-15" data-icon="alert"> This order contains misaligned content that might affect translation memory accuracy. </span></span>';
         }
 
@@ -617,7 +617,7 @@ class Order extends Element
     public function hasTmMissAlignments()
     {
         foreach ($this->getFiles() as $file) {
-            if ($file->isPublished()) continue;
+            if ($file->isPublished() || $this->isNew()) continue;
 
             if ($file->hasTmMissAlignments()) return true;
         }
@@ -671,14 +671,14 @@ class Order extends Element
 
     public function shouldTrackSourceContent()
     {
-        if ($this->isPending()) return Translations::getInstance()->settings->trackSourceChanges;
+        if ($this->trackChanges === NULL) return Translations::getInstance()->settings->trackSourceChanges;
 
         return (bool) $this->trackChanges;
     }
 
     public function shouldTrackTargetContent()
     {
-        if ($this->isPending()) return Translations::getInstance()->settings->trackTargetChanges;
+        if ($this->trackTargetChanges === NULL) return Translations::getInstance()->settings->trackTargetChanges;
 
         return (bool) $this->trackTargetChanges;
     }

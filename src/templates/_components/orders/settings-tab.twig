@@ -77,7 +77,7 @@
 							{% for element in elements %}
 								{% set canonicalId = element.isDraft ? element.canonicalId : element.id %}
 								{% set sourceUpdated = element.id in isSourceChanged|default([]) %}
-								{% set targetUpdated = element.id in isTargetChanged['elements']|default([]) %}
+								{% set targetUpdated = element.id in isTargetChanged|default([]) %}
 								<tr data-word-count="{{ elementWordCounts[element.id] }}"
 									data-element-id="{{ element.id }}" data-canonical-id="{{ canonicalId }}"
 									data-is-updated="{% if sourceUpdated %} 1 {% else %} 0 {% endif %}"

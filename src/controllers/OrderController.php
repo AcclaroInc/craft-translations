@@ -102,7 +102,7 @@ class OrderController extends Controller
         $variables['elements'] = [];
         $variables['orderId'] = $variables['orderId'] ?? null;
         $variables['isSourceChanged'] = [];
-		$variables['isTargetChanged'] = ['elements' => [], 'files' => []];
+		$variables['isTargetChanged'] = [];
 		$variables['selectedSubnavItem'] = 'orders';
 		$variables['isDefaultTranslator'] = true;
 		$variables['elementWordCounts'] = array();
@@ -345,8 +345,8 @@ class OrderController extends Controller
             $variables['isSourceChanged'] = Translations::$plugin->orderRepository->getIsSourceChanged($order);
 		}
 
-		if ($order->trackTargetChanges && $variables['isSubmitted']) {
-			$variables['isTargetChanged'] = Translations::$plugin->orderRepository->getIsTargetChanged($order);
+		if ($order->trackTargetChanges && $variables['isSubmitted'] && $order->hasTmMissAlignments()) {
+            $variables['isTargetChanged'] = Translations::$plugin->orderRepository->getIsTargetChanged($order);
 		}
 
 		$variables['canUpdateFiles'] = $variables['orderRecentStatus'] !== Constants::ORDER_STATUS_CANCELED && $variables['orderRecentStatus'] !== Constants::ORDER_STATUS_PUBLISHED;

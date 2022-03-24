@@ -565,51 +565,12 @@ class OrderRepository
 	 */
 	public function getIsTargetChanged($order): ?array
 	{
-		$originalIds = ['elements' => [], 'files' => []];
+		$originalIds = [];
 
 		foreach ($order->getFiles() as $file) {
-			if ($file->isPublished()) continue;
+			if ($file->isPublished() || $file->isNew()) continue;
 
-			try {
-				$elementRepository = Translations::$plugin->elementRepository;
-				$element = $elementRepository->getElementById($file->elementId, $file->targetSite);
-                $source = $file->source;
-
-				if ($file->isComplete()) {
-					$element = $elementRepository->getElementByDraftId($file->draftId, $file->targetSite);
-                    $source = $file->target;
-				}
-
-                // Skip incase entry doesn't exist for target site
-                if (!$element) continue;
-
-				$wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
-				$converter = Translations::$plugin->elementToFileConverter;
-
-				$currentContent = $converter->convert(
-					$element,
-					Constants::FILE_FORMAT_XML,
-					[
-						'sourceSite'    => $file->sourceSite,
-						'targetSite'    => $file->targetSite,
-						'wordCount'     => $wordCount,
-						'orderId'       => $file->orderId
-					]
-				);
-
-				$sourceContent = json_decode($converter->xmlToJson($source), true);
-				$currentContent = json_decode($converter->xmlToJson($currentContent), true);
-
-				$sourceContent = json_encode(array_values($sourceContent['content']));
-				$currentContent = json_encode(array_values($currentContent['content']));
-
-				if (md5($sourceContent) !== md5($currentContent)) {
-					array_push($originalIds['files'], $file->id);
-					array_push($originalIds['elements'], $file->elementId);
-				}
-			} catch (Exception $e) {
-				throw new Exception("Target data changes check, Error: " . $e->getMessage(), 1);
-			}
+			if ($file->hasTmMissAlignments()) array_push($originalIds, $file->elementId);
 		}
 
 		return $originalIds;

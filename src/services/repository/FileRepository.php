@@ -31,6 +31,7 @@ class FileRepository
         'status',
         'wordCount',
         'source',
+        'reference',
         'target',
         'previewUrl',
         'serviceFileId',
@@ -467,5 +468,15 @@ class FileRepository
         }
 
         return '<table class="diffTable data"><tbody>' . $mainContent . '</tbody></table>';
+    }
+
+    /**
+     * @param \acclaro\translations\models\FileModel $file
+     */
+    public function isReferenceChanged($file)
+    {
+        $currentData = $file->getTmMissAlignmentFile()['fileContent'];
+
+        return md5($currentData) !== md5($file->reference);
     }
 }

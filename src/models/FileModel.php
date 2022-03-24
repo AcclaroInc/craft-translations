@@ -59,7 +59,7 @@ class FileModel extends Model
 
     public $dateDeleted;
 
-    public $dateTmSync;
+    public $reference;
 
     public function init()
     {
@@ -226,6 +226,10 @@ class FileModel extends Model
 
             // Skip incase entry doesn't exist for target site
             if (!$element) throw new \Exception('Entry not found for files target Site');
+
+            if (!$this->isComplete() && $this->reference !== null) {
+                return Translations::$plugin->fileRepository->isReferenceChanged($this);
+            }
 
             $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
             $converter = Translations::$plugin->elementToFileConverter;

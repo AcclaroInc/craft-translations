@@ -82,6 +82,7 @@ class Install extends Migration
                     'status'            => $this->enum('status', Constants::FILE_STATUSES)->defaultValue(Constants::FILE_STATUS_NEW),
                     'wordCount'         => $this->integer(),
                     'source'            => $this->longText(),
+                    'reference'         => $this->longText(),
                     'target'            => $this->longText(),
                     'previewUrl'        => $this->string()->defaultValue(''),
                     'serviceFileId'     => $this->string()->defaultValue(''),
@@ -89,7 +90,6 @@ class Install extends Migration
                     'dateUpdated'       => $this->dateTime()->notNull(),
                     'dateDelivered'     => $this->dateTime(),
                     'dateDeleted'       => $this->dateTime()->null(),
-                    'dateTmSync'        => $this->dateTime(),
                     'uid'               => $this->uid()
                 ]
             );
@@ -136,8 +136,8 @@ class Install extends Migration
                     'elementIds'                => $this->string(8160)->notNull()->defaultValue(''),
                     'tags'                      => $this->string(8160)->notNull()->defaultValue(''),
                     'trackChanges'              => $this->integer()->defaultValue(0),
-					'trackTargetChanges'        => $this->integer()->defaultValue(0),
 					'includeTmFiles'            => $this->integer()->defaultValue(0),
+					'trackTargetChanges'        => $this->integer()->defaultValue(0),
                     'asynchronousPublishing'    => $this->integer()->defaultValue(0),
                     'dateCreated'               => $this->dateTime()->notNull(),
                     'dateUpdated'               => $this->dateTime()->notNull(),

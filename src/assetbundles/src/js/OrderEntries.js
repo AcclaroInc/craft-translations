@@ -541,10 +541,16 @@
                     if (textStatus === 'success') {
                         if (response.success && !isDefaultTranslator) {
                             Craft.cp.displayNotice('Translation memory files sent successfully.');
+							setTimeout(function() {
+								location.reload();
+							}, 500);
                         } else if (response.success && response.tmFiles) {
                             let $downloadForm = $('#regenerate-preview-urls');
                             let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
                             $downloadForm.append($iframe);
+							setTimeout(function() {
+								location.reload();
+							}, 500);
                         } else {
                             Craft.cp.displayError(Craft.t('app', response.message));
                         }

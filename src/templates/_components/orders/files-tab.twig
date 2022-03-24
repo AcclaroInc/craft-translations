@@ -61,7 +61,7 @@
 												{{ file.uiLabel }}
 											</a>
 											{% set sourceUpdated = file.elementId in isSourceChanged %}
-											{% set targetUpdated = file.id in isTargetChanged['files'] %}
+											{% set targetUpdated = order.trackTargetChanges and file.hasTmMissAlignments and not file.isNew %}
 											{% if element.className == constant('acclaro\\translations\\Constants::CLASS_ENTRY') %}
 												<a href="{{ file.previewUrl }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 											{% endif %}
