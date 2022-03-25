@@ -248,15 +248,18 @@
 				{% set includeTmFilesClass = "non-editable disabled" %}
 				{% set includeTmFilesTitle = "This field cannot be edited." %}
 			{% endif %}
-			<div style="margin-bottom: 0" class="{{ includeTmFilesClass }}" title="{{ includeTmFilesTitle }}">
-				{{ forms.lightswitchField({
-					label: 'Include translation memory alignment files<p class="fw-400">\
-						Include translation memory alignment files with order submission to prevent overwriting existing content edits.</p>'|t('app'),
-					id: "includeTmFiles",
-					name: "includeTmFiles",
-					on: order.includeTmFiles
-				}) }}
-			</div>
+			<span class="{{ includeTmFilesClass }}">
+				<div style="margin-bottom: 0" class="{% if includeTmFilesClass %} noClick disabled {% endif %}" title="{{ includeTmFilesTitle }}">
+					{{ forms.lightswitchField({
+						label: 'Include translation memory alignment files<p class="fw-400">\
+							Include translation memory alignment files with order submission to prevent overwriting existing content edits.</p>'|t('app'),
+						id: "includeTmFiles",
+						name: "includeTmFiles",
+						class: "noClick",
+						on: order.includeTmFiles
+					}) }}
+				</div>
+			</span>
 
 			<input type="hidden" id="originalIncludeTmFiles" value="{{ order.includeTmFiles }}">
 

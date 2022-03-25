@@ -109,12 +109,12 @@ class FilesController extends Controller
                     $fileContent = $file->source;
                 }
 
-                if ($order->includeTmFiles && $file->hasTmMissAlignments()) $fileName = "source/" . $fileName;
+                if ($order->includeTmFiles && $file->hasTmMissAlignments(true)) $fileName = "source/" . $fileName;
 
                 if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
                     $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
                     Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
-                } else if ($order->includeTmFiles && $file->hasTmMissAlignments()) {
+                } else if ($order->includeTmFiles && $file->hasTmMissAlignments(true)) {
                     $tmFile = $file->getTmMissAlignmentFile();
                     $fileName = $tmFile['fileName'];
 
@@ -461,7 +461,7 @@ class FilesController extends Controller
             //Iterate over each file on this order
             if ($order->files) {
                 foreach ($order->GetFiles() as $file) {
-                    if (! in_array($file->id, $files)) continue;
+                    if (! in_array($file->id, $files) || !$file->hasTmMissAlignments()) continue;
 
                     $tmFile = $file->getTmMissAlignmentFile();
                     $fileName = $tmFile['fileName'];

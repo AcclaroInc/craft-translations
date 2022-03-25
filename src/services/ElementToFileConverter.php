@@ -389,10 +389,8 @@ class ElementToFileConverter
 
         $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
 
-        $source = Translations::$plugin->elementTranslator->toTranslationSource(
-            $data['sourceElement'],
-            $data['sourceElementSite']
-        );
+        $source = json_decode($this->xmlToJson($data['sourceContent']), true)['content'] ?? [];
+
         $target = Translations::$plugin->elementTranslator->toTranslationSource(
             $data['targetElement'],
             $data['targetElementSite']

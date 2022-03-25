@@ -6,6 +6,8 @@
 
 	var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
 	var hasOrderId = $("input[type=hidden][name=id]").val() != '';
+	var isInProgress = $("#order-attr").data("status") === "in progress";
+	var hasCompleteFiles = $("#order-attr").data("has-completed-file");
 
 	/**
 	 * Order entries class
@@ -103,10 +105,12 @@
 		},
 		togglePublishButton: function() {
 			if (this.hasSelections()) {
-				this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
+				if (! isInProgress)
+					this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
 				this.$fileActions.removeClass('noClick disabled');
 			} else {
-				this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
+				if (! isInProgress)
+					this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
 				this.$fileActions.addClass('noClick disabled');
 			}
 		},
@@ -431,6 +435,9 @@
 			return $mainContent;
 		},
 		_buildFileActions: function() {
+			$draftButtonClass = 'disabled noCick';
+			if (hasCompleteFiles) $draftButtonClass = '';
+
 			$menu = $('<div>', {'class': 'menu'});
             $menu.insertAfter($('#file-actions-menu-icon'));
 
@@ -443,18 +450,20 @@
 
             $updateAction = $('<a>', {
                 'href': '#',
+				'class': $draftButtonClass,
                 'text': 'Rebuild draft previews',
             });
             $updateLi.append($updateAction);
-            this._addRebuildDraftPreviewAction($updateAction);
+            if (hasCompleteFiles) this._addRebuildDraftPreviewAction($updateAction);
 
             // Download preview links as csv button
             $updateAndDownloadAction = $('<a>', {
                 'href': '#',
+				'class': $draftButtonClass,
                 'text': 'Download preview links	',
             });
             $updateLi.append($updateAndDownloadAction);
-            this._addDownloadPreviewLinksAction($updateAndDownloadAction, true);
+            if (hasCompleteFiles) this._addDownloadPreviewLinksAction($updateAndDownloadAction, true);
 
             // Download/Sync TM Files Button
             $dropdown.append($('<hr>'));

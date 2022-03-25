@@ -428,7 +428,7 @@ class Order extends Element
         ];
     }
 
-    private function getTargetAlertHtml() {
+    public function getTargetAlertHtml() {
         $html = '';
         if (!$this->isPublished() && $this->hasTmMissAlignments() && $this->trackTargetChanges) {
             $html .= '<span class="nowrap pl-5"><span class="warning order-warning font-size-15" data-icon="alert"> This order contains misaligned content that might affect translation memory accuracy. </span></span>';
@@ -502,10 +502,22 @@ class Order extends Element
      */
     public function hasCompletedFiles()
     {
-		$files = Translations::$plugin->fileRepository->getFiles($this->id);
+        foreach ($this->getFiles() as $file) {
+			if ($file->isComplete() || $file->isPublished()) return true;
+		}
 
-        foreach ($files as $file) {
-			if ($file->isComplete() || $file->isReviewReady() || $file->isPublished()) return true;
+		return false;
+    }
+
+    /**
+     * Used to enable or disable sekect all checkbox in files tab
+     *
+     * @return bool
+     */
+    public function canEnableFilesCheckboxes()
+    {
+        foreach ($this->getFiles() as $file) {
+			if ($file->isInProgress() || $file->isComplete() || $file->isReviewReady() || $file->isPublished()) return true;
 		}
 
 		return false;

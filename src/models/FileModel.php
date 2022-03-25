@@ -28,6 +28,10 @@ use craft\validators\DateTimeValidator;
  */
 class FileModel extends Model
 {
+    /**
+     * @var \acclaro\translations\services\repository\FileRepository $_service
+     */
+    private $_service;
 
     public $id;
 
@@ -64,6 +68,8 @@ class FileModel extends Model
     public function init()
     {
         parent::init();
+
+        $this->_service = Translations::$plugin->fileRepository;
 
         $this->status = $this->status ? : Constants::FILE_STATUS_NEW;
         $this->sourceSite = $this->sourceSite ?: '';
@@ -150,6 +156,11 @@ class FileModel extends Model
         return $this->status === Constants::FILE_STATUS_COMPLETE;
     }
 
+    public function isInProgress()
+    {
+        return $this->status === Constants::FILE_STATUS_IN_PROGRESS;
+    }
+
     public function isReviewReady()
     {
         return $this->status === Constants::FILE_STATUS_REVIEW_READY;
@@ -212,53 +223,13 @@ class FileModel extends Model
 		return $element;
 	}
 
-    public function hasTmMissAlignments()
+    public function hasTmMissAlignments($ignoreReference = false)
     {
-        try {
-            $elementRepository = Translations::$plugin->elementRepository;
-            $element = $elementRepository->getElementById($this->elementId, $this->targetSite);
-            $source = $this->source;
-
-            if ($this->isComplete()) {
-                $element = $elementRepository->getElementByDraftId($this->draftId, $this->targetSite);
-                $source = $this->target;
-            }
-
-            // Skip incase entry doesn't exist for target site
-            if (!$element) throw new \Exception('Entry not found for files target Site');
-
-            if (!$this->isComplete() && $this->reference !== null) {
-                return Translations::$plugin->fileRepository->isReferenceChanged($this);
-            }
-
-            $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
-            $converter = Translations::$plugin->elementToFileConverter;
-
-            $currentContent = $converter->convert(
-                $element,
-                Constants::FILE_FORMAT_XML,
-                [
-                    'sourceSite'    => $this->sourceSite,
-                    'targetSite'    => $this->targetSite,
-                    'wordCount'     => $wordCount,
-                    'orderId'       => $this->orderId
-                ]
-            );
-
-            $sourceContent = json_decode($converter->xmlToJson($source), true);
-            $currentContent = json_decode($converter->xmlToJson($currentContent), true);
-
-            $sourceContent = json_encode(array_values($sourceContent['content']));
-            $currentContent = json_encode(array_values($currentContent['content']));
-
-            if (md5($sourceContent) !== md5($currentContent)) {
-                return true;
-            }
-        } catch (\Exception $e) {
-            Craft::error($e, Constants::PLUGIN_HANDLE);
+        if ($this->reference !== null) {
+            return $ignoreReference ?: $this->_service->isReferenceChanged($this);
         }
 
-        return false;
+        return $this->_service->hasTmMissAlignments($this);
     }
 
     public function getTmMissAlignmentFile()
@@ -266,12 +237,14 @@ class FileModel extends Model
         $element = Craft::$app->elements->getElementById($this->elementId, null, $this->sourceSite);
 
         $targetSite = $this->targetSite;
+        $source = $this->source;
 
         $targetElement = Craft::$app->elements->getElementById($this->elementId, null, $targetSite);
 
         if ($this->isComplete()) {
             $draft = Translations::$plugin->draftRepository->getDraftById($this->draftId, $targetSite);
             $targetElement = $draft ?: $targetElement;
+            // $source = $this->target;
         }
 
         if ($element instanceof GlobalSet) {
@@ -286,7 +259,7 @@ class FileModel extends Model
         }
 
         $TmData = [
-            'sourceElement' => $element,
+            'sourceContent' => $source,
             'sourceElementSite' => $this->sourceSite,
             'targetElement' => $targetElement,
             'targetElementSite' => $targetSite
