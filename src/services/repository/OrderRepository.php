@@ -364,6 +364,8 @@ class OrderRepository
             }
         }
 
+        $orderReferenceFiles = [];
+
         $sendOrderSvc = new SendOrder();
         $translationService = new AcclaroTranslationService($settings, $acclaroApiClient);
         foreach ($order->getFiles() as $file) {
@@ -374,11 +376,15 @@ class OrderRepository
             $translationService->sendOrderFile($order, $file, $settings);
 
             if ($order->shouldIncludeTmFiles() && $file->hasTmMissAlignments()) {
-                $translationService->sendOrderReferenceFile($order, $file);
+                array_push($orderReferenceFiles, $file);
             }
         }
 
         $acclaroApiClient->submitOrder($order->serviceOrderId);
+
+        foreach ($orderReferenceFiles as $file) {
+            $translationService->sendOrderReferenceFile($order, $file);
+        }
 
         $order->status = Constants::ORDER_STATUS_NEW;
 

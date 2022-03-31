@@ -248,15 +248,16 @@ class FileModel extends Model
         }
 
         if ($element instanceof GlobalSet) {
-            $filename = $this->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
-                '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+            $entrySlug= ElementHelper::normalizeSlug($element->name);
         } else if ($element instanceof Asset) {
             $assetFilename = $element->getFilename();
-            $fileInfo = pathinfo($element->getFilename());
-            $filename = $this->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+            $fileInfo = pathinfo($assetFilename);
+            $entrySlug= basename($assetFilename, '.' . $fileInfo['extension']);
         } else {
-            $filename = $this->elementId . '-' . $element->slug . '-' . $targetSite . '_TM.' . Constants::FILE_FORMAT_CSV;
+            $entrySlug= $element->slug;
         }
+
+        $filename = sprintf('%s-%s-%s_TM.%s',$this->elementId, $entrySlug, date("Ymd\THi"), Constants::FILE_FORMAT_CSV);
 
         $TmData = [
             'sourceContent' => $source,

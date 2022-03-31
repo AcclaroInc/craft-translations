@@ -970,3 +970,8 @@ td.target{
 .unset-width.fixed {
 	min-width: 404px !important;
 }
+
+.border-left-radius-5px {
+    border-top-left-radius: 5px !important;
+    border-bottom-left-radius: 5px !important;
+}

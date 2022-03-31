@@ -435,7 +435,7 @@
 			return $mainContent;
 		},
 		_buildFileActions: function() {
-			$draftButtonClass = 'disabled noCick';
+			$draftButtonClass = 'disabled noClick';
 			if (hasCompleteFiles) $draftButtonClass = '';
 
 			$menu = $('<div>', {'class': 'menu'});
@@ -482,6 +482,7 @@
 			var $form = $('#regenerate-preview-urls');
 			$(that).on('click', function(e) {
 				e.preventDefault();
+				self.toggleLoader(true);
 
 				var files = [];
 				$rows = self.getFiles(true);
@@ -502,6 +503,7 @@
 		_addDownloadPreviewLinksAction: function(that) {
 			$(that).on('click', function(e) {
 				e.preventDefault();
+				self.toggleLoader(true);
 				if (hasOrderId) {
 					var files = [];
 					$rows = self.getFiles(true);
@@ -517,8 +519,10 @@
 						if (response.success && response.previewFile) {
 							var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
 							$('#regenerate-preview-urls').append($iframe);
+							self.toggleLoader();
 						} else {
 							Craft.cp.displayError(Craft.t('app', 'Unable to download your file.'));
+							self.toggleLoader();
 						}
 					});
 				}
@@ -529,6 +533,7 @@
             var action = isDefaultTranslator ? 'download' : 'sync';
             $(that).on('click', function(e) {
                 e.preventDefault();
+				self.toggleLoader(true);
 
                 var files = [];
                 $rows = self.getFiles(true);
@@ -550,25 +555,34 @@
                     if (textStatus === 'success') {
                         if (response.success && !isDefaultTranslator) {
                             Craft.cp.displayNotice('Translation memory files sent successfully.');
-							setTimeout(function() {
-								location.reload();
-							}, 500);
+							location.reload();
                         } else if (response.success && response.tmFiles) {
                             let $downloadForm = $('#regenerate-preview-urls');
                             let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
                             $downloadForm.append($iframe);
 							setTimeout(function() {
 								location.reload();
-							}, 500);
+							}, 100);
                         } else {
                             Craft.cp.displayError(Craft.t('app', response.message));
+							self.toggleLoader();
                         }
                     } else {
                         Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
+						self.toggleLoader();
                     }
                 });
+
             });
 		},
+		toggleLoader: function(show = false) {
+			if (show) {
+				$('#file-actions').addClass('disabled noClick');
+			} else {
+				$('#file-actions').removeClass('disabled noClick');
+			}
+			$('#files').find('.translations-loader').toggleClass('spinner hidden');
+        },
 		getFiles: function($selected = false) {
 			$elementCheckboxes = $('#files tbody .file :checkbox');
 			if ($selected) {
