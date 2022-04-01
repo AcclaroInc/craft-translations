@@ -52,18 +52,18 @@ class NeoFieldTranslator extends GenericFieldTranslator
             $source[$key] = $value;
         }
 
-        $block = $block->getChildren()->all();
-        $new = 0;
-        foreach ($block as $childBlock) {
-            $childBlockId = $childBlock->id ?? 'new' . ++$new;
-            $key = sprintf('%s.%s', $keyPrefix, $childBlockId);
+        // $block = $block->getChildren()->all();
+        // $new = 0;
+        // foreach ($block as $childBlock) {
+        //     $childBlockId = $childBlock->id ?? 'new' . ++$new;
+        //     $key = sprintf('%s.%s', $keyPrefix, $childBlockId);
 
-            $childBlockSource = $this->blockToTranslationSource($elementTranslator, $childBlock, $key);
+        //     $childBlockSource = $this->blockToTranslationSource($elementTranslator, $childBlock, $key);
 
-            foreach ($childBlockSource as $key => $value) {
-                $source[$key] = $value;
-            }
-        }
+        //     foreach ($childBlockSource as $key => $value) {
+        //         $source[$key] = $value;
+        //     }
+        // }
 
         return $source;
     }
