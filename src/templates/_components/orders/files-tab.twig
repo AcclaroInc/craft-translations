@@ -7,7 +7,13 @@
 				Files
 			</label>
 			<div class="btngroup submit ml-auto">
-				<input type="button" id="review" class="btn submit disabled form-submit"
+				<div class="translations-loader hidden" style="margin-right:-30px"></div>
+
+				<div id='file-actions' class='btngroup flex flex-nowrap noClick disabled pr-10px'>
+					<div class="btn menubtn" data-icon='settings' title='Actions' id='file-actions-menu-icon'></div>
+				</div>
+
+				<input type="button" id="review" class="btn submit disabled form-submit border-left-radius-5px"
 					disabled="disabled" value="{{ 'Review changes'|t }}">
 			</div>
 		</div>
@@ -18,7 +24,7 @@
 			<table class="data fullwidth" dir="ltr">
 				<thead>
 					<tr>
-						{% if order.hasCompletedFiles %}
+						{% if order.canEnableFilesCheckboxes %}
 							{% set fileCheckboxProp = '' %}
 						{% endif %}
 						<td class="thin checkbox-cell translations-checkbox-cell select-all-checkbox">
@@ -38,8 +44,8 @@
 						{% set element = file.element %}
 						<tr data-word-count="{{ elementWordCounts[file.elementId] }}" data-element-id="{{ file.elementId }}" class="diff-clone" data-file-id="{{ file.id }}">
 
-							<td class="thin checkbox-cell translations-checkbox-cell">
-								{% if file.isComplete or file.isReviewReady or file.isPublished %}
+							<td class="thin checkbox-cell translations-checkbox-cell file">
+								{% if file.isInProgress or file.isComplete or file.isReviewReady or file.isPublished %}
 									<input class="checkbox hidden" data-element="{{ file.elementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}"/>
 								{% else %}
 									<input class="checkbox hidden" data-element="{{ file.elementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}" disabled="disabled"/>
@@ -54,12 +60,20 @@
 											<a href="{{ file.cpEditUrl }}">
 												{{ file.uiLabel }}
 											</a>
+											{% set sourceUpdated = file.elementId in isSourceChanged %}
+											{% set targetUpdated = order.trackTargetChanges and file.hasTmMissAlignments and not file.isNew %}
 											{% if element.className == constant('acclaro\\translations\\Constants::CLASS_ENTRY') %}
 												<a href="{{ file.previewUrl }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 											{% endif %}
-											{% if file.elementId in isSourceChanged and canUpdateFiles and not file.isPublished %}
+											{% if canUpdateFiles and not file.isPublished and (sourceUpdated or targetUpdated) %}
 												<span class="warning order-warning font-size-15" data-icon="alert">
-													{{ 'Source entry content has been modified since order was created.' }}
+													{% if sourceUpdated %}
+														<li> {{ 'Source entry content has been modified since order was created.' }} </li>
+													{% endif %}
+
+													{% if targetUpdated %}
+														<li> {{ 'Target entry content has been modified since order was created.' }} </li>
+													{% endif %}
 												</span>
 											{% endif %}
 										</td>

@@ -4,6 +4,11 @@
 		Craft.Translations = {};
 	}
 
+	var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
+	var hasOrderId = $("input[type=hidden][name=id]").val() != '';
+	var isInProgress = $("#order-attr").data("status") === "in progress";
+	var hasCompleteFiles = $("#order-attr").data("has-completed-file");
+
 	/**
 	 * Order entries class
 	 */
@@ -12,18 +17,30 @@
 		$selectAllCheckbox: null,
 		$publishSelectedBtn: null,
 		$selectedFileIds: null,
+		$buildFileActions: true,
 
 		init: function() {
 			self = this;
 			this.$publishSelectedBtn = $('#review');
+			this.$fileActions = $('#file-actions');
 			this.$selectAllCheckbox = $('.select-all-checkbox :checkbox');
 			this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
 
 			this.$selectAllCheckbox.on('change', function() {
+				if (self.$buildFileActions) {
+					self._buildFileActions();
+					self.$buildFileActions = false;
+				}
+
 				self.toggleSelected($(this).is(':checked'));
 			});
 
 			this.$checkboxes.on('change', function() {
+				if (self.$buildFileActions) {
+					self._buildFileActions();
+					self.$buildFileActions = false;
+				}
+
 				self.togglePublishButton();
 				self.toggleSelectAllCheckbox();
 			});
@@ -88,9 +105,13 @@
 		},
 		togglePublishButton: function() {
 			if (this.hasSelections()) {
-				this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
+				if (! isInProgress)
+					this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
+				this.$fileActions.removeClass('noClick disabled');
 			} else {
-				this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
+				if (! isInProgress)
+					this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
+				this.$fileActions.addClass('noClick disabled');
 			}
 		},
 		toggleApprovePublishButton: function(state) {
@@ -412,6 +433,162 @@
 			});
 
 			return $mainContent;
+		},
+		_buildFileActions: function() {
+			$draftButtonClass = 'disabled noClick';
+			if (hasCompleteFiles) $draftButtonClass = '';
+
+			$menu = $('<div>', {'class': 'menu'});
+            $menu.insertAfter($('#file-actions-menu-icon'));
+
+            $dropdown = $('<ul>', {'class': ''});
+            $menu.append($dropdown);
+
+            // Rebuild draft preview button
+            $updateLi = $('<li>');
+            $dropdown.append($updateLi);
+
+            $updateAction = $('<a>', {
+                'href': '#',
+				'class': $draftButtonClass,
+                'text': 'Rebuild draft previews',
+            });
+            $updateLi.append($updateAction);
+            if (hasCompleteFiles) this._addRebuildDraftPreviewAction($updateAction);
+
+            // Download preview links as csv button
+            $updateAndDownloadAction = $('<a>', {
+                'href': '#',
+				'class': $draftButtonClass,
+                'text': 'Download preview links	',
+            });
+            $updateLi.append($updateAndDownloadAction);
+            if (hasCompleteFiles) this._addDownloadPreviewLinksAction($updateAndDownloadAction, true);
+
+            // Download/Sync TM Files Button
+            $dropdown.append($('<hr>'));
+            $downloadTmLi = $('<li>');
+            $dropdown.append($downloadTmLi);
+            $label = (isDefaultTranslator ? 'Download ' : 'Sync ') + 'memory alignment files';
+
+            $downloadTmAction = $('<a>', {
+                'href': '#',
+                'text': $label,
+            });
+            $downloadTmLi.append($downloadTmAction);
+            this._addDownloadTmFilesAction($downloadTmAction);
+		},
+		_addRebuildDraftPreviewAction: function(that) {
+			var $form = $('#regenerate-preview-urls');
+			$(that).on('click', function(e) {
+				e.preventDefault();
+				self.toggleLoader(true);
+
+				var files = [];
+				$rows = self.getFiles(true);
+				$rows.each(function() {
+					files.push($(this).data('file-id'));
+				});
+
+				$hiddenFlow = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'files',
+                    'value': JSON.stringify(files)
+                });
+                $hiddenFlow.appendTo($form);
+
+				$form.submit();
+			});
+		},
+		_addDownloadPreviewLinksAction: function(that) {
+			$(that).on('click', function(e) {
+				e.preventDefault();
+				self.toggleLoader(true);
+				if (hasOrderId) {
+					var files = [];
+					$rows = self.getFiles(true);
+					$rows.each(function() {
+						files.push($(this).data('file-id'));
+					});
+					$data = {
+						'id': $("input[type=hidden][name=id]").val(),
+						'files': JSON.stringify(files)
+					};
+
+					Craft.postActionRequest('translations/export/export-preview-links', $data, function (response, textStatus) {
+						if (response.success && response.previewFile) {
+							var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
+							$('#regenerate-preview-urls').append($iframe);
+							self.toggleLoader();
+						} else {
+							Craft.cp.displayError(Craft.t('app', 'Unable to download your file.'));
+							self.toggleLoader();
+						}
+					});
+				}
+			});
+		},
+		_addDownloadTmFilesAction: function(that) {
+			var self = this;
+            var action = isDefaultTranslator ? 'download' : 'sync';
+            $(that).on('click', function(e) {
+                e.preventDefault();
+				self.toggleLoader(true);
+
+                var files = [];
+                $rows = self.getFiles(true);
+                $rows.each(function() {
+                    files.push($(this).data('file-id'));
+                });
+
+                $data = {
+                    files: JSON.stringify(files),
+                    orderId: $("input[type=hidden][name=id]").val()
+                }
+
+                actions = {
+                    download: 'translations/files/create-tm-export-zip',
+                    sync: 'translations/files/sync-tm-files'
+                }
+
+                Craft.postActionRequest(actions[action], $data, function(response, textStatus) {
+                    if (textStatus === 'success') {
+                        if (response.success && !isDefaultTranslator) {
+                            Craft.cp.displayNotice('Translation memory files sent successfully.');
+							location.reload();
+                        } else if (response.success && response.tmFiles) {
+                            let $downloadForm = $('#regenerate-preview-urls');
+                            let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
+                            $downloadForm.append($iframe);
+							setTimeout(function() {
+								location.reload();
+							}, 100);
+                        } else {
+                            Craft.cp.displayError(Craft.t('app', response.message));
+							self.toggleLoader();
+                        }
+                    } else {
+                        Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
+						self.toggleLoader();
+                    }
+                });
+
+            });
+		},
+		toggleLoader: function(show = false) {
+			if (show) {
+				$('#file-actions').addClass('disabled noClick');
+			} else {
+				$('#file-actions').removeClass('disabled noClick');
+			}
+			$('#files').find('.translations-loader').toggleClass('spinner hidden');
+        },
+		getFiles: function($selected = false) {
+			$elementCheckboxes = $('#files tbody .file :checkbox');
+			if ($selected) {
+				return $elementCheckboxes.filter(':checked').closest('tr');
+			}
+			return $elementCheckboxes.closest('tr');
 		}
 	};
 

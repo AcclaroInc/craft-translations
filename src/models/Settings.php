@@ -21,6 +21,10 @@ class Settings extends Model
 {
     public $chkDuplicateEntries = true;
 
+    public $trackSourceChanges;
+
+    public $trackTargetChanges;
+
     public $apiLogging;
 
     public $twigSearchFilterSingleQuote = "";

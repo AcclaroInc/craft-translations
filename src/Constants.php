@@ -4,7 +4,7 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.3.7';
+    const PLUGIN_SCHEMA_VERSION = '1.3.8';
     const CRAFT_MIN_VERSION = '3.7.9';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
@@ -199,6 +199,7 @@ class Constants
     const ACCLARO_API_REQUEST_ORDER_CALLBACK    = 'orders/{orderid}/callback';
 
     const ACCLARO_API_SEND_SOURCE_FILE      = 'orders/{orderid}/files';
+    const ACCLARO_API_SEND_REFERENCE_FILE   = 'orders/{orderid}/reference-file';
     const ACCLARO_API_GET_ORDER_FILES_INFO  = 'orders/{orderid}/files-info';
     const ACCLARO_API_GET_FILE              = 'orders/{orderid}/files/{fileid}';
     const ACCLARO_API_GET_FILE_STATUS       = 'orders/{orderid}/files/{fileid}/status';

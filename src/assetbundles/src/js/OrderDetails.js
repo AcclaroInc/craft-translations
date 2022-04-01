@@ -122,6 +122,26 @@
 
 		if ($originalTrackChanges != currentTrackChanges) return true;
 
+		// Validate Track Target Changes
+		$originalTrackTargetChanges = $('#originalTrackTargetChanges').val();
+		var currentTrackTargetChanges = $('input[type=hidden][name=trackTargetChanges]').val();
+
+		if (currentTrackTargetChanges == undefined || currentTrackTargetChanges == '') {
+			currentTrackTargetChanges = 0;
+		}
+
+		if ($originalTrackTargetChanges != currentTrackTargetChanges) return true;
+
+		// Validate Include Tm Files Changes
+		$originalIncludeTmFiles = $('#originalIncludeTmFiles').val();
+		var currentIncludeTmFiles = $('input[type=hidden][name=includeTmFiles]').val();
+
+		if (currentIncludeTmFiles == undefined || currentIncludeTmFiles == '') {
+			currentIncludeTmFiles = 0;
+		}
+
+		if ($originalIncludeTmFiles != currentIncludeTmFiles) return true;
+
 		// Validate Translator
 		$originalTranslatorId = $('#originalTranslatorId').val().split(',');
 		var currentTranslatorId = $('#translatorId').val().split(",");
@@ -170,7 +190,9 @@
 
     function getFieldValuesAsUrlParams() {
         title = $('#title').val();
-        trackChanges = $('input[type=hidden][name=trackChanges]').val();;
+		trackChanges = $('input[type=hidden][name=trackChanges]').val();
+		trackTargetChanges = $('input[type=hidden][name=trackTargetChanges]').val();
+		includeTmFiles = $('input[type=hidden][name=includeTmFiles]').val();
         tags = $('input[name="tags[]"]');
         translatorId = $('#translatorId').val();
         targetSites = '';
@@ -205,7 +227,7 @@
             });
         }
 
-        url += "&trackChanges="+trackChanges
+		url += "&trackChanges=" + trackChanges + "&trackTargetChanges=" + trackTargetChanges + "&includeTmFiles=" + includeTmFiles
         return url
     }
 
@@ -489,7 +511,7 @@
                 }
             });
 
-            $('#trackChanges').on('change', function() {
+			$('#trackChanges, #trackTargetChanges, #includeTmFiles').on('change', function () {
                 if (validateForm() && (isPending || isOrderChanged())) {
                     setSubmitButtonStatus(true);
                 } else {
@@ -522,10 +544,6 @@
                 } else {
                     setSubmitButtonStatus(false);
                 }
-            });
-
-            $('#createNewOrder').on('click', function () {
-                window.location.href = "/admin/translations/orders/create";
             });
 
             $('.order-warning', '#global-container').infoicon();
@@ -575,8 +593,9 @@
                     storageKey: null,
                     sources: null,
                     elementIndex: null,
-                    criteria: {siteId: this.elementSiteId},
+                    criteria: {siteId: site},
                     multiSelect: 1,
+                    showSiteMenu: false,
                     disabledElementIds: canonicalElementIds,
 
                     onSelect: $.proxy(function(elements) {
@@ -647,23 +666,6 @@
                     $cancelIcon.addClass('desc');
                 }
             });
-
-			$('#export-preview-links').on('click', function () {
-				if (hasOrderId) {
-					$data = {
-						'id': $("input[type=hidden][name=id]").val()
-					};
-
-					Craft.postActionRequest('translations/export/export-preview-links', $data, function (response, textStatus) {
-						if (response.success && response.previewFile) {
-							var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
-							$('#regenerate-preview-urls').append($iframe);
-						} else {
-							Craft.cp.displayError(Craft.t('app', 'Unable to download your file.'));
-						}
-					});
-				}
-			});
 
             $(window).on('scroll resize', function(e) {
                 $width = $(window).width();
@@ -967,24 +969,13 @@
             }
         },
         _buildElementActions: function() {
-            var $toolbar = $('<div>', {'id': 'toolbar', 'class': 'btngroup flex flex-nowrap margin-left', 'style': 'max-width: 10px'});
-            $toolbar.insertAfter('#text-field #entries-label');
-
-            $menubtn = $('<div class="btn menubtn" data-icon=settings title=Actions></div>');
-            $toolbar.append($menubtn);
-
-            $('<div class="translations-loader hidden"></div>').insertAfter($toolbar);
-
-            $menubtn.on('click', function(e) {
-                e.preventDefault();
-            });
-
             $menu = $('<div>', {'class': 'menu', 'id': 'order-element-action-menu'});
-            $menu.appendTo($toolbar);
+            $menu.insertAfter($('#element-action-menu-icon'));
 
             $dropdown = $('<ul>', {'class': ''});
             $menu.append($dropdown);
 
+            // Update entrie button
             $updateLi = $('<li>');
             $dropdown.append($updateLi);
 
@@ -996,6 +987,7 @@
             $updateLi.append($updateAction);
             this._addUpdateElementAction($updateAction);
 
+            // Update and download entries button
             $updateAndDownloadAction = $('<a>', {
                 'class': 'update-element disabled noClick',
                 'href': '#',
@@ -1004,6 +996,7 @@
             $updateLi.append($updateAndDownloadAction);
             this._addUpdateElementAction($updateAndDownloadAction, true);
 
+            // Delete Button
             $dropdown.append($('<hr>'));
             $deleteLi = $('<li>');
             $dropdown.append($deleteLi);
@@ -1197,12 +1190,11 @@
                 if (! this.$elementActions) {
                     this._buildElementActions();
                     this.$elementActions = $('#order-element-action-menu');
-                } else {
-                    $('#toolbar').show();
                 }
+                $('#toolbar').removeClass('disabled noClick');
                 this.toggleUpdateActionButton();
             } else {
-                $('#toolbar').hide();
+                $('#toolbar').addClass('disabled noClick');
             }
         }
     }

@@ -28,7 +28,6 @@ class OrderAsset extends AssetBundle
         $this->js = [
             'js/OrderDetails.js',
             'js/OrderEntries.js',
-            'js/OrderIndex.js',
             'js/ExportFiles.js',
             'js/ImportFiles.js',
             'js/diff2html.min.js',

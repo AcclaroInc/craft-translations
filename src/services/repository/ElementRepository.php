@@ -15,9 +15,9 @@ use craft\elements\Entry;
 
 class ElementRepository
 {
-    public function getElementById($element, $siteId)
+	public function getElementById($elementId, $siteId)
     {
-        return Craft::$app->elements->getElementById($element, $siteId);
+		return Craft::$app->elements->getElementById($elementId, null, $siteId);
     }
 
     public function getElementByDraftId($draftId, $siteId = null)

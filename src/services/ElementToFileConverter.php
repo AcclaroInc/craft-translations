@@ -104,9 +104,9 @@ class ElementToFileConverter
         $targetLanguage = Craft::$app->sites->getSiteById($targetSite) ?
                             Craft::$app->sites->getSiteById($targetSite)->language : 'deleted';
 
-        $headers = '"orderId","elementId","source-site","target-site","source-language","target-language","wordCount"';   
+        $headers = '"orderId","elementId","source-site","target-site","source-language","target-language","wordCount"';
         $content = "\"$orderId\",\"$element->id\",\"$sourceSite\",\"$targetSite\",\"$sourceLanguage\",\"$targetLanguage\",\"$wordCount\"";
-  
+
         foreach (
             Translations::$plugin->elementTranslator->toTranslationSource(
                 $element,
@@ -181,7 +181,7 @@ class ElementToFileConverter
         unset($data['source-language']);
         $langs->setAttribute('target-language', $data['target-language'] ?? 'deleted');
         unset($data['target-language']);
-        
+
         $elementIdMeta = $head->appendChild($dom->createElement('meta'));
         $elementIdMeta->setAttribute('elementId', $data['elementId']);
         unset($data['elementId']);
@@ -215,7 +215,7 @@ class ElementToFileConverter
             }
 
             $dom = new \DOMDocument('1.0', 'utf-8');
-    
+
             //Turn LibXml Internal Errors Reporting On!
             libxml_use_internal_errors(true);
             if (!$dom->loadXML( $xml_content ))
@@ -231,23 +231,22 @@ class ElementToFileConverter
             // Meta ElementId
             $element = $dom->getElementsByTagName('meta');
             $element = isset($element[0]) ? $element[0] : $element;
-    
+
             return (string)$element->getAttribute('elementId');
         } catch(\Exception $e) {
             Craft::error(Translations::$plugin->translator->translate('app', $e->getMessage()));
         }
-        
+
     }
 
     /**
      * Report and Validate XML imported files
      * @return string
      */
-    private function reportXmlErrors()
-    {
+    private function reportXmlErrors() {
     	$errors = array();
     	$libErros = libxml_get_errors();
-    	
+
     	$msg = false;
     	if ($libErros && isset($libErros[0]))
     	{
@@ -256,8 +255,7 @@ class ElementToFileConverter
     	return $msg;
     }
 
-    private function csvToJson($file_content)
-    {
+    private function csvToJson($file_content) {
         $jsonData = [];
         $contentArray = explode("\n", $file_content, 2);
 
@@ -305,11 +303,10 @@ class ElementToFileConverter
         return $jsonData;
     }
 
-    public function addDataToSourceXML($xml_content, array $data)
-    {
+    public function addDataToSourceXML($xml_content, array $data) {
         $dom = new \DOMDocument('1.0', 'utf-8');
         $dom->formatOutput = true;
-    
+
         //Turn LibXml Internal Errors Reporting On!
         libxml_use_internal_errors(true);
         if (!$dom->loadXML( $xml_content ))
@@ -378,5 +375,33 @@ class ElementToFileConverter
         }
 
         return $headers."\n".$content;
+    }
+
+    /**
+     * Create a csv file for Translations memory alignments
+     *
+     * @var array $data
+     * @return string
+     */
+    public function createTmFileContent($data) {
+        $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
+        $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
+
+        $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
+
+        $source = json_decode($this->xmlToJson($data['sourceContent']), true)['content'] ?? [];
+
+        $target = Translations::$plugin->elementTranslator->toTranslationSource(
+            $data['targetElement'],
+            $data['targetElementSite']
+        );
+
+        foreach ($source as $key => $value) {
+            $targetValue = $target[$key] ?? '';
+            if ($value !== $targetValue)
+                $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $targetValue);
+        }
+
+        return $tmContent;
     }
 }

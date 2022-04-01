@@ -15,6 +15,9 @@ use craft\base\Model;
 use yii\validators\NumberValidator;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use craft\elements\Asset;
+use craft\elements\GlobalSet;
+use craft\helpers\ElementHelper;
 use craft\validators\SiteIdValidator;
 use craft\validators\DateTimeValidator;
 
@@ -25,6 +28,10 @@ use craft\validators\DateTimeValidator;
  */
 class FileModel extends Model
 {
+    /**
+     * @var \acclaro\translations\services\repository\FileRepository $_service
+     */
+    private $_service;
 
     public $id;
 
@@ -56,9 +63,13 @@ class FileModel extends Model
 
     public $dateDeleted;
 
+    public $reference;
+
     public function init()
     {
         parent::init();
+
+        $this->_service = Translations::$plugin->fileRepository;
 
         $this->status = $this->status ? : Constants::FILE_STATUS_NEW;
         $this->sourceSite = $this->sourceSite ?: '';
@@ -145,6 +156,11 @@ class FileModel extends Model
         return $this->status === Constants::FILE_STATUS_COMPLETE;
     }
 
+    public function isInProgress()
+    {
+        return $this->status === Constants::FILE_STATUS_IN_PROGRESS;
+    }
+
     public function isReviewReady()
     {
         return $this->status === Constants::FILE_STATUS_REVIEW_READY;
@@ -206,4 +222,54 @@ class FileModel extends Model
 
 		return $element;
 	}
+
+    public function hasTmMissAlignments($ignoreReference = false)
+    {
+        if ($this->reference !== null) {
+            return $ignoreReference ?: $this->_service->isReferenceChanged($this);
+        }
+
+        return $this->_service->hasTmMissAlignments($this);
+    }
+
+    public function getTmMissAlignmentFile()
+    {
+        $element = Craft::$app->elements->getElementById($this->elementId, null, $this->sourceSite);
+
+        $targetSite = $this->targetSite;
+        $source = $this->source;
+
+        $targetElement = Craft::$app->elements->getElementById($this->elementId, null, $targetSite);
+
+        if ($this->isComplete()) {
+            $draft = Translations::$plugin->draftRepository->getDraftById($this->draftId, $targetSite);
+            $targetElement = $draft ?: $targetElement;
+            // $source = $this->target;
+        }
+
+        if ($element instanceof GlobalSet) {
+            $entrySlug= ElementHelper::normalizeSlug($element->name);
+        } else if ($element instanceof Asset) {
+            $assetFilename = $element->getFilename();
+            $fileInfo = pathinfo($assetFilename);
+            $entrySlug= basename($assetFilename, '.' . $fileInfo['extension']);
+        } else {
+            $entrySlug= $element->slug;
+        }
+
+        $filename = sprintf('%s-%s-%s_TM.%s',$this->elementId, $entrySlug, date("Ymd\THi"), Constants::FILE_FORMAT_CSV);
+
+        $TmData = [
+            'sourceContent' => $source,
+            'sourceElementSite' => $this->sourceSite,
+            'targetElement' => $targetElement,
+            'targetElementSite' => $targetSite
+        ];
+        $fileContent = Translations::$plugin->elementToFileConverter->createTmFileContent($TmData);
+
+        return [
+            'fileName' => $filename,
+            'fileContent' => $fileContent
+        ];
+    }
 }

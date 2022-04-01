@@ -323,6 +323,7 @@ class BaseController extends Controller
         }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
+        $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
 
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
@@ -347,7 +348,8 @@ class BaseController extends Controller
                 $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
                     'description' => 'Regenerating preview urls for '. $order->title,
                     'order' => $order,
-                    'filePreviewUrls' => $filePreviewUrls
+                    'filePreviewUrls' => $filePreviewUrls,
+                    'files' => $files,
                 ]));
 
                 if ($job) {
@@ -362,7 +364,7 @@ class BaseController extends Controller
                     $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
                 }
             } else {
-                Translations::$plugin->fileRepository->regeneratePreviewUrls($order, $filePreviewUrls);
+                Translations::$plugin->fileRepository->regeneratePreviewUrls($order, $filePreviewUrls, $files);
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done building draft previews'));
             }
         }

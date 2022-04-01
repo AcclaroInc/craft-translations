@@ -31,6 +31,7 @@ class FileRepository
         'status',
         'wordCount',
         'source',
+        'reference',
         'target',
         'previewUrl',
         'serviceFileId',
@@ -240,14 +241,14 @@ class FileRepository
      * @return bool
      * @throws \Throwable
      */
-    public function regeneratePreviewUrls($order, $previewUrls, $queue=null) {
+    public function regeneratePreviewUrls($order, $previewUrls, $files = [], $queue=null) {
         $totalElements = count($order->files);
         $currentElement = 0;
 
         $service = new RegeneratePreviewUrls();
         foreach ($order->files as $file) {
 
-            if (! $file->isComplete()) continue;
+            if (!($file->isComplete() || in_array($file->id, $files))) continue;
 
             if ($queue) {
                 $service->updateProgress($queue, $currentElement++ / $totalElements);
@@ -467,5 +468,63 @@ class FileRepository
         }
 
         return '<table class="diffTable data"><tbody>' . $mainContent . '</tbody></table>';
+    }
+
+    /**
+     * @param \acclaro\translations\models\FileModel $file
+     */
+    public function isReferenceChanged($file)
+    {
+        $currentData = $file->getTmMissAlignmentFile()['fileContent'];
+
+        return md5($currentData) !== md5($file->reference);
+    }
+
+    /**
+     * @param \acclaro\translations\models\FileModel $file
+     */
+    public function hasTmMissAlignments($file)
+    {
+        try {
+            $elementRepository = Translations::$plugin->elementRepository;
+            $element = $elementRepository->getElementById($file->elementId, $file->targetSite);
+            $source = $file->source;
+
+            if ($file->isComplete()) {
+                $element = $elementRepository->getElementByDraftId($file->draftId, $file->targetSite);
+                $source = $file->target;
+            }
+
+            // Skip incase entry doesn't exist for target site
+            if (!$element) throw new \Exception('Entry not found for files target Site');
+
+            $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+            $converter = Translations::$plugin->elementToFileConverter;
+
+            $currentContent = $converter->convert(
+                $element,
+                Constants::FILE_FORMAT_XML,
+                [
+                    'sourceSite'    => $file->sourceSite,
+                    'targetSite'    => $file->targetSite,
+                    'wordCount'     => $wordCount,
+                    'orderId'       => $file->orderId
+                ]
+            );
+
+            $sourceContent = json_decode($converter->xmlToJson($source), true);
+            $currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+            $sourceContent = json_encode(array_values($sourceContent['content']));
+            $currentContent = json_encode(array_values($currentContent['content']));
+
+            if (md5($sourceContent) !== md5($currentContent)) {
+                return true;
+            }
+        } catch (\Exception $e) {
+            Craft::error($e, Constants::PLUGIN_HANDLE);
+        }
+
+        return false;
     }
 }

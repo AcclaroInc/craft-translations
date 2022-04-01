@@ -364,6 +364,8 @@ class OrderRepository
             }
         }
 
+        $orderReferenceFiles = [];
+
         $sendOrderSvc = new SendOrder();
         $translationService = new AcclaroTranslationService($settings, $acclaroApiClient);
         foreach ($order->getFiles() as $file) {
@@ -372,9 +374,17 @@ class OrderRepository
             }
 
             $translationService->sendOrderFile($order, $file, $settings);
+
+            if ($order->shouldIncludeTmFiles() && $file->hasTmMissAlignments()) {
+                array_push($orderReferenceFiles, $file);
+            }
         }
 
         $acclaroApiClient->submitOrder($order->serviceOrderId);
+
+        foreach ($orderReferenceFiles as $file) {
+            $translationService->sendOrderReferenceFile($order, $file);
+        }
 
         $order->status = Constants::ORDER_STATUS_NEW;
 
@@ -550,6 +560,25 @@ class OrderRepository
             }
         }
 
-        return $originalIds;
-    }
+		return $originalIds;
+	}
+
+	/**
+	 * Checks if target data of elements in order is different than what is delivered
+	 *
+	 * @param Order $order
+	 * @return array $result
+	 */
+	public function getIsTargetChanged($order): ?array
+	{
+		$originalIds = [];
+
+		foreach ($order->getFiles() as $file) {
+			if ($file->isPublished() || $file->isNew()) continue;
+
+			if ($file->hasTmMissAlignments()) array_push($originalIds, $file->elementId);
+		}
+
+		return $originalIds;
+	}
 }
