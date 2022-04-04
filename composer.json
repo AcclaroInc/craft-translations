@@ -24,12 +24,11 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^3.7.14",
+        "craftcms/cms": "^3.7.33",
         "guzzlehttp/guzzle": "^6.3|^7.0",
         "php": ">=7.2.0",
         "sebastian/diff": "^3.0",
         "composer/composer": "^2.1.9",
-        "enshrined/svg-sanitize": "~0.14.0|~0.15.2",
 		"spatie/guzzle-rate-limiter-middleware": "^2.0"
     },
     "autoload": {
