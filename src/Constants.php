@@ -88,6 +88,7 @@ class Constants
     const ACCLARO_FILE_NEW      = 'NEW FILE';
     const ACCLARO_FILE_CANCEL   = 'CANCEL FILE';
     const ACCLARO_ORDER_CANCEL  = 'CANCEL ORDER';
+    const ACCLARO_ORDER_TYPE    = 'Website';
 
     const FILE_STATUSES = [
         self::FILE_STATUS_NEW,

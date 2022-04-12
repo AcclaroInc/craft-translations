@@ -212,7 +212,7 @@ class AcclaroApiClient
             'name' => $name,
             'comments' => $comments,
             'duedate' => $dueDate,
-            // 'clientref' => $craftOrderId,
+            'type' => Constants::ACCLARO_ORDER_TYPE,
             'delivery' => Constants::DELIVERY,
             'estwordcount' => $wordCount,
         ));
