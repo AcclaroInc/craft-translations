@@ -257,7 +257,9 @@ class FileModel extends Model
             $entrySlug= $element->slug;
         }
 
-        $filename = sprintf('%s-%s-%s_TM.%s',$this->elementId, $entrySlug, date("Ymd\THi"), Constants::FILE_FORMAT_CSV);
+        $targetLang = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($targetSite)->language);
+
+        $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), Constants::FILE_FORMAT_CSV);
 
         $TmData = [
             'sourceContent' => $source,
