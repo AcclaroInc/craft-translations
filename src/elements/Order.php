@@ -629,7 +629,7 @@ class Order extends Element
     public function hasTmMissAlignments($ignoreNew = true)
     {
         foreach ($this->getFiles() as $file) {
-            if ($file->isPublished() || ($ignoreNew && $this->isNew())) continue;
+            if ($file->isPublished() || ($ignoreNew && $file->isNew())) continue;
 
             if ($file->hasTmMissAlignments(!$ignoreNew)) return true;
         }
