@@ -81,7 +81,8 @@ class FilesController extends Controller
         //Iterate over each file on this order
         if ($order->files)
         {
-            foreach ($order->GetFiles() as $file)
+            $hasMissAlignment = $order->hasTmMissAlignments(false);
+            foreach ($order->getFiles() as $file)
             {
                 // skip failed files
                 if ($file->isCanceled()) continue;
@@ -109,7 +110,7 @@ class FilesController extends Controller
                     $fileContent = $file->source;
                 }
 
-                if ($order->includeTmFiles && $file->hasTmMissAlignments(true)) $fileName = "source/" . $fileName;
+                if ($order->includeTmFiles && $hasMissAlignment) $fileName = "source/" . $fileName;
 
                 if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
                     $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
@@ -460,7 +461,7 @@ class FilesController extends Controller
 
             //Iterate over each file on this order
             if ($order->files) {
-                foreach ($order->GetFiles() as $file) {
+                foreach ($order->getFiles() as $file) {
                     if (! in_array($file->id, $files) || !$file->hasTmMissAlignments()) continue;
 
                     $tmFile = $file->getTmMissAlignmentFile();
@@ -496,7 +497,7 @@ class FilesController extends Controller
 
         //Iterate over each file on this order
         if ($order->files) {
-            foreach ($order->GetFiles() as $file) {
+            foreach ($order->getFiles() as $file) {
                 if (in_array($file->id, $files) && $file->hasTmMissAlignments()) {
                     $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
                         $order->getTranslator()->service,

@@ -626,12 +626,12 @@ class Order extends Element
         return $this->statusLabel;
     }
 
-    public function hasTmMissAlignments()
+    public function hasTmMissAlignments($ignoreNew = true)
     {
         foreach ($this->getFiles() as $file) {
-            if ($file->isPublished() || $this->isNew()) continue;
+            if ($file->isPublished() || ($ignoreNew && $this->isNew())) continue;
 
-            if ($file->hasTmMissAlignments()) return true;
+            if ($file->hasTmMissAlignments(!$ignoreNew)) return true;
         }
 
         return false;
