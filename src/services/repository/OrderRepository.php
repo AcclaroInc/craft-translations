@@ -375,7 +375,7 @@ class OrderRepository
 
             $translationService->sendOrderFile($order, $file, $settings);
 
-            if ($order->shouldIncludeTmFiles() && $file->hasTmMissAlignments()) {
+            if ($order->shouldIncludeTmFiles() && $file->hasTmMisalignments()) {
                 array_push($orderReferenceFiles, $file);
             }
         }
@@ -576,7 +576,7 @@ class OrderRepository
 		foreach ($order->getFiles() as $file) {
 			if ($file->isPublished() || $file->isNew()) continue;
 
-			if ($file->hasTmMissAlignments()) array_push($originalIds, $file->elementId);
+			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
 		}
 
 		return $originalIds;

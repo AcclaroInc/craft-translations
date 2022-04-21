@@ -483,7 +483,7 @@ class FileRepository
     /**
      * @param \acclaro\translations\models\FileModel $file
      */
-    public function hasTmMissAlignments($file)
+    public function hasTmMisalignments($file)
     {
         try {
             $elementRepository = Translations::$plugin->elementRepository;

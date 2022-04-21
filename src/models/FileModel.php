@@ -223,13 +223,13 @@ class FileModel extends Model
 		return $element;
 	}
 
-    public function hasTmMissAlignments($ignoreReference = false)
+    public function hasTmMisalignments($ignoreReference = false)
     {
         if ($this->reference !== null) {
             return $ignoreReference ?: $this->_service->isReferenceChanged($this);
         }
 
-        return $this->_service->hasTmMissAlignments($this);
+        return $this->_service->hasTmMisalignments($this);
     }
 
     public function getTmMissAlignmentFile()
