@@ -475,7 +475,7 @@ class FileRepository
      */
     public function isReferenceChanged($file)
     {
-        $currentData = $file->getTmMissAlignmentFile()['fileContent'];
+        $currentData = $file->getTmMisalignmentFile()['fileContent'];
 
         return md5($currentData) !== md5($file->reference);
     }

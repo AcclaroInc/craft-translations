@@ -232,7 +232,7 @@ class FileModel extends Model
         return $this->_service->hasTmMisalignments($this);
     }
 
-    public function getTmMissAlignmentFile()
+    public function getTmMisalignmentFile()
     {
         $element = Craft::$app->elements->getElementById($this->elementId, null, $this->sourceSite);
 

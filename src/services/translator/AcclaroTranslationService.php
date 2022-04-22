@@ -283,7 +283,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
-            $tmFile = $file->getTmMissAlignmentFile();
+            $tmFile = $file->getTmMisalignmentFile();
             $path = $tempPath .'-'. $tmFile['fileName'];
 
             $stream = fopen($path, 'w+');
