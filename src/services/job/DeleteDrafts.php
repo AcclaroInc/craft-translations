@@ -21,7 +21,7 @@ class DeleteDrafts extends BaseJob
 {
     public $drafts;
 
-    public function execute($queue)
+    public function execute($queue): void
     {
         $totalElements = count($this->drafts);
         $currentElement = 0;
@@ -50,7 +50,7 @@ class DeleteDrafts extends BaseJob
         }
     }
 
-    protected function defaultDescription()
+    protected function defaultDescription(): ?string
     {
         return Constants::JOB_DELETING_DRAFT;
     }

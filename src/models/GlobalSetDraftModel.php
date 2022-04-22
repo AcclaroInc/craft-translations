@@ -30,12 +30,6 @@ class GlobalSetDraftModel extends GlobalSet
 {
     protected $_globalSet = null;
 
-    public $id;
-
-    public $draftId;
-
-    public $name;
-
     public $globalSetId;
 
     public $site;
@@ -54,7 +48,7 @@ class GlobalSetDraftModel extends GlobalSet
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         $rules[] = [['name', 'globalSetId', 'site', 'data'], 'required'];
@@ -67,7 +61,7 @@ class GlobalSetDraftModel extends GlobalSet
         return $rules;
     }
 
-    public function getFieldLayout()
+    public function getFieldLayout(): ?\craft\models\FieldLayout
     {
         $globalSet = $this->getGlobalSet();
         
@@ -123,7 +117,7 @@ class GlobalSetDraftModel extends GlobalSet
         return $this->_globalSet;
     }
 
-    public function getUrl()
+    public function getUrl(): ?string
     {
         return '';
     }
@@ -131,7 +125,7 @@ class GlobalSetDraftModel extends GlobalSet
     /**
      * {@inheritdoc}
      */
-    public function getCpEditUrl()
+    public function getCpEditUrl(): ?string
     {
         $globalSet = $this->getGlobalSet();
 
@@ -143,7 +137,7 @@ class GlobalSetDraftModel extends GlobalSet
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         $behaviors = parent::behaviors();
         $behaviors['customFields'] = [

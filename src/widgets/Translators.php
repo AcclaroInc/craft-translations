@@ -41,7 +41,7 @@ class Translators extends Widget
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         
@@ -59,7 +59,7 @@ class Translators extends Widget
     /**
      * @inheritdoc
      */
-    public function getBodyHtml()
+    public function getBodyHtml(): ?string
     {
         $view = Craft::$app->getView();
         

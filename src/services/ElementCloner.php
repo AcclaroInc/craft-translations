@@ -36,7 +36,7 @@ class ElementCloner
                 $newElement->title = $existingElement->title;
             }
 
-            foreach ($existingElement->getFieldLayout()->getFields() as $fieldLayoutField) {
+            foreach ($existingElement->getFieldLayout()->getCustomFields() as $fieldLayoutField) {
                 $this->cloneField($existingElement, $newElement, $fieldLayoutField->getField());
             }
         }

@@ -65,7 +65,7 @@ class FileModel extends Model
 
     public $reference;
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -76,7 +76,7 @@ class FileModel extends Model
         $this->targetSite = $this->targetSite ?: '';
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['orderId', 'elementId', 'draftId', 'sourceSite', 'targetSite'], 'required'],

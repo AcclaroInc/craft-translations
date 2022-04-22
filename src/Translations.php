@@ -39,7 +39,6 @@ use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\services\job\DeleteDrafts;
-use craft\errors\MigrationException;
 use yii\web\User;
 
 class Translations extends Plugin
@@ -61,23 +60,17 @@ class Translations extends Plugin
      */
     public static $view;
 
-    /**
-     * @var bool
-     */
-    public $hasCpSection = true;
-
-    /**
-     * @var bool
-     */
-    public $hasCpSettings = true;
-
-    /**
-     * @var string
-     */
-    public $schemaVersion = Constants::PLUGIN_SCHEMA_VERSION;
-
     // Public Methods
     // =========================================================================
+
+    public function __construct($id, $parent = null, array $config = [])
+    {
+        $this->schemaVersion = Constants::PLUGIN_SCHEMA_VERSION;
+        $this->hasCpSettings = true;
+        $this->hasCpSection = true;
+
+        parent::__construct($id, $parent, $config);
+    }
 
     /**
      * @inheritdoc
@@ -113,10 +106,6 @@ class Translations extends Plugin
             Drafts::class,
             Drafts::EVENT_BEFORE_APPLY_DRAFT,
             function (DraftEvent $event) {
-                // Craft::debug(
-                //     'Drafts::EVENT_BEFORE_PUBLISH_DRAFT',
-                //     __METHOD__
-                // );
                 Craft::info(
                     Craft::t(
                         'translations',
@@ -203,7 +192,7 @@ class Translations extends Plugin
     /**
      * @inheritdoc
      */
-    public function uninstall()
+    public function uninstall(): void
     {
         // Let's clean up the drafts table
         $drafts = self::$plugin->fileRepository->getAllDraftIds();
@@ -214,21 +203,13 @@ class Translations extends Plugin
             ]));
         }
 
-        if (($migration = $this->createInstallMigration()) !== null) {
-            try {
-                $this->getMigrator()->migrateDown($migration);
-            } catch (MigrationException $e) {
-                return false;
-            }
-        }
-        $this->afterUninstall();
-        return null;
+        parent::uninstall();
     }
 
     /**
      * @inheritdoc
      */
-    public function getCpNavItem()
+    public function getCpNavItem(): ?array
     {
         $subNavs = [];
         $navItem = parent::getCpNavItem();
@@ -276,18 +257,18 @@ class Translations extends Plugin
     /**
      * @inheritdoc
      */
-    public function getSettingsResponse()
+    public function getSettingsResponse(): mixed
     {
         // Just redirect to the plugin settings page
         Craft::$app->getResponse()->redirect(UrlHelper::cpUrl(Constants::URL_SETTINGS));
     }
 
-    protected function createSettingsModel()
+    protected function createSettingsModel(): ?\craft\base\Model
     {
         return new \acclaro\translations\models\Settings();
     }
 
-    protected function settingsHtml()
+    protected function settingsHtml(): ?string
     {
         return \Craft::$app->getView()->renderTemplate('translations/settings/general', [
             'settings' => $this->getSettings()

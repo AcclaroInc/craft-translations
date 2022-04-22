@@ -30,10 +30,6 @@ class AssetDraftModel extends Asset
 {
     protected $_asset = null;
 
-    public $id;
-
-    public $draftId;
-
     public $name;
 
     public $assetId;
@@ -56,7 +52,7 @@ class AssetDraftModel extends Asset
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         $rules[] = [['name', 'assetId', 'site', 'data'], 'required'];
@@ -115,7 +111,7 @@ class AssetDraftModel extends Asset
         return $this->_asset;
     }
 
-    public function getUrl($transform = null, ?bool $generateNow = null)
+    public function getUrl($transform = null, ?bool $generateNow = null): ?string
     {
         return '';
     }
@@ -123,7 +119,7 @@ class AssetDraftModel extends Asset
     /**
      * {@inheritdoc}
      */
-    public function getCpEditUrl()
+    public function getCpEditUrl(): ?string
     {
         $asset = $this->getAsset();
 
@@ -135,7 +131,7 @@ class AssetDraftModel extends Asset
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         $behaviors = parent::behaviors();
         $behaviors['customFields'] = [

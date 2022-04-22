@@ -30,10 +30,6 @@ class CategoryDraftModel extends Category
 {
     protected $_category = null;
 
-    public $id;
-
-    public $draftId;
-
     public $name;
 
     public $categoryId;
@@ -56,7 +52,7 @@ class CategoryDraftModel extends Category
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         $rules[] = [['name', 'categoryId', 'site', 'data'], 'required'];
@@ -65,7 +61,7 @@ class CategoryDraftModel extends Category
         return $rules;
     }
 
-    public function getFieldLayout()
+    public function getFieldLayout(): ?\craft\models\FieldLayout
     {
         
         return parent::getFieldLayout();
@@ -120,7 +116,7 @@ class CategoryDraftModel extends Category
         return $this->_category;
     }
 
-    public function getUrl()
+    public function getUrl(): ?string
     {
         return '';
     }
@@ -128,7 +124,7 @@ class CategoryDraftModel extends Category
     /**
      * {@inheritdoc}
      */
-    public function getCpEditUrl()
+    public function getCpEditUrl(): ?string
     {
         $category = $this->getCategory();
 
@@ -141,7 +137,7 @@ class CategoryDraftModel extends Category
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         $behaviors = parent::behaviors();
         $behaviors['customFields'] = [

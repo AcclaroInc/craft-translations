@@ -54,7 +54,7 @@ class NewAndModifiedEntries extends Widget
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         
@@ -75,7 +75,7 @@ class NewAndModifiedEntries extends Widget
     /**
      * @inheritdoc
      */
-    public function getSettingsHtml()
+    public function getSettingsHtml(): ?string
     {
         $options = [
             ['label' => 'Last 24 hours', 'value' => 1],
@@ -96,7 +96,7 @@ class NewAndModifiedEntries extends Widget
     /**
      * @inheritdoc
      */
-    public function getBodyHtml()
+    public function getBodyHtml(): ?string
     {
         $params = [];
 

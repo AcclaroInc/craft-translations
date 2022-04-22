@@ -40,7 +40,7 @@ class OrderController extends Controller
      * @var    bool|array Allows anonymous access to this controller's actions.
      * @access protected
      */
-    protected $allowAnonymous = true;
+    protected array|bool|int $allowAnonymous = self::ALLOW_ANONYMOUS_LIVE | self::ALLOW_ANONYMOUS_OFFLINE;
 
     /**
      * @var int

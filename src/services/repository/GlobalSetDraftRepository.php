@@ -135,7 +135,7 @@ class GlobalSetDraftRepository
 
         $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
 
-        foreach ($draft->getFieldLayout()->getFields() as $layoutField) {
+        foreach ($draft->getFieldLayout()->getCustomFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {

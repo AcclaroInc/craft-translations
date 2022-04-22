@@ -154,7 +154,7 @@ class AssetDraftRepository
         
         $asset = $this->getAssetById($record->assetId, $draft->site);
 
-        foreach ($asset->getFieldLayout()->getFields() as $layoutField) {
+        foreach ($asset->getFieldLayout()->getCustomFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {

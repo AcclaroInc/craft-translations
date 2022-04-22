@@ -42,7 +42,7 @@ class News extends Widget
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         
@@ -62,7 +62,7 @@ class News extends Widget
     /**
      * @inheritdoc
      */
-    public function getSettingsHtml()
+    public function getSettingsHtml(): ?string
     {
         return Craft::$app->getView()->renderTemplate('translations/_components/widgets/News/settings',
             [
@@ -73,7 +73,7 @@ class News extends Widget
     /**
      * @inheritdoc
      */
-    public function getBodyHtml()
+    public function getBodyHtml(): ?string
     {
         $view = Craft::$app->getView();
         

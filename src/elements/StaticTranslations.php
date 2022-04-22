@@ -176,7 +176,7 @@ class StaticTranslations extends Element
     /**
      * @inheritdoc
      */
-    public static function indexHtml(ElementQueryInterface $elementQuery, array $disabledElementIds = null, array $viewState, string $sourceKey = null, string $context = null, bool $includeContainer, bool $showCheckboxes): string
+    public static function indexHtml(ElementQueryInterface $elementQuery, ?array $disabledElementIds = null, array $viewState, ?string $sourceKey = null, ?string $context = null, bool $includeContainer, bool $showCheckboxes): string
     {
 
         // if not getting siteId then set primary site id

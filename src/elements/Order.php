@@ -41,10 +41,6 @@ class Order extends Element
 
     protected $_files;
 
-    public $id;
-
-    public $title;
-
     public $translatorId;
 
     public $ownerId;
@@ -68,8 +64,6 @@ class Order extends Element
     public $activityLog;
 
     public $dateOrdered;
-
-    public $dateUpdated;
 
     public $serviceOrderId;
 
@@ -121,7 +115,7 @@ class Order extends Element
         return StringHelper::toLowerCase(static::pluralDisplayName());
     }
 
-    public static function refHandle()
+    public static function refHandle(): ?string
     {
         return 'order';
     }
@@ -437,7 +431,7 @@ class Order extends Element
         return $html;
     }
 
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         $rules[] = [['translatorId', 'ownerId', 'sourceSite', 'targetSites', 'activityLog', 'entriesCount', 'wordCount', 'elementIds',],'required'];
@@ -476,7 +470,7 @@ class Order extends Element
         return $this->_elements;
     }
 
-    public function getUrl()
+    public function getUrl(): ?string
     {
         return Constants::URL_ORDER_DETAIL . $this->id;
     }
@@ -582,7 +576,7 @@ class Order extends Element
         $this->activityLog = json_encode($activityLog);
     }
 
-    public function getCpEditUrl()
+    public function getCpEditUrl(): ?string
     {
         return Translations::$plugin->urlHelper->cpUrl(Constants::URL_ORDER_DETAIL.$this->id);
     }
@@ -760,7 +754,7 @@ class Order extends Element
         return true;
     }
 
-    public function afterSave(bool $isNew)
+    public function afterSave(bool $isNew): void
     {
         if (!$isNew) {
             $record = OrderRecord::findOne($this->id);
@@ -801,7 +795,7 @@ class Order extends Element
         return true;
     }
 
-    public function afterDelete()
+    public function afterDelete(): void
     {
     }
 }

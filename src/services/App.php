@@ -166,7 +166,7 @@ class App extends Component
      */
     public $orderEdit;
     
-    public function init()
+    public function init(): void
     {
         $this->services = new Services();
         $this->urlHelper = new UrlHelper();
