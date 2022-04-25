@@ -25,7 +25,7 @@
             <div id="newwidgetmenubtn" class="btn submit menubtn add icon {% if isSelectableWidget is empty %} disabled {% endif %}">{{ 'New widget'|t('app') }}</div>
             <div class="menu newwidgetmenu">
                 <ul>
-                    {% for type, info in widgetTypes if info.selectable %}
+                    {% for type, info in widgetTypes|filter(info => info.selectable) %}
                         <li>
                             <a data-type="{{ type }}" 
                                 data-name="{{ info.name }}">

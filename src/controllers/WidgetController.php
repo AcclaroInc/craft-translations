@@ -141,7 +141,7 @@ class WidgetController extends Controller
         // Assemble the list of existing widgets
         $variables['widgets'] = [];
 
-        /** @var Widget[] $widgets */
+        /** @var WidgetInterface[] $widgets */
         $widgets = $this->getAllWidgets();
         $allWidgetJs = '';
 
@@ -397,12 +397,8 @@ class WidgetController extends Controller
                 }
             }
         }
-        
-        return $this->asJson([
-            'success' => true,
-            'data' => $data,
-            'error' => null
-        ]);
+
+        return $this->asSuccess(null, $data);
     }
 
     public function actionGetRecentlyModified($limit = 0)
@@ -518,11 +514,7 @@ class WidgetController extends Controller
             }
         }
 
-        return $this->asJson([
-            'success' => true,
-            'data' => $data,
-            'error' => null
-        ]);
+        return $this->asSuccess(null, $data);
     }
 
     public function actionGetRecentEntries($limit = 0)
@@ -532,7 +524,7 @@ class WidgetController extends Controller
 
         // Set variables
         $limit = Craft::$app->getRequest()->getParam('limit');
-        $days = Craft::$app->getRequest()->getParam('days');
+        $days = Craft::$app->getRequest()->getParam('days', '7');
         $data = [];
         $i = 0;
 
@@ -597,11 +589,7 @@ class WidgetController extends Controller
             }
         }
 
-        return $this->asJson([
-            'success' => true,
-            'data' => $data,
-            'error' => null
-        ]);
+        return $this->asSuccess(null, $data);
     }
 
     // Public Methods
@@ -1067,7 +1055,7 @@ class WidgetController extends Controller
      */
     private function _saveAndReturnWidget(WidgetInterface $widget): Response
     {
-        /** @var Widget $widget */
+        /** @var WidgetInterface $widget */
         if ($this->saveWidget($widget)) {
             $info = $this->_getWidgetInfo($widget);
             $view = $this->getView();

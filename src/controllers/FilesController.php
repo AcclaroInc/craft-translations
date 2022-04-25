@@ -256,7 +256,7 @@ class FilesController extends Controller
                                 if (! Craft::$app->getElements()->saveElement($asset)) {
                                     $errors = $asset->getFirstErrors();
 
-                                    return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                                    return $this->asFailure(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                                 }
 
                                 $assetIds[] = $asset->id;
@@ -334,7 +334,7 @@ class FilesController extends Controller
                         if (! Craft::$app->getElements()->saveElement($asset)) {
                             $errors = $asset->getFirstErrors();
 
-                            return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                            return $this->asFailure(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                         }
 
                         $totalWordCount = Translations::$plugin->fileRepository->getUploadedFilesWordCount($asset, $file->extension);

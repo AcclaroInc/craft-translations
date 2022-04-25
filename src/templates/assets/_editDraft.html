@@ -132,16 +132,19 @@
 
     function updatePreviewThumb() {
         $previewThumbContainer.addClass('loading');
-        Craft.postActionRequest('assets/preview-thumb', {
+        Craft.sendActionRequest('POST', 'assets/preview-thumb', {
             assetId: assetId,
             width: 350,
             height: 190
-        }, function(response, textStatus) {
-            $previewThumbContainer.removeClass('loading');
+        }).then((response, textStatus) => {
             if (textStatus === 'success') {
                 $previewThumbContainer.find('img').replaceWith(response.img);
             }
-        });
+        })
+        .finally(() => {
+            $previewThumbContainer.removeClass('loading')
+                .find('.spinner').remove();
+        })
     }
 
     $('#download-btn').on('click', function() {

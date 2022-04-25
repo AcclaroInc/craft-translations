@@ -20,11 +20,12 @@ Craft.Translations.CategoryTranslations = {
     },
 
     isEditCategoryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="categories/save-category"]').length > 0;
+        return $('form#main-form input[type=hidden][name=action][value="elements/save"]').length > 0 ||
+        $('form#main-form input[type=hidden][name=action][value="elements/save-draft"]').length > 0;
     },
 
     getEditCategoryId: function() {
-        return $('form#main-form input[type=hidden][name=sourceId]').val();
+        return $('form#main-form input[type=hidden][name=elementId]').val();
     },
 
     updateSelectedCategories: function() {
@@ -78,17 +79,21 @@ Craft.Translations.CategoryTranslations = {
     initAddToTranslationOrderButton: function(orders, categoryId) {
         var self = this;
 
-        //var sourceSite = $('form#main-form input[type=hidden][name=siteId]').val();
+        let $detailsContainer = $('<div>', {'class': 'details'});
+        let $metaContainer = $('<div>', {'class': 'meta'});
+        $metaContainer.appendTo($detailsContainer);
 
         var $btncontainer = document.createElement('div');
-        $btncontainer.id = "translations-field";
-        $btncontainer.className = "field";
+            $btncontainer.id = "translations-field";
+            $btncontainer.className = "field";
+        $metaContainer.append($btncontainer);
 
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
         if (this.isEditCategoryScreen()) {
-            $settings = document.getElementById('settings');
-            $settings.insertBefore($btncontainer, $settings.firstChild);
+            $settings = $('#details');
+
+            $settings.prepend($detailsContainer);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
 
@@ -96,7 +101,7 @@ Craft.Translations.CategoryTranslations = {
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
         } else {
-            $btngroup.insertBefore('#header #action-button');
+            $btngroup.insertBefore('#header #action-buttons');
         }
 
 

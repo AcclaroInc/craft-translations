@@ -112,15 +112,14 @@
                         type: type
                     };
 
-                    Craft.postActionRequest('translations/widget/create-widget', data, function(response, textStatus) {
-                        if (textStatus === 'success' && response.success) {
+                    Craft.sendActionRequest('POST', 'translations/widget/create-widget', data)
+                        .then((response) => {
                             $container.removeClass('loading');
                             widget.update(response);
-                        }
-                        else {
+                        })
+                        .catch(({response}) => {
                             widget.destroy();
-                        }
-                    });
+                        })
                 }
             },
 
@@ -351,10 +350,10 @@
                 var action = this.$container.hasClass('new') ? 'translations/widget/create-widget' : 'translations/widget/save-widget-settings',
                     data = this.$settingsForm.serialize();
 
-                Craft.postActionRequest(action, data, $.proxy(function(response, textStatus) {
-                    this.$settingsSpinner.addClass('hidden');
+                Craft.sendActionRequest('POST', action, data)
+                    .then((response) => {
+                        this.$settingsSpinner.addClass('hidden');
 
-                    if (textStatus === 'success') {
                         if (this.$settingsErrorList) {
                             this.$settingsErrorList.remove();
                             this.$settingsErrorList = null;
@@ -381,8 +380,7 @@
                                     .insertAfter(this.$settingsContainer);
                             }
                         }
-                    }
-                }, this));
+                    })
             },
 
             update: function(response) {
@@ -611,15 +609,14 @@
                     colspan: newColspan
                 };
 
-                Craft.postActionRequest('translations/widget/change-widget-colspan', data, function(response, textStatus) {
-                    if (textStatus === 'success' && response.success) {
+                Craft.sendActionRequest('POST', 'translations/widget/change-widget-colspan', data)
+                    .then((response) => {
                         Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
                         location.reload();
-                    }
-                    else {
+                    })
+                    .catch(({response}) => {
                         Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
-                    }
-                });
+                    })
             }
         });
 })(jQuery);

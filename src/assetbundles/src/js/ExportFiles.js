@@ -52,7 +52,8 @@
                                 params: params
                             };
 
-                            Craft.postActionRequest(params.action, data, $.proxy(function(response, textStatus) {
+                            Craft.sendActionRequest('POST', params.action, data)
+                                .then((response, textStatus) => {
                                     if(textStatus === 'success')
                                     {
                                         if (response && response.error) {
@@ -75,9 +76,6 @@
                                         this.onComplete(false);
                                     }
 
-                                }, this),
-                                {
-                                    complete: $.noop
                                 });
 
                         }, this)

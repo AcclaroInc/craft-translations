@@ -17,12 +17,16 @@ Craft.Translations.AddEntriesToTranslationOrder = {
     $createNewLink: null,
 
     isEditEntryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="entries/save-entry"]').length > 0 ||
-        $('form#main-form input[type=hidden][name=action][value="entry-revisions/publish-draft"]').length > 0;
+        return $('form#main-form input[type=hidden][name=action][value="elements/save-draft"]').length > 0 ||
+        $('form#main-form input[type=hidden][name=action][value="elements/apply-draft"]').length > 0;
+    },
+
+    isRevertRevisionScreen: function(){
+        return $('form input[type=hidden][name=action][value="elements/revert"]').length > 0;
     },
 
     getEditEntryId: function() {
-        var entryId = $('form#main-form input[type=hidden][name=entryId]').val();
+        var entryId = $('form#main-form input[type=hidden][name=elementId]').val();
         if(!entryId) {
             entryId = $('form#main-form input[type=hidden][name=sourceId]').val();
         }
@@ -103,9 +107,14 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         this.data = data;
 
+        let $detailsContainer = $('<div>', {'class': 'details'});
+        let $metaContainer = $('<div>', {'class': 'meta'});
+        $metaContainer.appendTo($detailsContainer);
+
         var $btncontainer = document.createElement('div');
             $btncontainer.id = "translations-field";
             $btncontainer.className = "field";
+        $metaContainer.append($btncontainer);
 
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
@@ -129,9 +138,9 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         }
 
         if (this.isEditEntryScreen()) {
-            $settings = document.getElementById('settings');
+            $settings = $('#details');
 
-            $settings.insertBefore($btncontainer, $settings.firstChild);
+            $settings.prepend($detailsContainer);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
 
@@ -139,8 +148,8 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
-        } else {
-            $btngroup.insertBefore('#header #action-button');
+        } else if(! this.isRevertRevisionScreen()) {
+            $btngroup.appendTo('header#header');
         }
 
         this.$btn = $('<a>', {

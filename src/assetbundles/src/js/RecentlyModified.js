@@ -79,8 +79,8 @@
                     limit: params
                 };
 
-                Craft.postActionRequest('translations/widget/get-recently-modified', data, $.proxy(function(response, textStatus) {
-                    if (textStatus === 'success') {
+                Craft.sendActionRequest('POST', 'translations/widget/get-recently-modified', data)
+                    .then((response) => {
                         this.$widget.removeClass('loading');
                         this.$widget.find('.elements').removeClass('hidden');
 
@@ -123,54 +123,53 @@
 
                             this.$widget.find('#recently-modified-widget').html(widgetHtml);
                         }
-                    }
-                    
-                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
-                    window.translationsdashboard.grid.refreshCols(true, true);
-
-                    $('.entry-check .checkbox').on('click', function(e) {
-                        $(e.target).closest('tr[id^=item-]').toggleClass('sel');
-                        Craft.Translations.RecentlyModified.prototype.updateSelected();
-                    });
-
-                    $('.view-diff').on('click', function(e) {
-                        e.preventDefault();
-
-                        var diffHtml = content[$(e.target).attr('data-id')].diff;
-
-                        var classNames = [
-                            'entryId',
-                            'entryName',
-                            'siteLabel',
-                            'fileDate',
-                            'entryDate',
-                            'wordDifference'
-                        ];
-
-                        // Show the modal
-                        $modal.show();
-
-                        // Set the reorder button
-                        $('.reorderUrl').attr('href', Craft.getUrl('translations/orders/create?sourceSite='+ content[$(e.target).attr('data-id')].siteId +'&elements[]='+ content[$(e.target).attr('data-id')].entryId));
-
-                        // Set modification details
-                        for (let index = 0; index < classNames.length; index++) {
-                            $('.' + classNames[index]).html(content[$(e.target).attr('data-id')][classNames[index]]);
-                        }
-
-                        // Add the diff html
-                        document.getElementById("modal-body").innerHTML = diffHtml;
-
-                        $('#modal-body').on('click', 'div.diff-copy', function(event) {
-                            Craft.Translations.OrderEntries.copyTextToClipboard(event);
+    
+                        window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                        window.translationsdashboard.grid.refreshCols(true, true);
+    
+                        $('.entry-check .checkbox').on('click', function(e) {
+                            $(e.target).closest('tr[id^=item-]').toggleClass('sel');
+                            Craft.Translations.RecentlyModified.prototype.updateSelected();
                         });
-                        
-                        $('#close-diff-modal').on('click', function(e) {
+    
+                        $('.view-diff').on('click', function(e) {
                             e.preventDefault();
-                            $modal.hide();
+    
+                            var diffHtml = content[$(e.target).attr('data-id')].diff;
+    
+                            var classNames = [
+                                'entryId',
+                                'entryName',
+                                'siteLabel',
+                                'fileDate',
+                                'entryDate',
+                                'wordDifference'
+                            ];
+    
+                            // Show the modal
+                            $modal.show();
+    
+                            // Set the reorder button
+                            $('.reorderUrl').attr('href', Craft.getUrl('translations/orders/create?sourceSite='+ content[$(e.target).attr('data-id')].siteId +'&elements[]='+ content[$(e.target).attr('data-id')].entryId));
+    
+                            // Set modification details
+                            for (let index = 0; index < classNames.length; index++) {
+                                $('.' + classNames[index]).html(content[$(e.target).attr('data-id')][classNames[index]]);
+                            }
+    
+                            // Add the diff html
+                            document.getElementById("modal-body").innerHTML = diffHtml;
+    
+                            $('#modal-body').on('click', 'div.diff-copy', function(event) {
+                                Craft.Translations.OrderEntries.copyTextToClipboard(event);
+                            });
+                            
+                            $('#close-diff-modal').on('click', function(e) {
+                                e.preventDefault();
+                                $modal.hide();
+                            });
                         });
-                    });
-                }, this));
+                    })
             },
             updateSelected: function() {
                 var entries = [];

@@ -96,21 +96,23 @@
                     }
                 });
 
-                Craft.postActionRequest('translations/translator/delete', data, $.proxy(function(response, textStatus) {
+                Craft.sendActionRequest('POST', 'translations/translator/delete', data)
+                .then((response, textStatus) => {
                     if (textStatus === 'success') {
                         location.reload();
                     } else {
                         Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
                     }
-                }, this));
+                });
             });
         },
 
         _getTranslatorsData: function(key) {
             $mainDiv = $('<div>', {class: "translations-element-index"});
 
-            Craft.postActionRequest('translations/translator/get-translators', {service: key}, $.proxy(function(response, textStatus) {
-                if (textStatus === 'success' && response.data != "") {
+            Craft.sendActionRequest('POST', 'translations/translator/get-translators', {service: key})
+            .then((response, textStatus) => {
+                if (response.data != "") {
                     $table = $('<table>', {class: "data"});
                     $table.appendTo($mainDiv);
                     $thead = $('<thead>\
@@ -149,11 +151,12 @@
                         $td.appendTo($tr);
                         $tr.appendTo($tbody);
                     });
-                } else {
-                    Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
-                    return null;
                 }
-            }, this));
+            })
+            .catch(({response}) => {
+                Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
+                return null;    
+            });
 
             return $mainDiv;
         }

@@ -301,23 +301,25 @@
 				fileId: $fileId
 			};
 
-			Craft.postActionRequest('translations/files/get-file-diff', fileData, function(response, textStatus) {
-				if (textStatus === 'success' && response.success) {
+			Craft.sendActionRequest('POST', 'translations/files/get-file-diff', fileData)
+				.then((response) => {
 					data = response.data;
 
 					diffHtml = self.createDiffHtmlView(data);
 					diffHtml.attr("id", "data-"+$fileId)
 					$("#data-"+$fileId).replaceWith(diffHtml);
 					diffHtml.show();
-				} else {
+				})
+				.catch(() => {
 					Craft.cp.displayNotice(Craft.t('app', response.error));
-				}
-				// Copy text to clipboard
-				var $copyBtn = $("#data-"+$fileId).find('.diff-copy');
-				$($copyBtn).on('click', function(event) {
-					self.copyTextToClipboard(event);
+				})
+				.finally(() => {
+					// Copy text to clipboard
+					var $copyBtn = $("#data-"+$fileId).find('.diff-copy');
+					$($copyBtn).on('click', function(event) {
+						self.copyTextToClipboard(event);
+					});
 				});
-			});
 		},
 		createDiffHtmlView: function(data) {
 			var diffData = data.diff;
@@ -515,16 +517,18 @@
 						'files': JSON.stringify(files)
 					};
 
-					Craft.postActionRequest('translations/export/export-preview-links', $data, function (response, textStatus) {
-						if (response.success && response.previewFile) {
-							var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
-							$('#regenerate-preview-urls').append($iframe);
-							self.toggleLoader();
-						} else {
+					Craft.sendActionRequest('POST', 'translations/export/export-preview-links', $data)
+						.then((response) => {
+							if (response.previewFile) {
+								var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
+								$('#regenerate-preview-urls').append($iframe);
+								self.toggleLoader();
+							}
+						})
+						.catch(() => {
 							Craft.cp.displayError(Craft.t('app', 'Unable to download your file.'));
 							self.toggleLoader();
-						}
-					});
+						});
 				}
 			});
 		},
@@ -551,27 +555,27 @@
                     sync: 'translations/files/sync-tm-files'
                 }
 
-                Craft.postActionRequest(actions[action], $data, function(response, textStatus) {
-                    if (textStatus === 'success') {
-                        if (response.success && !isDefaultTranslator) {
-                            Craft.cp.displayNotice('Translation memory files sent successfully.');
+                Craft.sendActionRequest('POST', actions[action], $data)
+					.then((response) => {
+						if (response.success && !isDefaultTranslator) {
+							Craft.cp.displayNotice('Translation memory files sent successfully.');
 							location.reload();
-                        } else if (response.success && response.tmFiles) {
-                            let $downloadForm = $('#regenerate-preview-urls');
-                            let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
-                            $downloadForm.append($iframe);
+						} else if (response.success && response.tmFiles) {
+							let $downloadForm = $('#regenerate-preview-urls');
+							let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
+							$downloadForm.append($iframe);
 							setTimeout(function() {
 								location.reload();
 							}, 100);
-                        } else {
-                            Craft.cp.displayError(Craft.t('app', response.message));
+						} else {
+							Craft.cp.displayError(Craft.t('app', response.message));
 							self.toggleLoader();
-                        }
-                    } else {
-                        Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
+						}
+					})
+					.catch(() => {
+						Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
 						self.toggleLoader();
-                    }
-                });
+					});
 
             });
 		},

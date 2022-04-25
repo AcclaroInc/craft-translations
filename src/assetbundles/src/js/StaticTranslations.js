@@ -13,20 +13,20 @@ Craft.Translations.StaticTranslations = {
             {name: 'source', value: Craft.elementIndex.sourceKey},
             {name: 'siteId', value: Craft.elementIndex.siteId}
             );
-        Craft.postActionRequest('translations/static-translations/save', data, $.proxy(function(response, textStatus) {
-            if (textStatus === 'success') {
+        Craft.sendActionRequest('POST', 'translations/static-translations/save', data)
+            .then((response) => {
                 if (response.success) {
                     Craft.cp.displayNotice(Craft.t('app', 'Static Translations saved.'));
                     Craft.elementIndex.updateElements();
                 }
-            } else {
+            })
+            .catch(() => {
                 Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
-            }
-
-            $('.save-static-translation').removeClass('disabled');
-            $('.save-static-translation').attr("disabled", false);
-
-        }, this));
+            })
+            .finally(() => {
+                $('.save-static-translation').removeClass('disabled');
+                $('.save-static-translation').attr("disabled", false);    
+            });
 
 
     },
@@ -39,17 +39,15 @@ Craft.Translations.StaticTranslations = {
             search: Craft.elementIndex.searchText
         };
 
-        Craft.postActionRequest('translations/static-translations/export', data, $.proxy(function(response, textStatus) {
-            if (textStatus === 'success') {
-                if (response.success) {
+        Craft.sendActionRequest('POST', 'translations/static-translations/export', data)
+            .then((response) => {
                     var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/static-translations/export-file', {'filename': response.filePath})}).hide();
                     $('#static-translation').append($iframe);
                     Craft.cp.displayNotice(Craft.t('app', 'Static Translations exported.'));
-                }
-            } else {
+            })
+            .catch(() => {
                 Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
-            }
-        }, this));
+            });
 
     },
 

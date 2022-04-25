@@ -865,11 +865,8 @@
                     window.history.pushState("", "", url);
                     $form.submit();
                 }else if ($(that).text() == "Update order") {
-                    Craft.postActionRequest('translations/order/update-order', $form.serialize(), function(response, textStatus) {
-                        if (response == null) {
-                            Craft.cp.displayError(Craft.t('app', "Unable to update order."));
-                            sendingOrderStatus(false);
-                        } else if (textStatus === 'success' && response.success) {
+                    Craft.sendActionRequest('POST', 'translations/order/update-order', $form.serialize())
+                        .then((response) => {
                             if (response.message) {
                                 Craft.cp.displayNotice(Craft.t('app', response.message));
                                 setTimeout(function() {
@@ -879,11 +876,11 @@
                                 Craft.cp.displayError(Craft.t('app', "Something went wrong"));
                                 sendingOrderStatus(false);
                             }
-                        } else {
+                        })
+                        .catch(() => {
                             Craft.cp.displayError(Craft.t('app', response.message));
                             sendingOrderStatus(false);
-                        }
-                    });
+                        });
                 } else {
                     var $hiddenFlow = $('<input>', {
                         'type': 'hidden',
@@ -892,29 +889,30 @@
                     });
                     $hiddenFlow.appendTo($form);
 
-                    Craft.postActionRequest($form.find('input[name=action]').val(), $form.serialize(), function(response, textStatus) {
-                        if (response == null) {
-                            Craft.cp.displayError(Craft.t('app', "Unable to create order."));
-                            sendingOrderStatus(false);
-                        } else if (textStatus === 'success' && response.success) {
-                            if (response.message) {
-                                Craft.cp.displayNotice(Craft.t('app', response.message));
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 200);
-                            } else if (response.url) {
-                                window.location.href = response.url;
-                            } else if (response.job) {
-                                Craft.Translations.trackJobProgressById(true, false, response.job);
+                    Craft.sendActionRequest('POST', $form.find('input[name=action]').val(), $form.serialize()) 
+                        .then((response, textStatus) => {
+                            if (response == null) {
+                                Craft.cp.displayError(Craft.t('app', "Unable to create order."));
+                                sendingOrderStatus(false);
+                            } else if (textStatus === 'success' && response.success) {
+                                if (response.message) {
+                                    Craft.cp.displayNotice(Craft.t('app', response.message));
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 200);
+                                } else if (response.url) {
+                                    window.location.href = response.url;
+                                } else if (response.job) {
+                                    Craft.Translations.trackJobProgressById(true, false, response.job);
+                                } else {
+                                    Craft.cp.displayError(Craft.t('app', "No data in response"));
+                                    sendingOrderStatus(false);
+                                }
                             } else {
-                                Craft.cp.displayError(Craft.t('app', "No data in response"));
+                                Craft.cp.displayError(Craft.t('app', response.message));
                                 sendingOrderStatus(false);
                             }
-                        } else {
-                            Craft.cp.displayError(Craft.t('app', response.message));
-                            sendingOrderStatus(false);
-                        }
-                    });
+                        });
                 }
 
             });
@@ -1034,19 +1032,20 @@
                     'value': JSON.stringify(elements)
                 });
                 $hiddenFlow.appendTo($form);
-                Craft.postActionRequest('translations/order/update-order-files-source', $form.serialize(), function(response, textStatus) {
-                    if (textStatus === 'success') {
-                        if (response.success) {
-                            $download ? self._downloadFiles() : location.reload();
+                Craft.sendActionRequest('POST', 'translations/order/update-order-files-source', $form.serialize())
+                    .then((response, textStatus) => {
+                        if (textStatus === 'success') {
+                            if (response.success) {
+                                $download ? self._downloadFiles() : location.reload();
+                            } else {
+                                Craft.cp.displayError(Craft.t('app', response.message));
+                                self.onComplete();
+                            }
                         } else {
-                            Craft.cp.displayError(Craft.t('app', response.message));
+                            Craft.cp.displayError(Craft.t('app', 'Unable to update entries.'));
                             self.onComplete();
                         }
-                    } else {
-                        Craft.cp.displayError(Craft.t('app', 'Unable to update entries.'));
-                        self.onComplete();
-                    }
-                });
+                    });
             });
         },
         _addDeleteElementAction: function(that) {
@@ -1110,25 +1109,26 @@
                 params: params
             };
 
-            Craft.postActionRequest(params.action, $data, function(response, textStatus) {
-                if(textStatus === 'success') {
-                    if (response && response.error) {
-                        Craft.cp.displayError(response.error);
+            Craft.sendActionRequest('POST', params.action, $data)
+                .then((response, textStatus) => {
+                    if(textStatus === 'success') {
+                        if (response && response.error) {
+                            Craft.cp.displayError(response.error);
+                            self.onComplete();
+                        }
+
+                        if (response && response.translatedFiles) {
+                            var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.translatedFiles})}).hide();
+                            $downloadForm.append($iframe);
+                            setTimeout(function() {
+                                self.onComplete(true);
+                            }, 500);
+                        }
+                    } else {
+                        Craft.cp.displayError('There was a problem exporting your file.');
                         self.onComplete();
                     }
-
-                    if (response && response.translatedFiles) {
-                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.translatedFiles})}).hide();
-                        $downloadForm.append($iframe);
-						setTimeout(function() {
-							self.onComplete(true);
-						}, 500);
-                    }
-                } else {
-                    Craft.cp.displayError('There was a problem exporting your file.');
-                    self.onComplete();
-                }
-            });
+                });
         },
         onComplete: function($reload = false) {
             $('#toolbar').removeClass('disabled noClick');

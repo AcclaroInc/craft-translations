@@ -646,12 +646,15 @@ class Translations extends Plugin
             UserPermissions::class,
             UserPermissions::EVENT_REGISTER_PERMISSIONS,
             function (RegisterUserPermissionsEvent $event) {
-                Craft::debug(
+                Craft::info(
                     '['. __METHOD__ .'] UserPermissions::EVENT_REGISTER_PERMISSIONS',
                     'translations'
                 );
                 // Register our custom permissions
-                $event->permissions[Craft::t('translations', 'Translations')] = $this->customAdminCpPermissions();
+                $event->permissions[] = [
+                    'heading'       => Craft::t('translations', 'Translations'),
+                    'permissions'   => $this->customAdminCpPermissions(),
+                ];
             }
         );
     }
