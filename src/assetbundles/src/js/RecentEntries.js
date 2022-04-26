@@ -33,12 +33,12 @@
                     autoShow: false,
                 });
 
-                var data = {
+                var $data = {
                     limit: params.limit,
                     days: params.days
                 };
 
-                Craft.sendActionRequest('POST', 'translations/widget/get-recent-entries', data)
+                Craft.sendActionRequest('POST', 'translations/widget/get-recent-entries', {data: $data})
                     .then((response) => {
                         this.$widget.removeClass('loading');
                         this.$widget.find('.elements').removeClass('hidden');

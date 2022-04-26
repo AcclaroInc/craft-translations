@@ -73,7 +73,7 @@ class FilesController extends Controller
         {
             $errors[] = 'Unable to create zip file: '.$zipDest;
             Craft::error('['. __METHOD__ .'] Unable to create zip file: '.$zipDest, 'translations');
-            return false;
+            return $this->asFailure(null, $errors);
         }
 
         $transaction = Craft::$app->getDb()->beginTransaction();
@@ -144,15 +144,15 @@ class FilesController extends Controller
         if(count($errors) > 0)
         {
             $transaction->rollBack();
-            return $errors;
+            return $this->asFailure(null, $errors);
         }
 
         if (Craft::$app->getElements()->saveElement($order, true, true, false)) {
             $transaction->commit();
-            return $this->asJson(['translatedFiles' => $zipDest]);
+            return $this->asSuccess(null, ['translatedFiles' => $zipDest]);
         } else {
             $transaction->rollBack();
-            return false;
+            return $this->asFailure(null, []);
         }
 
     }

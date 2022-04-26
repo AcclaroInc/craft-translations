@@ -48,34 +48,20 @@
                             var postData = Garnish.getPostData(this.$form),
                                 params = Craft.expandPostArray(postData);
 
-                            var data = {
-                                params: params
-                            };
+                            Craft.sendActionRequest('POST', params.action, {data: params})
+                                .then((response) => {
+                                    this.updateProgressBar();
 
-                            Craft.sendActionRequest('POST', params.action, data)
-                                .then((response, textStatus) => {
-                                    if(textStatus === 'success')
-                                    {
-                                        if (response && response.error) {
-                                            alert(response.error);
-                                        }
-
-                                        this.updateProgressBar();
-
-                                        if (response && response.translatedFiles) {
-                                            var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.translatedFiles})}).hide();
-                                            this.$form.append($iframe);
-                                        }
-
-                                        setTimeout($.proxy(this, 'onComplete'), 300);
-                                    }
-                                    else
-                                    {
-                                        Craft.cp.displayError(Craft.t('app', 'There was a problem exporting your file.'));
-
-                                        this.onComplete(false);
+                                    if (response.translatedFiles) {
+                                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.translatedFiles})}).hide();
+                                        this.$form.append($iframe);
                                     }
 
+                                    setTimeout($.proxy(this, 'onComplete'), 300);
+                                }).catch(() => {
+                                    Craft.cp.displayError(Craft.t('app', 'There was a problem exporting your file.'));
+
+                                    this.onComplete(false);
                                 });
 
                         }, this)

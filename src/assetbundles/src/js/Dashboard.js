@@ -108,16 +108,16 @@
                 $container.removeClass('scaleout');
 
                 if (!settingsHtml) {
-                    var data = {
+                    var params = {
                         type: type
                     };
 
-                    Craft.sendActionRequest('POST', 'translations/widget/create-widget', data)
+                    Craft.sendActionRequest('POST', 'translations/widget/create-widget', {data: params})
                         .then((response) => {
                             $container.removeClass('loading');
                             widget.update(response);
                         })
-                        .catch(({response}) => {
+                        .catch(() => {
                             widget.destroy();
                         })
                 }
@@ -347,10 +347,12 @@
                 e.preventDefault();
                 this.$settingsSpinner.removeClass('hidden');
 
-                var action = this.$container.hasClass('new') ? 'translations/widget/create-widget' : 'translations/widget/save-widget-settings',
-                    data = this.$settingsForm.serialize();
+                var action = this.$container.hasClass('new') ? 'translations/widget/create-widget' : 'translations/widget/save-widget-settings';
 
-                Craft.sendActionRequest('POST', action, data)
+                var postData = Garnish.getPostData(this.$settingsForm),
+                params = Craft.expandPostArray(postData);
+
+                Craft.sendActionRequest('POST', action, {data: params})
                     .then((response) => {
                         this.$settingsSpinner.addClass('hidden');
 
@@ -359,28 +361,29 @@
                             this.$settingsErrorList = null;
                         }
 
-                        if (response.success) {
-                            Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
+                        Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
 
-                            // Make sure the widget is still allowed to be shown, just in case
-                            if (!response.info) {
-                                this.destroy();
-                            }
-                            else {
-                                this.update(response);
-                                this.hideSettings();
-                            }
-                            window.location.reload();
+                        // Make sure the widget is still allowed to be shown, just in case
+                        if (!response.info) {
+                            this.destroy();
                         }
                         else {
-                            Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
-
-                            if (response.errors) {
-                                this.$settingsErrorList = Craft.ui.createErrorList(response.errors)
-                                    .insertAfter(this.$settingsContainer);
-                            }
+                            this.update(response);
+                            this.hideSettings();
                         }
-                    })
+                        window.location.reload();
+                    }).catch(({response}) => {
+                        if (this.$settingsErrorList) {
+                            this.$settingsErrorList.remove();
+                            this.$settingsErrorList = null;
+                        }
+                        Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
+
+                        if (response.errors) {
+                            this.$settingsErrorList = Craft.ui.createErrorList(response.errors)
+                                .insertAfter(this.$settingsContainer);
+                        }
+                    });
             },
 
             update: function(response) {
@@ -604,17 +607,17 @@
                 }
 
                 // Save the change
-                var data = {
+                var params = {
                     id: widgetIds,
                     colspan: newColspan
                 };
 
-                Craft.sendActionRequest('POST', 'translations/widget/change-widget-colspan', data)
+                Craft.sendActionRequest('POST', 'translations/widget/change-widget-colspan', {data: params})
                     .then((response) => {
                         Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
                         location.reload();
                     })
-                    .catch(({response}) => {
+                    .catch(() => {
                         Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
                     })
             }

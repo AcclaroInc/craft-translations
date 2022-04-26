@@ -865,7 +865,9 @@
                     window.history.pushState("", "", url);
                     $form.submit();
                 }else if ($(that).text() == "Update order") {
-                    Craft.sendActionRequest('POST', 'translations/order/update-order', $form.serialize())
+                    var postData = Garnish.getPostData($form),
+                    params = Craft.expandPostArray(postData);
+                    Craft.sendActionRequest('POST', 'translations/order/update-order', {data: params})
                         .then((response) => {
                             if (response.message) {
                                 Craft.cp.displayNotice(Craft.t('app', response.message));
@@ -889,7 +891,10 @@
                     });
                     $hiddenFlow.appendTo($form);
 
-                    Craft.sendActionRequest('POST', $form.find('input[name=action]').val(), $form.serialize()) 
+                    var postData = Garnish.getPostData($form),
+                    params = Craft.expandPostArray(postData);
+
+                    Craft.sendActionRequest('POST', $form.find('input[name=action]').val(), {data: params}) 
                         .then((response, textStatus) => {
                             if (response == null) {
                                 Craft.cp.displayError(Craft.t('app', "Unable to create order."));
@@ -1032,7 +1037,9 @@
                     'value': JSON.stringify(elements)
                 });
                 $hiddenFlow.appendTo($form);
-                Craft.sendActionRequest('POST', 'translations/order/update-order-files-source', $form.serialize())
+                var postData = Garnish.getPostData($form),
+                params = Craft.expandPostArray(postData);
+                Craft.sendActionRequest('POST', 'translations/order/update-order-files-source', {data: params})
                     .then((response, textStatus) => {
                         if (textStatus === 'success') {
                             if (response.success) {
@@ -1106,7 +1113,7 @@
             params = Craft.expandPostArray(postData);
 
             var $data = {
-                params: params
+                data: params
             };
 
             Craft.sendActionRequest('POST', params.action, $data)

@@ -1,5 +1,4 @@
-{% extends "_layouts/elementindex" %}
-{% import 'translations/_macros' as macros %}
+{% extends "_layouts/cp" %}
 
 {% set title = "Static Translations"|t('app') %}
 {% set elementType = 'acclaro\\translations\\elements\\StaticTranslations' %}
@@ -21,7 +20,7 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\StaticTranslationsAssets") %}
 
-{% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}
+{% set sources = craft.app.elementSources.getSources(elementType, 'index', true) %}
 {% set customizableSources = (sources is not empty and context == 'index' and currentUser.can('customizeSources')) %}
 
 {% block sidebar %}

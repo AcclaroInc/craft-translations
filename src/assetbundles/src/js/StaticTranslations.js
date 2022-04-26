@@ -33,13 +33,13 @@ Craft.Translations.StaticTranslations = {
 
     exportStaticTranslation: function() {
 
-        var data = {
+        params = {
             siteId: Craft.elementIndex.siteId,
             sourceKey: Craft.elementIndex.sourceKey,
             search: Craft.elementIndex.searchText
         };
 
-        Craft.sendActionRequest('POST', 'translations/static-translations/export', data)
+        Craft.sendActionRequest('POST', 'translations/static-translations/export', {data: params})
             .then((response) => {
                     var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/static-translations/export-file', {'filename': response.filePath})}).hide();
                     $('#static-translation').append($iframe);
@@ -63,7 +63,6 @@ Craft.Translations.StaticTranslations = {
             $('.save-static-translation').attr("disabled", true);
 
             e.preventDefault();
-            console.log(Craft.elementIndex);
             self.saveStaticTranslation();
         });
 

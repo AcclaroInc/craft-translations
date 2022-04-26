@@ -43,12 +43,12 @@ class StaticTranslations extends Element
         return Translations::$plugin->translator->translate('app', 'Static Translation');
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         try{
             return $this->original;
         } catch (\Exception $e) {
-            ErrorHandler::convertExceptionToError($e);
+            \yii\base\ErrorHandler::convertExceptionToError($e);
         }
     }
 
@@ -185,9 +185,9 @@ class StaticTranslations extends Element
             $elementQuery->siteId = $primarySite->id;
         }
 
-        $attributes = Craft::$app->getElementIndexes()->getTableAttributes(static::class, $sourceKey);
-        if (!empty($elementQuery->siteId)) {
+        $attributes = Craft::$app->getElementSources()->getTableAttributes(static::class, $sourceKey);
 
+        if (!empty($elementQuery->siteId)) {
             $currentSite = Craft::$app->getSites()->getSiteById($elementQuery->siteId);
             $lang = Craft::$app->getI18n()->getLocaleById($currentSite->language);
             $trans = 'Target: '.ucfirst($lang->displayName).' ('.$currentSite->language.')';

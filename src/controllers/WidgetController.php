@@ -305,7 +305,7 @@ class WidgetController extends Controller
         foreach (explode(',', $widgetId) as $id) {
             $this->changeWidgetColspan($id, $colspan);
         }
-        return $this->asJson(['success' => true]);
+        return $this->asSuccess(null, []);
     }
 
     /**
@@ -1065,8 +1065,7 @@ class WidgetController extends Controller
                 'maxColspan' => $widget::maxColspan(),
                 'selectable' => false,
             ];
-            return $this->asJson([
-                'success' => true,
+            return $this->asSuccess(null, [
                 'info' => $info,
                 'additionalInfo' => $additionalInfo,
                 'headHtml' => $view->getHeadHtml(),
@@ -1079,7 +1078,7 @@ class WidgetController extends Controller
                 $allErrors[] = $error;
             }
         }
-        return $this->asJson([
+        return $this->asFailure(null, [
             'errors' => $allErrors
         ]);
     }

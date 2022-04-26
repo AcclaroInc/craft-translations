@@ -32,7 +32,7 @@
     { label: 'Translations'|t, url: url('translations') },
 ] %}
 
-{% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}
+{% set sources = craft.app.elementSources.getSources(elementType, 'index') %}
 {% set customizableSources = (sources is not empty and context == 'index' and currentUser.can('customizeSources')) %}
 
 {% block sidebar %}

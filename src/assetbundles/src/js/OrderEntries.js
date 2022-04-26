@@ -301,7 +301,7 @@
 				fileId: $fileId
 			};
 
-			Craft.sendActionRequest('POST', 'translations/files/get-file-diff', fileData)
+			Craft.sendActionRequest('POST', 'translations/files/get-file-diff', {data: fileData})
 				.then((response) => {
 					data = response.data;
 
@@ -517,7 +517,7 @@
 						'files': JSON.stringify(files)
 					};
 
-					Craft.sendActionRequest('POST', 'translations/export/export-preview-links', $data)
+					Craft.sendActionRequest('POST', 'translations/export/export-preview-links', {data: $data})
 						.then((response) => {
 							if (response.previewFile) {
 								var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
@@ -555,7 +555,7 @@
                     sync: 'translations/files/sync-tm-files'
                 }
 
-                Craft.sendActionRequest('POST', actions[action], $data)
+                Craft.sendActionRequest('POST', actions[action], {data: $data})
 					.then((response) => {
 						if (response.success && !isDefaultTranslator) {
 							Craft.cp.displayNotice('Translation memory files sent successfully.');
