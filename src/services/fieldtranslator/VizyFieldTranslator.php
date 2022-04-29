@@ -34,9 +34,10 @@ class VizyFieldTranslator extends GenericFieldTranslator
 				if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
 					foreach ($block->getFieldLayout()->getFields() as $innerField) {
 						if ($this->getIsTranslatable($innerField)) {
-							$key = sprintf('%s.%s.%s', $field->handle, $block->getBlockType()->id, $innerField->handle);
+							$key = sprintf('%s.%s.%s', $field->handle, $block->id, $innerField->handle);
 							$value = $block->getFieldvalue($innerField->handle);
 
+							// NOTE: The reason we are parsing any type of fields inside this file but not calling again element translator is because of vizy does not return cafts interface class thus it error out as invalid handle at the end when it reaches generic field translator file.
 							switch (true) {
 								case is_null($value):
 									break;
@@ -104,8 +105,8 @@ class VizyFieldTranslator extends GenericFieldTranslator
 			$blockArray = $block['rawNode'];
 			if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
 				foreach ($block->getFieldLayout()->getFields() as $innerField) {
-					if (isset($targetData[$block->getBlockType()->id][$innerField->handle])) {
-						$value = $targetData[$block->getBlockType()->id][$innerField->handle];
+					if (isset($targetData[$block->id][$innerField->handle])) {
+						$value = $targetData[$block->id][$innerField->handle];
 						$innerBlock = $block['attrs']['values']['content']['fields'][$innerField->handle];
 						
 						$newValue = $this->fieldToPostArrayFromTranslationTarget($block, $innerField, $innerBlock, $value, $targetSite, $index);
