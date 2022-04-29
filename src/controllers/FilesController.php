@@ -33,7 +33,7 @@ use acclaro\translations\services\job\ImportFiles;
  */
 class FilesController extends Controller
 {
-    protected $allowAnonymous = ['actionImportFile', 'actionExportFile', 'actionCreateExportZip'];
+    protected array|int|bool $allowAnonymous = ['actionImportFile', 'actionExportFile', 'actionCreateExportZip'];
 
     /**
      * @var Order
@@ -71,9 +71,8 @@ class FilesController extends Controller
         // Open zip
         if ($zip->open($zipDest, $zip::CREATE) !== true)
         {
-            $errors[] = 'Unable to create zip file: '.$zipDest;
             Craft::error('['. __METHOD__ .'] Unable to create zip file: '.$zipDest, 'translations');
-            return $this->asFailure(null, $errors);
+            return $this->asFailure('Unable to create zip file: '.$zipDest);
         }
 
         $transaction = Craft::$app->getDb()->beginTransaction();
@@ -144,17 +143,13 @@ class FilesController extends Controller
         if(count($errors) > 0)
         {
             $transaction->rollBack();
-            return $this->asFailure(null, $errors);
+            return $this->asFailure(implode('\n', $errors));
         }
 
-        if (Craft::$app->getElements()->saveElement($order, true, true, false)) {
-            $transaction->commit();
-            return $this->asSuccess(null, ['translatedFiles' => $zipDest]);
-        } else {
-            $transaction->rollBack();
-            return $this->asFailure(null, []);
-        }
+        Craft::$app->getElements()->saveElement($order, true, true, false);
+        $transaction->commit();
 
+        return $this->asSuccess(null, ['translatedFiles' => $zipDest]);
     }
 
     /**

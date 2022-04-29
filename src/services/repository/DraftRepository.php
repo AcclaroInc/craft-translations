@@ -72,7 +72,7 @@ class DraftRepository
         // Let's save the draft before we pass it to publishDraft()
         Craft::$app->elements->saveElement($draft, true, true, false);
 
-        return Craft::$app->getDrafts()->publishDraft($draft);
+        return Craft::$app->getDrafts()->applyDraft($draft);
     }
 
     public function isTranslationDraft($draftId, $elementId=null)
@@ -142,7 +142,7 @@ class DraftRepository
             }
 
             // Apply the draft to the entry
-            $newEntry = Craft::$app->getDrafts()->publishDraft($draft);
+            $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
         } catch (InvalidElementException $e) {
             Craft::$app->getSession()->setError(Craft::t('app', 'Couldn’t publish draft.'));
             // Send the draft back to the template

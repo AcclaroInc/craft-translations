@@ -38,6 +38,13 @@
     {% endif %}
 {% endblock %}
 
+{% block toolbar %}
+    {% include '_elements/toolbar' with {
+        showSiteMenu: true,
+    } %}
+{% endblock %}
+
+
 {% block content %}
     <form method="post" id="static-translation" accept-charset="utf-8">
         {{ csrfInput() }}
@@ -63,8 +70,19 @@
 
 {% endblock %}
 
-{% js %}
+{% block initJs %}
+    Craft.elementIndex = Craft.createElementIndex('{{ elementType|e("js") }}', $('#page-container'), {
+        elementTypeName: '{{ elementInstance.displayName()|e("js") }}',
+        elementTypePluralName: '{{ elementInstance.pluralDisplayName()|e("js") }}',
+        context: '{{ context }}',
+        storageKey: 'elementindex.{{ elementType|e("js") }}',
+        criteria: Craft.defaultIndexCriteria,
+        toolbarSelector: '#toolbar',
+    });
+
     $(document).ready(function() {
         Craft.Translations.StaticTranslations.init();
     });
-{% endjs %}
+{% endblock %}
+
+{% js block('initJs') %}

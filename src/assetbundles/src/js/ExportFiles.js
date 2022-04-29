@@ -47,19 +47,20 @@
                         complete: $.proxy(function() {
                             var postData = Garnish.getPostData(this.$form),
                                 params = Craft.expandPostArray(postData);
+                                $data = {'params' : params};
 
-                            Craft.sendActionRequest('POST', params.action, {data: params})
+                            Craft.sendActionRequest('POST', params.action, {data: $data})
                                 .then((response) => {
                                     this.updateProgressBar();
 
-                                    if (response.translatedFiles) {
-                                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.translatedFiles})}).hide();
+                                    if (response.data.translatedFiles) {
+                                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.translatedFiles})}).hide();
                                         this.$form.append($iframe);
                                     }
 
                                     setTimeout($.proxy(this, 'onComplete'), 300);
-                                }).catch(() => {
-                                    Craft.cp.displayError(Craft.t('app', 'There was a problem exporting your file.'));
+                                }).catch(({response}) => {
+                                    Craft.cp.displayError(Craft.t('app', response.data.message));
 
                                     this.onComplete(false);
                                 });

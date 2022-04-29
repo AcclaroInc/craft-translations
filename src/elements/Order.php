@@ -88,6 +88,9 @@ class Order extends Element
      */
     public static function displayName(): string
     {
+        // To Show Colum Header as Name inspite of order in index page table.
+        if(debug_backtrace()[1]['function'] == 'getTableAttributes')
+            return Translations::$plugin->translator->translate('app', 'Name');
         return Translations::$plugin->translator->translate('app', 'Order');
     }
 
@@ -387,7 +390,6 @@ class Order extends Element
     protected static function defineTableAttributes(): array
     {
         $attributes = [
-            'title' => ['label' => Translations::$plugin->translator->translate('app', 'Name')],
             'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
             'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
             'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
@@ -405,7 +407,6 @@ class Order extends Element
     protected static function defineDefaultTableAttributes(string $source): array
     {
         return [
-            'title',
             'status',
             'translatorId',
             'dateOrdered',

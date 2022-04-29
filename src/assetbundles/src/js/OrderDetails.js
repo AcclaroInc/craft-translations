@@ -869,18 +869,13 @@
                     params = Craft.expandPostArray(postData);
                     Craft.sendActionRequest('POST', 'translations/order/update-order', {data: params})
                         .then((response) => {
-                            if (response.message) {
-                                Craft.cp.displayNotice(Craft.t('app', response.message));
-                                setTimeout(function() {
-                                    window.location.href = removeParams(location.href);
-                                }, 200);
-                            } else {
-                                Craft.cp.displayError(Craft.t('app', "Something went wrong"));
-                                sendingOrderStatus(false);
-                            }
+                            Craft.cp.displayNotice(Craft.t('app', response.data.message));
+                            setTimeout(function() {
+                                window.location.href = removeParams(location.href);
+                            }, 200);
                         })
-                        .catch(() => {
-                            Craft.cp.displayError(Craft.t('app', response.message));
+                        .catch(({response}) => {
+                            Craft.cp.displayError(Craft.t('app', response.data.message));
                             sendingOrderStatus(false);
                         });
                 } else {
@@ -895,28 +890,12 @@
                     params = Craft.expandPostArray(postData);
 
                     Craft.sendActionRequest('POST', $form.find('input[name=action]').val(), {data: params}) 
-                        .then((response, textStatus) => {
-                            if (response == null) {
-                                Craft.cp.displayError(Craft.t('app', "Unable to create order."));
-                                sendingOrderStatus(false);
-                            } else if (textStatus === 'success' && response.success) {
-                                if (response.message) {
-                                    Craft.cp.displayNotice(Craft.t('app', response.message));
-                                    setTimeout(function() {
-                                        location.reload();
-                                    }, 200);
-                                } else if (response.url) {
-                                    window.location.href = response.url;
-                                } else if (response.job) {
-                                    Craft.Translations.trackJobProgressById(true, false, response.job);
-                                } else {
-                                    Craft.cp.displayError(Craft.t('app', "No data in response"));
-                                    sendingOrderStatus(false);
-                                }
-                            } else {
-                                Craft.cp.displayError(Craft.t('app', response.message));
-                                sendingOrderStatus(false);
-                            }
+                        .then((response) => {
+                            window.location.href = response.data.redirect;
+                        })
+                        .catch(({response}) => {
+                            Craft.cp.displayError(Craft.t('app', response.data.message));
+                            sendingOrderStatus(false);
                         });
                 }
 
@@ -1040,18 +1019,12 @@
                 var postData = Garnish.getPostData($form),
                 params = Craft.expandPostArray(postData);
                 Craft.sendActionRequest('POST', 'translations/order/update-order-files-source', {data: params})
-                    .then((response, textStatus) => {
-                        if (textStatus === 'success') {
-                            if (response.success) {
-                                $download ? self._downloadFiles() : location.reload();
-                            } else {
-                                Craft.cp.displayError(Craft.t('app', response.message));
-                                self.onComplete();
-                            }
-                        } else {
-                            Craft.cp.displayError(Craft.t('app', 'Unable to update entries.'));
-                            self.onComplete();
-                        }
+                    .then((response) => {
+                        $download ? self._downloadFiles() : location.reload();
+                    })
+                    .catch(({response}) => {
+                        Craft.cp.displayError(Craft.t('app', response.data.message));
+                        self.onComplete();
                     });
             });
         },
@@ -1110,31 +1083,19 @@
             }).appendTo($downloadForm);
 
             postData = Garnish.getPostData($downloadForm);
-            params = Craft.expandPostArray(postData);
+            $data = {params: Craft.expandPostArray(postData)};
 
-            var $data = {
-                data: params
-            };
-
-            Craft.sendActionRequest('POST', params.action, $data)
-                .then((response, textStatus) => {
-                    if(textStatus === 'success') {
-                        if (response && response.error) {
-                            Craft.cp.displayError(response.error);
-                            self.onComplete();
-                        }
-
-                        if (response && response.translatedFiles) {
-                            var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.translatedFiles})}).hide();
-                            $downloadForm.append($iframe);
-                            setTimeout(function() {
-                                self.onComplete(true);
-                            }, 500);
-                        }
-                    } else {
-                        Craft.cp.displayError('There was a problem exporting your file.');
-                        self.onComplete();
-                    }
+            Craft.sendActionRequest('POST', params.action, {data: $data})
+                .then((response) => {
+                    var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.translatedFiles})}).hide();
+                    $downloadForm.append($iframe);
+                    setTimeout(function() {
+                        self.onComplete(true);
+                    }, 500);
+                })
+                .catch(({response}) => {
+                    Craft.cp.displayError(response.data.message);
+                    self.onComplete();
                 });
         },
         onComplete: function($reload = false) {
