@@ -519,8 +519,8 @@
 
 					Craft.sendActionRequest('POST', 'translations/export/export-preview-links', {data: $data})
 						.then((response) => {
-							if (response.previewFile) {
-								var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
+							if (response.data.previewFile) {
+								var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.data.previewFile }) }).hide();
 								$('#regenerate-preview-urls').append($iframe);
 								self.toggleLoader();
 							}
@@ -557,19 +557,16 @@
 
                 Craft.sendActionRequest('POST', actions[action], {data: $data})
 					.then((response) => {
-						if (response.success && !isDefaultTranslator) {
+						if (!isDefaultTranslator) {
 							Craft.cp.displayNotice('Translation memory files sent successfully.');
 							location.reload();
-						} else if (response.success && response.tmFiles) {
+						} else if (response.data.tmFiles) {
 							let $downloadForm = $('#regenerate-preview-urls');
-							let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
+							let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.tmFiles})}).hide();
 							$downloadForm.append($iframe);
 							setTimeout(function() {
 								location.reload();
 							}, 100);
-						} else {
-							Craft.cp.displayError(Craft.t('app', response.message));
-							self.toggleLoader();
 						}
 					})
 					.catch(() => {

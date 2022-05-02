@@ -249,7 +249,7 @@
 				{% set includeTmFilesTitle = "This field cannot be edited." %}
 			{% endif %}
 			<span class="{{ includeTmFilesClass }}">
-				<div style="margin-bottom: 0" class="{% if includeTmFilesClass %} noClick disabled {% endif %}" title="{{ includeTmFilesTitle }}">
+				<div style="margin-bottom: 0" class="{% if includeTmFilesClass %} noClick {% endif %}" title="{{ includeTmFilesTitle }}">
 					{{ forms.lightswitchField({
 						label: 'Include translation memory alignment files<p class="fw-400">\
 							Include translation memory alignment files with order submission to prevent overwriting existing content edits.</p>'|t('app'),

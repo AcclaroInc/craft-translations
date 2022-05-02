@@ -1374,7 +1374,7 @@ class OrderController extends Controller
 
         if (! $order) return $this->asFailure('Order not found');
 
-        $elements = Craft::$app->getRequest()->getBodyParam('update-elements');
+        $elements = Craft::$app->getRequest()->getRequiredBodyParam('selected');
         if ($elements) $elements = json_decode($elements, true);
 
         $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;

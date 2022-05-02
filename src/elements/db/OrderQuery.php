@@ -2,7 +2,6 @@
 
 namespace acclaro\translations\elements\db;
 
-use acclaro\translations\Constants;
 use craft\elements\db\ElementQuery;
 use craft\helpers\Db;
 
@@ -13,7 +12,7 @@ class OrderQuery extends ElementQuery
      */
     protected array $defaultOrderBy = ['translations_orders.dateCreated' => SORT_DESC];
 
-    public array|string|null $status = Constants::ORDER_STATUS_PENDING;
+    public array|string|null $status = null;
 
     public $elementIds;
     

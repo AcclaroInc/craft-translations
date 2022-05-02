@@ -1012,14 +1012,14 @@
 
                 $hiddenFlow = $('<input>', {
                     'type': 'hidden',
-                    'name': 'update-elements',
+                    'name': 'selected',
                     'value': JSON.stringify(elements)
                 });
                 $hiddenFlow.appendTo($form);
                 var postData = Garnish.getPostData($form),
                 params = Craft.expandPostArray(postData);
                 Craft.sendActionRequest('POST', 'translations/order/update-order-files-source', {data: params})
-                    .then((response) => {
+                    .then(() => {
                         $download ? self._downloadFiles() : location.reload();
                     })
                     .catch(({response}) => {
@@ -1083,9 +1083,10 @@
             }).appendTo($downloadForm);
 
             postData = Garnish.getPostData($downloadForm);
-            $data = {params: Craft.expandPostArray(postData)};
+            $data = Craft.expandPostArray(postData);
+            params = {'params': $data};
 
-            Craft.sendActionRequest('POST', params.action, {data: $data})
+            Craft.sendActionRequest('POST', $data.action, {data: params})
                 .then((response) => {
                     var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.translatedFiles})}).hide();
                     $downloadForm.append($iframe);

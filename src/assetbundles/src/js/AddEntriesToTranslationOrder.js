@@ -17,12 +17,19 @@ Craft.Translations.AddEntriesToTranslationOrder = {
     $createNewLink: null,
 
     isEditEntryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="elements/save-draft"]').length > 0 ||
-        $('form#main-form input[type=hidden][name=action][value="elements/apply-draft"]').length > 0;
+        return $('form#main-form input[type=hidden][name=action][value="elements/save"]').length > 0;
+    },
+
+    isCreateEntryScreen: function() {
+        return $('form#main-form input[type=hidden][name=action][value="elements/apply-draft"]').length > 0;
     },
 
     isRevertRevisionScreen: function(){
         return $('form input[type=hidden][name=action][value="elements/revert"]').length > 0;
+    },
+
+    isEditDraftScreen: function(){
+        return $('form#main-form input[type=hidden][name=action][value="elements/save-draft"]').length > 0;
     },
 
     getEditEntryId: function() {
@@ -148,8 +155,8 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
-        } else if(! this.isRevertRevisionScreen()) {
-            $btngroup.appendTo('header#header');
+        } else if(! (this.isRevertRevisionScreen() || this.isEditDraftScreen() || this.isCreateEntryScreen())) {
+            $btngroup.insertBefore('header#header > div:last');
         }
 
         this.$btn = $('<a>', {

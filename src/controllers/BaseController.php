@@ -26,10 +26,10 @@ use acclaro\translations\services\job\RegeneratePreviewUrls;
 class BaseController extends Controller
 {
     /**
-     * @var    bool|array Allows anonymous access to this controller's actions.
+     * @var    array|int|bool Allows anonymous access to this controller's actions.
      * @access protected
      */
-    protected $allowAnonymous = true;
+    protected array|int|bool $allowAnonymous = true;
 
     /**
      * @var int

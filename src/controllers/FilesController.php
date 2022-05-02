@@ -450,7 +450,7 @@ class FilesController extends Controller
 
             // Open zip
             if ($zip->open($zipDest, $zip::CREATE) !== true) {
-                throw new \Exception('Unable to create zip file: '.$zipDest);
+                return $this->asFailure('Unable to create zip file: '.$zipDest);
             }
 
             //Iterate over each file on this order
@@ -463,7 +463,7 @@ class FilesController extends Controller
                     $fileContent = $tmFile['fileContent'];
 
                     if (! $fileContent || ! $zip->addFromString($fileName, $fileContent)) {
-                        throw new \Exception('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
+                        return $this->asFailure('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
                     }
 
                     $file->reference = $tmFile['fileContent'];
@@ -475,10 +475,10 @@ class FilesController extends Controller
             $zip->close();
         } catch(\Exception $e) {
             Craft::error('['. __METHOD__ .']' . $e->getMessage(), 'translations');
-            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            return $this->asFailure($e->getMessage());
         }
 
-        return $this->asJson(['success' => true, 'tmFiles' => $zipDest]);
+        return $this->asSuccess(null, ['tmFiles' => $zipDest]);
     }
 
     /**
