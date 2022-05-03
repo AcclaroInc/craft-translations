@@ -25,6 +25,7 @@ use acclaro\translations\records\OrderRecord;
 use acclaro\translations\elements\db\OrderQuery;
 use acclaro\translations\elements\actions\OrderDelete;
 use acclaro\translations\elements\actions\OrderEdit;
+use craft\elements\User;
 
 /**
  * @author    Acclaro
@@ -138,9 +139,19 @@ class Order extends Element
         return false;
     }
 
-    public function getIsEditable(): bool
+    public function canView(User $user): bool
     {
-        return true;
+        return $user->can('translations:orders:create');
+    }
+
+    public function canSave(User $user): bool
+    {
+        return $user->can('translations:orders:edit');
+    }
+
+    public function canDelete(User $user): bool
+    {
+        return $user->can('translations:orders:delete');
     }
 
     /**
@@ -156,7 +167,7 @@ class Order extends Element
         return false;
     }
 
-    protected static function defineActions(string $source = null): array
+    protected static function defineActions(string $source): array
     {
         $actions = [OrderDelete::class, OrderEdit::class];
 
@@ -171,7 +182,7 @@ class Order extends Element
         return $actions;
     }
 
-    protected static function defineSources(string $context = null): array
+    protected static function defineSources(string $context): array
     {
         $sources = [
             [
