@@ -34,7 +34,7 @@ class LanguageCoverage extends Widget
     /**
      * @inheritdoc
      */
-    public static function iconPath()
+    public static function icon(): ?string
     {
         return Craft::getAlias('@app/icons/world.svg');
     }
@@ -47,9 +47,9 @@ class LanguageCoverage extends Widget
     public function rules(): array
     {
         $rules = parent::rules();
-        
+
         $rules[] = ['limit', 'number', 'integerOnly' => true];
-        
+
         return $rules;
     }
 
@@ -89,7 +89,7 @@ class LanguageCoverage extends Widget
         return Craft::$app->getView()->renderTemplate('translations/_components/widgets/LanguageCoverage/body', [
             'limit' => $this->limit,
             // 'colspan' => $this->limit
-        ]);   
+        ]);
     }
 
     public static function doesUserHaveWidget(string $type): bool

@@ -348,11 +348,9 @@
                 this.$settingsSpinner.removeClass('hidden');
 
                 var action = this.$container.hasClass('new') ? 'translations/widget/create-widget' : 'translations/widget/save-widget-settings';
+                data = this.$settingsForm.serialize();
 
-                var postData = Garnish.getPostData(this.$settingsForm),
-                params = Craft.expandPostArray(postData);
-
-                Craft.sendActionRequest('POST', action, {data: params})
+                Craft.sendActionRequest('POST', action, {data})
                     .then((response) => {
                         this.$settingsSpinner.addClass('hidden');
 
@@ -364,11 +362,11 @@
                         Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
 
                         // Make sure the widget is still allowed to be shown, just in case
-                        if (!response.info) {
+                        if (!response.data.info) {
                             this.destroy();
                         }
                         else {
-                            this.update(response);
+                            this.update(response.data);
                             this.hideSettings();
                         }
                         window.location.reload();
@@ -379,8 +377,8 @@
                         }
                         Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
 
-                        if (response.errors) {
-                            this.$settingsErrorList = Craft.ui.createErrorList(response.errors)
+                        if (response.data.errors) {
+                            this.$settingsErrorList = Craft.ui.createErrorList(response.data.errors)
                                 .insertAfter(this.$settingsContainer);
                         }
                     });

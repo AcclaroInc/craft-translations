@@ -32,7 +32,7 @@ class News extends Widget
     /**
      * @inheritdoc
      */
-    public static function iconPath()
+    public static function icon(): ?string
     {
         return Craft::getAlias('@app/icons/feed.svg');
     }
@@ -45,9 +45,9 @@ class News extends Widget
     public function rules(): array
     {
         $rules = parent::rules();
-        
+
         $rules[] = ['limit', 'number', 'integerOnly' => true];
-        
+
         return $rules;
     }
 
@@ -76,9 +76,9 @@ class News extends Widget
     public function getBodyHtml(): ?string
     {
         $view = Craft::$app->getView();
-        
+
         $articles = $this->_getArticles();
-        
+
         return $view->renderTemplate('translations/_components/widgets/News/body', ['articles' => $articles]);
     }
 

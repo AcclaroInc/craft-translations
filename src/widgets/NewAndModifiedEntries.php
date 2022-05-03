@@ -34,7 +34,7 @@ class NewAndModifiedEntries extends Widget
     /**
      * @inheritdoc
      */
-    public static function iconPath()
+    public static function icon(): ?string
     {
         return Craft::getAlias('@app/icons/newspaper.svg');
     }
@@ -57,10 +57,10 @@ class NewAndModifiedEntries extends Widget
     public function rules(): array
     {
         $rules = parent::rules();
-        
+
         $rules[] = ['limit', 'number', 'integerOnly' => true];
         $rules[] = ['days', 'number', 'integerOnly' => true];
-        
+
         return $rules;
     }
 
@@ -142,28 +142,5 @@ class NewAndModifiedEntries extends Widget
     protected static function allowMultipleInstances(): bool
     {
         return false;
-    }
-
-    /**
-     * Returns the new entries
-     *
-     * @return array
-     */
-    private function _getEntries(): array
-    {
-        $elements = Entry::find()->limit($this->limit)->orderBy(['dateUpdated' => SORT_DESC])->all();
-
-        $i = 0;
-        $entries = [];
-        foreach ($elements as $element) {
-            $entries[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
-            $entries[$i]['entryId'] = $element->id;
-            $entries[$i]['entryDate'] = $element->dateUpdated;
-            $entries[$i]['entryDateTimestamp'] = $element->dateUpdated;
-            $entries[$i]['id'] = $element->id;
-            $i++;
-        }
-
-        return $entries;
     }
 }
