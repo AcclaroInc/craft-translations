@@ -19,6 +19,8 @@ use acclaro\translations\Translations;
 
 class VizyFieldTranslator extends GenericFieldTranslator
 {
+	private $skipNsmFields = ['sex', 'country', 'countryCode', 'administrativeArea', 'mapUrl', 'sortingCode', 'placeData', 'recipient', 'locale', 'dependentLocality', 'additionalName'];
+
     /**
      * {@inheritdoc}
      */
@@ -27,29 +29,55 @@ class VizyFieldTranslator extends GenericFieldTranslator
         $source = [];
 
 		$blocks = $element->getFieldValue($field->handle)->all();
-
 		if ($blocks) {
 			foreach ($blocks as $index => $block) {
 				if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
 					foreach ($block->getFieldLayout()->getFields() as $innerField) {
-						if ($this->isFieldTranslatable($innerField)) {
-							$key = sprintf('%s.%s.%s', $field->handle, $block->getBlockType()->id, $innerField->handle);
+						if ($this->getIsTranslatable($innerField)) {
+							$key = sprintf('%s.%s.%s', $field->handle, $block->id, $innerField->handle);
 							$value = $block->getFieldvalue($innerField->handle);
 
-							switch ($value) {
-								case !is_object($value):
-									$source[$key] = $value ?? "";
+							// NOTE: The reason we are parsing any type of fields inside this file but not calling again element translator is because of vizy does not return cafts interface class thus it error out as invalid handle at the end when it reaches generic field translator file.
+							switch (true) {
+								case is_null($value):
 									break;
-								case $value instanceof craft\redactor\FieldData:
+								case is_string($value):
+									$source[$key] = $value;
+									break;
+								case $innerField instanceof craft\redactor\Field:
 									$source[$key] = $value->getRawContent();
 									break;
-								case $value instanceof \newism\fields\models\PersonNameModel:
-									foreach ($value as $handle => $data) {
-										$source[$key . "." . $handle] = $data;
+								case $innerField instanceof craft\fields\Checkboxes:
+									foreach($value->getOptions() as $option) {
+										$k = sprintf('%s.%s', $key, $option->value);
+										$source[$k] = $option->label;
+									}
+									break;
+								case $innerField instanceof \fruitstudios\linkit\fields\LinkitField:
+									$k = sprintf('%s.%s.customText', $key, $index);
+
+									$source[$k] = $innerField->serializeValue($value)['customText'];
+						
+									break;
+								case $innerField instanceof craft\fields\Assets:
+									foreach ($value->siteId($sourceSite)->all() as $asset) {
+										$source[sprintf('%s.%s.%s', $key, $asset->id, 'title')] = $asset->title;
+									}
+									break;
+								case $innerField instanceof \newism\fields\fields\PersonName:
+								case $innerField instanceof \newism\fields\fields\Address:
+								case $innerField instanceof \newism\fields\fields\Email:
+								case $innerField instanceof \newism\fields\fields\Telephone:
+								case $innerField instanceof \newism\fields\fields\Gender:
+								case $innerField instanceof \newism\fields\fields\Embed:
+									foreach ($value as $nsmKey => $nsmVal) {
+										if (in_array($nsmKey, $this->skipNsmFields)) continue;
+										$k = sprintf('%s.%s', $key, $nsmKey);
+										$source[$k] = $nsmVal;
 									}
 									break;
 								default:
-									$source = array_merge($source, $this->fieldToTranslationSource($value, $key));
+									$source = array_merge($source, $this->fieldToTranslationSource($value, $key, $index));
 							}
 						}
 					}
@@ -67,32 +95,29 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	/**
      * {@inheritdoc}
      */
-    public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
+    public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $targetData)
     {
 		$postArray = [];
 
 		$blocks = $element->getFieldValue($field->handle)->all();
-
+		
 		foreach ($blocks as $index => $block) {
 			$blockArray = $block['rawNode'];
 			if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
 				foreach ($block->getFieldLayout()->getFields() as $innerField) {
-					if (isset($fieldData[$block->getBlockType()->id][$innerField->handle])) {
-						$value = $fieldData[$block->getBlockType()->id][$innerField->handle];
-
-						if (!is_string($value)) {
-							$innerBlock = $block['attrs']['values']['content']['fields'][$innerField->handle];
-
-							$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($innerField->handle), $innerBlock, $value, $targetSite);
-						}
-
-						$blockArray['attrs']['values']['content']['fields'][$innerField->handle] = $value;
+					if (isset($targetData[$block->id][$innerField->handle])) {
+						$value = $targetData[$block->id][$innerField->handle];
+						$innerBlock = $block['attrs']['values']['content']['fields'][$innerField->handle];
+						
+						$newValue = $this->fieldToPostArrayFromTranslationTarget($block, $innerField, $innerBlock, $value, $targetSite, $index);
+						
+						$blockArray['attrs']['values']['content']['fields'][$innerField->handle] = $newValue;
 					}
 				}
 				$postArray[$field->handle][$index] = $blockArray;
 			} else {
 				$key = sprintf('new%s', $index + 1);
-				$data = $this->customFieldToPostArray($blockArray, $fieldData[$key]);
+				$data = $this->customFieldToPostArray($blockArray, $targetData[$key]);
 				$postArray[$field->handle][$index] = $data;
 			}
 		}
@@ -107,36 +132,58 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	 * @param string $key
 	 * @return array
 	 */
-	private function fieldToTranslationSource($value, $key)
+	private function fieldToTranslationSource($value, $key, $mainIndex)
 	{
 		$source = [];
 
 		foreach ($value->all() as $index => $nestedField) {
 			$index += 1;
 			foreach ($nestedField->getFieldLayout()->getFields() as $field) {
-				if ($this->isFieldTranslatable($field)) {
+				if ($this->getIsTranslatable($field)) {
 					$newKey = sprintf('%s.new%s.%s', $key, $index, $field->handle);
 
-					$value = $nestedField->getFieldvalue($field->handle);
+					$newValue = $nestedField->getFieldvalue($field->handle);
 
-					switch ($value) {
-						case (!is_object($value)):
-							if ($nestedField instanceof craft\elements\Asset) {
-								$newKey = sprintf('%s.%s.%s', $key, $nestedField->id, $field->handle);
-								$source[sprintf('%s.%s.%s', $key, $nestedField->id, 'title')] = $nestedField->title;
+					switch ($newValue) {
+						case is_null($newValue):
+							break;
+						case is_string($newValue):
+							$source[$newKey] = $newValue;
+							break;
+						case $field instanceof craft\redactor\Field:
+							$source[$newKey] = $newValue->getRawContent();
+							break;
+						case $field instanceof craft\fields\Checkboxes:
+							foreach($newValue->getOptions() as $option) {
+								$k = sprintf('%s.%s', $newKey, $option->value);
+								$source[$k] = $option->label;
 							}
-							$source[$newKey] = $value ?? "";
 							break;
-						case $value instanceof craft\redactor\FieldData:
-							$source[$newKey] = $value->getRawContent();
+						case $field instanceof \fruitstudios\linkit\fields\LinkitField:
+							$k = sprintf('%s.%s.customText', $newKey, $mainIndex);
+
+							$source[$k] = $field->serializeValue($newValue)['customText'];
+				
 							break;
-						case $value instanceof \newism\fields\models\PersonNameModel:
-							foreach ($value as $handle => $data) {
-								$source[$newKey . "." . $handle] = $data;
+						case $field instanceof craft\fields\Assets:
+							foreach ($newValue->all() as $asset) {
+								$source[sprintf('%s.%s.%s', $newKey, $asset->id, 'title')] = $asset->title;
+							}
+							break;
+						case $field instanceof \newism\fields\fields\PersonName:
+						case $field instanceof \newism\fields\fields\Address:
+						case $field instanceof \newism\fields\fields\Email:
+						case $field instanceof \newism\fields\fields\Telephone:
+						case $field instanceof \newism\fields\fields\Gender:
+						case $field instanceof \newism\fields\fields\Embed:
+							foreach ($value as $nsmKey => $nsmVal) {
+								if (in_array($nsmKey, $this->skipNsmFields)) continue;
+								$k = sprintf('%s.%s', $key, $nsmKey);
+								$source[$k] = $nsmVal;
 							}
 							break;
 						default:
-							$source = array_merge($source, $this->fieldToTranslationSource($value, $newKey));
+							$source = array_merge($source, $this->fieldToTranslationSource($newValue, $newKey, $mainIndex));
 					}
 				}
 			}
@@ -149,49 +196,81 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	 * Converts Target data to post array
 	 *
 	 * @param mixed $nestedFields
-	 * @param array $attributes
+	 * @param mixed $attributes
 	 * @param array $targetData
 	 * @return array
 	 */
-	private function fieldToPostArrayFromTranslationTarget($nestedFields, $attributes, $targetData, $targetSite)
+	private function fieldToPostArrayFromTranslationTarget($block, $field, $attributes, $targetData, $targetSite, $mainIndex)
 	{
+		$handle = $field->handle;
+		$value = $block->getFieldValue($handle);
 		$postArray = $attributes;
 
-		if ($nestedFields instanceof \newism\fields\models\PersonNameModel) {
-			foreach ($nestedFields as $handle => $field) {
-				$postArray[$handle] = $targetData[$handle];
-			}
-			return $postArray;
-		}
-
-		if ($nestedFields instanceof craft\elements\db\AssetQuery) {
-			foreach ($attributes as $assetId) {
-				$asset = Craft::$app->assets->getAssetById($assetId, $targetSite);
-				$asset->siteId = $targetSite;
-
-				foreach ($targetData[$assetId] as $handle => $value) {
-					$asset->$handle = $value;
+		switch (true) {
+			case is_null($value):
+				break;
+			case is_string($value):
+			case $field instanceof craft\redactor\Field:
+				$postArray = $targetData;
+				break;
+			case $field instanceof craft\fields\Checkboxes:
+				foreach($value->getOptions() as $option) {
+					$postArray['label'] = $targetData[$option->value];
 				}
-				Translations::$plugin->draftRepository->saveDraft($asset);
-			}
-			return $postArray;
-		}
-
-		foreach ($nestedFields->all() as $index => $block) {
-            $index++;
-            $index = "new" . $index;
-            foreach ($block->getFieldLayout()->getFields() as $field) {
-				if (isset($targetData[$index][$field->handle])) {
-					$value = $targetData[$index][$field->handle];
-
-					if (! is_string($value)) {
-						$innerBlock = $attributes[$index]['fields'][$field->handle];
-						$value = $this->fieldToPostArrayFromTranslationTarget($block->getFieldvalue($field->handle), $innerBlock, $value, $targetSite);
+				break;
+			case $field instanceof \fruitstudios\linkit\fields\LinkitField:
+				$postArray['customText'] = $targetData[$mainIndex]['customText'];
+				break;
+			case $field instanceof craft\fields\Assets:
+				foreach ($attributes as $assetId) {
+					$asset = Craft::$app->assets->getAssetById($assetId, $targetSite);
+					$asset->siteId = $targetSite;
+	
+					foreach ($targetData[$assetId] as $handle => $value) {
+						$asset->$handle = $targetData[$assetId][$handle];
 					}
-
-					$postArray[$index]['fields'][$field->handle] = $value;
+					Translations::$plugin->draftRepository->saveDraft($asset);
 				}
-			}
+				break;
+			case $field instanceof \newism\fields\fields\PersonName:
+			case $field instanceof \newism\fields\fields\Email:
+			case $field instanceof \newism\fields\fields\Telephone:
+			case $field instanceof \newism\fields\fields\Gender:
+			case $field instanceof \newism\fields\fields\Embed:
+				foreach ($attributes as $nsmKey => $nsmVal) {
+					if (key_exists($nsmKey, $targetData)) {
+						$postArray[$nsmKey] = $targetData[$nsmKey];
+					}
+				}
+				break;
+			case $field instanceof \newism\fields\fields\Address:
+				$tmp = [];
+				foreach ($value as $nsmKey => $nsmVal) {
+					if (key_exists($nsmKey, $targetData)) {
+						$tmp[$nsmKey] = $targetData[$nsmKey];
+					} else {
+						$tmp[$nsmKey] = $nsmVal;
+					}
+				}
+				$postArray = json_encode($tmp);
+				break;
+			default:
+				foreach ($value->all() as $index => $block) {
+					$index++;
+					$index = "new" . $index;
+					foreach ($block->getFieldLayout()->getFields() as $field) {
+						if (isset($targetData[$index][$field->handle])) {
+							$value = $targetData[$index][$field->handle];
+		
+							if (! is_string($value)) {
+								$innerBlock = $attributes[$index]['fields'][$field->handle];
+								$value = $this->fieldToPostArrayFromTranslationTarget($block, $field, $innerBlock, $value, $targetSite, $mainIndex);
+							}
+		
+							$postArray[$index]['fields'][$field->handle] = $value;
+						}
+					}
+				}
 		}
 
 		return $postArray;
@@ -203,13 +282,13 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	 * @param [type] $field
 	 * @return boolean
 	 */
-	private function isFieldTranslatable($field)
+	private function getIsTranslatable($field)
 	{
 		return $field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES);
 	}
 
 	/**
-	 * function to parse cistome fields attribute to surce array
+	 * function to parse custom fields attribute to source array
 	 *
 	 * @param array $attrs
 	 * @param string $key
