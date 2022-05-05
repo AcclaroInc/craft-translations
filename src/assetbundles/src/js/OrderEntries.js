@@ -303,7 +303,7 @@
 
 			Craft.sendActionRequest('POST', 'translations/files/get-file-diff', {data: fileData})
 				.then((response) => {
-					data = response.data;
+					data = response.data.data;
 
 					diffHtml = self.createDiffHtmlView(data);
 					diffHtml.attr("id", "data-"+$fileId)
