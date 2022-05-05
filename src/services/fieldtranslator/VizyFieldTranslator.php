@@ -31,7 +31,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		if ($blocks) {
 			foreach ($blocks as $index => $block) {
 				if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
-					foreach ($block->getFieldLayout()->getFields() as $innerField) {
+					foreach ($block->getFieldLayout()->getCustomFields() as $innerField) {
 						if ($this->isFieldTranslatable($innerField)) {
 							$key = sprintf('%s.%s.%s', $field->handle, $block->getBlockType()->id, $innerField->handle);
 							$value = $block->getFieldvalue($innerField->handle);
@@ -76,7 +76,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		foreach ($blocks as $index => $block) {
 			$blockArray = $block['rawNode'];
 			if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
-				foreach ($block->getFieldLayout()->getFields() as $innerField) {
+				foreach ($block->getFieldLayout()->getCustomFields() as $innerField) {
 					if (isset($fieldData[$block->getBlockType()->id][$innerField->handle])) {
 						$value = $fieldData[$block->getBlockType()->id][$innerField->handle];
 
@@ -113,7 +113,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 
 		foreach ($value->all() as $index => $nestedField) {
 			$index += 1;
-			foreach ($nestedField->getFieldLayout()->getFields() as $field) {
+			foreach ($nestedField->getFieldLayout()->getCustomFields() as $field) {
 				if ($this->isFieldTranslatable($field)) {
 					$newKey = sprintf('%s.new%s.%s', $key, $index, $field->handle);
 
@@ -180,7 +180,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		foreach ($nestedFields->all() as $index => $block) {
             $index++;
             $index = "new" . $index;
-            foreach ($block->getFieldLayout()->getFields() as $field) {
+			foreach ($block->getFieldLayout()->getCustomFields() as $field) {
 				if (isset($targetData[$index][$field->handle])) {
 					$value = $targetData[$index][$field->handle];
 

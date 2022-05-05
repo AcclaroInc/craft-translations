@@ -247,8 +247,6 @@ class ElementTranslator
     {
         $fieldType = $field;
 
-        $fieldHandle = $field->handle;
-
         // Check if field is translatable or is nested field
         if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);

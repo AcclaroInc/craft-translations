@@ -25,14 +25,14 @@ class AssetsFieldTranslator extends GenericFieldTranslator
 
         $blocks = $element->getFieldValue($field->handle)->siteId($sourceSite)->all();
 
-        if ($blocks) 
+        if ($blocks)
         {
-            foreach ($blocks as $block) 
+            foreach ($blocks as $block)
             {
                 $source[sprintf('%s.%s.%s', $field->handle, $block->id, 'title')] = $block->title;
 
                 $element = Craft::$app->assets->getAssetById($block->id, $sourceSite);
-                foreach ($element->getFieldLayout()->getFields() as $layoutField) {
+                foreach ($element->getFieldLayout()->getCustomFields() as $layoutField) {
                     $assetField = Craft::$app->fields->getFieldById($layoutField->id);
                     $fieldSource = $elementTranslator->fieldToTranslationSource($element, $assetField, $sourceSite);
 
@@ -55,20 +55,19 @@ class AssetsFieldTranslator extends GenericFieldTranslator
 
         $post[$fieldHandle] = [];
 
-        if (!$blocks) 
+        if (!$blocks)
         {
             return '';
         }
 
-        foreach ($blocks as $i => $block) 
-        {             
+        foreach ($blocks as $i => $block) {
             $post[$fieldHandle][$block->id] = $block->id;
         }
         return $post;
     }
 
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
-    { 
+    {
         $fieldHandle = $field->handle;
 
         $blocks = $element->getFieldValue($fieldHandle)->siteid($sourceSite)->all();
