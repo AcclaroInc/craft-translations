@@ -114,7 +114,7 @@ class OrderRepository
     }
 
     /**
-     * @return \craft\elements\db\ElementQuery
+     * @return array
      */
     public function getInProgressOrders()
     {
@@ -131,7 +131,7 @@ class OrderRepository
     }
 
     /**
-     * @return \craft\elements\db\ElementQuery
+     * @return array
      */
     public function getInProgressOrdersByTranslatorId($translatorId)
     {
@@ -143,7 +143,7 @@ class OrderRepository
     }
 
     /**
-     * @return \craft\elements\db\ElementQuery
+     * @return array
      */
     public function getCompleteOrders()
     {

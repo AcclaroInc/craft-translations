@@ -365,10 +365,6 @@ class Translations extends Plugin
 
         if (preg_match('#^entries(/|$)#', $path)) {
             $this->_includeEntryResources();
-
-            if (isset(Craft::$app->getRequest()->getQueryParams()['draftId'])) {
-                $this->_includeEditDraftResource(Craft::$app->getRequest()->getQueryParams()['draftId']);
-            }
         }
 
         if (preg_match('#^categories(/|$)#', $path, $match)) {
@@ -413,20 +409,6 @@ class Translations extends Plugin
         $numberOfCompleteOrders = count(self::$plugin->orderRepository->getCompleteOrders());
         self::$view->registerJs("$(function(){ Craft.Translations });");
         self::$view->registerJs("$(function(){ Craft.Translations.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
-    }
-
-    private function _includeEditDraftResource($draftId)
-    {
-        $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
-
-        // If this is a translation draft, load the JS
-        if (!empty($response)) {
-            self::$view->registerAssetBundle(EditDraftAssets::class);
-
-            $response = json_encode($response);
-
-            self::$view->registerJs("$(function(){ Craft.Translations.ApplyTranslations.init({$draftId}, {$response}); });");
-        }
     }
 
     private function _includeEntryResources()
@@ -548,14 +530,13 @@ class Translations extends Plugin
             $action = end($action);
 
             $applyDraftActions = [
-                'apply-drafts',
-                'save-draft-and-publish',
+                'apply-draft', // Apply from entry detail page
+                'save-draft-and-publish', // Apply from order detail page
                 'publish-draft',
                 'run',
             ];
 
-            if(!empty($response) && !in_array($action, $applyDraftActions)) {
-
+            if (!empty($response) && !in_array($action, $applyDraftActions)) {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
                 $path = $craft->request->getFullPath();
                 $params = $craft->request->getQueryParams();
