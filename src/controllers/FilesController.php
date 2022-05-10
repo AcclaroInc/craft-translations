@@ -85,7 +85,7 @@ class FilesController extends Controller
                 // skip failed files
                 if ($file->isCanceled()) continue;
 
-                $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+                $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
 
                 $targetSite = $file->targetSite;
 
@@ -402,7 +402,7 @@ class FilesController extends Controller
             $error = "File not found.";
             if ($file && (in_array($file->status, [Constants::FILE_STATUS_REVIEW_READY, Constants::FILE_STATUS_COMPLETE, Constants::FILE_STATUS_PUBLISHED]))) {
                 try {
-                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+                    $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
 
                     $data['diff'] = Translations::$plugin->fileRepository->getSourceTargetDifferences($file->source, $file->target);
 

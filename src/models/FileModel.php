@@ -133,7 +133,7 @@ class FileModel extends Model
 
     public function hasDraft()
     {
-        return $this->draftId ?: null;
+        return $this->_service->getDraft($this);
     }
 
     public function isNew()
@@ -178,7 +178,7 @@ class FileModel extends Model
 
 	public function getUiLabel()
 	{
-		if ($this->isComplete()) {
+        if ($this->isComplete() && $this->hasDraft()) {
 			return Translations::$plugin->orderRepository->getFileTitle($this);
 		}
 		if ($element = $this->getElement($this->isPublished())) {
@@ -211,11 +211,12 @@ class FileModel extends Model
 	public function getElement($isApplied = null)
 	{
 		$site = $isApplied ? $this->targetSite : $this->sourceSite;
-		$element = Craft::$app->getElements()->getElementById($this->elementId, null, $site);
+        $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $site);
 
 		if (! $element) {
-			$element = Craft::$app->getElements()->getElementById($this->elementId, null, $this->sourceSite);
+            $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
 		}
+
 		if ($isApplied && $element->getIsDraft()) {
 			$element = $element->getCanonical();
 		}
@@ -234,17 +235,16 @@ class FileModel extends Model
 
     public function getTmMissAlignmentFile()
     {
-        $element = Craft::$app->elements->getElementById($this->elementId, null, $this->sourceSite);
+        $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
 
         $targetSite = $this->targetSite;
         $source = $this->source;
 
-        $targetElement = Craft::$app->elements->getElementById($this->elementId, null, $targetSite);
+        $targetElement = Translations::$plugin->elementRepository->getElementById($this->elementId, $targetSite);
 
         if ($this->isComplete()) {
-            $draft = Translations::$plugin->draftRepository->getDraftById($this->draftId, $targetSite);
+            $draft = $this->_service->getDraft($this);
             $targetElement = $draft ?: $targetElement;
-            // $source = $this->target;
         }
 
         if ($element instanceof GlobalSet) {

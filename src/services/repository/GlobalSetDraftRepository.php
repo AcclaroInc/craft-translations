@@ -31,6 +31,8 @@ class GlobalSetDraftRepository
     {
         $record = GlobalSetDraftRecord::findOne($draftId);
 
+        if (!$record) return null;
+
         $globalSetDraft = new GlobalSetDraftModel($record->toArray([
             'id',
             'name',

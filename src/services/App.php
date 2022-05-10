@@ -25,12 +25,12 @@ class App extends Component
      * @var UrlHelper
      */
     public $urlHelper;
-    
+
     /**
      * @var UrlGenerator
      */
     public $urlGenerator;
-    
+
     /**
      * @var Translator
      */
@@ -40,21 +40,16 @@ class App extends Component
      * @var ElementCloner
      */
     public $elementCloner;
-    
+
     /**
      * @var repository\TranslationRepository
      */
     public $translationRepository;
-    
+
     /**
      * @var repository\CategoryRepository
      */
     public $categoryRepository;
-
-    /**
-     * @var repository\CategoryDraftRepository
-     */
-    public $categoryDraftRepository;
 
     /**
      * @var repository\AssetDraftRepository
@@ -65,12 +60,12 @@ class App extends Component
      * @var repository\TagRepository
      */
     public $tagRepository;
-    
+
     /**
      * @var repository\DraftRepository
      */
     public $draftRepository;
-    
+
     /**
      * @var repository\EntryRepository
      */
@@ -80,42 +75,42 @@ class App extends Component
      * @var repository\ElementRepository
      */
     public $elementRepository;
-    
+
     /**
      * @var repository\FileRepository
      */
     public $fileRepository;
-    
+
     /**
      * @var repository\GlobalSetRepository
      */
     public $globalSetRepository;
-    
+
     /**
      * @var repository\GlobalSetDraftRepository
      */
     public $globalSetDraftRepository;
-    
+
     /**
      * @var repository\SiteRepository
      */
     public $siteRepository;
-    
+
     /**
      * @var repository\OrderRepository
      */
     public $orderRepository;
-    
+
     /**
      * @var repository\TranslatorRepository
      */
     public $translatorRepository;
-    
+
     /**
      * @var repository\UserRepository
      */
     public $userRepository;
-    
+
     /**
      * @var repository\WidgetRepository
      */
@@ -130,47 +125,47 @@ class App extends Component
      * @var WordCounter
      */
     public $wordCounter;
-    
+
     /**
      * @var fieldtranslator\Factory
      */
     public $fieldTranslatorFactory;
-    
+
     /**
      * @var translator\Factory
      */
     public $translatorFactory;
-    
+
     /**
      * @var ElementTranslator
      */
     public $elementTranslator;
-    
+
     /**
      * @var ElementToFileConverter
      */
     public $elementToFileConverter;
-    
+
     /**
      * @var Services
      */
     public $services;
-    
+
     /**
      * @var OrderSearchParams
      */
     public $orderSearchParams;
-    
+
     /**
      * @var OrderDelete
      */
     public $orderDelete;
-    
+
     /**
      * @var OrderEdit
      */
     public $orderEdit;
-    
+
     public function init(): void
     {
         $this->services = new Services();
@@ -180,7 +175,6 @@ class App extends Component
         $this->elementCloner = new ElementCloner();
         $this->translationRepository = new repository\TranslationRepository();
         $this->categoryRepository = new repository\CategoryRepository();
-        $this->categoryDraftRepository = new repository\CategoryDraftRepository();
         $this->assetDraftRepository = new repository\AssetDraftRepository();
         $this->tagRepository = new repository\TagRepository();
         $this->draftRepository = new repository\DraftRepository();

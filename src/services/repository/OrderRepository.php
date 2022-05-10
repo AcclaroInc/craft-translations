@@ -38,7 +38,7 @@ class OrderRepository
      */
     public function getOrderById($orderId)
     {
-        return Craft::$app->elements->getElementById($orderId);
+        return Translations::$plugin->elementRepository->getElementById($orderId);
     }
 
     /**
@@ -500,19 +500,19 @@ class OrderRepository
      */
     public function getFileTitle($file) {
 
-		$element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+        $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
 
         if ($element instanceof GlobalSet) {
             $draftElement = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
         } else if ($element instanceof Category) {
-            $draftElement = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+            $draftElement = Translations::$plugin->categoryRepository->getDraftById($file->draftId, $file->targetSite);
         } else if ($element instanceof Asset) {
             $draftElement = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
         } else {
             $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
 
-		return $draftElement->title ?? $element->title;
+        return $draftElement->title ?? $draftElement->name ?? $element->title;
     }
 
     /**

@@ -116,14 +116,9 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         this.data = data;
 
-        let $detailsContainer = $('<div>', {'class': 'details'});
-        let $metaContainer = $('<div>', {'class': 'meta'});
-        $metaContainer.appendTo($detailsContainer);
-
         var $btncontainer = document.createElement('div');
             $btncontainer.id = "translations-field";
             $btncontainer.className = "field";
-        $metaContainer.append($btncontainer);
 
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
@@ -147,9 +142,9 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         }
 
         if (this.isEditEntryScreen()) {
-            $settings = $('#details');
+            $settings = $('#slug-field').closest('div.meta');
 
-            $settings.prepend($detailsContainer);
+            $settings.prepend($btncontainer);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
 

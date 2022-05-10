@@ -43,11 +43,20 @@ class AssetController extends BaseController
 
         $variables['dimensions'] = $asset->dimensions;
         $variables['assetUrl'] = $asset->url;
-        $variables['canReplaceFile'] = $asset->isEditable;
-        $variables['previewHtml'] = $asset->editorHtml;
+        $variables['author'] = Craft::$app->getUsers()->getUserById($asset->uploaderId);
+        // $variables['canReplaceFile'] = $asset->isEditable;
+        $variables['title'] = $asset->title;
+        $variables['isRevision'] = $asset->getIsRevision();
+        $variables['previewHtml'] = $asset->previewHtml;
         $variables['volume'] = $asset->volume;
         $variables['formattedSize'] = $asset->formattedSize;
         $variables['formattedSizeInBytes'] = $asset->formattedSizeInBytes;
+
+        $variables['saveSourceAction'] = 'translations/asset/save-draft';
+        $variables['deleteSourceAction'] = 'translations/asset/delete-draft';
+        $variables['publishSourceAction'] = 'translations/asset/publish-draft';
+        $variables['canEdit'] = true;
+        $variables['canUpdateSource'] = true;
 
         $this->renderTemplate('translations/assets/_editDraft', $variables);
     }

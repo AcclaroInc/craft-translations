@@ -473,7 +473,7 @@ class Order extends Element
 
         foreach ($elementIds as $key => $elementId) {
             if (!array_key_exists($elementId, $this->_elements)) {
-                $element = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
+                $element = Translations::$plugin->elementRepository->getElementById($elementId, $this->sourceSite);
 
                 $element ? $this->_elements[$elementId] = $element : '';
             }

@@ -227,7 +227,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         if ($file) {
 
-            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+            $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);

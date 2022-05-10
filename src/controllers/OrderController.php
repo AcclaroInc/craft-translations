@@ -192,8 +192,7 @@ class OrderController extends Controller
 
         if ($variables['inputElements']) {
             foreach ($variables['inputElements'] as $elementId) {
-                $element = Craft::$app->getElements()
-                    ->getElementById((int) $elementId, null, $order->sourceSite);
+                $element = Translations::$plugin->elementRepository->getElementById((int) $elementId, $order->sourceSite);
 
                 if ($element) {
                     $variables['elements'][] = $element;
@@ -701,8 +700,7 @@ class OrderController extends Controller
         $variables['elements'] = [];
 
         foreach ($data['elements'] as $elementId) {
-            $element = Craft::$app->getElements()
-                ->getElementById((int) $elementId, null, $variables['order']->sourceSite);
+            $element = Translations::$plugin->elementRepository->getElementById((int) $elementId, $variables['order']->sourceSite);
 
             if ($element) {
                 $variables['elements'][] = $element;
@@ -1410,7 +1408,7 @@ class OrderController extends Controller
                 if (in_array($file->elementId, $elements)) {
                     if ($file->isPublished()) continue;
 
-                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+                    $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
 
                     $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,

@@ -161,7 +161,7 @@ class Exporter extends ElementExporter
     {
         $elementIds = json_decode($elementIds, true);
         foreach ($elementIds as $elementId){
-            $element = Craft::$app->getElements()->getElementById($elementId, null, $sourceSite);
+            $element = Translations::$plugin->elementRepository->getElementById($elementId, $sourceSite);
             $this->elementsTitle[$elementId] = is_object($element) ? $element->title : 'N/A';
         }
 

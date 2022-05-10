@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\models;
 
+use Craft;
 use craft\elements\Asset;
 use craft\behaviors\DraftBehavior;
 use craft\validators\SiteIdValidator;
@@ -18,8 +19,6 @@ use craft\behaviors\FieldLayoutBehavior;
 use craft\behaviors\CustomFieldBehavior;
 use acclaro\translations\records\AssetDraftRecord;
 
-use Craft;
-use craft\base\Model;
 
 /**
  * @author    Acclaro
@@ -41,10 +40,10 @@ class AssetDraftModel extends Asset
     public $sourceSite;
 
     /**
-     * @param array|null    $attributes
+     * @param array $attributes
      */
     public function __construct(
-        $attributes = null
+        $attributes = []
     ) {
         parent::__construct($attributes);
     }
@@ -76,11 +75,11 @@ class AssetDraftModel extends Asset
         $fieldContent = isset($assetData['fields']) ? $assetData['fields'] : null;
         // $attributes['draftId'] = $attributes['id'];
         $attributes['id'] = $attributes['assetId'];
-        
+
         $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'assetId')));
-        
+
         $attributes = array_merge($attributes, $assetData);
-        
+
         $draft = parent::setAttributes($attributes);
 
         if ($fieldContent) {
@@ -124,7 +123,7 @@ class AssetDraftModel extends Asset
         $asset = $this->getAsset();
 
         $path = 'translations/assets/'.$asset->id.'/drafts/'.$this->draftId;
-        
+
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
 

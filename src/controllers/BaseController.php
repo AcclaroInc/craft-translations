@@ -262,7 +262,7 @@ class BaseController extends Controller
                 if (!in_array($elementId, $elementIds)) {
                     $elementIds[] = $elementId;
 
-                    $element = Craft::$app->getElements()->getElementById($elementId, null, $order->sourceSite);
+                    $element = Translations::$plugin->elementRepository->getElementById($elementId, $order->sourceSite);
 
                     if ($element instanceof Entry) {
                         $sites = array();

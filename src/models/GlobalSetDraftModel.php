@@ -37,10 +37,10 @@ class GlobalSetDraftModel extends GlobalSet
     public $data;
 
     /**
-     * @param array|null    $attributes
+     * @param array $attributes
      */
     public function __construct(
-        $attributes = null
+        $attributes = []
     ) {
         parent::__construct($attributes);
     }
@@ -64,7 +64,7 @@ class GlobalSetDraftModel extends GlobalSet
     public function getFieldLayout(): ?\craft\models\FieldLayout
     {
         $globalSet = $this->getGlobalSet();
-        
+
         return $globalSet->getFieldLayout();
     }
 
@@ -82,11 +82,11 @@ class GlobalSetDraftModel extends GlobalSet
         $globalSetData = json_decode($attributes['data'], true);
         $fieldContent = isset($globalSetData['fields']) ? $globalSetData['fields'] : null;
         $attributes['id'] = $attributes['globalSetId'];
-        
+
         $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'globalSetId')));
-        
+
         $attributes = array_merge($attributes, $globalSetData);
-        
+
         $draft = parent::setAttributes($attributes);
 
         if ($fieldContent) {
@@ -130,7 +130,7 @@ class GlobalSetDraftModel extends GlobalSet
         $globalSet = $this->getGlobalSet();
 
         $path = 'translations/globals/'.$globalSet->handle.'/drafts/'.$this->draftId;
-        
+
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
 

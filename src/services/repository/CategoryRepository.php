@@ -11,9 +11,10 @@
 namespace acclaro\translations\services\repository;
 
 use Craft;
+use craft\base\Component;
 use craft\elements\Category;
 
-class CategoryRepository
+class CategoryRepository extends Component
 {
     public function find($attributes = null)
     {
@@ -26,6 +27,15 @@ class CategoryRepository
     public function getCategoryById($id, $site=null)
     {
         return Craft::$app->getCategories()->getCategoryById($id, $site);
+    }
+
+    public function getDraftById($draftId, $siteId)
+    {
+        return Category::find()
+            ->draftId($draftId)
+            ->siteId($siteId)
+            ->status(null)
+            ->one();
     }
 
     public function saveCategory(Category $category)

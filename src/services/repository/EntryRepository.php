@@ -12,16 +12,16 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\elements\User;
-use craft\elements\Entry;
 use craft\base\Component;
 use craft\services\Drafts;
 use craft\events\DraftEvent;
 use craft\behaviors\DraftBehavior;
 use acclaro\translations\Translations;
+use craft\base\ElementInterface;
 
 class EntryRepository extends Component
 {
-    public function createDraft(Entry $entry, $site, $orderName)
+    public function createDraft(ElementInterface $entry, $site, $orderName)
     {
         $allSitesHandle = Translations::$plugin->siteRepository->getAllSitesHandle();
 

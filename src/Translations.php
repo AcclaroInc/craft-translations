@@ -36,7 +36,6 @@ use acclaro\translations\assetbundles\EntryAssets;
 use acclaro\translations\assetbundles\CategoryAssets;
 use acclaro\translations\assetbundles\Assets;
 use acclaro\translations\assetbundles\UniversalAssets;
-use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\services\job\DeleteDrafts;
 use yii\web\User;
@@ -351,7 +350,6 @@ class Translations extends Plugin
 
                     // Asset, Category, Global-set Controllers
                     'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
-                    'translations/categories/<group>/<slug:{slug}>/drafts/<draftId:\d+>' => 'translations/category/edit-draft',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/global-set/edit-draft',
                 ]);
             }

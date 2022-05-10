@@ -433,7 +433,7 @@ class WidgetController extends Controller
             if ($fileRecord) {
                 $fileId = $fileRecord->id;
                 // Now we can get the element
-                $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
+                $element = Translations::$plugin->elementRepository->getElementById($id, Craft::$app->getSites()->getPrimarySite()->id);
                 // Get the elements translated file
                 $file = Translations::$plugin->fileRepository->getFileById($fileId);
 
@@ -531,7 +531,7 @@ class WidgetController extends Controller
             // exclude entries for which order has been created
             if (in_array($id, $entriesInOrders)) continue;
             // Now we can get the element
-            $element = Craft::$app->getElements()->getElementById($id, null, Craft::$app->getSites()->getPrimarySite()->id);
+            $element = Translations::$plugin->elementRepository->getElementById($id, Craft::$app->getSites()->getPrimarySite()->id);
 
             // Current entries XML
             $currentXML = Translations::$plugin->elementToFileConverter->convert(
