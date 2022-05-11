@@ -128,10 +128,10 @@
                         $table.appendTo($mainDiv);
                         $thead = $('<thead>\
                             <tr>\
-                                <th class="checkbox-cell selectallcontainer orderable">\
+                                <td class="checkbox-cell selectallcontainer orderable">\
                                     <input type="checkbox" title="select-all" id="translator-0"/>\
                                     <label for="translator-0"></label>\
-                                </th>\
+                                </td>\
                                 <th>Name</th>\
                                 <th>Status</th>\
                                 <th>Service</th>\
@@ -146,7 +146,7 @@
                             $tr = $('<tr>');
 
                             $id = "translator-"+this.id;
-                            $service = this.service == "export_import" ? "Export/Import" 
+                            $service = this.service == "export_import" ? "Export/Import"
                                 : this.service.substr(0,1).toUpperCase()+this.service.substr(1);
                             $url = "translators/detail/"+this.id;
                             $statusClass = this.status == "active" ? "green" : "red";
@@ -166,7 +166,7 @@
                 })
                 .catch(() => {
                     Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
-                    return null;    
+                    return null;
                 });
 
             return $mainDiv;

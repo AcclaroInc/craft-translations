@@ -26,7 +26,7 @@ Craft.Translations.StaticTranslations = {
             })
             .finally(() => {
                 $('.save-static-translation').removeClass('disabled');
-                $('.save-static-translation').attr("disabled", false);    
+                $('.save-static-translation').attr("disabled", false);
             });
 
 
@@ -42,9 +42,9 @@ Craft.Translations.StaticTranslations = {
 
         Craft.sendActionRequest('POST', 'translations/static-translations/export', {data: params})
             .then((response) => {
-                    var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/static-translations/export-file', {'filename': response.filePath})}).hide();
-                    $('#static-translation').append($iframe);
-                    Craft.cp.displayNotice(Craft.t('app', 'Static Translations exported.'));
+                var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/static-translations/export-file', {'filename': response.data.filePath})}).hide();
+                $('#static-translation').append($iframe);
+                Craft.cp.displayNotice(Craft.t('app', 'Static Translations exported.'));
             })
             .catch(({response}) => {
                 Craft.cp.displayError(Craft.t('app', response.data.error));

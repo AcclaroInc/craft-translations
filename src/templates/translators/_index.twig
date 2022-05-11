@@ -33,7 +33,6 @@
 ] %}
 
 {% set sources = craft.app.elementSources.getSources(elementType, 'index') %}
-{% set customizableSources = (sources is not empty and context == 'index' and currentUser.can('customizeSources')) %}
 
 {% block sidebar %}
     {% if sources is not empty %}
@@ -49,10 +48,10 @@
         <table class="data">
             <thead>
                 <tr>
-                    <th class="checkbox-cell selectallcontainer orderable" role="checkbox">
+                    <td class="checkbox-cell selectallcontainer orderable" role="checkbox">
                         <input type="checkbox" class="thin" title="select all" id="translator-0"/>
                         <label for="translator-0"></label>
-                    </th>
+                    </td>
                     <th>{{ 'Name'|t }}</th>
                     <th>{{ 'Status'|t }}</th>
                     <th>{{ 'Service'|t }}</th>

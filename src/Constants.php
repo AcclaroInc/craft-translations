@@ -145,7 +145,6 @@ class Constants
     const TABLE_TRANSLATORS         = '{{%translations_translators}}';
     const TABLE_TRANSLATIONS        = '{{%translations_translations}}';
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
-    const TABLE_CATEGORY_DRAFT      = '{{%translations_categorydrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
 
     // Job Descriptions
@@ -265,7 +264,12 @@ class Constants
         'newism\fields\fields\Embed',
         'newism\fields\fields\PersonName',
         'newism\fields\fields\Gender',
-        'ether\seo\fields\SeoField'
+        'ether\seo\fields\SeoField',
+        'ether\notes\Field',
+        'amici\SuperDynamicFields\fields\SueprDynamicDropdownField',
+        'amici\SuperDynamicFields\fields\SueprDynamicRadioField',
+        'amici\SuperDynamicFields\fields\SueprDynamicCheckboxesField',
+        'amici\SuperDynamicFields\fields\SueprDynamicMultiSelectField',
     ];
 
     const UNRELATED_FIELD_TYPES = [
@@ -275,6 +279,7 @@ class Constants
         'craft\fields\Lightswitch',
         'craft\fields\Time',
         'craft\fields\Url',
-        'craft\fields\Users'
+        'craft\fields\Users',
+        'craft\fields\Money',
     ];
 }

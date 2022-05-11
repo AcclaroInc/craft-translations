@@ -9,7 +9,6 @@ class StaticTranslationQuery extends ElementQuery
     /**
      * @inheritdoc
      */
-    public mixed $id;
     public $source;
     public $translateStatus;
     public $pluginHandle;

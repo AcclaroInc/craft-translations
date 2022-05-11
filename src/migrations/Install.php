@@ -203,25 +203,6 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_CATEGORY_DRAFT);
-        if ($tableSchema === null) {
-            $tablesCreated = true;
-            $this->createTable(
-                Constants::TABLE_CATEGORY_DRAFT,
-                [
-                    'id'            => $this->primaryKey(),
-                    'name'          => $this->string()->notNull(),
-                    'title'         => $this->string()->notNull(),
-                    'categoryId'    => $this->integer()->notNull(),
-                    'site'          => $this->integer()->notNull(),
-                    'data'          => $this->mediumText()->notNull(),
-                    'dateCreated'   => $this->dateTime()->notNull(),
-                    'dateUpdated'   => $this->dateTime()->notNull(),
-                    'uid'           => $this->uid()
-                ]
-            );
-        }
-
         $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_ASSET_DRAFT);
         if ($tableSchema === null) {
             $tablesCreated = true;
@@ -302,8 +283,6 @@ class Install extends Migration
         $this->dropTableIfExists(Constants::TABLE_FILES);
 
         $this->dropTableIfExists(Constants::TABLE_GLOBAL_SET_DRAFT);
-
-        $this->dropTableIfExists(Constants::TABLE_CATEGORY_DRAFT);
 
         $this->dropTableIfExists(Constants::TABLE_ASSET_DRAFT);
 
