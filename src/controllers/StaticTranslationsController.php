@@ -54,7 +54,7 @@ class StaticTranslationsController extends Controller
 
         Translations::$plugin->staticTranslationsRepository->set($lang, $translations);
 
-        return $this->asJson([
+        return $this->asSuccess('Static Translations saved.', [
             'success' => true,
             'errors' => []
         ]);

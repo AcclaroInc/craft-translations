@@ -16,10 +16,8 @@ Craft.Translations.StaticTranslations = {
 
         Craft.sendActionRequest('POST', 'translations/static-translations/save', {data: $data})
             .then((response) => {
-                if (response.success) {
-                    Craft.cp.displayNotice(Craft.t('app', 'Static Translations saved.'));
-                    Craft.elementIndex.updateElements();
-                }
+                Craft.cp.displayNotice(Craft.t('app', response.data.message));
+                Craft.elementIndex.updateElements();
             })
             .catch(({response}) => {
                 Craft.cp.displayError(Craft.t('app', response.data.error));
