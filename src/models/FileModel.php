@@ -190,7 +190,7 @@ class FileModel extends Model
 
 	public function getPreviewUrl()
 	{
-		$previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($this->getElement($this->isPublished()), $this);
+        $previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($this->getElement(), $this);
 
 		if ($this->isPublished()) return $previewUrl;
 
@@ -208,16 +208,15 @@ class FileModel extends Model
 		return $hasDiff;
 	}
 
-	public function getElement($isApplied = null)
+    public function getElement()
 	{
-		$site = $isApplied ? $this->targetSite : $this->sourceSite;
-        $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $site);
+        $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->targetSite);
 
 		if (! $element) {
             $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
 		}
 
-		if ($isApplied && $element->getIsDraft()) {
+        if ($element->getIsDraft()) {
 			$element = $element->getCanonical();
 		}
 

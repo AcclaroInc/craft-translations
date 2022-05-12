@@ -230,8 +230,18 @@ class FileRepository
 
         foreach($records as $record) {
             if ($record && $record->draftId) {
-                $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
-                Craft::$app->getElements()->deleteElement($element);
+                $file = new FileModel($record->toArray([
+                    'id',
+                    'orderId',
+                    'elementId',
+                    'draftId',
+                    'sourceSite',
+                    'targetSite',
+                    'status',
+                ]));
+
+                if ($element = $file->hasDraft())
+                    Craft::$app->getElements()->deleteElement($element);
             }
             $record->delete();
         }
