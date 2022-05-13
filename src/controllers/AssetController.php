@@ -5,9 +5,19 @@ namespace acclaro\translations\controllers;
 use Craft;
 use acclaro\translations\Translations;
 use acclaro\translations\Constants;
+use acclaro\translations\services\repository\AssetDraftRepository;
 
 class AssetController extends BaseController
 {
+    protected $service;
+
+    public function __construct($id, $module = null)
+    {
+        parent::__construct($id, $module);
+
+        $this->service = new AssetDraftRepository();
+    }
+
     /**
      * Edit an asset draft
      *
@@ -71,8 +81,8 @@ class AssetController extends BaseController
         $this->requirePostRequest();
 
         $assetId = $this->request->getParam('assetId');
-        $siteId = $this->request->getParam('site');
-        $asset = Craft::$app->assets->getAssetById($assetId, $siteId);
+        $siteId = $this->request->getParam('siteId');
+        $asset = $this->service->getAssetById($assetId, $siteId);
 
         if (!$asset) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No Asset exists with the ID “{id}”.', array('id' => $assetId)));
@@ -101,7 +111,7 @@ class AssetController extends BaseController
             $draft->setFieldValues($fields);
         }
 
-        Craft::$app->getElements()->saveElement($draft);
+        $this->service->saveDraft($draft);
 
         if (Translations::$plugin->assetDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));

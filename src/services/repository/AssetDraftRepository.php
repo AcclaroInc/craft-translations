@@ -40,37 +40,40 @@ class AssetDraftRepository
     public function getDraftById($draftId)
     {
         $record = AssetDraftRecord::findOne($draftId);
+        $assetDraft = null;
 
-        $assetDraft = new AssetDraftModel($record->toArray([
-            'id',
-            'name',
-            'title',
-            'assetId',
-            'site',
-            'data'
-        ]));
+        if ($record) {
+            $assetDraft = new AssetDraftModel($record->toArray([
+                'id',
+                'name',
+                'title',
+                'assetId',
+                'site',
+                'data'
+            ]));
 
-        $asset = Craft::$app->assets->getAssetById($assetDraft->assetId);
+            $asset = Craft::$app->assets->getAssetById($assetDraft->assetId);
 
-        $assetDraft->draftId = $assetDraft->id;
-        $assetDraft->folderId = $asset->folderId;
-        
-        $assetData = json_decode($record['data'], true);
-        $fieldContent = isset($assetData['fields']) ? $assetData['fields'] : null;
+            $assetDraft->draftId = $assetDraft->id;
+            $assetDraft->folderId = $asset->folderId;
 
-        if ($fieldContent) {
-            $post = array();
+            $assetData = json_decode($record['data'], true);
+            $fieldContent = isset($assetData['fields']) ? $assetData['fields'] : null;
 
-            foreach ($fieldContent as $fieldId => $fieldValue) {
-                $field = Craft::$app->fields->getFieldById($fieldId);
+            if ($fieldContent) {
+                $post = array();
 
-                if ($field) {
-                    $post[$field->handle] = $fieldValue;
+                foreach ($fieldContent as $fieldId => $fieldValue) {
+                    $field = Craft::$app->fields->getFieldById($fieldId);
+
+                    if ($field) {
+                        $post[$field->handle] = $fieldValue;
+                    }
                 }
-            }
 
-            $assetDraft->setFieldValues($post);
-            Craft::$app->getElements()->saveElement($assetDraft);
+                $assetDraft->setFieldValues($post);
+                Craft::$app->getElements()->saveElement($assetDraft);
+            }
         }
 
         return $assetDraft;
@@ -125,7 +128,7 @@ class AssetDraftRepository
                     array(':assetId' => $draft->id, ':site' => $draft->site)
                 )
                 ->count('id');
-            
+
             $draft->name = Translations::$plugin->translator->translate('app', 'Draft {num}', array('num' => $totalDrafts + 1));
         }
 
@@ -151,14 +154,14 @@ class AssetDraftRepository
                 $content[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
             }
         }
-        
+
         $asset = $this->getAssetById($record->assetId, $draft->site);
 
         foreach ($asset->getFieldLayout()->getCustomFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
-                if (isset($content[$field->handle]) && $content[$field->handle] !== null) { 
+                if (isset($content[$field->handle]) && $content[$field->handle] !== null) {
                     $data['fields'][$field->id] = $content[$field->handle];
                 }
             }
@@ -175,7 +178,7 @@ class AssetDraftRepository
                 }
 
                 $draft->draftId = $record->id;
-                
+
                 return true;
             }
         } catch (Exception $e) {
@@ -204,7 +207,7 @@ class AssetDraftRepository
         $asset->setScenario(Element::SCENARIO_LIVE);
 
         $success = Craft::$app->elements->saveElement($asset);
-        
+
         if (!$success) {
             Craft::error( '['. __METHOD__ .'] Couldn’t publish draft "'.$draft->title.'"', 'translations' );
             return false;
@@ -252,7 +255,7 @@ class AssetDraftRepository
                 if ($transaction !== null) {
                     $transaction->commit();
                 }
-                
+
                 return true;
             }
         } catch (Exception $e) {

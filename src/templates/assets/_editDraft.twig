@@ -50,7 +50,7 @@
 
 {% block content %}
     {{ form.render()|raw }}
-    {{ hiddenInput('elementId', asset.id) }}
+    {{ hiddenInput('assetId', asset.id) }}
     {{ hiddenInput('draftId', element.id) }}
     {{ hiddenInput('siteId', element.site) }}
     {{ hiddenInput('fieldLayoutId', asset.getFieldLayout().id) }}

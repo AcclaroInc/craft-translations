@@ -200,10 +200,6 @@
     margin: 0 0 2em;
 }
 
-/* #import-tool {
-    margin-left: 10px;
-} */
-
 .margin-right-10{
     margin-right: 10px;
 }
@@ -214,8 +210,8 @@
 }
 
 .utility-status .progressbar {
-    left: 75%;
-    width: 25%;
+    left: 50%;
+        width: 50%;
     transform: translateX(-50%) translateY(-50%);
 }
 
@@ -241,7 +237,6 @@
 
 .translations-complete-orders-indicator {
     float: right;
-    /* display: inline-block; */
     padding: 0;
     min-height: 22px;
     border: none;

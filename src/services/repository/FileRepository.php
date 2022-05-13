@@ -213,7 +213,8 @@ class FileRepository
 
         if ($record && $record->draftId) {
             $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
-            Craft::$app->getElements()->deleteElement($element);
+            if ($element)
+                Craft::$app->getElements()->deleteElement($element);
         }
 
         return $record->delete();
