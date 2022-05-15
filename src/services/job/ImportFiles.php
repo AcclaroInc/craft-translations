@@ -192,7 +192,7 @@ class ImportFiles extends BaseJob
         $translationService = Translations::$plugin->translatorFactory
             ->makeTranslationService($translation_service, $this->order->translator->getSettings());
 
-        $file->target = Translations::$plugin->elementToFileConverter->jsonToXml($file_content);
+        $file->target = $file_content;
         $file->status = Constants::FILE_STATUS_REVIEW_READY;
         $file->dateDelivered = new \DateTime();
 
@@ -427,7 +427,7 @@ class ImportFiles extends BaseJob
         $translationService = Translations::$plugin->translatorFactory
             ->makeTranslationService($translation_service, $this->order->translator->getSettings());
 
-        $file->target = Translations::$plugin->elementToFileConverter->jsontoxml($file_content);
+        $file->target = $file_content;
         $file->status = Constants::FILE_STATUS_REVIEW_READY;
         $file->dateDelivered = new \DateTime();
 
