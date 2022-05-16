@@ -429,4 +429,28 @@ class DraftRepository
 
         Translations::$plugin->orderRepository->saveOrder($order);
     }
+
+    /**
+     * Delete a translation draft
+     *
+     * @param int|string $draftId
+     *
+     * @return void
+     */
+    public function deleteDraft($draftId, $siteId)
+    {
+        $transaction = Craft::$app->getDb()->beginTransaction();
+
+        try {
+            $draft = $this->getDraftById($draftId, $siteId);
+
+            if ($draft) {
+                Craft::$app->getElements()->deleteElement($draft, true);
+            }
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+    }
 }
