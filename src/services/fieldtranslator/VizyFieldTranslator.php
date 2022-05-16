@@ -57,7 +57,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 									$k = sprintf('%s.%s.customText', $key, $index);
 
 									$source[$k] = $innerField->serializeValue($value)['customText'];
-						
+
 									break;
 								case $innerField instanceof craft\fields\Assets:
 									foreach ($value->siteId($sourceSite)->all() as $asset) {
@@ -100,7 +100,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		$postArray = [];
 
 		$blocks = $element->getFieldValue($field->handle)->all();
-		
+
 		foreach ($blocks as $index => $block) {
 			$blockArray = $block['rawNode'];
 			if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
@@ -108,9 +108,9 @@ class VizyFieldTranslator extends GenericFieldTranslator
 					if (isset($targetData[$block->id][$innerField->handle])) {
 						$value = $targetData[$block->id][$innerField->handle];
 						$innerBlock = $block['attrs']['values']['content']['fields'][$innerField->handle];
-						
+
 						$newValue = $this->fieldToPostArrayFromTranslationTarget($block, $innerField, $innerBlock, $value, $targetSite, $index);
-						
+
 						$blockArray['attrs']['values']['content']['fields'][$innerField->handle] = $newValue;
 					}
 				}
@@ -163,7 +163,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 							$k = sprintf('%s.%s.customText', $newKey, $mainIndex);
 
 							$source[$k] = $field->serializeValue($newValue)['customText'];
-				
+
 							break;
 						case $field instanceof craft\fields\Assets:
 							foreach ($newValue->all() as $asset) {
@@ -225,7 +225,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 				foreach ($attributes as $assetId) {
 					$asset = Craft::$app->assets->getAssetById($assetId, $targetSite);
 					$asset->siteId = $targetSite;
-	
+
 					foreach ($targetData[$assetId] as $handle => $value) {
 						$asset->$handle = $targetData[$assetId][$handle];
 					}
@@ -256,18 +256,27 @@ class VizyFieldTranslator extends GenericFieldTranslator
 				break;
 			default:
 				foreach ($value->all() as $index => $block) {
-					$index++;
-					$index = "new" . $index;
+					$innerIndex = sprintf("new%s", $index + 1);
+
 					foreach ($block->getFieldLayout()->getFields() as $field) {
-						if (isset($targetData[$index][$field->handle])) {
-							$value = $targetData[$index][$field->handle];
-		
-							if (! is_string($value)) {
-								$innerBlock = $attributes[$index]['fields'][$field->handle];
+						if (isset($targetData[$innerIndex][$field->handle])) {
+							$value = $targetData[$innerIndex][$field->handle];
+
+							if (!is_string($value)) {
+								if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
+									$innerBlock = $attributes[$index]['attrs']['values']['content']['fields'][$field->handle];
+								} else {
+									$innerBlock = $attributes[$innerIndex]['fields'][$field->handle];
+								}
+
 								$value = $this->fieldToPostArrayFromTranslationTarget($block, $field, $innerBlock, $value, $targetSite, $mainIndex);
 							}
-		
-							$postArray[$index]['fields'][$field->handle] = $value;
+
+							if ($block instanceof \verbb\vizy\nodes\VizyBlock) {
+								$postArray[$index]['attrs']['values']['content']['fields'][$field->handle] = $value;
+							} else {
+								$postArray[$innerIndex]['fields'][$field->handle] = $value;
+							}
 						}
 					}
 				}
