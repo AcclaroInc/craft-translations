@@ -60,7 +60,7 @@ class NeoFieldTranslator extends GenericFieldTranslator
         $newToParse = array();
 
         foreach ($blockData as $key => $value) {
-            if (is_numeric($key) || strpos($key, "_") !== false) {
+            if (is_numeric($key) || strpos($key, "new", 0) !== false) {
                 $newToParse[$key] = $value;
             } else {
                 $newBlockData[$key] = $value;
