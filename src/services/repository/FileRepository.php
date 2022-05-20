@@ -496,7 +496,7 @@ class FileRepository
             }
 
             // Skip incase entry doesn't exist for target site
-            if (!$element) throw new \Exception('Entry not found for files target Site');
+            if (!$element) return false;
 
             $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
             $converter = Translations::$plugin->elementToFileConverter;

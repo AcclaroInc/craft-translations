@@ -1431,6 +1431,10 @@ class OrderController extends Controller
                         ]
                     );
 
+                    // Delete draft here so that it does not try to merge in existing draft when merged after updating
+                    // source entry in order
+                    Translations::$plugin->draftRepository->deleteDraft($file->draftId, $file->targetSite);
+                    $file->draftId = null;
                     $file->status = Constants::FILE_STATUS_MODIFIED;
                     Translations::$plugin->fileRepository->saveFile($file);
 
