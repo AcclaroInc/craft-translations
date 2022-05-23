@@ -490,7 +490,7 @@ class FileRepository
      */
     public function isReferenceChanged($file)
     {
-        $currentData = $file->getTmMissAlignmentFile()['fileContent'];
+        $currentData = $file->getTmMisalignmentFile()['fileContent'];
 
         return md5($currentData) !== md5($file->reference);
     }
@@ -498,7 +498,7 @@ class FileRepository
     /**
      * @param \acclaro\translations\models\FileModel $file
      */
-    public function hasTmMissAlignments($file)
+    public function hasTmMisalignments($file)
     {
         try {
             $element = $file->getElement();

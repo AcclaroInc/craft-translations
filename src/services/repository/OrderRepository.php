@@ -375,7 +375,7 @@ class OrderRepository
 
             $translationService->sendOrderFile($order, $file, $settings);
 
-            if ($order->shouldIncludeTmFiles() && $file->hasTmMissAlignments()) {
+            if ($order->shouldIncludeTmFiles() && $file->hasTmMisalignments()) {
                 array_push($orderReferenceFiles, $file);
             }
         }
@@ -525,12 +525,12 @@ class OrderRepository
     {
         $originalIds = [];
 
-        if ($elements = $order->getElements()) {
-            foreach ($order->getFiles() as $file) {
+        if ($files = $order->getFiles()) {
+            foreach ($files as $file) {
                 if ($file->isPublished() || ! $file->source || in_array($file->elementId, $originalIds)) continue;
 
                 try {
-                    $element = $elements[$file->elementId];
+                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
                     $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
                     $converter = Translations::$plugin->elementToFileConverter;
 
@@ -576,7 +576,7 @@ class OrderRepository
 		foreach ($order->getFiles() as $file) {
             if ($file->isPublished() || $file->isNew() || $file->isModified()) continue;
 
-			if ($file->hasTmMissAlignments()) array_push($originalIds, $file->elementId);
+			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
 		}
 
 		return $originalIds;
