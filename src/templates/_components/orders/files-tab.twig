@@ -61,7 +61,7 @@
 												{{ file.uiLabel }}
 											</a>
 											{% set sourceUpdated = file.elementId in isSourceChanged %}
-											{% set targetUpdated = order.trackTargetChanges and file.hasTmMissAlignments and not file.isNew and not file.isModified %}
+											{% set targetUpdated = order.trackTargetChanges and file.hasTmMisAlignments and not file.isNew and not file.isModified %}
 											{% if element.className == constant('acclaro\\translations\\Constants::CLASS_ENTRY') %}
 												<a href="{{ file.previewUrl }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 											{% endif %}
@@ -134,7 +134,7 @@
 									</tr>
 								</table>
 							</td>
-							<td><table><thead><th class="bg-none icon ordered desc hidden"></th></thead></table></td>
+							<td><table><thead><th class="bg-none icon ordered desc orderable hidden"><button type="button"></button></th></thead></table></td>
 						</tr>
 					{% endfor %}
 				</tbody>
