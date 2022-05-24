@@ -582,14 +582,17 @@ class Translations extends Plugin
 				if ($currentFile) {
 					$order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
+                    $currentFile->status = Constants::FILE_STATUS_CANCELED;
+                    $currentFile->draftId = null;
+                    $currentFile->dateDelivered = null;
+
+                    self::$plugin->fileRepository->saveFile($currentFile);
+
                     if ($order) {
-						$order->logActivity(Translations::$plugin->translator->translate('app', 'Draft ' . $event->element->draftId . ' deleted.'));
-						Translations::$plugin->orderRepository->saveOrder($order);
+						$order->logActivity(self::$plugin->translator->translate('app', 'Draft ' . $event->element->draftId . ' deleted.'));
+                        $order->status = self::$plugin->orderRepository->getNewStatus($order);
+						self::$plugin->orderRepository->saveOrder($order);
 					}
-
-					$currentFile->status = Constants::FILE_STATUS_CANCELED;
-
-					self::$plugin->fileRepository->saveFile($currentFile);
                 }
             }
         }
@@ -599,7 +602,7 @@ class Translations extends Plugin
             $event->hardDelete = true;
         }
 
-        if ($order = Translations::$plugin->orderRepository->isTranslationOrder($event->element->id) && $event->hardDelete) {
+        if ($order = self::$plugin->orderRepository->isTranslationOrder($event->element->id) && $event->hardDelete) {
             $drafts = [];
             /** @var Order|null $order */
             foreach ($order->getFiles() as $file) {
