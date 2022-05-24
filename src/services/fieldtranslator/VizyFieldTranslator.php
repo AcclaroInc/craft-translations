@@ -73,7 +73,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 				$source = array_merge($source, $this->customFieldsToSourceArray($block->serializeValue(), $key));
 				break;
 			default:
-				foreach ($block->getFieldLayout()->getFields() as $field) {
+				foreach ($block->getFieldLayout()->getCustomFields() as $field) {
 					if ($this->getIsTranslatable($field)) {
 						$newKey = sprintf('%s.%s', $key, $field->handle);
 						$value = $block->getFieldValue($field->handle);
@@ -181,7 +181,8 @@ class VizyFieldTranslator extends GenericFieldTranslator
 							}
 						}
 					} else {
-						$postArray['attrs']['values']['content']['fields'][$handle] = $targetData[$handle];
+						if (isset($targetData[$handle]))
+							$postArray['attrs']['values']['content']['fields'][$handle] = $targetData[$handle];
 					}
 				}
 				break;
