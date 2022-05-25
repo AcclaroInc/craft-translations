@@ -1474,6 +1474,7 @@ class OrderController extends Controller
             Craft::$app->getSession()->setNotice('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
+            Craft::error($e, 'translations');
 
             return $this->asFailure($e->getMessage());
         }

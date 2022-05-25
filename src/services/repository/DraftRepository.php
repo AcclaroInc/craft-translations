@@ -401,6 +401,8 @@ class DraftRepository
      */
     public function deleteDraft($draftId, $siteId)
     {
+        if (! $draftId) return;
+
         $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {
