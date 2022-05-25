@@ -82,7 +82,7 @@ class GlobalSetController extends Controller
     {
         $this->requirePostRequest();
 
-        $site = $this->request->getParam('site', Craft::$app->sites->getPrimarySite()->id);
+        $site = $this->request->getBodyParam('site', Craft::$app->sites->getPrimarySite()->id);
 
         $globalSetId = $this->request->getParam('globalSetId');
 

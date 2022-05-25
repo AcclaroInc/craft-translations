@@ -220,11 +220,23 @@ class AssetController extends BaseController
 
         $asset = Translations::$plugin->assetDraftRepository->getAssetById($draft->assetId);
         $url = $asset->getCpEditUrl();
-        $elementId = $draft->assetId;
 
         Translations::$plugin->assetDraftRepository->deleteDraft($draft);
 
-        Translations::$plugin->fileRepository->deleteByDraftId($draftId, $elementId);
+        $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $asset->id);
+
+        if ($file) {
+            $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+
+            $file->status = Constants::FILE_STATUS_CANCELED;
+            $file->draftId = null;
+            $file->dateDelivered = null;
+
+            Translations::$plugin->fileRepository->saveFile($file);
+
+            $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
+            Translations::$plugin->orderRepository->saveOrder($order);
+        }
 
         Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
 

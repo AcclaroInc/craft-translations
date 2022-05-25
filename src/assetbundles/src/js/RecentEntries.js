@@ -115,15 +115,15 @@
 
                             // Add the diff html
                             document.getElementById("modal-body-entry").innerHTML = diffHtml;
+                        });
 
-                            $('#modal-body-entry').on('click', 'div.diff-copy', function(event) {
-                                Craft.Translations.OrderEntries.copyTextToClipboard(event);
-                            });
+                        $('#modal-body-entry').on('click', 'div.diff-copy', function (event) {
+                            Craft.Translations.OrderEntries.copyTextToClipboard(event);
+                        });
 
-                            $('#close-diff-modal-entry').on('click', function(e) {
-                                e.preventDefault();
-                                $modal_entry.hide();
-                            });
+                        $('#close-diff-modal-entry').on('click', function(e) {
+                            e.preventDefault();
+                            $modal_entry.hide();
                         });
                     })
             },
@@ -137,9 +137,9 @@
                 this.entries = unique(entries);
 
                 if (this.entries.length) {
-                    $('#new-entry-orders').removeClass('disabled');
+                    $('#new-entry-orders').removeClass('disabled noClick');
                 } else {
-                    $('#new-entry-orders').addClass('disabled');
+                    $('#new-entry-orders').addClass('disabled noClick');
                 }
 
                 var elements = '';
@@ -147,8 +147,12 @@
                     elements += '&elements[]=' + this.entries[i];
                 }
 
-                if (!$('#new-entry-orders').hasClass('disabled')) {
-                    $('#new-entry-orders').attr('href', Craft.getUrl('translations/orders/create?sourceSite='+ Craft.siteId + elements));
+                if (elements !== '') {
+                    $url = Craft.getUrl('translations/orders/create?sourceSite=' + Craft.siteId);
+
+                    $('#new-entry-orders').attr('href', $url + elements);
+                } else {
+                    $('#new-entry-orders').attr('href', '#');
                 }
             }
         });

@@ -19,10 +19,14 @@
 {% endblock %}
 
 {% block actionButton %}
-    <a class="btn submit icon btn-create-new-order" data-icon="language" href="{{ url('translations/orders/create') }}" style="margin-right: 5px;">{{ 'New order'|t }}</a>
+    <a class="btn submit icon btn-create-new-order" data-icon="language" href="{{ url('translations/orders/create') }}">
+        {{ 'New order'|t }}
+    </a>
     <div class="buttons secondary-buttons">
         <div class="newwidget btngroup">
-            <div id="newwidgetmenubtn" class="btn submit menubtn add icon {% if isSelectableWidget is empty %} disabled {% endif %}">{{ 'New widget'|t('app') }}</div>
+            <div id="newwidgetmenubtn" class="btn submit menubtn add icon" {% if isSelectableWidget is empty %} style="opacity:.5;pointer-events:none;" {% endif %}>
+                {{ 'New widget'|t('app') }}
+            </div>
             <div class="menu newwidgetmenu">
                 <ul>
                     {% for type, info in widgetTypes|filter(info => info.selectable) %}
