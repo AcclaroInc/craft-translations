@@ -55,7 +55,7 @@ class OrderRepository
      */
     public function getDraftOrders()
     {
-        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', 'new'))->all();
+        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', Constants::ORDER_STATUS_PENDING))->all();
         return $results;
     }
 
@@ -74,27 +74,6 @@ class OrderRepository
     }
 
     /**
-     * @return array
-     */
-    public function getAllOrderIds()
-    {
-        $orders = Order::find()
-            ->andWhere(Db::parseParam('translations_orders.status', array(
-                Constants::ORDER_STATUS_PUBLISHED,
-                Constants::ORDER_STATUS_COMPLETE,
-                Constants::ORDER_STATUS_IN_PREPARATION,
-                Constants::ORDER_STATUS_IN_PROGRESS
-            )))
-            ->all();
-        $orderIds = [];
-        foreach ($orders as $order){
-            $orderIds[] = $order->id;
-        }
-
-        return $orderIds;
-    }
-
-    /**
      * @return \craft\elements\db\ElementQuery
      */
     public function getOpenOrders()
@@ -106,7 +85,8 @@ class OrderRepository
                 Constants::ORDER_STATUS_IN_PREPARATION,
                 Constants::ORDER_STATUS_GETTING_QUOTE,
                 Constants::ORDER_STATUS_NEEDS_APPROVAL,
-                Constants::ORDER_STATUS_COMPLETE
+                Constants::ORDER_STATUS_COMPLETE,
+                Constants::ORDER_STATUS_NEW,
             )))
             ->all();
 
@@ -123,7 +103,8 @@ class OrderRepository
                 Constants::ORDER_STATUS_GETTING_QUOTE,
                 Constants::ORDER_STATUS_NEEDS_APPROVAL,
                 Constants::ORDER_STATUS_IN_PREPARATION,
-                Constants::ORDER_STATUS_IN_PROGRESS
+                Constants::ORDER_STATUS_IN_PROGRESS,
+                Constants::ORDER_STATUS_NEW,
             )))
             ->all();
 
@@ -155,6 +136,7 @@ class OrderRepository
     {
         return array(
             'new' => 'new',
+            'pending' => 'pending',
             'getting quote' => 'getting quote',
             'needs approval' => 'needs approval',
             'in preparation' => 'in preparation',
@@ -250,7 +232,8 @@ class OrderRepository
                     Constants::ORDER_STATUS_GETTING_QUOTE,
                     Constants::ORDER_STATUS_NEEDS_APPROVAL,
                     Constants::ORDER_STATUS_IN_PREPARATION,
-                    Constants::ORDER_STATUS_IN_PROGRESS
+                    Constants::ORDER_STATUS_IN_PROGRESS,
+                    Constants::ORDER_STATUS_NEW,
                 )))
                 ->count();
         }
