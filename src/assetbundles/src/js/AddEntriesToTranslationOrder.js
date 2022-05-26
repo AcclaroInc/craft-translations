@@ -175,7 +175,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         this.$btn.appendTo($btngroup);
 
-        this.$menubtn.appendTo($btngroup);
+        ($('<div>').append(this.$menubtn)).appendTo($btngroup);
 
         this.$menubtn.on('click', function(e) {
             e.preventDefault();
