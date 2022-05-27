@@ -28,6 +28,10 @@ Craft.Translations.CategoryTranslations = {
         return $('form#main-form input[type=hidden][name=elementId]').val();
     },
 
+    isCreatingFresh: function() {
+        return $('form#main-form input[type=hidden][name=fresh]').val();
+    },
+
     updateSelectedCategories: function() {
         var entries = [];
 
@@ -95,7 +99,7 @@ Craft.Translations.CategoryTranslations = {
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
-        } else {
+        } else if (!this.isCreatingFresh()) {
             $btngroup.insertBefore('#header #action-buttons');
         }
 
