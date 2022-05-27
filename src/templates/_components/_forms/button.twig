@@ -1,0 +1,74 @@
+{# Sync api orders button #}
+{% macro syncOrderButton(disabled) %}
+    <div class="btngroup">
+        {% set config = {
+            class: 'big icon'|explodeClass|merge([disabled]),
+            label: 'Sync orders'|t('app'),
+            type: 'submit',
+            attributes: {
+                value: 'submit',
+                data: {
+                    icon: 'refresh',
+                },
+            },
+            spinner: true,
+        } %}
+
+        {{ _self.button(config) }}
+    </div>
+{% endmacro %}
+
+{# New widget button #}
+{% macro newWidgetButton(config) %}
+    <div class="buttons secondary-buttons">
+        <div class="newwidget btngroup">
+            <div id="newwidgetmenubtn" class="btn submit menubtn add icon {% if config.isSelectableWidget is empty %} link-disabled {% endif %}">
+                {{ 'New widget'|t('app') }}
+            </div>
+            <div class="menu newwidgetmenu">
+                <ul>
+                    {% for type, info in config.widgetTypes|filter(info => info.selectable) %}
+                        <li>
+                            <a data-type="{{ type }}"
+                                data-name="{{ info.name }}">
+                                <span class="icon">{{ info.iconSvg|raw }}</span>
+                                {{ info.name == 'Modified Source Entries' ? 'New & Modified Entries' : info.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+{% endmacro %}
+
+{# Simple button #}
+{% macro button(config) %}
+    {% include '_includes/forms/button' with config only %}
+{% endmacro %}
+
+{# Anchor button #}
+{% macro anchorButton(config) %}
+    {% set label = config.label ?? null %}
+    {% set spinner = config.spinner ?? null %}
+
+    {% set attributes = {
+        id: config.id ?? false,
+        href: config.href ?? '#',
+        class: (config.class ?? [])|explodeClass|merge([
+            'btn',
+            not label ? 'btn-empty' : null,
+        ]|filter),
+    }|merge(config.attributes ?? {}) -%}
+
+    {% apply spaceless %}
+        {% tag 'a' with attributes %}
+            {{ label ? tag('div', {
+                class: 'label',
+                text: label,
+            }) }}
+        {% endtag %}
+        {% if spinner %}
+            <div class="spinner spinner-absolute translations-loader hidden"></div>
+        {% endif %}
+    {% endapply -%}
+{% endmacro %}

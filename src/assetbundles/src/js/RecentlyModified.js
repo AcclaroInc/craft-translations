@@ -182,9 +182,9 @@
                 this.entries = unique(entries);
 
                 if (this.entries.length) {
-                    $('#bulk-reorder').removeClass('disabled');
+                    $('#bulk-reorder').removeClass('link-disabled');
                 } else {
-                    $('#bulk-reorder').addClass('disabled');
+                    $('#bulk-reorder').addClass('link-disabled');
                 }
 
                 var elements = '';

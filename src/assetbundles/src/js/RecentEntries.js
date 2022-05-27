@@ -137,9 +137,9 @@
                 this.entries = unique(entries);
 
                 if (this.entries.length) {
-                    $('#new-entry-orders').removeClass('disabled noClick');
+                    $('#new-entry-orders').removeClass('link-disabled');
                 } else {
-                    $('#new-entry-orders').addClass('disabled noClick');
+                    $('#new-entry-orders').addClass('link-disabled');
                 }
 
                 var elements = '';

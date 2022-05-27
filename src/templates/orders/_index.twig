@@ -1,5 +1,6 @@
 {% extends "_layouts/cp" %}
-{% import 'translations/_macros' as macros %}
+{% import '_includes/forms' as forms %}
+{% import 'translations/_components/_forms/button' as button %}
 
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
 
@@ -13,19 +14,30 @@
 
 {% set disabled = '' %}
 {% if (orderCountAcclaro == 0) %}
-    {% set disabled = 'disabled' %}
+    {% set disabled = 'link-disabled' %}
 {% endif %}
 
 {% block actionButton %}
     <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
-        <input type="hidden" name="action" value="translations/order/sync-orders">
+        {{ forms.hidden({
+            name: 'action',
+            value: 'translations/order/sync-orders'
+        }) }}
         {{ csrfInput() }}
-        <div class="btngroup" style="margin-right:5px;">
-            <button type="submit" class="btn big {{ disabled }} icon" data-icon="refresh" value="submit" {{ disabled }}>{{ "Sync orders"|t('app') }}</button>
-        </div>
-        <div class="sync-status"></div>
+
+        {{ button.syncOrderButton(disabled) }}
     </form>
-    <a class="btn big submit icon btn-create-new-order" data-icon="language" href="{{ url('translations/orders/create') }}">{{ 'New order'|t }}</a>
+
+    {{ button.anchorButton({
+        label: 'New order',
+        class: 'submit',
+        href: url('translations/orders/create'),
+        attributes: {
+            data: {
+                icon: 'language',
+            },
+        }
+    }) }}
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}

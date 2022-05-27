@@ -1,3 +1,5 @@
+{% import 'translations/_components/_forms/button' as button %}
+
 <div class="tab-container mt--30">
     {% set tabs = {
             "recent-entries-widget": {label: "New Source Entries"|t, url: 'javascript:void(0)'},
@@ -29,8 +31,18 @@
                     {% endfor %}
                 </table>
             </div>
-            <div class="buttons right" style="margin-top:14px;">
-                <a href="#" id="bulk-reorder" class="btn submit disabled icon" data-icon="language" target="_blank">Re-order</a>
+            <div class="buttons right">
+                {{ button.anchorButton({
+                    label: 'Re-order'|t('app'),
+                    id: 'bulk-reorder',
+                    class: 'link-disabled icon submit',
+                    attributes: {
+                        target: '_blank',
+                        data: {
+                            icon: 'language'
+                        }
+                    }
+                }) }}
             </div>
         </div>
     </div>
@@ -43,8 +55,21 @@
                         <div class="modal-title">
                             <h1>Entry Modification Details</h1>
                             <div class="buttons">
-                                <a href="#" id="close-diff-modal" class="btn">Close</a>
-                                <a href="#" class="btn submit reorderUrl icon" data-icon="language" target="_blank">Re-order translations</a>
+                                {{ button.anchorButton({
+                                    label: 'Close'|t('app'),
+                                    id: 'close-diff-modal'
+                                }) }}
+
+                                {{ button.anchorButton({
+                                    label: 'Re-order translations'|t('app'),
+                                    class: 'submit reorderUrl',
+                                    attributes: {
+                                        target: '_blank',
+                                        data: {
+                                            icon: 'language'
+                                        }
+                                    }
+                                }) }}
                             </div>
                         </div>
                         <div class="diff-meta">
@@ -126,9 +151,23 @@
                 </table>
             </div>
 
-            <div class="buttons right" style="margin-top:14px;">
-                <a class="btn" href="{{ url('entries') }}">{{ 'View all entries'|t }}</a>
-                <a href="#" id="new-entry-orders" class="btn submit disabled noClick" target="_blank">{{ "New order"|t('app') }}</a>
+            <div class="buttons right">
+                {{ button.anchorButton({
+                    label: 'View all entries'|t('app'),
+                    href: url('entries')
+                }) }}
+
+                {{ button.anchorButton({
+                    label: 'New order'|t('app'),
+                    id: 'new-entry-orders',
+                    class: 'link-disabled submit',
+                    attributes: {
+                        target: '_blank',
+                        data: {
+                            icon: 'language'
+                        }
+                    }
+                }) }}
             </div>
 
         </div>

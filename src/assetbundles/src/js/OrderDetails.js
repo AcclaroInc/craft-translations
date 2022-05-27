@@ -233,10 +233,12 @@
 
     function sendingOrderStatus($status, $btnStatus = false) {
         if ($status) {
+            $('.translations-loader').parent('a').addClass('loading');
             $('.translations-loader').removeClass('hidden');
             $('.translations-dropdown .btn').addClass('disabled').css('pointer-events', 'none');
             $('.translations-dropdown .btn').prop('disabled', true);
         } else {
+            $('.translations-loader').parent('a').removeClass('loading');
             $('.translations-loader').addClass('hidden');
             if (! $btnStatus) {
                 $('.translations-dropdown .btn').removeClass('disabled').css('pointer-events', '');
@@ -722,7 +724,7 @@
                 disabled: "disabled"
             });
 
-            this.$btn.html("<span class='spinner translations-loader hidden'></span>Create Order");
+            this.$btn.html("<span class='spinner spinner-absolute translations-loader'></span><div class=label>Create order</div>");
 
             this.$menubtn = $('<div>', {
                 'class': 'btn submit menubtn disabled',
@@ -779,7 +781,7 @@
                 disabled: "disabled"
             });
 
-            this.$btn.html("<span class='spinner translations-loader hidden'></span>Update order");
+            this.$btn.html("<span class='spinner spinner-absolute translations-loader'></span><div class=label>Update order</div>");
 
             this.$menubtn = $('<div>', {
                 'class': 'btn submit menubtn disabled',
@@ -889,7 +891,7 @@
                     var postData = Garnish.getPostData($form),
                     params = Craft.expandPostArray(postData);
 
-                    Craft.sendActionRequest('POST', $form.find('input[name=action]').val(), {data: params}) 
+                    Craft.sendActionRequest('POST', $form.find('input[name=action]').val(), {data: params})
                         .then((response) => {
                             window.location.href = response.data.redirect;
                         })
