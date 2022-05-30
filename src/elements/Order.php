@@ -343,10 +343,10 @@ class Order extends Element
                 return $languages;
 
             case 'title':
-            case 'entriesCount':
             case 'wordCount':
                 return $value ? $value : '';
-
+            case 'entriesCount':
+                return count($this->getElements());
             case 'serviceOrderId':
                 if (!$value && ( !is_null($this->getTranslator()) && $this->getTranslator()->service !== Constants::TRANSLATOR_DEFAULT))
                 {
@@ -401,7 +401,7 @@ class Order extends Element
     protected static function defineTableAttributes(): array
     {
         $attributes = [
-            'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
+            // 'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
             'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
             'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
             'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],

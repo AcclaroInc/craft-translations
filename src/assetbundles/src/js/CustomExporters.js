@@ -48,6 +48,10 @@
             return $ids.replace(/,\s*$/, "");
         },
 
+        isTrashed: function () {
+            return this.$toolbar.find('.statusmenubtn').text() === 'Trashed' || this.$toolbar.find('form#craft-elements-actions-Restore-actiontrigger').length > 0;
+        },
+
         getViewParams: function() {
 
             var criteria = {
@@ -58,6 +62,10 @@
             if (this.$sidebar.find('.sel').data('key') != 'all') {
                 $status = this.$sidebar.find('.sel').data('key');
                 criteria['status'] = $status.replace(/-/g, ' ');
+            }
+
+            if (this.isTrashed()) {
+                criteria['trashed'] = true;
             }
 
             var params = {
@@ -88,7 +96,7 @@
                 {"label": "Raw data (fastest)", "value": "Raw"},
                 {"label": "Expanded", "value": "Expanded"},
             ];
-            
+
             var $typeField = Craft.ui.createSelectField({
                 label: Craft.t('app', 'Export Type'),
                 options: typeOptions,
@@ -111,17 +119,22 @@
                 min: 1
             }).appendTo($form);
 
-            $('<button/>', {
+            $exportButton = $('<button/>', {
                 type: 'submit',
                 'class': 'btn submit fullwidth',
                 text: Craft.t('app', 'Export')
-            }).appendTo($form)
+            });
+            $exportButton.appendTo($form);
 
             var $spinner = $('<div/>', {
                 'class': 'spinner hidden'
             }).appendTo($form);
 
             var hud = new Garnish.HUD(this.$exportBtn, $form);
+
+            this.addListener($exportButton, 'click', () => {
+                hud.hide();
+            });
 
             hud.on('hide', $.proxy(function() {
                 this.$exportBtn.removeClass('active');
@@ -135,7 +148,7 @@
                 if (submitting) {
                     return;
                 }
-    
+
                 submitting = true;
                 $spinner.removeClass('hidden');
                 var params = this.getViewParams();
