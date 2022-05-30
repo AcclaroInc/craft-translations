@@ -178,7 +178,8 @@ class VizyFieldTranslator extends GenericFieldTranslator
 							}
 						}
 					} else {
-						$postArray['attrs']['values']['content']['fields'][$handle] = $targetData[$handle];
+						if (isset($targetData[$handle]))
+							$postArray['attrs']['values']['content']['fields'][$handle] = $targetData[$handle];
 					}
 				}
 				break;
