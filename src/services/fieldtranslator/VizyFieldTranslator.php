@@ -49,7 +49,8 @@ class VizyFieldTranslator extends GenericFieldTranslator
 			foreach ($blocks as $index => $block) {
 				$node = $block['rawNode'];
 				$key = sprintf('new%s', $index + 1);
-				$postArray[$field->handle][$index] = $this->fieldToPostArrayFromTranslationTarget($node, $targetData[$key]);
+				if (isset($targetData[$key]))
+					$postArray[$field->handle][$index] = $this->fieldToPostArrayFromTranslationTarget($node, $targetData[$key]);
 			}
 		}
 
@@ -164,7 +165,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 						if (empty($values)) continue;
 
 						foreach ($values as $index => $value) {
-							// Skip index as matrix/superTable already procide as new1/new2
+							// Skip index as matrix/superTable already provide as new1/new2
 							if (strpos($index, 'new', 0) === 0) {
 								$key = $index;
 							} else {
