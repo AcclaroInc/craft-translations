@@ -29,12 +29,12 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             
             $new = 0;
             foreach ($blocks as $block) {
-                $blockId = $block->fieldId . "_" . $block->canonicalId ?? 'new' . ++$new;
+                $blockId = sprintf('new%s', ++$new);
                 $blockSource = $elementTranslator->toTranslationSource($block);
 
                 foreach ($blockSource as $key => $value) {
                     $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
-
+                    
                     $source[$key] = $value;
                 }
             }
@@ -60,9 +60,8 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             $fieldHandle => array(),
         );
 
-        $new = 0;
         foreach ($blocks as $i => $block) {
-            $blockId = $block->id ?? 'new' . ++$new;
+            $blockId = $block->id;
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->enabled,
@@ -87,9 +86,8 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         
         $new = 0;
         foreach ($blocks as $i => $block) {
-            $blockId = $block->id ?? 'new' . ++$new;
-            $i = $block->fieldId . "_" . $block->canonicalId ?? 'new' . ++$new;
-            // $blockData = isset($fieldData[$blockId]) ? $fieldData[$blockId] : array();
+            $blockId = $block->id;
+            $i = sprintf('new%s', ++$new);
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
 
             $post[$fieldHandle][$blockId] = array(

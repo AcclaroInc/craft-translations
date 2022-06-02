@@ -54,7 +54,7 @@ Prior to download, installation and use of the Translation Plugin for Craft on a
 Any usage of the plugin either on production or in a sandbox environment indicates your acceptance of the legal terms described in the [Craft Software License](https://craftcms.github.io/license/). Any usage of Acclaro Translation Service API integrations indicates acceptance of the terms and conditions as set forth in the [Acclaro User Agreement](https://my.acclaro.com/p.php/useragreement) and [Privacy Policy](https://www.acclaro.com/privacy-policy/).
 
 ### Updates & support
-Purchasing the plugin includes 12 months of updates and API connectivity access. Additional license renewals are $399/yr. [Advanced standalone product and multisite consulting support](https://info.acclaro.com/translation-plugin-for-craft3-support-info) for the Translation plugin can be purchased separately from Acclaro.
+Purchasing the plugin includes 12 months of updates and API connectivity access. Additional license renewals are $399/yr. Advanced standalone product and multisite consulting support for the Translation plugin can be purchased separately from Acclaro.
 
 ### Contributing
 Want to extend the Translations plugin with your own developed code? If it’s functionality that other plugin users can also take advantage of, let us know and we’ll guide you on how to submit a Git PR.  We’ll review, test and integrate as fast as we can.
