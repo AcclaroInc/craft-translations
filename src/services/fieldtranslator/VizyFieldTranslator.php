@@ -50,7 +50,9 @@ class VizyFieldTranslator extends GenericFieldTranslator
 				$node = $block['rawNode'];
 				$key = sprintf('new%s', $index + 1);
 				if (isset($targetData[$key]))
-					$postArray[$field->handle][$index] = $this->fieldToPostArrayFromTranslationTarget($node, $targetData[$key]);
+					$block = $this->fieldToPostArrayFromTranslationTarget($node, $targetData[$key]);
+
+				$postArray[$field->handle][$index] = $block;
 			}
 		}
 
