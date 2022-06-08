@@ -99,8 +99,8 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         $new = 0;
         foreach ($blocks as $i => $block) {
-            $blockId = $block->id;
             $i = 'new' . ++$new;
+            $blockId = $block-> id ?? $i;
             $blockData = isset($allBlockData[$i]) ? $allBlockData[$i] : array();
 
             $post[$fieldHandle][$blockId] = array(
@@ -155,7 +155,7 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         foreach ($blocks as $i => $block) {
 
-            $blockId = $block->id;
+            $blockId = $block->id ?? sprintf('new%s', ++$i);
             $post[$fieldHandle][$blockId] = array(
                 'type' => $block->getType()->handle,
                 'enabled' => $block->enabled,
