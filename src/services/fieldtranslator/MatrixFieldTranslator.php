@@ -87,12 +87,17 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         $new = 0;
         foreach ($blocks as $i => $block) {
             $i = sprintf('new%s', ++$new);
-            $blockId = $block->id ?? $i;
+            /**
+             * Block id changes for localised block so use $i and using same for non localised blocks merges other
+             * sites non localised block to non localised block.
+             */
+            $blockId = $field->getIsTranslatable() ? $i : $block->id;
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
 
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
+                'collapsed'         => $block->getAttributes()['collapsed'],
                 'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,
                 'siteId'            => $targetSite,
                 'fields'            => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true),
