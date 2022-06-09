@@ -76,31 +76,33 @@ class OrderDelete extends Delete
      */
     public function performAction(ElementQueryInterface $query): bool
     {
-        foreach ($query->all() as $order) {
-            /** @var \acclaro\translations\elements\Order $order */
-            foreach ($order->getFiles() as $file) {
-                if ($file->hasDraft()) {
-                    $element = $file->getElement();
+        if ($this->hard) {
+            foreach ($query->all() as $order) {
+                /** @var \acclaro\translations\elements\Order $order */
+                foreach ($order->getFiles() as $file) {
+                    if ($file->hasDraft()) {
+                        $element = $file->getElement();
 
-                    switch (get_class($element)) {
-                        case ($element instanceof GlobalSet):
-                            $elementRepository = Translations::$plugin->globalSetDraftRepository;
-                            $draft = $elementRepository->getDraftById($file->draftId);
-                            $elementRepository->deleteDraft($draft);
-                            break;
-                        case ($element instanceof Category):
-                            $elementRepository = Translations::$plugin->categoryDraftRepository;
-                            $draft = $elementRepository->getDraftById($file->draftId);
-                            $elementRepository->deleteDraft($draft);
-                            break;
-                        case ($element instanceof Asset):
-                            $elementRepository = Translations::$plugin->assetDraftRepository;
-                            $draft = $elementRepository->getDraftById($file->draftId);
-                            $elementRepository->deleteDraft($draft);
-                            break;
-                        default:
-                            $elementRepository = Translations::$plugin->draftRepository;
-                            $elementRepository->deleteDraft($file->draftId, $file->targetSite);
+                        switch (get_class($element)) {
+                            case ($element instanceof GlobalSet):
+                                $elementRepository = Translations::$plugin->globalSetDraftRepository;
+                                $draft = $elementRepository->getDraftById($file->draftId);
+                                $elementRepository->deleteDraft($draft);
+                                break;
+                            case ($element instanceof Category):
+                                $elementRepository = Translations::$plugin->categoryDraftRepository;
+                                $draft = $elementRepository->getDraftById($file->draftId);
+                                $elementRepository->deleteDraft($draft);
+                                break;
+                            case ($element instanceof Asset):
+                                $elementRepository = Translations::$plugin->assetDraftRepository;
+                                $draft = $elementRepository->getDraftById($file->draftId);
+                                $elementRepository->deleteDraft($draft);
+                                break;
+                            default:
+                                $elementRepository = Translations::$plugin->draftRepository;
+                                $elementRepository->deleteDraft($file->draftId, $file->targetSite);
+                        }
                     }
                 }
             }
