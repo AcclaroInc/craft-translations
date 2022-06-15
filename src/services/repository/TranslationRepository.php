@@ -134,38 +134,53 @@ class TranslationRepository
     {
         // Get stored string translations
         $translations = $this->getTranslations();
-        
+
         // Create reflection class of i18n and make accessible
         $reflectionClass = new ReflectionClass('yii\i18n\MessageSource');
         $reflectionProperty = $reflectionClass->getProperty('_messages');
         $reflectionProperty->setAccessible(true);
-        
+
         // Get i18n messages
         $messages = $reflectionProperty->getValue(Craft::$app->getI18n()->getMessageSource('translations'));
-        
+
         // Set site i18n messages from stored translations
         foreach ($translations as $translation) {
             $sourceSite = Craft::$app->sites->getSiteById($translation->sourceSite);
             $targetSite = Craft::$app->sites->getSiteById($translation->targetSite);
-            
-            if (! Craft::$app->sites->getSiteById($translation->targetSite)) {
-                Craft::warning( '['. __METHOD__ .'] Target Site with ID: '. $translation->targetSite .' does not exist', 'translations' );
+
+            if (! $targetSite) {
+                $this->deleteTranslationForSite($translation->targetSite);
+                continue;
+            } else if (! $sourceSite) {
+                $this->deleteTranslationForSite($translation->sourceSite);
                 continue;
             }
 
-            $sourceLanguage = Craft::$app->sites->getSiteById($translation->sourceSite)->language;
-            $targetLanguage = Craft::$app->sites->getSiteById($translation->targetSite)->language;
+            $sourceLanguage = $sourceSite->language;
+            $targetLanguage = $targetSite->language;
             $key = sprintf('%s/%s', $targetLanguage, 'translations');
             $messages[$key][$translation->source] = $translation->target;
-            
+
             if ($sourceLanguage !== $targetLanguage) {
                 Craft::$app->getI18n()->translate('translations', $translation->source, [], $targetLanguage);
             }
 
         }
-        
+
         $reflectionProperty->setValue(Craft::$app->getI18n()->getMessageSource('translations'), $messages);
-        
+
         $reflectionProperty->setAccessible(false);
+    }
+
+    public function deleteTranslationForSite($siteId)
+    {
+        try {
+            $records = TranslationRecord::find()->where(['targetSite' => $siteId])->orWhere(['sourceSite' => $siteId])->all();
+            foreach ($records as $record) {
+                $record->delete();
+            }
+        } catch (\Exception $e) {
+            Craft::error("Error deleting translations for Site Id: $siteId", 'translations');
+        }
     }
 }
