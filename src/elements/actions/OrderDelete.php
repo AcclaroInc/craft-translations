@@ -83,6 +83,9 @@ class OrderDelete extends Delete
                     if ($file->hasDraft()) {
                         $element = $file->getElement();
 
+                        // Skip if the entry has been deleted
+                        if (! $element) continue;
+
                         switch (get_class($element)) {
                             case ($element instanceof GlobalSet):
                                 $elementRepository = Translations::$plugin->globalSetDraftRepository;
