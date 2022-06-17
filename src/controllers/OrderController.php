@@ -146,6 +146,9 @@ class OrderController extends Controller
             $variables['inputElements'] = $orderElements ?: [];
         }
 
+        // Check if source site is exists
+        if (!Craft::$app->getSites()->getSiteById($order->sourceSite)) throw new Exception("Source Site Does Not Exist", 404);
+
 		// Check for changes if we are adding an element
 		if ($variables['isChanged']) {
 			if ($orderTitle= Craft::$app->getRequest()->getQueryParam('title')) {
