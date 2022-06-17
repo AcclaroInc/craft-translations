@@ -146,6 +146,9 @@ class OrderController extends Controller
             $variables['inputElements'] = $orderElements ?: [];
         }
 
+        // Check if source site is exists
+        if (!Craft::$app->getSites()->getSiteById($order->sourceSite)) throw new Exception("Source Site Does Not Exist", 404);
+
 		// Check for changes if we are adding an element
 		if ($variables['isChanged']) {
 			if ($orderTitle= Craft::$app->getRequest()->getQueryParam('title')) {
@@ -1433,8 +1436,10 @@ class OrderController extends Controller
 
                     // Delete draft here so that it does not try to merge in existing draft when merged after updating
                     // source entry in order
-                    Translations::$plugin->draftRepository->deleteDraft($file->draftId, $file->targetSite);
-                    $file->draftId = null;
+                    if ($file->hasDraft()) {
+                        Translations::$plugin->draftRepository->deleteDraft($file->draftId, $file->targetSite);
+                        $file->draftId = null;
+                    }
                     $file->status = Constants::FILE_STATUS_MODIFIED;
                     Translations::$plugin->fileRepository->saveFile($file);
 
