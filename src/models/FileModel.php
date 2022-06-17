@@ -200,7 +200,7 @@ class FileModel extends Model
 	public function hasSourceTargetDiff()
 	{
 		$hasDiff = false;
-		if ($this->isReviewReady() || $this->isComplete() || $this->isPublished()) {
+		if (!empty($this->target) && ($this->isReviewReady() || $this->isComplete() || $this->isPublished())) {
 			$hasDiff = (bool) Translations::$plugin->fileRepository->getSourceTargetDifferences(
 				$this->source, $this->target);
 		}
