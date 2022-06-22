@@ -297,7 +297,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $path
             );
 
-            $file->reference = $tmFile['fileContent'];
+            $file->reference = $tmFile['reference'];
             Translations::$plugin->fileRepository->saveFile($file);
 
             fclose($stream);

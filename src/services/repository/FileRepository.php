@@ -475,15 +475,36 @@ class FileRepository
      */
     public function isReferenceChanged($file)
     {
-        $currentData = $file->getTmMisalignmentFile()['fileContent'];
+        $currentData = $file->getTmMisalignmentFile()['reference'];
 
-        return md5($currentData) !== md5($file->reference);
+        $currentData = $this->getTargetFromReference($currentData);
+
+        return md5($currentData) !== md5($this->getTargetFromReference($file->reference));
+    }
+
+    /**
+     * Extracts and returns only data for target site as data might change for source entry after
+     * update source entry.
+     *
+     * @param string $referenceData
+     * @return string
+     */
+    private function getTargetFromReference($referenceData)
+    {
+        $targetData = [];
+        $referenceData = preg_split('/[\\n]/', $referenceData);
+
+        foreach ($referenceData as $line) {
+            array_push($targetData, explode(',', $line)[2]);
+        }
+
+        return implode(',', $targetData);
     }
 
     /**
      * @param \acclaro\translations\models\FileModel $file
      */
-    public function hasTmMisalignments($file)
+    public function checkTmMisalignments($file)
     {
         try {
             $elementRepository = Translations::$plugin->elementRepository;
@@ -526,5 +547,28 @@ class FileRepository
         }
 
         return false;
+    }
+
+    public function createReferenceData(array $data, $ignoreCommon = true)
+    {
+        $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
+        $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
+
+        $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
+
+        $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($data['sourceContent']), true)['content'] ?? [];
+
+        $target = Translations::$plugin->elementTranslator->toTranslationSource(
+            $data['targetElement'],
+            $data['targetElementSite']
+        );
+
+        foreach ($source as $key => $value) {
+            $targetValue = $target[$key] ?? '';
+            if ($ignoreCommon && $value === $targetValue) continue;
+            $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $targetValue);
+        }
+
+        return $tmContent;
     }
 }

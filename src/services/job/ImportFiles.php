@@ -183,6 +183,10 @@ class ImportFiles extends BaseJob
             return $file->isModified() ? false : '';
         }
 
+        if ($file->isComplete()) {
+            $file->reference = null;
+        }
+
         $translation_service = $this->order->translator->service;
         if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
             $translation_service = Constants::TRANSLATOR_DEFAULT;
@@ -315,6 +319,10 @@ class ImportFiles extends BaseJob
             return $file->isModified() ? false : '';
         }
 
+        if ($file->isComplete()) {
+            $file->reference = null;
+        }
+
         $translation_service = $this->order->translator->service;
         if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
             $translation_service = Constants::TRANSLATOR_DEFAULT;
@@ -416,6 +424,10 @@ class ImportFiles extends BaseJob
             $this->log(sprintf("File {%s} %s", $this->assetName($asset), $message));
 
             return $file->isModified() ? false : '';
+        }
+
+        if ($file->isComplete()) {
+            $file->reference = null;
         }
 
         $translation_service = $this->order->translator->service;

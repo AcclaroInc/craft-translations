@@ -225,11 +225,13 @@ class FileModel extends Model
 
     public function hasTmMisalignments($ignoreReference = false)
     {
-        if ($this->reference !== null) {
-            return $ignoreReference ?: $this->_service->isReferenceChanged($this);
+        if ($this->isModified() || $this->isPublished()) return false;
+
+        if ($this->reference && !$ignoreReference) {
+            return $this->_service->isReferenceChanged($this);
         }
 
-        return $this->_service->hasTmMisalignments($this);
+        return $this->_service->checkTmMisalignments($this);
     }
 
     public function getTmMisalignmentFile()
@@ -244,7 +246,6 @@ class FileModel extends Model
         if ($this->isComplete()) {
             $draft = Translations::$plugin->draftRepository->getDraftById($this->draftId, $targetSite);
             $targetElement = $draft ?: $targetElement;
-            // $source = $this->target;
         }
 
         if ($element instanceof GlobalSet) {
@@ -267,11 +268,11 @@ class FileModel extends Model
             'targetElement' => $targetElement,
             'targetElementSite' => $targetSite
         ];
-        $fileContent = Translations::$plugin->elementToFileConverter->createTmFileContent($TmData);
 
         return [
             'fileName' => $filename,
-            'fileContent' => $fileContent
+            'fileContent' => Translations::$plugin->fileRepository->createReferenceData($TmData),
+            'reference' => Translations::$plugin->fileRepository->createReferenceData($TmData, false),
         ];
     }
 }
