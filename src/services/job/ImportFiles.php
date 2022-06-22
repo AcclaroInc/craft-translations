@@ -27,6 +27,7 @@ class ImportFiles extends BaseJob
     public $totalFiles;
     public $fileFormat;
     public $discardElements;
+    private $_allowAppliedChanges = null;
 
     /**
      * Map of assetId v/s file name
@@ -620,6 +621,9 @@ class ImportFiles extends BaseJob
 
     private function canProcessPublishedOrder()
     {
-        return $this->order->isPublished() && $this->order->hasDefaultTranslator();
+        if (is_null($this->_allowAppliedChanges))
+            $this->_allowAppliedChanges = $this->order->isPublished() && $this->order->hasDefaultTranslator();
+
+        return $this->_allowAppliedChanges;
     }
 }
