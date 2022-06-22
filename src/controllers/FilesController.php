@@ -117,18 +117,20 @@ class FilesController extends Controller
                     Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
                 }
 
-                $tmFile = $file->getTmMisalignmentFile();
-                $fileName = $tmFile['fileName'];
+                if ($hasMisalignment) {
+                    $tmFile = $file->getTmMisalignmentFile();
+                    $fileName = $tmFile['fileName'];
 
-                if ($order->includeTmFiles && $file->hasTmMisalignments(true)) {
+                    if ($order->includeTmFiles && $file->hasTmMisalignments(true)) {
 
-                    if (! $zip->addFromString("references/" . $fileName, $tmFile['fileContent'])) {
-                        $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
-                        Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
+                        if (! $zip->addFromString("references/" . $fileName, $tmFile['fileContent'])) {
+                            $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
+                            Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
+                        }
                     }
-                }
 
-                $file->reference = $tmFile['reference'];
+                    $file->reference = $tmFile['reference'];
+                }
 
                 if ($file->isNew() || $file->isModified()) {
                     $file->status = Constants::FILE_STATUS_IN_PROGRESS;
