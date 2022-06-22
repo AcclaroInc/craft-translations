@@ -22,6 +22,7 @@ class ImportFiles extends BaseJob
 {
     public $assets;
     public $orderId;
+    /** @var \acclaro\translations\elements\Order $order */
     public $order;
     public $totalFiles;
     public $fileFormat;
@@ -141,7 +142,7 @@ class ImportFiles extends BaseJob
             return false;
         }
 
-        foreach ($this->order->files as $orderFile)
+        foreach ($this->order->getFiles() as $orderFile)
         {
             if (
                 $elementId == $orderFile->elementId &&
@@ -173,7 +174,7 @@ class ImportFiles extends BaseJob
             return false;
         }
 
-        if ($file->isPublished() || $file->isModified()) {
+        if ((!$this->canProcessPublishedOrder() && $file->isPublished()) || $file->isModified()) {
             $message = 'has already been published.';
             if ($file->isModified()) {
                 $message = 'has been modified, please download again and try with latest files.';
@@ -275,7 +276,7 @@ class ImportFiles extends BaseJob
 
         $orderId = (string)$element->getAttribute('orderId');
 
-        foreach ($this->order->files as $orderFile)
+        foreach ($this->order->getFiles() as $orderFile)
         {
             if (
                 $orderId == $orderFile->orderId &&
@@ -308,8 +309,8 @@ class ImportFiles extends BaseJob
             return false;
         }
 
-        // Don't process published files
-        if ($file->isPublished() || $file->isModified()) {
+        // Don't process published files untill orders status is published
+        if ((!$this->canProcessPublishedOrder() && $file->isPublished()) || $file->isModified()) {
             $message = 'has already been published.';
             if ($file->isModified()) {
                 $message = 'has been modified, please download again and try with latest files.';
@@ -382,7 +383,7 @@ class ImportFiles extends BaseJob
             return false;
         }
 
-        foreach ($this->order->files as $orderFile)
+        foreach ($this->order->getFiles() as $orderFile)
         {
             if (
                 $elementId == $orderFile->elementId &&
@@ -416,7 +417,7 @@ class ImportFiles extends BaseJob
             return false;
         }
 
-        if ($file->isPublished() || $file->isModified()) {
+        if ((!$this->canProcessPublishedOrder() && $file->isPublished()) || $file->isModified()) {
             $message = 'has already been published.';
             if ($file->isModified()) {
                 $message = 'has been modified, please download again and try with latest files.';
@@ -615,5 +616,10 @@ class ImportFiles extends BaseJob
     private function assetName($asset)
     {
         return $this->fileNames[$asset->id] ?? $asset->getFilename();
+    }
+
+    private function canProcessPublishedOrder()
+    {
+        return $this->order->isPublished() && $this->order->hasDefaultTranslator();
     }
 }
