@@ -27,10 +27,9 @@ class NeoFieldTranslator extends GenericFieldTranslator
         $blocks = $element->getFieldValue($field->handle)->all();
 
         if ($blocks) {
-            // foreach ($blocks->level(1) as $block) { // removed in 3.2
             $new = 0;
             foreach ($blocks as $block) {
-                $blockId = $block->fieldId . "_" . $block->canonicalId ?? 'new' . ++$new;
+                $blockId = 'new' . ++$new;
                 $keyPrefix = sprintf('%s.%s', $field->handle, $blockId);
 
                 $source = array_merge($source, $this->blockToTranslationSource($elementTranslator, $block, $keyPrefix));
@@ -52,19 +51,6 @@ class NeoFieldTranslator extends GenericFieldTranslator
             $source[$key] = $value;
         }
 
-        $block = $block->getChildren()->all();
-        $new = 0;
-        foreach ($block as $childBlock) {
-            $childBlockId = $childBlock->id ?? 'new' . ++$new;
-            $key = sprintf('%s.%s', $keyPrefix, $childBlockId);
-
-            $childBlockSource = $this->blockToTranslationSource($elementTranslator, $childBlock, $key);
-
-            foreach ($childBlockSource as $key => $value) {
-                $source[$key] = $value;
-            }
-        }
-
         return $source;
     }
 
@@ -74,7 +60,7 @@ class NeoFieldTranslator extends GenericFieldTranslator
         $newToParse = array();
 
         foreach ($blockData as $key => $value) {
-            if (is_numeric($key) || strpos($key, "_") !== false) {
+            if (is_numeric($key) || strpos($key, "new", 0) !== false) {
                 $newToParse[$key] = $value;
             } else {
                 $newBlockData[$key] = $value;
@@ -113,8 +99,8 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         $new = 0;
         foreach ($blocks as $i => $block) {
-            $blockId = $block->id ?? 'new' . ++$new;
-            $i = $block->fieldId . "_" . $block->canonicalId ?? 'new' . ++$new;
+            $i = 'new' . ++$new;
+            $blockId = $field->getIsTranslatable() ? $i : $block->id;
             $blockData = isset($allBlockData[$i]) ? $allBlockData[$i] : array();
 
             $post[$fieldHandle][$blockId] = array(
@@ -166,14 +152,14 @@ class NeoFieldTranslator extends GenericFieldTranslator
         $post = array(
             $fieldHandle => array(),
         );
-        $new = 0;
+
         foreach ($blocks as $i => $block) {
 
-            $blockId = $block->id ?? 'new' . ++$new;
+            $blockId = $block->id ?? sprintf('new%s', ++$i);
             $post[$fieldHandle][$blockId] = array(
                 'type' => $block->getType()->handle,
                 'enabled' => $block->enabled,
-                'fields' => $block->getSerializedFieldValues(),
+                'fields' => $elementTranslator->toPostArray($block),
             );
         }
 

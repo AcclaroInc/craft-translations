@@ -6,7 +6,9 @@ use Craft;
 use yii\web\Response;
 use craft\web\Controller;
 use craft\base\ElementInterface;
+use acclaro\translations\Constants;
 use yii\base\InvalidValueException;
+use acclaro\translations\Translations;
 use acclaro\translations\services\Exporter;
 use craft\elements\db\ElementQueryInterface;
 
@@ -20,7 +22,7 @@ class ExportController extends Controller
     {
         $this->requirePostRequest();
         $request = Craft::$app->getRequest();
-        
+
         // Get the criteria param
         $criteria = $request->getBodyParam('criteria');
 
@@ -70,6 +72,46 @@ class ExportController extends Controller
         return $this->response;
     }
 
+	/**
+	 * @return \craft\web\Response
+	 * @throws \yii\web\BadRequestHttpException
+	 */
+	public function actionExportPreviewLinks()
+	{
+		$this->requirePostRequest();
+		$request = Craft::$app->getRequest();
+
+		// Get the id param
+		$orderId = $request->getBodyParam('id');
+		$files = json_decode($request->getBodyParam('files'), true);
+
+		$order = Translations::$plugin->orderRepository->getOrderById($orderId);
+
+		$fileName = $this->getFileName($order);
+		$previewFile = fopen($fileName, "w");
+
+		fputcsv($previewFile, ['OrderId', 'Title', 'SourceSite', 'TargetSite', 'Status', 'DateOrdered', 'PreviewUrl']);
+
+		foreach ($order->getFiles() as $file) {
+            if (in_array($file->id, $files)) {
+                $row = [
+                    $orderId,
+                    $order->title,
+                    $file->sourceSite,
+                    $file->targetSite,
+                    $file->status,
+                    $order->dateOrdered,
+                    $file->previewUrl ?? 'N/A'
+                ];
+                fputcsv($previewFile, $row);
+            }
+		}
+
+		fclose($previewFile);
+
+		return $this->asJson(['success' => true, 'previewFile' => $fileName]);
+	}
+
     /**
      * Returns the element query based on the current params.
      *
@@ -100,4 +142,15 @@ class ExportController extends Controller
 
         return $query;
     }
+
+	/**
+	 * @param $order
+	 * @return string
+	 */
+	private function getFileName($order)
+	{
+		$file_name =  sprintf('preview_links_%s', $order['id']);
+
+		return Craft::$app->path->getTempPath() . '/' . $file_name . '.' . Constants::FILE_FORMAT_CSV;
+	}
 }

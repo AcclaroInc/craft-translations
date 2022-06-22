@@ -7,8 +7,13 @@
 
 namespace acclaro\translations\elements\actions;
 
+use acclaro\translations\Translations;
 use Craft;
 use craft\elements\actions\Delete;
+use craft\elements\Asset;
+use craft\elements\Category;
+use craft\elements\db\ElementQueryInterface;
+use craft\elements\GlobalSet;
 
 /**
  * OrderDelete represents a Delete element action.
@@ -64,5 +69,48 @@ class OrderDelete extends Delete
         return Craft::t('app', 'Are you sure you want to delete the selected {type}?', [
             'type' => $elementType::pluralLowerDisplayName(),
         ]);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function performAction(ElementQueryInterface $query): bool
+    {
+        if ($this->hard) {
+            foreach ($query->all() as $order) {
+                /** @var \acclaro\translations\elements\Order $order */
+                foreach ($order->getFiles() as $file) {
+                    if ($file->hasDraft()) {
+                        $element = $file->getElement();
+
+                        // Skip if the entry has been deleted
+                        if (! $element) continue;
+
+                        switch (get_class($element)) {
+                            case ($element instanceof GlobalSet):
+                                $elementRepository = Translations::$plugin->globalSetDraftRepository;
+                                $draft = $elementRepository->getDraftById($file->draftId);
+                                $elementRepository->deleteDraft($draft);
+                                break;
+                            case ($element instanceof Category):
+                                $elementRepository = Translations::$plugin->categoryDraftRepository;
+                                $draft = $elementRepository->getDraftById($file->draftId);
+                                $elementRepository->deleteDraft($draft);
+                                break;
+                            case ($element instanceof Asset):
+                                $elementRepository = Translations::$plugin->assetDraftRepository;
+                                $draft = $elementRepository->getDraftById($file->draftId);
+                                $elementRepository->deleteDraft($draft);
+                                break;
+                            default:
+                                $elementRepository = Translations::$plugin->draftRepository;
+                                $elementRepository->deleteDraft($file->draftId, $file->targetSite);
+                        }
+                    }
+                }
+            }
+        }
+
+        return parent::performAction($query);
     }
 }

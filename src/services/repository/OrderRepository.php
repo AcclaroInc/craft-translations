@@ -55,7 +55,7 @@ class OrderRepository
      */
     public function getDraftOrders()
     {
-        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', 'new'))->all();
+        $results = Order::find()->andWhere(Db::parseParam('translations_orders.status', Constants::ORDER_STATUS_PENDING))->all();
         return $results;
     }
 
@@ -74,27 +74,6 @@ class OrderRepository
     }
 
     /**
-     * @return array
-     */
-    public function getAllOrderIds()
-    {
-        $orders = Order::find()
-            ->andWhere(Db::parseParam('translations_orders.status', array(
-                Constants::ORDER_STATUS_PUBLISHED,
-                Constants::ORDER_STATUS_COMPLETE,
-                Constants::ORDER_STATUS_IN_PREPARATION,
-                Constants::ORDER_STATUS_IN_PROGRESS
-            )))
-            ->all();
-        $orderIds = [];
-        foreach ($orders as $order){
-            $orderIds[] = $order->id;
-        }
-
-        return $orderIds;
-    }
-
-    /**
      * @return \craft\elements\db\ElementQuery
      */
     public function getOpenOrders()
@@ -106,7 +85,8 @@ class OrderRepository
                 Constants::ORDER_STATUS_IN_PREPARATION,
                 Constants::ORDER_STATUS_GETTING_QUOTE,
                 Constants::ORDER_STATUS_NEEDS_APPROVAL,
-                Constants::ORDER_STATUS_COMPLETE
+                Constants::ORDER_STATUS_COMPLETE,
+                Constants::ORDER_STATUS_NEW,
             )))
             ->all();
 
@@ -123,7 +103,8 @@ class OrderRepository
                 Constants::ORDER_STATUS_GETTING_QUOTE,
                 Constants::ORDER_STATUS_NEEDS_APPROVAL,
                 Constants::ORDER_STATUS_IN_PREPARATION,
-                Constants::ORDER_STATUS_IN_PROGRESS
+                Constants::ORDER_STATUS_IN_PROGRESS,
+                Constants::ORDER_STATUS_NEW,
             )))
             ->all();
 
@@ -155,6 +136,7 @@ class OrderRepository
     {
         return array(
             'new' => 'new',
+            'pending' => 'pending',
             'getting quote' => 'getting quote',
             'needs approval' => 'needs approval',
             'in preparation' => 'in preparation',
@@ -250,7 +232,8 @@ class OrderRepository
                     Constants::ORDER_STATUS_GETTING_QUOTE,
                     Constants::ORDER_STATUS_NEEDS_APPROVAL,
                     Constants::ORDER_STATUS_IN_PREPARATION,
-                    Constants::ORDER_STATUS_IN_PROGRESS
+                    Constants::ORDER_STATUS_IN_PROGRESS,
+                    Constants::ORDER_STATUS_NEW,
                 )))
                 ->count();
         }
@@ -364,6 +347,8 @@ class OrderRepository
             }
         }
 
+        $orderReferenceFiles = [];
+
         $sendOrderSvc = new SendOrder();
         $translationService = new AcclaroTranslationService($settings, $acclaroApiClient);
         foreach ($order->getFiles() as $file) {
@@ -372,9 +357,17 @@ class OrderRepository
             }
 
             $translationService->sendOrderFile($order, $file, $settings);
+
+            if ($order->shouldIncludeTmFiles() && $file->hasTmMisalignments()) {
+                array_push($orderReferenceFiles, $file);
+            }
         }
 
         $acclaroApiClient->submitOrder($order->serviceOrderId);
+
+        foreach ($orderReferenceFiles as $file) {
+            $translationService->sendOrderReferenceFile($order, $file);
+        }
 
         $order->status = Constants::ORDER_STATUS_NEW;
 
@@ -515,12 +508,12 @@ class OrderRepository
     {
         $originalIds = [];
 
-        if ($elements = $order->getElements()) {
-            foreach ($order->getFiles() as $file) {
+        if ($files = $order->getFiles()) {
+            foreach ($files as $file) {
                 if ($file->isPublished() || ! $file->source || in_array($file->elementId, $originalIds)) continue;
 
                 try {
-                    $element = $elements[$file->elementId];
+                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
                     $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
                     $converter = Translations::$plugin->elementToFileConverter;
 
@@ -550,6 +543,25 @@ class OrderRepository
             }
         }
 
-        return $originalIds;
-    }
+		return $originalIds;
+	}
+
+	/**
+	 * Checks if target data of elements in order is different than what is delivered
+	 *
+	 * @param Order $order
+	 * @return array $result
+	 */
+	public function getIsTargetChanged($order): ?array
+	{
+		$originalIds = [];
+
+		foreach ($order->getFiles() as $file) {
+			if ($file->isPublished() || $file->isNew()) continue;
+
+			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
+		}
+
+		return $originalIds;
+	}
 }

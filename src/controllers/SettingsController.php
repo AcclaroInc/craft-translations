@@ -125,7 +125,8 @@ class SettingsController extends Controller
                 if ($order) {
                     $drafts = [];
                     foreach ($order->getFiles() as $file) {
-                        $drafts[] = $file->draftId;
+                        if ($file->hasDraft())
+                            $drafts[] = $file->draftId;
                     }
                     if ($drafts) {
                         Craft::$app->queue->push(new DeleteDrafts([
@@ -208,6 +209,8 @@ class SettingsController extends Controller
 
         $settings = Translations::getInstance()->settings;
         $variables['chkDuplicateEntries'] = $settings->chkDuplicateEntries;
+        $variables['trackSourceChanges'] = $settings->trackSourceChanges;
+        $variables['trackTargetChanges'] = $settings->trackTargetChanges;
         $variables['apiLogging'] = $settings->apiLogging;
         $variables['uploadVolume'] = $settings->uploadVolume;
         $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
@@ -241,6 +244,8 @@ class SettingsController extends Controller
 
         $request = Craft::$app->getRequest();
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
+        $trackSourceChanges = $request->getParam('trackSourceChanges');
+        $trackTargetChanges = $request->getParam('trackTargetChanges');
         $apiLogging = $request->getParam('apiLogging');
         $selectedVolume = $request->getParam('uploadVolume');
         $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
@@ -254,6 +259,8 @@ class SettingsController extends Controller
 
             $settings = [
                 'chkDuplicateEntries'           => $duplicateEntries,
+                'trackSourceChanges'            => $trackSourceChanges,
+                'trackTargetChanges'            => $trackTargetChanges,
                 'apiLogging'		            => $apiLogging,
                 'uploadVolume'                  => $selectedVolume,
                 'twigSearchFilterSingleQuote'   => $twigSearchFilterSingleQuote,

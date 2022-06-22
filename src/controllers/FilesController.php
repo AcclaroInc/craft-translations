@@ -58,7 +58,6 @@ class FilesController extends Controller
         $errors = array();
 
         $orderAttributes = $order->getAttributes();
-        $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
 
         //Filename Zip Folder
         $zipName = $this->getZipName($orderAttributes);
@@ -82,7 +81,8 @@ class FilesController extends Controller
         //Iterate over each file on this order
         if ($order->files)
         {
-            foreach ($order->GetFiles() as $file)
+            $hasMisalignment = $order->isTmMisaligned(false);
+            foreach ($order->getFiles() as $file)
             {
                 // skip failed files
                 if ($file->isCanceled()) continue;
@@ -92,14 +92,14 @@ class FilesController extends Controller
                 $targetSite = $file->targetSite;
 
                 if ($element instanceof GlobalSet) {
-                    $filename = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
+                    $fileName = $file->elementId . '-' . ElementHelper::normalizeSlug($element->name) .
                         '-' . $targetSite . '.' . $fileFormat;
                 } else if ($element instanceof Asset) {
                     $assetFilename = $element->getFilename();
                     $fileInfo = pathinfo($element->getFilename());
-                    $filename = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
+                    $fileName = $file->elementId . '-' . basename($assetFilename,'.'.$fileInfo['extension']) . '-' . $targetSite . '.' . $fileFormat;
                 } else {
-                    $filename = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
+                    $fileName = $file->elementId . '-' . $element->slug . '-' . $targetSite . '.' . $fileFormat;
                 }
 
                 if ($fileFormat === Constants::FILE_FORMAT_JSON) {
@@ -110,15 +110,32 @@ class FilesController extends Controller
                     $fileContent = $file->source;
                 }
 
-                if (! $fileContent || !$zip->addFromString($filename, $fileContent)) {
-                    $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
-                    Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$filename.' to the zip: '.$zipName, 'translations' );
+                if ($order->includeTmFiles && $hasMisalignment) $fileName = "source/" . $fileName;
+
+                if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
+                    $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
+                    Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
+                }
+
+                if ($hasMisalignment) {
+                    $tmFile = $file->getTmMisalignmentFile();
+                    $fileName = $tmFile['fileName'];
+
+                    if ($order->includeTmFiles && $file->hasTmMisalignments(true)) {
+
+                        if (! $zip->addFromString("references/" . $fileName, $tmFile['fileContent'])) {
+                            $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
+                            Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
+                        }
+                    }
+
+                    $file->reference = $tmFile['reference'];
                 }
 
                 if ($file->isNew() || $file->isModified()) {
                     $file->status = Constants::FILE_STATUS_IN_PROGRESS;
-                    Translations::$plugin->fileRepository->saveFile($file);
                 }
+                Translations::$plugin->fileRepository->saveFile($file);
             }
 
             if ($order->status !== ($newStatus = Translations::$plugin->orderRepository->getNewStatus($order))) {
@@ -213,7 +230,7 @@ class FilesController extends Controller
                             $fileInfo = null;
 
                             foreach ($files as $key => $file) {
-                                if (! is_bool(strpos($file, '__MACOSX'))) {
+                                if (! is_bool(strpos($file, '__MACOSX')) || strpos($file, '/references/') > -1) {
                                     unlink($file);
 
                                     continue;
@@ -422,10 +439,88 @@ class FilesController extends Controller
         ]);
     }
 
+    /**
+     * Create Zip of Translations memory alignment files
+     */
+    public function actionCreateTmExportZip() {
+        $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
+        $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
+
+        try {
+            $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+            $orderAttributes = $order->getAttributes();
+
+            //Filename Zip Folder
+            $zipName = $this->getZipName($orderAttributes) . '_TM';
+
+            // Set destination zip
+            $zipDest = Craft::$app->path->getTempPath() . '/' . $zipName . '.' . Constants::FILE_FORMAT_ZIP;
+
+            // Create zip
+            $zip = new \ZipArchive();
+
+            // Open zip
+            if ($zip->open($zipDest, $zip::CREATE) !== true) {
+                throw new \Exception('Unable to create zip file: '.$zipDest);
+            }
+
+            //Iterate over each file on this order
+            if ($order->files) {
+                foreach ($order->getFiles() as $file) {
+                    if (! in_array($file->id, $files) || !$file->hasTmMisalignments()) continue;
+
+                    $tmFile = $file->getTmMisalignmentFile();
+                    $fileName = $tmFile['fileName'];
+                    $fileContent = $tmFile['fileContent'];
+
+                    if (! $fileContent || ! $zip->addFromString($fileName, $fileContent)) {
+                        throw new \Exception('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
+                    }
+
+                    $file->reference = $tmFile['reference'];
+                    Translations::$plugin->fileRepository->saveFile($file);
+                }
+            }
+
+            // Close zip
+            $zip->close();
+        } catch(\Exception $e) {
+            Craft::error('['. __METHOD__ .']' . $e->getMessage(), 'translations');
+            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+        }
+
+        return $this->asJson(['success' => true, 'tmFiles' => $zipDest]);
+    }
+
+    /**
+     * Send Translation memory files to translation service provider
+     */
+    public function actionSyncTmFiles() {
+        $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
+        $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+
+        //Iterate over each file on this order
+        if ($order->files) {
+            foreach ($order->getFiles() as $file) {
+                if (in_array($file->id, $files) && $file->hasTmMisalignments()) {
+                    $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
+                        $order->getTranslator()->service,
+                        $order->getTranslator()->getSettings()
+                    );
+
+                    $translationService->sendOrderReferenceFile($order, $file);
+                }
+            }
+        }
+        return $this->asJson(['success' => true]);
+    }
+
+    // Private Methods
 	/**
      * Show Flash Notifications and Errors to the translator
 	 */
-    public function showUserMessages($message, $isSuccess = false)
+    private function showUserMessages($message, $isSuccess = false)
     {
     	if ($isSuccess) {
 			Craft::$app->session->setNotice(Craft::t('app', $message));
@@ -438,7 +533,7 @@ class FilesController extends Controller
      * @param $order
      * @return string
      */
-    public function getZipName($order) {
+    private function getZipName($order) {
 
         $title = str_replace(' ', '_', $order['title']);
         $title = preg_replace('/[^A-Za-z0-9\-_]/', '', $title);
@@ -448,5 +543,4 @@ class FilesController extends Controller
 
         return $zip_name;
     }
-
 }

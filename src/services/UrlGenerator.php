@@ -55,13 +55,17 @@ class UrlGenerator
 
     public function generateFileUrl(Element $element, FileModel $file)
     {
+        /** @var \craft\services\Sites $sitesService */
+        $sitesService = Craft::$app->getSites();
+        $targetSite = $sitesService->getSiteById($file->targetSite) ?? $sitesService->getSiteById($file->sourceSite) ?? $sitesService->getPrimarySite();
+
         if ($element instanceof GlobalSet) {
             if ($file->draftId && $file->isComplete()) {
                 return Translations::$plugin->urlHelper->cpUrl('translations/globals/'.$element->handle.'/drafts/'.$file->draftId);
             }
             return preg_replace(
                 '/(\/'.Craft::$app->sites->getSiteById($element->siteId)->handle.')/',
-                '/'.Craft::$app->sites->getSiteById($file->targetSite)->handle,
+                '/'.$targetSite->handle,
                 $element->getCpEditUrl($element)
             );
         }
@@ -74,7 +78,7 @@ class UrlGenerator
             }
             return Translations::$plugin->urlHelper->url(
                 $element->getCpEditUrl($element),
-                ['site' => Craft::$app->sites->getSiteById($file->targetSite)->handle]
+                ['site' => $targetSite->handle]
             );
         }
 
@@ -83,12 +87,12 @@ class UrlGenerator
                 return Translations::$plugin->urlHelper->cpUrl('translations/assets/'.$element->id.'/drafts/'.$file->draftId);
             }
             return Translations::$plugin->urlHelper->url($element->getCpEditUrl(),
-                ['site' => Craft::$app->sites->getSiteById($file->targetSite)->handle]
+                ['site' => $targetSite->handle]
             );
         }
 
         $data = [
-            'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle,
+            'site' => $targetSite->handle,
         ];
 
         if ($file->draftId && $file->isComplete()) {

@@ -31,6 +31,7 @@ class FileRepository
         'status',
         'wordCount',
         'source',
+        'reference',
         'target',
         'previewUrl',
         'serviceFileId',
@@ -240,14 +241,14 @@ class FileRepository
      * @return bool
      * @throws \Throwable
      */
-    public function regeneratePreviewUrls($order, $previewUrls, $queue=null) {
+    public function regeneratePreviewUrls($order, $previewUrls, $files = [], $queue=null) {
         $totalElements = count($order->files);
         $currentElement = 0;
 
         $service = new RegeneratePreviewUrls();
         foreach ($order->files as $file) {
 
-            if (! $file->isComplete()) continue;
+            if (!($file->isComplete() || in_array($file->id, $files))) continue;
 
             if ($queue) {
                 $service->updateProgress($queue, $currentElement++ / $totalElements);
@@ -467,5 +468,107 @@ class FileRepository
         }
 
         return '<table class="diffTable data"><tbody>' . $mainContent . '</tbody></table>';
+    }
+
+    /**
+     * @param \acclaro\translations\models\FileModel $file
+     */
+    public function isReferenceChanged($file)
+    {
+        $currentData = $file->getTmMisalignmentFile()['reference'];
+
+        $currentData = $this->getTargetFromReference($currentData);
+
+        return md5($currentData) !== md5($this->getTargetFromReference($file->reference));
+    }
+
+    /**
+     * Extracts and returns only data for target site as data might change for source entry after
+     * update source entry.
+     *
+     * @param string $referenceData
+     * @return string
+     */
+    private function getTargetFromReference($referenceData)
+    {
+        $targetData = [];
+        $referenceData = preg_split('/[\\n]/', $referenceData);
+
+        foreach ($referenceData as $line) {
+            array_push($targetData, explode(',', $line)[2]);
+        }
+
+        return implode(',', $targetData);
+    }
+
+    /**
+     * @param \acclaro\translations\models\FileModel $file
+     */
+    public function checkTmMisalignments($file)
+    {
+        try {
+            $elementRepository = Translations::$plugin->elementRepository;
+            $element = $elementRepository->getElementById($file->elementId, $file->targetSite);
+            $source = $file->source;
+
+            if ($file->isComplete()) {
+                $element = $elementRepository->getElementByDraftId($file->draftId, $file->targetSite);
+                $source = $file->target;
+            }
+
+            // Skip incase entry doesn't exist for target site
+            if (!$element) return false;
+
+            $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
+            $converter = Translations::$plugin->elementToFileConverter;
+
+            $currentContent = $converter->convert(
+                $element,
+                Constants::FILE_FORMAT_XML,
+                [
+                    'sourceSite'    => $file->sourceSite,
+                    'targetSite'    => $file->targetSite,
+                    'wordCount'     => $wordCount,
+                    'orderId'       => $file->orderId
+                ]
+            );
+
+            $sourceContent = json_decode($converter->xmlToJson($source), true);
+            $currentContent = json_decode($converter->xmlToJson($currentContent), true);
+
+            $sourceContent = json_encode(array_values($sourceContent['content']));
+            $currentContent = json_encode(array_values($currentContent['content']));
+
+            if (md5($sourceContent) !== md5($currentContent)) {
+                return true;
+            }
+        } catch (\Exception $e) {
+            Craft::error($e, Constants::PLUGIN_HANDLE);
+        }
+
+        return false;
+    }
+
+    public function createReferenceData(array $data, $ignoreCommon = true)
+    {
+        $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
+        $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
+
+        $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
+
+        $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($data['sourceContent']), true)['content'] ?? [];
+
+        $target = Translations::$plugin->elementTranslator->toTranslationSource(
+            $data['targetElement'],
+            $data['targetElementSite']
+        );
+
+        foreach ($source as $key => $value) {
+            $targetValue = $target[$key] ?? '';
+            if ($ignoreCommon && $value === $targetValue) continue;
+            $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $targetValue);
+        }
+
+        return $tmContent;
     }
 }

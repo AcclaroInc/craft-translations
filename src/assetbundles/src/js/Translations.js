@@ -3,7 +3,7 @@
     if (typeof Craft.Translations === 'undefined') {
         Craft.Translations = {};
     }
-    
+
     /**
      * Base Translations class
      */
@@ -27,10 +27,10 @@
                 this._trackJobProgressInternal(params);
             }
         },
-        
+
         /**
-         * 
-         * @param {id, notice, url} params 
+         *
+         * @param {id, notice, url} params
          */
         _trackJobProgressInternal: function(params) {
             Craft.queueActionRequest('queue/get-job-info?dontExtendSession=1', $.proxy(function(response, textStatus) {
@@ -46,15 +46,15 @@
                                 matches = true;
                                 inQueue = true;
                             }
-                            
+
                             if ((i + 1) == Craft.cp.jobInfo.length && !inQueue) {
                                 // Job is not in queue
                                 if (this.job) {
                                     Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
-            
+
                                     if (params.url && window.location.pathname.includes('translations/orders')) {
                                         window.location.href=Craft.getUrl(params.url);
-                                    }    
+                                    }
                                 }
                             }
 
@@ -64,7 +64,7 @@
                                 if (!this.job.error) {
                                     console.log(`Translation job progress: ${Craft.cp.jobInfo[i].progress}`);
                                     // Check again after a delay
-                                    this.trackJobProgressById(true, false, params);   
+                                    this.trackJobProgressById(true, false, params);
                                 } else {
                                     console.log('Job failed');
                                     Craft.cp.displayError(Craft.t('app', `${this.job.error}`));
@@ -73,17 +73,17 @@
                         }
                     } else {
                         // Job is either completed or no jobs running
-                        if (this.job) {
+                        // if (this.job) {
                             Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
-    
+
                             if (params.url && window.location.pathname.includes('translations/orders')) {
                                 window.location.href=Craft.getUrl(params.url);
                             }
-                        }
+                        // }
                     }
                 }
             }, this));
         },
     };
-    
+
     })(jQuery);

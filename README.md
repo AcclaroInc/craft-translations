@@ -15,7 +15,7 @@ The Translations plugin provides a simple way to translate your content from sta
   *Need support for a specific plugin? [Contact us](http://www.acclaro.com/translation-services-cost/?utm_campaign=Craft%20Plugin%20Store&utm_source=Craft%20Plugin%20Store%20Listing%20-%20Third%20Party%20Plugins%20Quote&utm_medium=Listing) for a quote.*
 
 ## ⚠️ System Requirements
-- Craft CMS 3.7.14 or later.
+- Craft CMS 3.7.33 or later.
 - PHP 7.2+
 - PHP [DOM](https://docs.craftcms.com/v3/requirements.html#optional-php-extensions) Extension
 - Craft [Multi-site](https://craftcms.com/docs/3.x/sites.html) configuration

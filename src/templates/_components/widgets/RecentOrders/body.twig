@@ -17,6 +17,7 @@
                     </td>
                     <td>
                         <span class="status {{order.getStatusColour()}}"></span>{{order.getStatusLabel()}}
+                        {{ order.getTargetAlertHtml()|raw }}
                     </td>
                     <td style="text-align:right;">
                         <span class="light">

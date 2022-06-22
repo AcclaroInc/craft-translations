@@ -171,6 +171,8 @@ class DraftRepository
             }
 
             $element = Craft::$app->getElements()->getElementById($file->elementId, null, $order->sourceSite);
+            $isFileReady = $file->isReviewReady();
+
             if ($queue) {
                 $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
             }
@@ -185,16 +187,22 @@ class DraftRepository
             }
 
             try {
-                $translation_service = $order->translator->service;
-                if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
-                    $translation_service = Constants::TRANSLATOR_DEFAULT;
+                if ($isFileReady) {
+                    $translation_service = $order->translator->service;
+                    if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+                        $translation_service = Constants::TRANSLATOR_DEFAULT;
+                    }
+
+                    //Translation Service
+                    $translationService = Translations::$plugin->translatorFactory
+                        ->makeTranslationService($translation_service, $order->translator->getSettings());
+
+                    $translationService->updateIOFile($order, $file);
+
+                    $file->reference = null;
+
+                    Translations::$plugin->fileRepository->saveFile($file);
                 }
-
-                //Translation Service
-                $translationService = Translations::$plugin->translatorFactory
-                    ->makeTranslationService($translation_service, $order->translator->getSettings());
-
-                $translationService->updateIOFile($order, $file);
 
                 /**
                  * Updated applyDrafts logic to apply drafts individually v.s all at once
@@ -423,5 +431,29 @@ class DraftRepository
         $order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts applied'));
 
         Translations::$plugin->orderRepository->saveOrder($order);
+    }
+
+    /**
+     * Delete a translation draft
+     *
+     * @param int|string $draftId
+     *
+     * @return void
+     */
+    public function deleteDraft($draftId, $siteId)
+    {
+        $transaction = Craft::$app->getDb()->beginTransaction();
+
+        try {
+            $draft = $this->getDraftById($draftId, $siteId);
+
+            if ($draft) {
+                Craft::$app->getElements()->deleteElement($draft, true);
+            }
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
     }
 }

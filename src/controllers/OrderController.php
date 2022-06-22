@@ -102,6 +102,7 @@ class OrderController extends Controller
         $variables['elements'] = [];
         $variables['orderId'] = $variables['orderId'] ?? null;
         $variables['isSourceChanged'] = [];
+		$variables['isTargetChanged'] = [];
 		$variables['selectedSubnavItem'] = 'orders';
 		$variables['isDefaultTranslator'] = true;
 		$variables['elementWordCounts'] = array();
@@ -145,6 +146,9 @@ class OrderController extends Controller
             $variables['inputElements'] = $orderElements ?: [];
         }
 
+        // Check if source site is exists
+        if (!Craft::$app->getSites()->getSiteById($order->sourceSite)) throw new Exception("Source Site Does Not Exist", 404);
+
 		// Check for changes if we are adding an element
 		if ($variables['isChanged']) {
 			if ($orderTitle= Craft::$app->getRequest()->getQueryParam('title')) {
@@ -176,6 +180,14 @@ class OrderController extends Controller
 
 			if ($orderTrackChanges= Craft::$app->getRequest()->getQueryParam('trackChanges')) {
 				$order->trackChanges = $orderTrackChanges;
+			}
+
+			if ($orderTrackTargetChanges = Craft::$app->getRequest()->getQueryParam('trackTargetChanges')) {
+				$order->trackTargetChanges = $orderTrackTargetChanges;
+			}
+
+			if ($orderIncludeTmFiles = Craft::$app->getRequest()->getQueryParam('includeTmFiles')) {
+				$order->includeTmFiles = $orderIncludeTmFiles;
 			}
 		}
 
@@ -334,7 +346,11 @@ class OrderController extends Controller
 
         if ($order->trackChanges && $variables['isSubmitted']) {
             $variables['isSourceChanged'] = Translations::$plugin->orderRepository->getIsSourceChanged($order);
-        }
+		}
+
+		if ($order->trackTargetChanges && $variables['isSubmitted'] && $order->isTmMisaligned()) {
+            $variables['isTargetChanged'] = Translations::$plugin->orderRepository->getIsTargetChanged($order);
+		}
 
 		$variables['canUpdateFiles'] = $variables['orderRecentStatus'] !== Constants::ORDER_STATUS_CANCELED && $variables['orderRecentStatus'] !== Constants::ORDER_STATUS_PUBLISHED;
 
@@ -411,7 +427,9 @@ class OrderController extends Controller
             $order->tags = json_encode($orderTags ?? []);
             $order->title = Craft::$app->getRequest()->getParam('title');
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
-            $order->sourceSite = $sourceSite;
+			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
+			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
+			$order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
             if ($requestedDueDate) {
@@ -657,6 +675,8 @@ class OrderController extends Controller
 
         $newOrder->title = $data['title'] ?? '';
         $newOrder->trackChanges = $data['trackChanges'] ?? null;
+		$newOrder->trackTargetChanges = $data['trackTargetChanges'] ?? null;
+		$newOrder->includeTmFiles = $data['includeTmFiles'] ?? null;
         $newOrder->targetSites = json_encode($data['targetSites'] ?? '');
         $newOrder->elementIds = json_encode($elementIds);
         $newOrder->comments = $data['comments'] ?? '';
@@ -928,6 +948,8 @@ class OrderController extends Controller
 			$order->elementIds = json_encode($elementIds);
 			$order->targetSites = json_encode($targetSites);
 			$order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
+			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
+			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
 			$translatorService->updateOrder($order);
 
 			Craft::$app->getElements()->saveElement($order);
@@ -1271,6 +1293,8 @@ class OrderController extends Controller
             $order->tags = $orderTags ? json_encode($orderTags) : '[]';
             $order->title = $title;
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
+			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
+			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
             $order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : '[]';
 
@@ -1410,6 +1434,12 @@ class OrderController extends Controller
                         ]
                     );
 
+                    // Delete draft here so that it does not try to merge in existing draft when merged after updating
+                    // source entry in order
+                    if ($file->hasDraft()) {
+                        Translations::$plugin->draftRepository->deleteDraft($file->draftId, $file->targetSite);
+                        $file->draftId = null;
+                    }
                     $file->status = Constants::FILE_STATUS_MODIFIED;
                     Translations::$plugin->fileRepository->saveFile($file);
 

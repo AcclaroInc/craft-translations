@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.0 - 2022-06-21
+
+### Fixed
+- Missing translation draft edits after applying ([AcclaroInc/#477](https://github.com/AcclaroInc/pm-craft-translations/issues/477))
+- Duplicate resnames in exported XML ([AcclaroInc/#472](https://github.com/AcclaroInc/pm-craft-translations/issues/472))
+- Issue with duplicated blocks and overwritten values in multiple working drafts
+- Issue with localized matrix fields when order submitted with non-primary source site ([AcclaroInc/#467](https://github.com/AcclaroInc/pm-craft-translations/issues/467))
+- Duplicate "Modified" Order status (#299)
+- Acclaro orders sync issue (#334)
+- Draft deletion on Order removal
+- Draft application error with JSON and CSV formats
+- Issue with order page auto-refresh on queue job completion
+
+### Added
+- Translation memory alignment ([AcclaroInc/#442](https://github.com/AcclaroInc/pm-craft-translations/issues/442))
+- Enhanced UX for Order preview links ([AcclaroInc/#448](https://github.com/AcclaroInc/pm-craft-translations/issues/448))
+- Vizy plugin support ([AcclaroInc/#305](https://github.com/AcclaroInc/pm-craft-translations/issues/305))
+- Acclaro API `createOrder` request param `type` as `Website` ([AcclaroInc/#476](https://github.com/AcclaroInc/pm-craft-translations/issues/476))
+- Allow file actions for "Applied" Orders ([AcclaroInc/#431](https://github.com/AcclaroInc/pm-craft-translations/issues/431))
+- A confirmation warning when clearing orders from settings page
+
+### Updated
+- Craft minimum version from `3.7.14` to `3.7.33`
+
 ## 2.1.4 - 2022-03-14
 
 ### Updated

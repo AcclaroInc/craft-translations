@@ -212,7 +212,7 @@ class AcclaroApiClient
             'name' => $name,
             'comments' => $comments,
             'duedate' => $dueDate,
-            // 'clientref' => $craftOrderId,
+            'type' => Constants::ACCLARO_ORDER_TYPE,
             'delivery' => Constants::DELIVERY,
             'estwordcount' => $wordCount,
         ));
@@ -383,6 +383,26 @@ class AcclaroApiClient
     }
 
     /**
+     * Send reference file
+     *
+     * @param int|string $orderId
+     * @param string $sourceSite
+     * @param string $targetSite
+     * @param string|binary $referenceFile
+     * @return void|object
+     */
+    public function sendReferenceFile($orderId, $sourceSite, $targetSite, $referenceFile)
+    {
+        return $this->post(Constants::ACCLARO_API_SEND_REFERENCE_FILE, array(
+            'orderid' => $orderId,
+            'sourcelang' => $sourceSite,
+            'targetlang' => $targetSite,
+        ), array(
+            'file' => $referenceFile,
+        ));
+    }
+
+    /**
      * Get file status
      *
      * @param int|string $orderId
@@ -406,7 +426,8 @@ class AcclaroApiClient
     public function getFileInfo($orderId)
     {
         return $this->get(Constants::ACCLARO_API_GET_ORDER_FILES_INFO, array(
-            'orderid' => $orderId,
+            'orderid'   => $orderId,
+            'filetype'  => Constants::ACCLARO_TARGET_FILE_TYPE,
         ));
     }
 

@@ -23,24 +23,38 @@
             value: 'translations/settings/save-configuration-options',
         }) }}
 
+        <h3>{{ "General"|t('app') }}</h3>
+
         {{ forms.lightswitchField({
             first: true,
-            label: "Show duplicate Entries warnings"|t('app'),
+            label: "Enable warnings for duplicate source entries"|t('app'),
+            instructions: "Displays a warning if the source entry already exists in another order."|t('app'),
             id: 'chkDuplicateEntries',
             name: 'chkDuplicateEntries',
             on: chkDuplicateEntries,
         }) }}
 
         {{ forms.lightswitchField({
-            first: true,
-            label: "Enable Translator Logging"|t('app'),
-            id: 'apiLogging',
-            name: 'apiLogging',
-            on: apiLogging,
+            label: "Track source content changes by default"|t('app'),
+            instructions: "Enables the \"Track source content updates\" settings by default on new submission."|t('app'),
+            id: 'trackSourceChanges',
+            name: 'trackSourceChanges',
+            on: trackSourceChanges,
         }) }}
 
+        {{ forms.lightswitchField({
+            label: "Track target content changes by default"|t('app'),
+            instructions: "Enables the \"Track target content updates\" settings by default on new submission."|t('app'),
+            id: 'trackTargetChanges',
+            name: 'trackTargetChanges',
+            on: trackTargetChanges,
+        }) }}
+
+        <hr>
+        <h3>{{ "Assets"|t('app') }}</h3>
+
         {{ forms.selectField({
-            label: "Upload Volume"|t('app'),
+            label: "Upload volume"|t('app'),
             instructions: "Specify an Asset Volume to use for uploads."|t('app'),
             id: 'uploadVolume',
             name: 'uploadVolume',
@@ -49,10 +63,12 @@
             toggle: true
         }) }}
 
+        <hr>
         <h3>{{ "Static Translations"|t('app') }}</h3>
 
         {{ forms.textField({
             label: "Twig search filter (single quote)"|t('app'),
+            instructions: "Define a custom RegEx for filtering Twig strings."|t('app'),
             placeholder: "Twig search filter (single quote)"|t('app'),
             id: 'twigSearchFilterSingleQuote',
             name: 'twigSearchFilterSingleQuote',
@@ -62,6 +78,7 @@
 
         {{ forms.textField({
             label: "Twig search filter (double quote)"|t('app'),
+            instructions: "Define a custom RegEx for filtering Twig strings."|t('app'),
             placeholder: "Twig search filter (double quote)"|t('app'),
             id: 'twigSearchFilterDoubleQuote',
             name: 'twigSearchFilterDoubleQuote',
@@ -71,11 +88,24 @@
 
         {{ forms.textField({
             label: "Target String Position"|t('app'),
+            instructions: "Define a custom RegEx position for filtering Twig strings."|t('app'),
             placeholder: "Target String Position"|t('app'),
             id: 'targetStringPosition',
             name: 'targetStringPosition',
             value: targetStringPosition ?? '',
             size: '40',
+        }) }}
+
+        <hr>
+        <h3>{{ "Advanced"|t('app') }}</h3>
+
+        {{ forms.lightswitchField({
+            first: true,
+            label: "Enable debugging"|t('app'),
+            instructions: "Creates a translations log file to assist with troubleshooting."|t('app'),
+            id: 'apiLogging',
+            name: 'apiLogging',
+            on: apiLogging,
         }) }}
 
         <div class="buttons">
@@ -88,7 +118,7 @@
 
 {% js %}
     $( document ).ready(function() {
-        $('#chkDuplicateEntries, #apiLogging').change(function() {
+        $('#chkDuplicateEntries, #apiLogging, #trackSourceChanges, #trackTargetChanges').change(function() {
             $('#save-configuration').toggleClass('submit');
         });
     });

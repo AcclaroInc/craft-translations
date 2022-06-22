@@ -40,6 +40,8 @@ use acclaro\translations\assetbundles\EditDraftAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\services\job\DeleteDrafts;
 use craft\errors\MigrationException;
+use craft\events\DeleteSiteEvent;
+use craft\services\Sites;
 use yii\web\User;
 
 class Translations extends Plugin
@@ -108,6 +110,16 @@ class Translations extends Plugin
                 }
             }
         );
+
+        // Prune deleted sites translations from `translation_translations` table
+        Event::on(Sites::class, Sites::EVENT_BEFORE_DELETE_SITE, function (DeleteSiteEvent $event) {
+            Craft::debug(
+                '[' . __METHOD__ . '] Sites::EVENT_BEFORE_DELETE_SITE',
+                'translations'
+            );
+
+            $this->_onDeleteSite($event);
+        });
 
         Event::on(
             Drafts::class,
@@ -653,6 +665,13 @@ class Translations extends Plugin
                 ]));
             }
         }
+    }
+
+    private function _onDeleteSite(Event $event)
+    {
+        $siteId = $event->site->id;
+
+        self::$plugin->translationRepository->deleteTranslationForSite($siteId);
     }
 
     /**

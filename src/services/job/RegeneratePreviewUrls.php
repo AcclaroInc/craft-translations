@@ -18,17 +18,18 @@ class RegeneratePreviewUrls extends BaseJob
 {
     public $order;
     public $filePreviewUrls;
+    public $files;
 
     public function execute($queue)
     {
 
-        Translations::$plugin->fileRepository->regeneratePreviewUrls($this->order, $this->filePreviewUrls, $queue);
+        Translations::$plugin->fileRepository->regeneratePreviewUrls($this->order, $this->filePreviewUrls, $this->files, $queue);
     }
 
     public function updateProgress($queue, $progress) {
         $this->setProgress($queue, $progress);
     }
-    
+
     protected function defaultDescription()
     {
         return Constants::JOB_REGENERATING_PREVIEW_URL;

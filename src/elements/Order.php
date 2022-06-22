@@ -78,8 +78,12 @@ class Order extends Element
     public $wordCount;
 
     public $elementIds;
-    
+
     public $trackChanges;
+
+	public $trackTargetChanges;
+
+    public $includeTmFiles;
 
     public $asynchronousPublishing;
 
@@ -195,16 +199,6 @@ class Order extends Element
                 'criteria' => [
                     'status' => [
                         Constants::ORDER_STATUS_NEW
-                    ]
-                ],
-                'defaultSort' => ['dateOrdered', 'desc']
-            ],
-            [
-                'key' => 'modified',
-                'label' => Translations::$plugin->translator->translate('app', 'Modified'),
-                'criteria' => [
-                    'status' => [
-                        Constants::ORDER_STATUS_MODIFIED
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -368,7 +362,13 @@ class Order extends Element
                 return sprintf('<a href="%s" target="_blank">#%s</a>', $translationService->getOrderUrl($this), $value);
 
             case 'status':
-                return "<span class='status ". $this->getStatusColour() ."'></span>".Translations::$plugin->translator->translate('app', $this->getStatusLabel());
+                $html = sprintf(
+                    "<span class='status %s'></span>%s",
+                    $this->getStatusColour(),
+                    Translations::$plugin->translator->translate('app', $this->getStatusLabel())
+                ) . $this->getTargetAlertHtml();
+
+                return $html;
             case 'orderDueDate':
             case 'requestedDueDate':
             case 'dateOrdered':
@@ -426,6 +426,15 @@ class Order extends Element
             'targetSites'   => $this->string()->notNull()->defaultValue(''),
             'status' => $this->enum('values', Constants::ORDER_STATUSES)->defaultValue(Constants::ORDER_STATUS_PENDING),
         ];
+    }
+
+    public function getTargetAlertHtml() {
+        $html = '';
+        if (!$this->isPublished() && $this->isTmMisaligned() && $this->trackTargetChanges) {
+            $html .= '<span class="nowrap pl-5"><span class="warning order-warning font-size-15" data-icon="alert"> This order contains misaligned content that might affect translation memory accuracy. </span></span>';
+        }
+
+        return $html;
     }
 
     public function rules()
@@ -493,10 +502,22 @@ class Order extends Element
      */
     public function hasCompletedFiles()
     {
-		$files = Translations::$plugin->fileRepository->getFiles($this->id);
+        foreach ($this->getFiles() as $file) {
+			if ($file->isComplete() || $file->isPublished()) return true;
+		}
 
-        foreach ($files as $file) {
-			if ($file->isComplete() || $file->isReviewReady() || $file->isPublished()) return true;
+		return false;
+    }
+
+    /**
+     * Used to enable or disable sekect all checkbox in files tab
+     *
+     * @return bool
+     */
+    public function canEnableFilesCheckboxes()
+    {
+        foreach ($this->getFiles() as $file) {
+			if ($file->isInProgress() || $file->isComplete() || $file->isReviewReady() || $file->isPublished()) return true;
 		}
 
 		return false;
@@ -605,6 +626,17 @@ class Order extends Element
         return $this->statusLabel;
     }
 
+    public function isTmMisaligned($ignoreNew = true)
+    {
+        foreach ($this->getFiles() as $file) {
+            if ($file->isPublished() || ($ignoreNew && $file->isNew())) continue;
+
+            if ($file->hasTmMisalignments(!$ignoreNew)) return true;
+        }
+
+        return false;
+    }
+
     public function getStatusColour()
     {
         switch ($this->status) {
@@ -637,6 +669,38 @@ class Order extends Element
         $this->statusColour = $this->statusColour ?? $statusColour;
         return $this->statusColour;
     }
+
+	public function hasDefaultTranslator()
+	{
+		$response = false;
+
+		if ($translator = $this->getTranslator()) {
+			$response = $translator->service === Constants::TRANSLATOR_DEFAULT;
+		}
+
+		return $response;
+	}
+
+    public function shouldTrackSourceContent()
+    {
+        if ($this->trackChanges === NULL) return Translations::getInstance()->settings->trackSourceChanges;
+
+        return (bool) $this->trackChanges;
+    }
+
+    public function shouldTrackTargetContent()
+    {
+        if ($this->trackTargetChanges === NULL) return Translations::getInstance()->settings->trackTargetChanges;
+
+        return (bool) $this->trackTargetChanges;
+    }
+
+	public function isExportImportAllowed()
+	{
+		if ($this->isPublished() && !$this->hasDefaultTranslator()) return false;
+
+		return !$this->isPending() && !$this->isFailed();
+	}
 
     public function isNew()
     {
@@ -683,6 +747,11 @@ class Order extends Element
         return $this->status === Constants::ORDER_STATUS_PUBLISHED;
     }
 
+    public function shouldIncludeTmFiles()
+    {
+        return (bool) $this->includeTmFiles;
+    }
+
     /**
      * Events
      */
@@ -719,6 +788,8 @@ class Order extends Element
         $record->elementIds =  $this->elementIds;
         $record->tags =  $this->tags;
         $record->trackChanges =  $this->trackChanges;
+		$record->trackTargetChanges =  $this->trackTargetChanges;
+		$record->includeTmFiles =  $this->includeTmFiles;
 
         $record->save(false);
 

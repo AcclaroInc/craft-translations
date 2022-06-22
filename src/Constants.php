@@ -4,8 +4,8 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.3.7';
-    const CRAFT_MIN_VERSION = '3.7.9';
+    const PLUGIN_SCHEMA_VERSION = '1.3.8';
+    const CRAFT_MIN_VERSION = '3.7.33';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
 
@@ -82,12 +82,14 @@ class Constants
     const DELIVERY      = 'craftcms';
     const DEFAULT_TAG   = 'CraftCMS';
 
-    const ORDER_TAG_GROUP_HANDLE = "craftTranslations";
+    const ORDER_TAG_GROUP_HANDLE    = "craftTranslations";
+    const ACCLARO_TARGET_FILE_TYPE  = 'target';
 
     // Acclaro Order Comments
     const ACCLARO_FILE_NEW      = 'NEW FILE';
     const ACCLARO_FILE_CANCEL   = 'CANCEL FILE';
     const ACCLARO_ORDER_CANCEL  = 'CANCEL ORDER';
+    const ACCLARO_ORDER_TYPE    = 'Website';
 
     const FILE_STATUSES = [
         self::FILE_STATUS_NEW,
@@ -160,6 +162,7 @@ class Constants
     const NESTED_FIELD_TYPES = [
         'craft\fields\Matrix',
         'craft\fields\Assets',
+		'verbb\vizy\fields\VizyField',
         'verbb\supertable\fields\SuperTableField',
         'benf\neo\Field'
     ];
@@ -198,6 +201,7 @@ class Constants
     const ACCLARO_API_REQUEST_ORDER_CALLBACK    = 'orders/{orderid}/callback';
 
     const ACCLARO_API_SEND_SOURCE_FILE      = 'orders/{orderid}/files';
+    const ACCLARO_API_SEND_REFERENCE_FILE   = 'orders/{orderid}/reference-file';
     const ACCLARO_API_GET_ORDER_FILES_INFO  = 'orders/{orderid}/files-info';
     const ACCLARO_API_GET_FILE              = 'orders/{orderid}/files/{fileid}';
     const ACCLARO_API_GET_FILE_STATUS       = 'orders/{orderid}/files/{fileid}/status';
@@ -248,6 +252,7 @@ class Constants
         'craft\fields\MultiSelect',
         'craft\fields\RadioButtons',
         'benf\neo\Field',
+		'verbb\vizy\fields\VizyField',
         'typedlinkfield\fields\LinkField',
         'craft\redactor\Field',
         'fruitstudios\linkit\fields\LinkitField',

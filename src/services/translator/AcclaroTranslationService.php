@@ -273,6 +273,39 @@ class AcclaroTranslationService implements TranslationServiceInterface
     }
 
     /**
+     * @param \acclaro\translations\models\FileModel $file
+     */
+    public function sendOrderReferenceFile($order, $file) {
+        $tempPath = Craft::$app->path->getTempPath();
+        $acclaroApiClient = $this->acclaroApiClient;
+
+        if ($file) {
+            $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
+            $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
+
+            $tmFile = $file->getTmMisalignmentFile();
+            $path = $tempPath .'-'. $tmFile['fileName'];
+
+            $stream = fopen($path, 'w+');
+
+            fwrite($stream, $tmFile['fileContent']);
+
+            $acclaroApiClient->sendReferenceFile(
+                $order->serviceOrderId,
+                $sourceSite,
+                $targetSite,
+                $path
+            );
+
+            $file->reference = $tmFile['reference'];
+            Translations::$plugin->fileRepository->saveFile($file);
+
+            fclose($stream);
+            unlink($path);
+        }
+    }
+
+    /**
      * Cancel an Acclaro order.
      *
      * @return void
