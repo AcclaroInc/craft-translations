@@ -227,6 +227,11 @@ class FileModel extends Model
     {
         if ($this->isModified() || $this->isPublished()) return false;
 
+        // Reference or miss alignment can only be check if source entry exists in given target site
+        if (!Craft::$app->elements->getElementById($this->elementId, null, $this->targetSite)) {
+            return false;
+        }
+
         if ($this->reference && !$ignoreReference) {
             return $this->_service->isReferenceChanged($this);
         }
