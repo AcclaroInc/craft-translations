@@ -185,7 +185,7 @@ class ImportFiles extends BaseJob
             return $file->isModified() ? false : '';
         }
 
-        if ($file->isComplete()) {
+        if ($file->isComplete() || $file->isPublished()) {
             $file->reference = null;
         }
 
@@ -321,7 +321,7 @@ class ImportFiles extends BaseJob
             return $file->isModified() ? false : '';
         }
 
-        if ($file->isComplete()) {
+        if ($file->isComplete() || $file->isPublished()) {
             $file->reference = null;
         }
 
@@ -428,7 +428,7 @@ class ImportFiles extends BaseJob
             return $file->isModified() ? false : '';
         }
 
-        if ($file->isComplete()) {
+        if ($file->isComplete() || $file->isPublished()) {
             $file->reference = null;
         }
 
