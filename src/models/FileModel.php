@@ -236,7 +236,11 @@ class FileModel extends Model
             return $this->_service->isReferenceChanged($this);
         }
 
-        return $this->_service->checkTmMisalignments($this);
+        if ($this->isNew() || $this->isComplete()) {
+            return $this->_service->checkTmMisalignments($this);
+        }
+
+        return false;
     }
 
     public function getTmMisalignmentFile()
