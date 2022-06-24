@@ -117,7 +117,8 @@ class FilesController extends Controller
                     Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
                 }
 
-                if ($hasMisalignment) {
+                /** Check if entry exists in target site for reference comparison */
+                if ($hasMisalignment && Translations::$plugin->elementRepository->getElementById($file->elementId, $file->targetSite)) {
                     $tmFile = $file->getTmMisalignmentFile();
                     $fileName = $tmFile['fileName'];
 
