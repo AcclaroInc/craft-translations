@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.1 - 2022-06-24
+
+### Fixed
+
+- TM alignment error parsing special characters ([AcclaroInc/#483](https://github.com/AcclaroInc/pm-craft-translations/issues/483))
+- Track target content notice bug ([AcclaroInc/#484](https://github.com/AcclaroInc/pm-craft-translations/issues/484))
+- TM alignment file export bug ([AcclaroInc/485](https://github.com/AcclaroInc/pm-craft-translations/issues/485))
+
+### Updated
+
+- `craftcms/cms` minimum version from `3.7.33` to `3.7.36` due to dependency vulnerabilities
+- `guzzlehttp/guzzle` minimum version from `6.5.7` to `6.5.8` due to dependency vulnerabilities
+
 ## 2.2.0 - 2022-06-21
 
 ### Fixed
