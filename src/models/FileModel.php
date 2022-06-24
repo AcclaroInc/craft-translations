@@ -225,8 +225,6 @@ class FileModel extends Model
 
     public function hasTmMisalignments($ignoreReference = false)
     {
-        if ($this->isModified() || $this->isPublished()) return false;
-
         // Reference or miss alignment can only be check if source entry exists in given target site
         if (!Craft::$app->elements->getElementById($this->elementId, null, $this->targetSite)) {
             return false;
@@ -236,7 +234,7 @@ class FileModel extends Model
             return $this->_service->isReferenceChanged($this);
         }
 
-        if ($this->isNew() || $this->isComplete()) {
+        if ($ignoreReference || $this->isNew() || $this->isComplete()) {
             return $this->_service->checkTmMisalignments($this);
         }
 
