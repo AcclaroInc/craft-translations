@@ -82,7 +82,8 @@ class Constants
     const DELIVERY      = 'craftcms';
     const DEFAULT_TAG   = 'CraftCMS';
 
-    const ORDER_TAG_GROUP_HANDLE = "craftTranslations";
+    const ORDER_TAG_GROUP_HANDLE    = "craftTranslations";
+    const ACCLARO_TARGET_FILE_TYPE  = 'target';
 
     // Acclaro Order Comments
     const ACCLARO_FILE_NEW      = 'NEW FILE';

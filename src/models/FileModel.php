@@ -200,7 +200,7 @@ class FileModel extends Model
 	public function hasSourceTargetDiff()
 	{
 		$hasDiff = false;
-		if ($this->isReviewReady() || $this->isComplete() || $this->isPublished()) {
+		if (!empty($this->target) && ($this->isReviewReady() || $this->isComplete() || $this->isPublished())) {
 			$hasDiff = (bool) Translations::$plugin->fileRepository->getSourceTargetDifferences(
 				$this->source, $this->target);
 		}
@@ -226,11 +226,20 @@ class FileModel extends Model
 
     public function hasTmMisalignments($ignoreReference = false)
     {
-        if ($this->reference !== null) {
-            return $ignoreReference ?: $this->_service->isReferenceChanged($this);
+        // Reference or miss alignment can only be check if source entry exists in given target site
+        if (!Craft::$app->elements->getElementById($this->elementId, null, $this->targetSite)) {
+            return false;
         }
 
-        return $this->_service->hasTmMisalignments($this);
+        if ($this->reference && !$ignoreReference) {
+            return $this->_service->isReferenceChanged($this);
+        }
+
+        if ($ignoreReference || $this->isNew() || $this->isComplete()) {
+            return $this->_service->checkTmMisalignments($this);
+        }
+
+        return false;
     }
 
     public function getTmMisalignmentFile()
@@ -267,11 +276,11 @@ class FileModel extends Model
             'targetElement' => $targetElement,
             'targetElementSite' => $targetSite
         ];
-        $fileContent = Translations::$plugin->elementToFileConverter->createTmFileContent($TmData);
 
         return [
             'fileName' => $filename,
-            'fileContent' => $fileContent
+            'fileContent' => Translations::$plugin->fileRepository->createReferenceData($TmData),
+            'reference' => Translations::$plugin->fileRepository->createReferenceData($TmData, false),
         ];
     }
 }

@@ -11,34 +11,37 @@
 namespace acclaro\translations;
 
 use Craft;
-use craft\events\RegisterUserPermissionsEvent;
-use craft\services\UserPermissions;
+use yii\web\User;
 use yii\base\Event;
 use craft\base\Plugin;
 use craft\web\UrlManager;
+use craft\services\Sites;
 use craft\elements\Entry;
+use craft\services\Drafts;
 use craft\services\Plugins;
 use craft\events\ModelEvent;
 use craft\helpers\UrlHelper;
 use craft\events\DraftEvent;
 use craft\services\Elements;
 use craft\events\PluginEvent;
-use craft\services\Drafts;
+use craft\services\UserPermissions;
+use craft\events\DeleteSiteEvent;
+use craft\events\DeleteElementEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterComponentTypesEvent;
-use craft\events\DeleteElementEvent;
+use craft\events\RegisterUserPermissionsEvent;
+use craft\console\Application as ConsoleApplication;
+
 use acclaro\translations\Constants;
 use acclaro\translations\services\App;
 use acclaro\translations\elements\Order;
 use acclaro\translations\base\PluginTrait;
-use craft\console\Application as ConsoleApplication;
 use acclaro\translations\assetbundles\EntryAssets;
 use acclaro\translations\assetbundles\CategoryAssets;
 use acclaro\translations\assetbundles\Assets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\services\job\DeleteDrafts;
-use yii\web\User;
 
 class Translations extends Plugin
 {
@@ -100,6 +103,16 @@ class Translations extends Plugin
                 }
             }
         );
+
+        // Prune deleted sites translations from `translation_translations` table
+        Event::on(Sites::class, Sites::EVENT_BEFORE_DELETE_SITE, function (DeleteSiteEvent $event) {
+            Craft::debug(
+                '[' . __METHOD__ . '] Sites::EVENT_BEFORE_DELETE_SITE',
+                'translations'
+            );
+
+            $this->_onDeleteSite($event);
+        });
 
         Event::on(
             Drafts::class,
@@ -616,6 +629,13 @@ class Translations extends Plugin
                 ]));
             }
         }
+    }
+
+    private function _onDeleteSite(Event $event)
+    {
+        $siteId = $event->site->id;
+
+        self::$plugin->translationRepository->deleteTranslationForSite($siteId);
     }
 
     /**

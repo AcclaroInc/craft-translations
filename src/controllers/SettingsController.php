@@ -125,7 +125,8 @@ class SettingsController extends Controller
                 if ($order) {
                     $drafts = [];
                     foreach ($order->getFiles() as $file) {
-                        $drafts[] = $file->draftId;
+                        if ($file->hasDraft())
+                            $drafts[] = $file->draftId;
                     }
                     if ($drafts) {
                         Craft::$app->queue->push(new DeleteDrafts([

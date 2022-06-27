@@ -54,8 +54,12 @@ class UrlGenerator
 
     public function generateFileUrl(Element $element, FileModel $file)
     {
+        /** @var \craft\services\Sites $sitesService */
+        $sitesService = Craft::$app->getSites();
+        $targetSite = $sitesService->getSiteById($file->targetSite) ?? $sitesService->getSiteById($file->sourceSite) ?? $sitesService->getPrimarySite();
+
         $data = [
-            'site' => Craft::$app->sites->getSiteById($file->targetSite)->handle,
+            'site' => $targetSite->handle,
         ];
 
         if ($element instanceof GlobalSet) {
@@ -65,7 +69,7 @@ class UrlGenerator
             }
             return preg_replace(
                 '/(\/'.Craft::$app->sites->getSiteById($element->siteId)->handle.')/',
-                '/'.Craft::$app->sites->getSiteById($file->targetSite)->handle,
+                '/'.$targetSite->handle,
                 $element->getCpEditUrl($element)
             );
         }
@@ -76,7 +80,7 @@ class UrlGenerator
                 return Translations::$plugin->urlHelper->cpUrl($url);
             }
             return Translations::$plugin->urlHelper->url($element->getCpEditUrl(),
-                ['site' => Craft::$app->sites->getSiteById($file->targetSite)->handle]
+                ['site' => $targetSite->handle]
             );
         }
 

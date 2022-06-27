@@ -490,7 +490,7 @@ class FileRepository
      */
     public function isReferenceChanged($file)
     {
-        $currentData = $file->getTmMisalignmentFile()['fileContent'];
+        $currentData = $file->getTmMisalignmentFile()['reference'];
 
         return md5($currentData) !== md5($file->reference);
     }
@@ -498,7 +498,7 @@ class FileRepository
     /**
      * @param \acclaro\translations\models\FileModel $file
      */
-    public function hasTmMisalignments($file)
+    public function checkTmMisalignments($file)
     {
         try {
             $element = $file->getElement();
@@ -565,5 +565,35 @@ class FileRepository
         }
 
         return $draft;
+    }
+
+    public function createReferenceData(array $data, $ignoreCommon = true)
+    {
+        $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
+        $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
+
+        $tmContent = [[$targetLanguage]];
+
+        if ($ignoreCommon)
+            $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
+
+        $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($data['sourceContent']), true)['content'] ?? [];
+
+        $target = Translations::$plugin->elementTranslator->toTranslationSource(
+            $data['targetElement'],
+            $data['targetElementSite']
+        );
+
+        foreach ($source as $key => $value) {
+            $targetValue = $target[$key] ?? '';
+            if ($ignoreCommon) {
+                if ($value !== $targetValue)
+                    $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $targetValue);
+            } else {
+                $tmContent[] = [$targetValue];
+            }
+        }
+
+        return $ignoreCommon ? $tmContent : json_encode($tmContent);
     }
 }

@@ -26,7 +26,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         $blocks = $element->getFieldValue($field->handle)->all();
 
         if ($blocks) {
-            
+
             $new = 0;
             foreach ($blocks as $block) {
                 $blockId = sprintf('new%s', ++$new);
@@ -34,7 +34,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
 
                 foreach ($blockSource as $key => $value) {
                     $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
-                    
+
                     $source[$key] = $value;
                 }
             }
@@ -61,7 +61,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         );
 
         foreach ($blocks as $i => $block) {
-            $blockId = $block->id;
+            $blockId = $block->id ?? sprintf('new%s', ++$i);
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->enabled,
@@ -77,28 +77,33 @@ class MatrixFieldTranslator extends GenericFieldTranslator
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
     {
         $fieldHandle = $field->handle;
-        
+
         $blocks = $element->getFieldValue($fieldHandle)->all();
-        
+
         $post = array(
             $fieldHandle => array(),
         );
-        
+
         $new = 0;
         foreach ($blocks as $i => $block) {
-            $blockId = $block->id;
             $i = sprintf('new%s', ++$new);
+            /**
+             * Block id changes for localised block so use $i and using same for non localised blocks merges other
+             * sites non localised block to non localised block.
+             */
+            $blockId = $field->getIsTranslatable() ? $i : $block->id;
             $blockData = isset($fieldData[$i]) ? $fieldData[$i] : array();
 
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
+                'collapsed'         => $block->getAttributes()['collapsed'],
                 'enabledForSite'    => isset($block->getAttributes()['enabledForSite']) ? $block->getAttributes()['enabledForSite'] : null,
                 'siteId'            => $targetSite,
                 'fields'            => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceSite, $targetSite, $blockData, true),
             );
         }
-        
+
         return $post;
     }
 

@@ -223,6 +223,10 @@ class DraftRepository
                         ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, $order->translator->getSettings());
 
                     $translationService->updateIOFile($order, $file);
+
+                    $file->reference = null;
+
+                    Translations::$plugin->fileRepository->saveFile($file);
                 }
 
                 /**
@@ -292,7 +296,6 @@ class DraftRepository
             $file->draftId = $draft->draftId;
             $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
             $file->status = Constants::FILE_STATUS_COMPLETE;
-            $file->reference = null;
 
             Translations::$plugin->fileRepository->saveFile($file);
 

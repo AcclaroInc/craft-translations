@@ -84,13 +84,15 @@
 							<td>
 								<table>
 									<tr>
-										<td>
-											{% if siteObjects[file.targetSite] is defined %}
+										{% if siteObjects[file.targetSite] is defined %}
+											<td>
 												{{siteObjects[file.targetSite].name}} ({{ siteObjects[file.targetSite].language }})
-											{% else %}
+											</td>
+										{% else %}
+											<td style="color:red;">
 												{{ "Deleted" }}
-											{% endif %}
-										</td>
+											</td>
+										{% endif %}
 									</tr>
 								</table>
 							</td>

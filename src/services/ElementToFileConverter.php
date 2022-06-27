@@ -377,32 +377,4 @@ class ElementToFileConverter
 
         return $headers."\n".$content;
     }
-
-    /**
-     * Create a csv file for Translations memory alignments
-     *
-     * @var array $data
-     * @return string
-     */
-    public function createTmFileContent($data) {
-        $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
-        $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
-
-        $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
-
-        $source = json_decode($this->xmlToJson($data['sourceContent']), true)['content'] ?? [];
-
-        $target = Translations::$plugin->elementTranslator->toTranslationSource(
-            $data['targetElement'],
-            $data['targetElementSite']
-        );
-
-        foreach ($source as $key => $value) {
-            $targetValue = $target[$key] ?? '';
-            if ($value !== $targetValue)
-                $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $targetValue);
-        }
-
-        return $tmContent;
-    }
 }
