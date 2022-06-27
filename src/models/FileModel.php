@@ -216,7 +216,8 @@ class FileModel extends Model
             $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
 		}
 
-        if ($element->getIsDraft()) {
+        /** Check element as an entry could have been deleted */
+        if ($element && $element->getIsDraft()) {
 			$element = $element->getCanonical();
 		}
 

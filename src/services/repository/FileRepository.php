@@ -548,9 +548,7 @@ class FileRepository
     {
         $draft = null;
 
-        if ($file->draftId) {
-            $element = $file->getElement();
-
+        if ($file->draftId && $element = $file->getElement()) {
             switch (get_class($element)) {
                 case GlobalSet::class:
                     $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
