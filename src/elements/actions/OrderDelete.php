@@ -92,11 +92,6 @@ class OrderDelete extends Delete
                                 $draft = $elementRepository->getDraftById($file->draftId);
                                 $elementRepository->deleteDraft($draft);
                                 break;
-                            case ($element instanceof Category):
-                                $elementRepository = Translations::$plugin->categoryDraftRepository;
-                                $draft = $elementRepository->getDraftById($file->draftId);
-                                $elementRepository->deleteDraft($draft);
-                                break;
                             case ($element instanceof Asset):
                                 $elementRepository = Translations::$plugin->assetDraftRepository;
                                 $draft = $elementRepository->getDraftById($file->draftId);

@@ -514,6 +514,10 @@ class OrderRepository
 
                 try {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+
+                    /** Skip in case the source entry is deleted */
+                    if (! $element) throw new Exception('Source entry not found');
+
                     $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
                     $converter = Translations::$plugin->elementToFileConverter;
 

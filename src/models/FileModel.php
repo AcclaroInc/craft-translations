@@ -188,6 +188,13 @@ class FileModel extends Model
 		return 'Not Found!';
 	}
 
+    public function hasPreview()
+    {
+        $element = $this->getElement();
+
+        return $element instanceof (Constants::CLASS_ENTRY) || $element instanceof (Constants::CLASS_CATEGORY);
+    }
+
 	public function getPreviewUrl()
 	{
         $previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($this->getElement(), $this);

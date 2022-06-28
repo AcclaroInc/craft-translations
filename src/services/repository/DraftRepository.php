@@ -280,7 +280,7 @@ class DraftRepository
             return false;
         }
 
-        if ($draft instanceof GlobalSet || $draft instanceof Category || $draft instanceof Asset) {
+        if (!$file->hasPreview()) {
             $targetSite = $draft->site;
         } else {
             $targetSite = $draft->siteId;

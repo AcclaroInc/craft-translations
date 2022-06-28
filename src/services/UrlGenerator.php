@@ -96,7 +96,7 @@ class UrlGenerator
     public function generateFileWebUrl(Element $element, FileModel $file)
     {
         if ($file->isPublished()) {
-            if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
+            if (!$file->hasPreview()) {
                 return '';
             }
 
@@ -113,19 +113,19 @@ class UrlGenerator
 
     public function generateElementPreviewUrl(Element $element, $siteId = null)
     {
-        if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
+        if ($element instanceof GlobalSet || $element instanceof Asset) {
             return '';
         }
 
         $className = get_class($element);
 
-        if ($className === Entry::class && !$element->getIsDraft()) {
+        if (($className === Entry::class || $className === Category::class) && !$element->getIsDraft()) {
             $previewUrl = $element->url;
         } else {
             $route = [
                 'preview/preview', [
                     'elementType' => $className,
-                    'sourceId' => $element->getCanonicalId(),
+                    'canonicalId' => $element->getCanonicalId(),
                     'siteId' => $siteId ? $siteId : $element->siteId,
                     'draftId' => $element->draftId,
                     'revisionId' => $element->revisionId

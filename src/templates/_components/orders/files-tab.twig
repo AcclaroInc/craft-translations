@@ -62,7 +62,7 @@
 											</a>
 											{% set sourceUpdated = file.elementId in isSourceChanged %}
 											{% set targetUpdated = order.trackTargetChanges and file.hasTmMisAlignments and not file.isNew and not file.isModified %}
-											{% if element.className == constant('acclaro\\translations\\Constants::CLASS_ENTRY') %}
+											{% if file.hasPreview %}
 												<a href="{{ file.previewUrl }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 											{% endif %}
 											{% if canUpdateFiles and not file.isPublished and (sourceUpdated or targetUpdated) %}
