@@ -77,11 +77,17 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
-        if ($order->isCanceled()) return;
+        if ($order->isCanceled()) {
+            $error = sprintf('Can not update canceled order. OrderId: %s', $order->id);
+            Craft::error($error, Constants::PLUGIN_HANDLE);
+            return;
+        }
 
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
         if (empty($orderResponse->status)) {
+            $error = sprintf('Empty order response from acclaro. OrderId: %s', $order->id);
+            Craft::error($error, Constants::PLUGIN_HANDLE);
             return;
         }
 
@@ -121,11 +127,17 @@ class AcclaroTranslationService implements TranslationServiceInterface
     public function updateFile(Order $order, FileModel $file)
     {
         try {
-            if ($file->isCanceled()) return;
+            if ($file->isCanceled()) {
+                $error = sprintf('Can not update canceled file. FileId: %s', $file->id);
+                Craft::error($error, Constants::PLUGIN_HANDLE);
+                return;
+            }
 
             $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
 
             if (!is_array($fileInfoResponse)) {
+                $error = sprintf('Invalid file Info from acclaro. FileId: %s', $file->id);
+                Craft::error($error, Constants::PLUGIN_HANDLE);
                 return;
             }
             // find the matching file
@@ -137,6 +149,8 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             /** @var object $fileInfo */
             if (empty($fileInfo->targetfile)) {
+                $error = sprintf('No target file in response from acclaro. FileId: %s', $file->id);
+                Craft::error($error, Constants::PLUGIN_HANDLE);
                 return;
             }
 
