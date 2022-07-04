@@ -144,7 +144,8 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
 
-                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($draft, $sourceSite, $targetSite, $targetData);
+                /** Use source entry as first argument as the draft in target site might have different block structure as compared to source leading into missing some blocks */
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
                 $draft->setFieldValues($post);
                 $draft->siteId = $targetSite;
 
