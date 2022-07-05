@@ -4,7 +4,7 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.3.8';
+    const PLUGIN_SCHEMA_VERSION = '1.3.9';
     const CRAFT_MIN_VERSION = '3.7.33';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
@@ -83,7 +83,7 @@ class Constants
     const DEFAULT_TAG   = 'CraftCMS';
 
     const ORDER_TAG_GROUP_HANDLE    = "craftTranslations";
-    const ACCLARO_TARGET_FILE_TYPE  = 'target';
+    const ACCLARO_SOURCE_FILE_TYPE  = 'source';
 
     // Acclaro Order Comments
     const ACCLARO_FILE_NEW      = 'NEW FILE';
