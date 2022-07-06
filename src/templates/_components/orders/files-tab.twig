@@ -62,6 +62,12 @@
 											</a>
 											{% set sourceUpdated = file.elementId in isSourceChanged %}
 											{% set targetUpdated = order.trackTargetChanges and file.hasTmMisAlignments and not file.isNew and not file.isModified %}
+
+											{# Ignore target changes for api order that are completed #}
+											{% if not order.hasDefaultTranslator and (order.isReviewReady or order.isComplete or order.isPublished) %}
+												{% set targetUpdated = false %}
+											{% endif %}
+
 											{% if file.hasPreview %}
 												<a href="{{ file.previewUrl }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 											{% endif %}
