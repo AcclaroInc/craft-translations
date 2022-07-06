@@ -83,9 +83,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             case $element instanceof Asset:
                 $elementRepository = Translations::$plugin->assetDraftRepository;
                 break;
-            case $element instanceof Category:
-                $elementRepository = Translations::$plugin->categoryRepository;
-                break;
             case $element instanceof GlobalSet:
                 $elementRepository = Translations::$plugin->globalSetDraftRepository;
                 break;
