@@ -84,7 +84,7 @@ class Install extends Migration
                     'source'            => $this->longText(),
                     'reference'         => $this->longText(),
                     'target'            => $this->longText(),
-                    'previewUrl'        => $this->string()->defaultValue(''),
+                    'previewUrl'        => $this->text(),
                     'serviceFileId'     => $this->string()->defaultValue(''),
                     'dateCreated'       => $this->dateTime()->notNull(),
                     'dateUpdated'       => $this->dateTime()->notNull(),
