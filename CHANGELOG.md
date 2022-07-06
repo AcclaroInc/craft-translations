@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.2 - 2022-07-06
+
+### Fixed
+- An issue where order fails to open when `previewUrl` length exceeds 255 chars. (#341) 
+
+### Updated
+- Removed the use of `filetype` param in API order sync call.
+
 ## 2.2.1 - 2022-06-24
 
 ### Fixed

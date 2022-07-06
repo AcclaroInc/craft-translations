@@ -426,8 +426,7 @@ class AcclaroApiClient
     public function getFileInfo($orderId)
     {
         return $this->get(Constants::ACCLARO_API_GET_ORDER_FILES_INFO, array(
-            'orderid'   => $orderId,
-            'filetype'  => Constants::ACCLARO_TARGET_FILE_TYPE,
+            'orderid'   => $orderId
         ));
     }
 

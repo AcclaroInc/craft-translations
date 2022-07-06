@@ -137,6 +137,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             /** @var object $fileInfo */
             if (empty($fileInfo->targetfile)) {
+                if ($fileInfo->filetype == Constants::ACCLARO_SOURCE_FILE_TYPE) {
+                    Craft::error('[' . __METHOD__ . '] target file missing for fileId: ' . $file->id , 'translations');
+                }
                 return;
             }
 
