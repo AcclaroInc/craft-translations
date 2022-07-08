@@ -553,6 +553,9 @@ class FileRepository
                 case GlobalSet::class:
                     $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
                     break;
+                case Category::class:
+                    $draft = Translations::$plugin->categoryRepository->getDraftById($file->draftId, $file->targetSite);
+                    break;
                 case Asset::class:
                     $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
                     break;

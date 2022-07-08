@@ -47,6 +47,11 @@ class App extends Component
     public $translationRepository;
 
     /**
+     * @var repository\CategoryRepository
+     */
+    public $categoryRepository;
+
+    /**
      * @var repository\AssetDraftRepository
      */
     public $assetDraftRepository;
@@ -169,6 +174,7 @@ class App extends Component
         $this->translator = new Translator();
         $this->elementCloner = new ElementCloner();
         $this->translationRepository = new repository\TranslationRepository();
+        $this->categoryRepository = new repository\CategoryRepository();
         $this->assetDraftRepository = new repository\AssetDraftRepository();
         $this->tagRepository = new repository\TagRepository();
         $this->draftRepository = new repository\DraftRepository();

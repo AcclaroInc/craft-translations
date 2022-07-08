@@ -487,6 +487,8 @@ class OrderRepository
 
         if ($element instanceof GlobalSet) {
             $draftElement = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+        } else if ($element instanceof Category) {
+            $draftElement = Translations::$plugin->categoryRepository->getDraftById($file->draftId, $file->targetSite);
         } else if ($element instanceof Asset) {
             $draftElement = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
         } else {
