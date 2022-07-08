@@ -14,7 +14,6 @@ use Craft;
 use Exception;
 use craft\elements\Asset;
 use craft\elements\Entry;
-use craft\elements\Category;
 use craft\elements\GlobalSet;
 use yii\web\NotFoundHttpException;
 use craft\errors\InvalidElementException;
@@ -28,24 +27,6 @@ use acclaro\translations\services\job\CreateDrafts;
 
 class DraftRepository
 {
-    /**
-     * @return \craft\elements\Entry|null
-     */
-    public function makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes)
-    {
-        $draft = Craft::$app->getDrafts()->createDraft(
-            $entry,
-            $creatorId,
-            $name,
-            $notes,
-            $newAttributes
-        );
-
-        $draft->setAttributes($newAttributes, false);
-
-        return $draft;
-    }
-
     public function getDraftById($draftId, $siteId)
     {
         $draft = Entry::find()
