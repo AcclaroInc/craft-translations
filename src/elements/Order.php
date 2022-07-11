@@ -82,6 +82,8 @@ class Order extends Element
 
     public $asynchronousPublishing;
 
+    public $requestQuote;
+
     public $tags;
 
     /**
@@ -752,9 +754,24 @@ class Order extends Element
         return $this->status === Constants::ORDER_STATUS_COMPLETE;
     }
 
+    public function isGettingQuote()
+    {
+        return $this->status === Constants::ORDER_STATUS_GETTING_QUOTE;
+    }
+
+    public function isAwaitingApproval()
+    {
+        return $this->status === Constants::ORDER_STATUS_NEEDS_APPROVAL;
+    }
+
     public function isPublished()
     {
         return $this->status === Constants::ORDER_STATUS_PUBLISHED;
+    }
+
+    public function requestQuote()
+    {
+        return $this->requestQuote;
     }
 
     public function shouldIncludeTmFiles()
@@ -800,6 +817,7 @@ class Order extends Element
         $record->trackChanges =  $this->trackChanges;
 		$record->trackTargetChanges =  $this->trackTargetChanges;
 		$record->includeTmFiles =  $this->includeTmFiles;
+		$record->requestQuote =  $this->requestQuote;
 
         $record->save(false);
 

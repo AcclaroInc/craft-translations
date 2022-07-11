@@ -100,20 +100,24 @@ class AcclaroTranslationService implements TranslationServiceInterface
             }
         }
 
-        $orderStatus = Translations::$plugin->orderRepository->getNewStatus($order);
+        // Ignore changing order status untill order is in quote flow
+        if ($order->isGettingQuote() || $order->isAwaitingApproval()) {
+            $order->status = $orderResponse->status;
+        } else {
+            $orderStatus = Translations::$plugin->orderRepository->getNewStatus($order);
 
-        if ($order->status !== $orderStatus) {
-			$order->status = $orderStatus;
-            $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''), $order->getStatusLabel())
-            );
+            if ($order->status !== $orderStatus) {
+                $order->status = $orderStatus;
+                $order->logActivity(
+                    sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''), $order->getStatusLabel())
+                );
+            }
         }
 
         if ($order->title !== $orderResponse->name) {
             Translations::$plugin->orderRepository->saveOrderName($order->id, $orderResponse->name);
         }
 
-        $order->status = $orderStatus;
         // check if due date set then update it
         if($orderResponse->duedate){
             $dueDate = new \DateTime($orderResponse->duedate);

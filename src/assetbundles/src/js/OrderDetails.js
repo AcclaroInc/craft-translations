@@ -193,6 +193,7 @@
 		trackChanges = $('input[type=hidden][name=trackChanges]').val();
 		trackTargetChanges = $('input[type=hidden][name=trackTargetChanges]').val();
 		includeTmFiles = $('input[type=hidden][name=includeTmFiles]').val();
+		requestQuote = $('input[type=hidden][name=requestQuote]').val();
         tags = $('input[name="tags[]"]');
         translatorId = $('#translatorId').val();
         targetSites = '';
@@ -227,7 +228,11 @@
             });
         }
 
-		url += "&trackChanges=" + trackChanges + "&trackTargetChanges=" + trackTargetChanges + "&includeTmFiles=" + includeTmFiles
+        if (trackChanges) url += "&trackChanges=" + trackChanges
+        if (trackTargetChanges) url += "&trackTargetChanges=" + trackTargetChanges
+        if (includeTmFiles) url += "&includeTmFiles=" + includeTmFiles
+        if (requestQuote) url += "&requestQuote=" + requestQuote
+
         return url
     }
 

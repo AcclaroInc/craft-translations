@@ -258,17 +258,19 @@ class OrderRepository
             return;
         }
 
-        $syncOrderSvc = new SyncOrder();
-        foreach ($order->getFiles() as $file) {
-            if ($queue) {
-                $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
+        if (!($order->isGettingQuote() || $order->isAwaitingApproval())) {
+            $syncOrderSvc = new SyncOrder();
+            foreach ($order->getFiles() as $file) {
+                if ($queue) {
+                    $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
+                }
+                // Let's make sure we're not updating canceled/complete/published files
+                if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
+
+                $translationService->updateFile($order, $file);
+
+                Translations::$plugin->fileRepository->saveFile($file);
             }
-            // Let's make sure we're not updating canceled/complete/published files
-            if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
-
-            $translationService->updateFile($order, $file);
-
-            Translations::$plugin->fileRepository->saveFile($file);
         }
 
         $translationService->updateOrder($order);
@@ -363,13 +365,17 @@ class OrderRepository
             }
         }
 
-        $acclaroApiClient->submitOrder($order->serviceOrderId);
+        if ($order->requestQuote()) {
+            $acclaroApiClient->requestOrderQuote($order->serviceOrderId);
+        } else {
+            $acclaroApiClient->submitOrder($order->serviceOrderId);
+        }
 
         foreach ($orderReferenceFiles as $file) {
             $translationService->sendOrderReferenceFile($order, $file);
         }
 
-        $order->status = Constants::ORDER_STATUS_NEW;
+        $order->status = $order->requestQuote() ? Constants::ORDER_STATUS_GETTING_QUOTE : Constants::ORDER_STATUS_NEW;
 
         $order->dateOrdered = new \DateTime();
 

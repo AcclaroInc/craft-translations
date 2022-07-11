@@ -189,6 +189,10 @@ class OrderController extends Controller
 			if ($orderIncludeTmFiles = Craft::$app->getRequest()->getQueryParam('includeTmFiles')) {
 				$order->includeTmFiles = $orderIncludeTmFiles;
 			}
+
+			if ($requestOrderQuote = Craft::$app->getRequest()->getQueryParam('requestQuote')) {
+				$order->requestQuote = $requestOrderQuote;
+			}
 		}
 
 		$finalElements = $order->getElements();
@@ -428,6 +432,7 @@ class OrderController extends Controller
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
+			$order->requestQuote = Craft::$app->getRequest()->getBodyParam('requestQuote');
 			$order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
@@ -673,6 +678,7 @@ class OrderController extends Controller
         $newOrder->trackChanges = $data['trackChanges'] ?? null;
 		$newOrder->trackTargetChanges = $data['trackTargetChanges'] ?? null;
 		$newOrder->includeTmFiles = $data['includeTmFiles'] ?? null;
+		$newOrder->requestQuote = $data['requestQuote'] ?? null;
         $newOrder->targetSites = json_encode($data['targetSites'] ?? '');
         $newOrder->elementIds = json_encode($elementIds);
         $newOrder->comments = $data['comments'] ?? '';
@@ -1285,6 +1291,7 @@ class OrderController extends Controller
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
+			$order->requestQuote = Craft::$app->getRequest()->getBodyParam('requestQuote');
             $order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : '[]';
 

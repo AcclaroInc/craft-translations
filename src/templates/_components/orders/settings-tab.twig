@@ -264,6 +264,19 @@
 			<input type="hidden" id="originalIncludeTmFiles" value="{{ order.includeTmFiles }}">
 
 			<div id="extra-fields" style="margin-top: 20px">
+				<span class="{{ includeTmFilesClass }}">
+					<div style="margin-bottom: 0" class="{% if includeTmFilesClass %} noClick {% endif %}" title="{{ includeTmFilesTitle }}">
+						{{ forms.lightswitchField({
+							label: 'Request a quote for this order<p class="fw-400">\
+								Quote will be provided and approval will be taken by translator before processing the order.</p>'|t('app'),
+							id: "requestQuote",
+							name: "requestQuote",
+							on: order.requestQuote
+						}) }}
+					</div>
+				</span>
+				<input type="hidden" id="originalQuoteRequest" value="{{ order.requestQuote }}">
+
 				{{ forms.dateField({
 					label: 'Requested due date'|t,
 					value: (order.requestedDueDate ? date(order.requestedDueDate) : null),
