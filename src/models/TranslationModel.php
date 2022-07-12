@@ -36,7 +36,7 @@ class TranslationModel extends Model
 
     public $attributes;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             ['id', 'number', 'integerOnly' => true],

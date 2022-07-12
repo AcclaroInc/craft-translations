@@ -15,21 +15,33 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
     $btn: null,
     $createNewLink: null,
+    $sidebar: null,
 
     isEditEntryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="entries/save-entry"]').length > 0 ||
-        $('form#main-form input[type=hidden][name=action][value="entry-revisions/publish-draft"]').length > 0;
+        return $('form#main-form input[type=hidden][name=action][value="elements/save"]').length > 0;
+    },
+
+    isCreateEntryScreen: function() {
+        return $('form#main-form input[type=hidden][name=action][value="elements/apply-draft"]').length > 0;
+    },
+
+    isRevertRevisionScreen: function(){
+        return $('form input[type=hidden][name=action][value="elements/revert"]').length > 0;
+    },
+
+    isEditDraftScreen: function(){
+        return $('form#main-form input[type=hidden][name=action][value="elements/save-draft"]').length > 0;
     },
 
     getEditEntryId: function() {
-        var entryId = $('form#main-form input[type=hidden][name=entryId]').val();
+        var entryId = $('form#main-form input[type=hidden][name=elementId]').val();
         if(!entryId) {
             entryId = $('form#main-form input[type=hidden][name=sourceId]').val();
         }
 
         return entryId;
     },
-    
+
     updateSelectedEntries: function() {
         var entries = [];
 
@@ -67,13 +79,13 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         // Figure out the initial locale
         var $option = localeMenu.$options.filter('.sel:first');
 
-        
+
         if ($option.length === 0) {
             $option = localeMenu.$options.first();
         }
-        
+
         var siteId = $option.data('site-id').toString();
-        
+
         return siteId;
     },
 
@@ -100,6 +112,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         }
 
         var self = this;
+        this.$sidebar = $('#sidebar');
 
         this.data = data;
 
@@ -129,18 +142,18 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         }
 
         if (this.isEditEntryScreen()) {
-            $settings = document.getElementById('settings');
+            $settings = $('#slug-field').closest('div.meta');
 
-            $settings.insertBefore($btncontainer, $settings.firstChild);
+            $settings.prepend($btncontainer);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
 
-            
+
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
-        } else {
-            $btngroup.insertBefore('#header #action-button');
+        } else if(! (this.isRevertRevisionScreen() || this.isEditDraftScreen() || this.isCreateEntryScreen())) {
+            $btngroup.insertBefore('header#header > div:last');
         }
 
         this.$btn = $('<a>', {
@@ -162,7 +175,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         this.$btn.appendTo($btngroup);
 
-        this.$menubtn.appendTo($btngroup);
+        ($('<div>').append(this.$menubtn)).appendTo($btngroup);
 
         this.$menubtn.on('click', function(e) {
             e.preventDefault();
@@ -323,6 +336,12 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             $submit.appendTo($form);
 
             $form.submit();
+        });
+
+        // This prevent the new translation button from remaining enabled when user selects an entry and changes entry group from side bar
+        this.$sidebar.on('click', 'li', function () {
+            $(self.$btn[0]).toggleClass('disabled', true);
+            $(self.$menubtn[0]).toggleClass('disabled', true);
         });
     }
 };

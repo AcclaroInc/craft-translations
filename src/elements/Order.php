@@ -25,6 +25,7 @@ use acclaro\translations\records\OrderRecord;
 use acclaro\translations\elements\db\OrderQuery;
 use acclaro\translations\elements\actions\OrderDelete;
 use acclaro\translations\elements\actions\OrderEdit;
+use craft\elements\User;
 
 /**
  * @author    Acclaro
@@ -40,10 +41,6 @@ class Order extends Element
     protected $_elements = array();
 
     protected $_files;
-
-    public $id;
-
-    public $title;
 
     public $translatorId;
 
@@ -69,8 +66,6 @@ class Order extends Element
 
     public $dateOrdered;
 
-    public $dateUpdated;
-
     public $serviceOrderId;
 
     public $entriesCount;
@@ -94,6 +89,9 @@ class Order extends Element
      */
     public static function displayName(): string
     {
+        // To Show Colum Header as Name inspite of order in index page table.
+        if(debug_backtrace()[1]['function'] == 'getTableAttributes')
+            return Translations::$plugin->translator->translate('app', 'Name');
         return Translations::$plugin->translator->translate('app', 'Order');
     }
 
@@ -121,7 +119,7 @@ class Order extends Element
         return StringHelper::toLowerCase(static::pluralDisplayName());
     }
 
-    public static function refHandle()
+    public static function refHandle(): ?string
     {
         return 'order';
     }
@@ -141,9 +139,19 @@ class Order extends Element
         return false;
     }
 
-    public function getIsEditable(): bool
+    public function canView(User $user): bool
     {
-        return true;
+        return $user->can('translations:orders:create');
+    }
+
+    public function canSave(User $user): bool
+    {
+        return $user->can('translations:orders:edit');
+    }
+
+    public function canDelete(User $user): bool
+    {
+        return $user->can('translations:orders:delete');
     }
 
     /**
@@ -159,7 +167,7 @@ class Order extends Element
         return false;
     }
 
-    protected static function defineActions(string $source = null): array
+    protected static function defineActions(string $source): array
     {
         $actions = [OrderDelete::class, OrderEdit::class];
 
@@ -174,7 +182,7 @@ class Order extends Element
         return $actions;
     }
 
-    protected static function defineSources(string $context = null): array
+    protected static function defineSources(string $context): array
     {
         $sources = [
             [
@@ -335,10 +343,10 @@ class Order extends Element
                 return $languages;
 
             case 'title':
-            case 'entriesCount':
             case 'wordCount':
                 return $value ? $value : '';
-
+            case 'entriesCount':
+                return count($this->getElements());
             case 'serviceOrderId':
                 if (!$value && ( !is_null($this->getTranslator()) && $this->getTranslator()->service !== Constants::TRANSLATOR_DEFAULT))
                 {
@@ -393,8 +401,7 @@ class Order extends Element
     protected static function defineTableAttributes(): array
     {
         $attributes = [
-            'title' => ['label' => Translations::$plugin->translator->translate('app', 'Name')],
-            'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
+            // 'serviceOrderId' => ['label' => Translations::$plugin->translator->translate('app', 'ID')],
             'ownerId' => ['label' => Translations::$plugin->translator->translate('app', 'Owner')],
             'entriesCount' => ['label' => Translations::$plugin->translator->translate('app', 'Entries')],
             'wordCount' => ['label' => Translations::$plugin->translator->translate('app', 'Words')],
@@ -411,7 +418,6 @@ class Order extends Element
     protected static function defineDefaultTableAttributes(string $source): array
     {
         return [
-            'title',
             'status',
             'translatorId',
             'dateOrdered',
@@ -430,14 +436,14 @@ class Order extends Element
 
     public function getTargetAlertHtml() {
         $html = '';
-        if (!$this->isPublished() && $this->isTmMisaligned() && $this->trackTargetChanges) {
+        if (!($this->isPublished() || $this->isCanceled()) && $this->isTmMisaligned() && $this->trackTargetChanges) {
             $html .= '<span class="nowrap pl-5"><span class="warning order-warning font-size-15" data-icon="alert"> This order contains misaligned content that might affect translation memory accuracy. </span></span>';
         }
 
         return $html;
     }
 
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         $rules[] = [['translatorId', 'ownerId', 'sourceSite', 'targetSites', 'activityLog', 'entriesCount', 'wordCount', 'elementIds',],'required'];
@@ -467,7 +473,7 @@ class Order extends Element
 
         foreach ($elementIds as $key => $elementId) {
             if (!array_key_exists($elementId, $this->_elements)) {
-                $element = Craft::$app->elements->getElementById($elementId, null, $this->sourceSite);
+                $element = Translations::$plugin->elementRepository->getElementById($elementId, $this->sourceSite);
 
                 $element ? $this->_elements[$elementId] = $element : '';
             }
@@ -476,7 +482,7 @@ class Order extends Element
         return $this->_elements;
     }
 
-    public function getUrl()
+    public function getUrl(): ?string
     {
         return Constants::URL_ORDER_DETAIL . $this->id;
     }
@@ -582,7 +588,7 @@ class Order extends Element
         $this->activityLog = json_encode($activityLog);
     }
 
-    public function getCpEditUrl()
+    public function getCpEditUrl(): ?string
     {
         return Translations::$plugin->urlHelper->cpUrl(Constants::URL_ORDER_DETAIL.$this->id);
     }
@@ -628,6 +634,10 @@ class Order extends Element
 
     public function isTmMisaligned($ignoreNew = true)
     {
+        if (!$this->hasDefaultTranslator() && ($this->isComplete() || $this->isReviewReady() || $this->isPublished())) {
+            return false;
+        }
+
         foreach ($this->getFiles() as $file) {
             if ($file->isPublished() || ($ignoreNew && $file->isNew())) continue;
 
@@ -760,7 +770,7 @@ class Order extends Element
         return true;
     }
 
-    public function afterSave(bool $isNew)
+    public function afterSave(bool $isNew): void
     {
         if (!$isNew) {
             $record = OrderRecord::findOne($this->id);
@@ -801,7 +811,7 @@ class Order extends Element
         return true;
     }
 
-    public function afterDelete()
+    public function afterDelete(): void
     {
     }
 }

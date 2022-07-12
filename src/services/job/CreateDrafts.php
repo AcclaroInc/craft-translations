@@ -22,7 +22,7 @@ class CreateDrafts extends BaseJob
     public $publish;
     public $fileIds;
 
-    public function execute($queue)
+    public function execute($queue): void
     {
         Translations::$plugin->draftRepository->createOrderDrafts(
             $this->orderId, $this->wordCounts, $this->publish, $this->fileIds, $queue
@@ -33,7 +33,7 @@ class CreateDrafts extends BaseJob
         $queue->setProgress($progress);
     }
 
-    protected function defaultDescription()
+    protected function defaultDescription(): ?string
     {
         return $this->publish ? Constants::JOB_APPLYING_DRAFT : Constants::JOB_CREATING_DRAFT;
     }

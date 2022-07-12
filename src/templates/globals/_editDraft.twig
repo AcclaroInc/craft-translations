@@ -1,0 +1,80 @@
+{% extends "_layouts/cp" %}
+{% set title = "Globals"|t %}
+
+{% block pageTitle %}
+{{ parent() }}
+
+<div class="select">
+    <select onchange="document.location.href='{{ url('globals/'~globalSetHandle) }}';">
+        {% for site in craft.app.sites.getAllSites() %}
+        <option value="{{ site.handle }}" {% if site.id==draft.site %} selected {% endif %}>{{ site.name }}</option>
+        {% endfor %}
+    </select>
+</div>
+<div class="select" style="margin-left:0.75em;">
+    <select onchange="document.location.href=this.options[this.selectedIndex].value;">
+        <option value="{{ url('globals/'~globalSetHandle) }}">{{ 'Current'|t }}</option>
+        {% for d in drafts %}
+        <option value="{{ d.cpEditUrl }}" {% if draftId==d.draftId %} selected {% endif %}>{{ d.name }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endblock %}
+
+{% block actionButton %}
+<div class="buttons">
+    <div class="btngroup">
+        <input type="submit" form="globalSetDraft" class="btn submit" value="{{ 'Save'|t }}">
+        <div class="btn submit menubtn" data-form="globalSetDraft"></div>
+        <div class="menu">
+            <ul>
+                <li><a class="formsubmit" data-action="translations/global-set/publish-draft">{{ 'Publish draft'|t
+                        }}</a></li>
+            </ul>
+            <hr>
+            <ul>
+                <li><a class="formsubmit" data-action="translations/global-set/delete-draft"
+                        data-confirm="{{ 'Are you sure you want to delete this draft?'|t }}">{{ 'Delete draft'|t }}</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<nav>
+    <ul>
+        {% for globalSet in globalSets %}
+        <li>
+            <a{% if globalSet.handle==globalSetHandle %} class="sel" {% endif %} href="{{ globalSet.getCpEditUrl() }}">
+                {{ globalSet.name|t }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+{% endblock %}
+
+
+{% block content %}
+<form id="globalSetDraft" method="post" accept-charset="UTF-8" data-saveshortcut data-confirm-unload>
+    <input type="hidden" name="action" value="translations/global-set/save-draft">
+    <input type="hidden" name="draftId" value="{{ draft.draftId }}">
+    <input type="hidden" name="site" value="{{ draft.site }}">
+    <input type="hidden" name="globalSetId" value="{{ globalSetId }}">
+    {{ csrfInput() }}
+
+    {% if draft.getFieldLayout().getCustomFields() | length %}
+    <div>
+        {% for tab in draft.getFieldLayout().getTabs() %}
+        <div id="{{ tab.getHtmlId() }}" {% if not loop.first %} class="hidden" {% endif %}>
+            {% include "_includes/fields" with {
+            fields: tab.getLayout().getCustomFields(),
+            element: draft
+            } only %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</form>
+{% endblock %}

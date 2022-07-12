@@ -5,7 +5,7 @@ namespace acclaro\translations\base;
 use acclaro\translations\services\TranslationsService;
 
 use Craft;
-use craft\log\FileTarget;
+use craft\log\MonologTarget;
 
 use yii\log\Logger;
 
@@ -34,9 +34,9 @@ trait PluginTrait
 
     private function _setLogging()
     {
-        Craft::getLogger()->dispatcher->targets[] = new FileTarget([
-            'logFile' => Craft::getAlias('@storage/logs/translations.log'),
-            'categories' => ['translations'],
+        Craft::getLogger()->dispatcher->targets[] = new MonologTarget([
+            'name' => 'translations',
+            'allowLineBreaks' => true
         ]);
     }
 

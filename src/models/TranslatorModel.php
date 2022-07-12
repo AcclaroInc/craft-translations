@@ -41,7 +41,7 @@ class TranslatorModel extends Model
     
     public $dateUpdated;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             ['id', 'number', 'integerOnly' => true],
@@ -51,7 +51,7 @@ class TranslatorModel extends Model
         ];
     }
 
-    public function fields()
+    public function fields(): array
     {
         return [
             'label' => '',
