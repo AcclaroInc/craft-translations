@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 3.0.0-beta.1 - 2022-07-12
+## 3.0.0-beta.1 - 2022-07-14
 
 ### Fixed
 - An issue where `New translations` button on entry index page remains active on switching entry groups.
@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Updated
 - Craft minimum version from 3.7.33 to 4.0.0
+- Requires PHP ^8.0.2
 - Category draft's custom logic with craft's native code. (Craft now supports category drafts)
 - Download TM files action disabled by default.
 
