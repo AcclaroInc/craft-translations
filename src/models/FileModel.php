@@ -215,7 +215,7 @@ class FileModel extends Model
 		return $hasDiff;
 	}
 
-    public function getElement()
+    public function getElement($canonical = true)
 	{
         $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->targetSite);
 
@@ -224,12 +224,17 @@ class FileModel extends Model
 		}
 
         /** Check element as an entry could have been deleted */
-        if ($element && $element->getIsDraft()) {
+        if ($element && $canonical && $element->getIsDraft()) {
 			$element = $element->getCanonical();
 		}
 
 		return $element;
 	}
+
+    public function getPreviewSettings()
+    {
+        return $this->_service->getPreviewSettings($this);
+    }
 
     public function hasTmMisalignments($ignoreReference = false)
     {

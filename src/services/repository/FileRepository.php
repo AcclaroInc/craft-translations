@@ -542,6 +542,45 @@ class FileRepository
         return false;
     }
 
+    /**
+     * Return a preview setting array used for creating per file preview
+     *
+     * @param \acclaro\translations\models\FileModel $file
+     *
+     *@return array $settings
+     */
+    public function getPreviewSettings(FileModel $file)
+    {
+        $settings = [];
+        $element = $file->getElement(false);
+
+        if ($element) {
+            $security = Craft::$app->getSecurity();
+
+            if ($previewTargets = $element->getPreviewTargets() ?? []) {
+                if ($file->hasDraft() && $file->isComplete()) {
+                    Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
+                } else {
+                    Craft::$app->getSession()->authorize("previewElement:$element->id");
+                }
+            }
+
+            $settings = [
+                'canonicalId' => $element->id,
+                'draftId' => $file->draftId ?? null,
+                'elementType' => get_class($element),
+                'enablePreview' => true,
+                'isLive' => !($file->isComplete() && $file->hasDraft()),
+                'previewTargets' => $previewTargets,
+                'previewToken' => $security->generateRandomString() ?? null,
+                'siteId' => $file->targetSite,
+                'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite) : null,
+            ];
+        }
+
+        return $settings;
+    }
+
     // Draft Actions
 
     public function getDraft(FileModel $file)

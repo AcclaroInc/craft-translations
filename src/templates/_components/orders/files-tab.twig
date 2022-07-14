@@ -1,5 +1,7 @@
 {% import '_includes/forms' as forms %}
 
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\FilePreviewAssets") %}
+
 <div id="files" class="{% if not selectedTab|default(null) %} hidden {% endif %}">
 	<div class="field">
 		<div class="heading">
@@ -68,9 +70,17 @@
 												{% set targetUpdated = false %}
 											{% endif %}
 
+											{# Create Preview for each target entry #}
 											{% if file.hasPreview %}
-												<a href="{{ file.previewUrl }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+												{% set fileId = 'file_' ~ file.id %}
+
+												<a id="{{ fileId }}" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+
+												{% js %}
+													new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.previewSettings|json_encode|raw }});
+												{% endjs %}
 											{% endif %}
+
 											{% if canUpdateFiles and not file.isPublished and (sourceUpdated or targetUpdated) %}
 												<span class="warning order-warning font-size-15" data-icon="alert">
 													{% if sourceUpdated %}
