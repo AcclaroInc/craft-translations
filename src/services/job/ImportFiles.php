@@ -36,7 +36,7 @@ class ImportFiles extends BaseJob
      */
     public $fileNames;
 
-    public function execute($queue)
+    public function execute($queue): void
     {
         $this->order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
 
@@ -52,7 +52,7 @@ class ImportFiles extends BaseJob
         }
     }
 
-    protected function defaultDescription()
+    protected function defaultDescription(): ?string
     {
         return Constants::JOB_IMPORTING_FILES;
     }

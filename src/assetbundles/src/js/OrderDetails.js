@@ -233,10 +233,12 @@
 
     function sendingOrderStatus($status, $btnStatus = false) {
         if ($status) {
+            $('.translations-loader').parent('a').addClass('loading');
             $('.translations-loader').removeClass('hidden');
             $('.translations-dropdown .btn').addClass('disabled').css('pointer-events', 'none');
             $('.translations-dropdown .btn').prop('disabled', true);
         } else {
+            $('.translations-loader').parent('a').removeClass('loading');
             $('.translations-loader').addClass('hidden');
             if (! $btnStatus) {
                 $('.translations-dropdown .btn').removeClass('disabled').css('pointer-events', '');
@@ -722,7 +724,7 @@
                 disabled: "disabled"
             });
 
-            this.$btn.html("<span class='spinner translations-loader hidden'></span>Create Order");
+            this.$btn.html("<span class='spinner spinner-absolute translations-loader'></span><div class=label>Create order</div>");
 
             this.$menubtn = $('<div>', {
                 'class': 'btn submit menubtn disabled',
@@ -779,7 +781,7 @@
                 disabled: "disabled"
             });
 
-            this.$btn.html("<span class='spinner translations-loader hidden'></span>Update order");
+            this.$btn.html("<span class='spinner spinner-absolute translations-loader'></span><div class=label>Update order</div>");
 
             this.$menubtn = $('<div>', {
                 'class': 'btn submit menubtn disabled',
@@ -865,25 +867,19 @@
                     window.history.pushState("", "", url);
                     $form.submit();
                 }else if ($(that).text() == "Update order") {
-                    Craft.postActionRequest('translations/order/update-order', $form.serialize(), function(response, textStatus) {
-                        if (response == null) {
-                            Craft.cp.displayError(Craft.t('app', "Unable to update order."));
+                    var postData = Garnish.getPostData($form),
+                    params = Craft.expandPostArray(postData);
+                    Craft.sendActionRequest('POST', 'translations/order/update-order', {data: params})
+                        .then((response) => {
+                            Craft.cp.displayNotice(Craft.t('app', response.data.message));
+                            setTimeout(function() {
+                                window.location.href = removeParams(location.href);
+                            }, 200);
+                        })
+                        .catch(({response}) => {
+                            Craft.cp.displayError(Craft.t('app', response.data.message));
                             sendingOrderStatus(false);
-                        } else if (textStatus === 'success' && response.success) {
-                            if (response.message) {
-                                Craft.cp.displayNotice(Craft.t('app', response.message));
-                                setTimeout(function() {
-                                    window.location.href = removeParams(location.href);
-                                }, 200);
-                            } else {
-                                Craft.cp.displayError(Craft.t('app', "Something went wrong"));
-                                sendingOrderStatus(false);
-                            }
-                        } else {
-                            Craft.cp.displayError(Craft.t('app', response.message));
-                            sendingOrderStatus(false);
-                        }
-                    });
+                        });
                 } else {
                     var $hiddenFlow = $('<input>', {
                         'type': 'hidden',
@@ -892,29 +888,17 @@
                     });
                     $hiddenFlow.appendTo($form);
 
-                    Craft.postActionRequest($form.find('input[name=action]').val(), $form.serialize(), function(response, textStatus) {
-                        if (response == null) {
-                            Craft.cp.displayError(Craft.t('app', "Unable to create order."));
+                    var postData = Garnish.getPostData($form),
+                    params = Craft.expandPostArray(postData);
+
+                    Craft.sendActionRequest('POST', $form.find('input[name=action]').val(), {data: params})
+                        .then((response) => {
+                            window.location.href = response.data.redirect;
+                        })
+                        .catch(({response}) => {
+                            Craft.cp.displayError(Craft.t('app', response.data.message));
                             sendingOrderStatus(false);
-                        } else if (textStatus === 'success' && response.success) {
-                            if (response.message) {
-                                Craft.cp.displayNotice(Craft.t('app', response.message));
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 200);
-                            } else if (response.url) {
-                                window.location.href = response.url;
-                            } else if (response.job) {
-                                Craft.Translations.trackJobProgressById(true, false, response.job);
-                            } else {
-                                Craft.cp.displayError(Craft.t('app', "No data in response"));
-                                sendingOrderStatus(false);
-                            }
-                        } else {
-                            Craft.cp.displayError(Craft.t('app', response.message));
-                            sendingOrderStatus(false);
-                        }
-                    });
+                        });
                 }
 
             });
@@ -1030,23 +1014,20 @@
 
                 $hiddenFlow = $('<input>', {
                     'type': 'hidden',
-                    'name': 'update-elements',
+                    'name': 'selected',
                     'value': JSON.stringify(elements)
                 });
                 $hiddenFlow.appendTo($form);
-                Craft.postActionRequest('translations/order/update-order-files-source', $form.serialize(), function(response, textStatus) {
-                    if (textStatus === 'success') {
-                        if (response.success) {
-                            $download ? self._downloadFiles() : location.reload();
-                        } else {
-                            Craft.cp.displayError(Craft.t('app', response.message));
-                            self.onComplete();
-                        }
-                    } else {
-                        Craft.cp.displayError(Craft.t('app', 'Unable to update entries.'));
+                var postData = Garnish.getPostData($form),
+                params = Craft.expandPostArray(postData);
+                Craft.sendActionRequest('POST', 'translations/order/update-order-files-source', {data: params})
+                    .then(() => {
+                        $download ? self._downloadFiles() : location.reload();
+                    })
+                    .catch(({response}) => {
+                        Craft.cp.displayError(Craft.t('app', response.data.message));
                         self.onComplete();
-                    }
-                });
+                    });
             });
         },
         _addDeleteElementAction: function(that) {
@@ -1104,31 +1085,21 @@
             }).appendTo($downloadForm);
 
             postData = Garnish.getPostData($downloadForm);
-            params = Craft.expandPostArray(postData);
+            $data = Craft.expandPostArray(postData);
+            params = {'params': $data};
 
-            var $data = {
-                params: params
-            };
-
-            Craft.postActionRequest(params.action, $data, function(response, textStatus) {
-                if(textStatus === 'success') {
-                    if (response && response.error) {
-                        Craft.cp.displayError(response.error);
-                        self.onComplete();
-                    }
-
-                    if (response && response.translatedFiles) {
-                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.translatedFiles})}).hide();
-                        $downloadForm.append($iframe);
-						setTimeout(function() {
-							self.onComplete(true);
-						}, 500);
-                    }
-                } else {
-                    Craft.cp.displayError('There was a problem exporting your file.');
+            Craft.sendActionRequest('POST', $data.action, {data: params})
+                .then((response) => {
+                    var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.translatedFiles})}).hide();
+                    $downloadForm.append($iframe);
+                    setTimeout(function() {
+                        self.onComplete(true);
+                    }, 500);
+                })
+                .catch(({response}) => {
+                    Craft.cp.displayError(response.data.message);
                     self.onComplete();
-                }
-            });
+                });
         },
         onComplete: function($reload = false) {
             $('#toolbar').removeClass('disabled noClick');

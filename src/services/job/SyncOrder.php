@@ -17,7 +17,7 @@ class SyncOrder extends BaseJob
 {
     public $order;
 
-    public function execute($queue)
+    public function execute($queue): void
     {
 
         Translations::$plugin->orderRepository->syncOrder($this->order, $queue);
@@ -27,7 +27,7 @@ class SyncOrder extends BaseJob
         $queue->setProgress($progress);
     }
 
-    protected function defaultDescription()
+    protected function defaultDescription(): ?string
     {
         return 'Syncing order '. $this->order->title;
     }
