@@ -92,13 +92,27 @@
 
         getPreview: function () {
             var t = this;
+
             return this.preview ||
                 (this.preview = new Craft.Preview(this),
                     this.preview.on("open", (function () {})),
                     this.preview.on("close", (function () {
                         t.scrollY && (window.scrollTo(0, t.scrollY), t.scrollY = null);
+
+                        // Remove preview modal on close as we can have multipe preview files.
+                        t.removePreview();
                     }))
                 ), this.preview;
+        },
+
+        removePreview: function () {
+            $preview = $(document).find('div[aria-labelledby=lp-preview-heading]');
+
+            if ($preview.length >= 1) {
+                $preview.remove();
+                $(document).find('div.modal-shade.dark').remove();
+                this.preview = null;
+            }
         },
 
         openPreview: function () {
