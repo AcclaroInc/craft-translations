@@ -14,22 +14,19 @@
 			value: 'translations/order/accept-quote',
 		}) }}
 
+		{% set quoteActions = order.isGettingQuote ? 'noClick disabled' : '' %}
+
 		<div class="field">
 			<div class="heading">
 				<label>Quote details</label>
 
-				<div class="btngroup ml-auto">
+				<div id="quote-action-buttons" class="btngroup ml-auto {{ quoteActions }}">
 
 					{{ forms.button({
 						type: "submit",
 						label: "Accept",
 						spinner: true,
 						class: "submit"
-					}) }}
-
-					{{ forms.button({
-						id: "quoteDownload",
-						class: "submit menubtn"
 					}) }}
 				</div>
 			</div>
@@ -42,7 +39,7 @@
 				</div>
 				<div class="input ltr">
 					<div class="float-right">
-						<label class="right"> {{ "$1000" }} </label>
+						<label class="right"> {{ orderQuote|default('N/A') }} </label>
 					</div>
 				</div>
 			</div>

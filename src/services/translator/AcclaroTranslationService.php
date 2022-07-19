@@ -375,4 +375,24 @@ class AcclaroTranslationService implements TranslationServiceInterface
             }
         }
     }
+
+    public function getOrderQuote($orderId)
+    {
+        return $this->acclaroApiClient->getQuoteDetails($orderId);
+    }
+
+    public function acceptOrderQuote($orderId)
+    {
+        $this->acclaroApiClient->approveQuote($orderId);
+    }
+
+    public function getOrderQuoteDocument($orderId)
+    {
+        return $this->acclaroApiClient->getQuoteDocument($orderId);
+    }
+
+    public function declineOrderQuote($orderId, $comment = '')
+    {
+        return $this->acclaroApiClient->declineQuote($orderId, $comment);
+    }
 }

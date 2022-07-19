@@ -342,6 +342,10 @@ class OrderController extends Controller
 				if ($orderStatus !== Constants::ORDER_STATUS_COMPLETE) {
 					$variables['isUpdateable'] = true;
 				}
+
+                if ($order->requestQuote() && !$order->isGettingQuote()) {
+                    $variables['orderQuote'] = $translationService->getOrderQuote($order->id) ?? "Unable to fetch quote value";
+                }
 			}
         }
 
@@ -1509,7 +1513,27 @@ class OrderController extends Controller
 
         if (!$order) return $this->asFailure('Order not found');
 
-        return $this->asSuccess("Quote accept request sent");
+        try {
+            $translator = $order->getTranslator();
+            if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
+                $translatorService = Translations::$plugin->translatorFactory
+                    ->makeTranslationService(
+                        $translator->service,
+                        json_decode($translator->settings, true)
+                    );
+
+                $file = $translatorService->acceptOrderQuote($order->serviceOrderId);
+
+                if (empty($file)) {
+                    return $this->asFailure('Unable to approve quote');
+                }
+            }
+        } catch (\Exception $e) {
+            Craft::error($e, 'translations');
+            return $this->asFailure($e->getMessage());
+        }
+
+        return $this->asSuccess("Quote approve request sent");
     }
 
     /**
@@ -1524,6 +1548,26 @@ class OrderController extends Controller
         $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
 
         if (!$order) return $this->asFailure('Order not found');
+
+        try {
+            $translator = $order->getTranslator();
+            if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
+                $translatorService = Translations::$plugin->translatorFactory
+                    ->makeTranslationService(
+                        $translator->service,
+                        json_decode($translator->settings, true)
+                    );
+
+                $file = $translatorService->declineOrderQuote($order->serviceOrderId);
+
+                if (empty($file)) {
+                    return $this->asFailure('Unable to decline quote request');
+                }
+            }
+        } catch (\Exception $e) {
+            Craft::error($e, 'translations');
+            return $this->asFailure($e->getMessage());
+        }
 
         return $this->asSuccess("Quote decline request sent");
     }

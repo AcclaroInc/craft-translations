@@ -447,6 +447,7 @@
             }
 
             syncSites(true);
+            self._addQuoteActions();
 
             if (isSubmitted) {
                 this._createUpdateOrderButtonGroup();
@@ -1172,6 +1173,90 @@
             } else {
                 $('#toolbar').addClass('disabled noClick');
             }
+        },
+        _addQuoteActions: function () {
+            $quoteTab = $(document).find('#quote');
+
+            // Only register if detail page has quote tab
+            if ($quoteTab.length > 0) {
+                $btngroup = $('#quote-action-buttons');
+
+                $menubtn = $('<div>', {'class': 'btn submit menubtn'});
+                $menubtn.appendTo($btngroup);
+
+                $menubtn.on('click', function(e) {
+                    e.preventDefault();
+                });
+
+                $menu = $('<div>', {'class': 'menu'});
+                $menu.appendTo($btngroup);
+
+                $dropdown = $('<ul>', {'class': ''});
+
+                $dropdown.appendTo($menu);
+
+                $item = $('<li>');
+                $item.appendTo($dropdown);
+
+                $declineLink = $('<a>', {
+                    'class': 'translations-submit-order',
+                    'href': '#',
+                    'text': 'Decline quote'
+                });
+
+                $declineLink.appendTo($item);
+                this.declineQuoteRequest($declineLink);
+
+                $dropdown.append($('<hr>'));
+
+                $item = $('<li>');
+                $item.appendTo($dropdown);
+
+                $downloadLink = $('<a>', {
+                    'class': 'translations-submit-order',
+                    'href': '#',
+                    'text': 'Download quote'
+                });
+
+                $downloadLink.appendTo($item);
+                this.downloadQuote($downloadLink);
+            }
+        },
+        declineQuoteRequest: function (that) {
+            var $form = $('#quote-form');
+            $(that).on('click', function(e) {
+                e.preventDefault();
+
+                $newAction = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'action',
+                    'value': 'translations/order/decline-quote'
+                });
+                $newAction.appendTo($form);
+
+                $form.submit();
+            });
+        },
+        downloadQuote: function (that) {
+            var $form = $('#quote-form');
+            $(that).on('click', function(e) {
+                e.preventDefault();
+
+                postData = Garnish.getPostData($form);
+                $data = Craft.expandPostArray(postData);
+
+                Craft.sendActionRequest('GET', 'translations/files/quote-document?id='+$data['id'])
+                .then((response) => {
+                    var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.document})}).hide();
+                    $form.append($iframe);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 500);
+                })
+                .catch(({response}) => {
+                    Craft.cp.displayError(response.data.message);
+                });
+            });
         }
     }
 

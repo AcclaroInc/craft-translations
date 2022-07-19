@@ -512,6 +512,38 @@ class FilesController extends Controller
         return $this->asJson(['success' => true]);
     }
 
+    public function actionQuoteDocument()
+    {
+        $this->requireLogin();
+
+        $orderId = Craft::$app->getRequest()->getParam('id');
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+
+        if (!$order) return $this->asFailure('Order not found');
+
+        try {
+            $translator = $order->getTranslator();
+            if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
+                $translatorService = Translations::$plugin->translatorFactory
+                    ->makeTranslationService(
+                        $translator->service,
+                        json_decode($translator->settings, true)
+                    );
+
+                $file = $translatorService->getOrderQuoteDocument($order->serviceOrderId);
+
+                if (empty($file)) {
+                    return $this->asFailure('Unable to get quote file from translator');
+                }
+
+                return $this->asSuccess(null, ['document' => $file]);
+            }
+        } catch(\Exception $e) {
+            Craft::error($e, 'translations');
+            return $this->asFailure($e->getMessage());
+        }
+    }
+
     // Private Methods
 	/**
      * Show Flash Notifications and Errors to the translator
