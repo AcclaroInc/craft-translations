@@ -809,6 +809,10 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     align-items: center;
 }
 
+.wd-50 {
+    width: 50%;
+}
+
 #approve-publish-form .footer,
 .modal .resizehandle {
     z-index: 9;

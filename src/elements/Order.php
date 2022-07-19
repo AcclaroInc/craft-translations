@@ -606,7 +606,11 @@ class Order extends Element
                 $statusLabel = 'Modified';
                 break;
             case Constants::ORDER_STATUS_GETTING_QUOTE:
+                $statusLabel = 'Getting quote';
+                break;
             case Constants::ORDER_STATUS_NEEDS_APPROVAL:
+                $statusLabel = 'Needs approval';
+                break;
             case Constants::ORDER_STATUS_IN_PROGRESS:
             case Constants::ORDER_STATUS_IN_REVIEW:
                 $statusLabel = 'In progress';

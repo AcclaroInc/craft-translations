@@ -606,10 +606,12 @@ class OrderController extends Controller
                     }
                 }
 
-                $order->logActivity(sprintf(
-                    Translations::$plugin->translator->translate('app', 'Order submitted to %s'),
-                    $order->translator->getName()
-                ));
+                $orderAction = sprintf('Order submitted to %s', $order->translator->getName());
+
+                if ($order->requestQuote())
+                    $orderAction = sprintf('Order quote requested from %s', $order->translator->getName());
+
+                $order->logActivity(Translations::$plugin->translator->translate('app', $orderAction));
             }
             $transaction->commit();
         } catch (Exception $e) {
@@ -1492,5 +1494,37 @@ class OrderController extends Controller
         }
 
         return $this->asSuccess('Entries updated.');
+    }
+
+    /**
+     * Accept order quote
+     */
+    public function actionAcceptQuote()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
+
+        if (!$order) return $this->asFailure('Order not found');
+
+        return $this->asSuccess("Quote accept request sent");
+    }
+
+    /**
+     * Decline order quote
+     */
+    public function actionDeclineQuote()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
+
+        if (!$order) return $this->asFailure('Order not found');
+
+        return $this->asSuccess("Quote decline request sent");
     }
 }

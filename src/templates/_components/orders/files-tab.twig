@@ -2,7 +2,7 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\FilePreviewAssets") %}
 
-<div id="files" class="{% if not selectedTab|default(null) %} hidden {% endif %}">
+<div id="files" class="{% if not (selectedTab|default(null) == 'files') %} hidden {% endif %}">
 	<div class="field">
 		<div class="heading">
 			<label id="files-label">

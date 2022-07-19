@@ -1,0 +1,66 @@
+{% import '_includes/forms' as forms %}
+
+<div id="quote" class="{% if not (selectedTab|default(null) == 'quote') %} hidden {% endif %}">
+	<form method="post" id="quote-form" accept-charset="UTF-8">
+		{{ csrfInput() }}
+
+		{{ forms.hidden({
+			name: 'id',
+			value: orderId,
+		}) }}
+
+		{{ forms.hidden({
+			name: 'action',
+			value: 'translations/order/accept-quote',
+		}) }}
+
+		<div class="field">
+			<div class="heading">
+				<label>Quote details</label>
+
+				<div class="btngroup ml-auto">
+
+					{{ forms.button({
+						type: "submit",
+						label: "Accept",
+						spinner: true,
+						class: "submit"
+					}) }}
+
+					{{ forms.button({
+						id: "quoteDownload",
+						class: "submit menubtn"
+					}) }}
+				</div>
+			</div>
+		</div>
+
+		<div class="meta">
+			<div class="field wd-50">
+				<div class="heading">
+					<label>Total</label>
+				</div>
+				<div class="input ltr">
+					<div class="float-right">
+						<label class="right"> {{ "$1000" }} </label>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="field">
+			<div class="heading">
+				<label>Comments</label>
+			</div>
+			<div class="input ltr">
+				{{ forms.textarea({
+					id: "quoteComment",
+					name: "quoteComment",
+					rows: 5,
+					cols: 60,
+					placeholder: "Add your comment here...",
+					title: "comments"
+				}) }}
+			</div>
+		</div>
+	</form>
+</div>

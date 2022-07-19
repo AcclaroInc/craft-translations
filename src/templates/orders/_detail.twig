@@ -43,12 +43,23 @@
 {% if isSubmitted %}
 	{% if not isProcessing %}
 		{% if not isChanged %}
-			{% set selectedTab = "files" %}
+			{% if order.requestQuote and (order.isGettingQuote or order.isAwaitingApproval) %}
+				{% set selectedTab = "quote" %}
+			{% else %}
+				{% set selectedTab = "files" %}
+			{% endif %}
 		{% endif %}
+
 		{% set tabs = {
             "order": {label: "Order settings"|t, url: "#order"},
             "files": {label: "Order details"|t, url: "#files"},
         } %}
+
+		{% if order.requestQuote and (order.isGettingQuote or order.isAwaitingApproval) %}
+			{% set tabs = tabs|merge({
+				"quote": {label: "Order quote"|t, url: "#quote"}
+			}) %}
+		{% endif %}
 	{% endif %}
 {% endif %}
 
@@ -79,6 +90,10 @@
 
 		{% include "translations/_components/orders/settings-tab" %}
 		{% include "translations/_components/orders/files-tab" %}
+
+		{% if order.requestQuote and (order.isGettingQuote or order.isAwaitingApproval) %}
+			{% include "translations/_components/orders/quote-tab" %}
+		{% endif %}
 
 	{% endif %}
 {% endblock %}
