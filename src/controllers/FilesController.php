@@ -501,8 +501,8 @@ class FilesController extends Controller
         $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
-        //Iterate over each file on this order
-        if ($order->files) {
+        //Iterate over each file on this order and only process if trackTargetChanges is enabled
+        if ($order->files && $order->trackTargetChanges) {
             foreach ($order->getFiles() as $file) {
                 if (in_array($file->id, $files) && $file->hasTmMisalignments()) {
                     $translationService = Translations::$plugin->translatorFactory->makeTranslationService(

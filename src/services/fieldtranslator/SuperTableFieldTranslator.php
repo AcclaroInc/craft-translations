@@ -103,7 +103,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 					foreach ($block as $key => $elem) {
 						$n = sprintf('new%s', ++$new);
 						$blockId = $elem->id ?? $n;
-						$blockData = isset($fieldData[$n]) ? $fieldData[$n] : array();
+						$blockData = $fieldData[$n] ?? $fieldData[$blockId] ?? array();
 						$post[$fieldHandle][$blockId] = array(
 							'type' => $blockType->id,
 							'fields' => $elementTranslator->toPostArray($elem, $blockData),
@@ -111,8 +111,8 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 					}
 				} else {
 					$n = sprintf('new%s', ++$new);
-					$blockData = isset($fieldData[$n]) ? $fieldData[$n] : array();
 					$blockId = $block-> id ?? $n;
+					$blockData = $fieldData[$n] ?? $fieldData[$blockId] ?? array();
 					$post[$fieldHandle][$blockId] = array(
 						'type' => $blockType->id,
 						'fields' => $elementTranslator->toPostArray($block, $blockData),
@@ -123,7 +123,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 				foreach ($blockElem as $key => $block) {
 					$n = sprintf('new%s', ++$new);
 					$blockId = $block-> id ?? $n;
-					$blockData = isset($fieldData[$n][$key]) ? $fieldData[$n][$key] : array();
+					$blockData = $fieldData[$n][$key] ?? $fieldData[$blockId][$key] ?? array();
 					$post[$fieldHandle][$blockId] = array(
 						'type' => $blockType->id,
 						'fields' => $elementTranslator->toPostArray($block, $blockData),
@@ -160,7 +160,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 					foreach ($block as $key => $elem) {
 						$n = sprintf('new%s', ++$new);
 						$blockId = $field->getIsTranslatable() ? $n : $elem->id;
-						$blockData = isset($fieldData[$n]) ? $fieldData[$n] : array();
+						$blockData = $fieldData[$n] ?? $fieldData[$elem->id] ?? array();
 						$post[$fieldHandle][$blockId] = array(
 							'type' => $blockType->id,
 							'fields' => $elementTranslator->toPostArrayFromTranslationTarget($elem, $sourceLanguage, $targetLanguage, $blockData, true),
@@ -168,8 +168,8 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 					}
 				} else {
 					$n = sprintf('new%s', ++$new);
-					$blockData = isset($fieldData[$n]) ? $fieldData[$n] : array();
 					$blockId = $field->getIsTranslatable() ? $n : $block->id;
+					$blockData = $fieldData[$n] ?? $fieldData[$block->id] ?? array();
 					$post[$fieldHandle][$blockId] = array(
 						'type' => $blockType->id,
 						'fields' => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceLanguage, $targetLanguage, $blockData, true),
@@ -180,7 +180,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 				foreach ($blockElem as $key => $block) {
 					$n = sprintf('new%s', ++$new);
 					$blockId = $field->getIsTranslatable() ? $n : $block->id;
-					$blockData = isset($fieldData[$n][$key]) ? $fieldData[$n][$key] : array();
+					$blockData = $fieldData[$n][$key] ?? $fieldData[$block->id][$key] ?? array();
 					$post[$fieldHandle][$blockId] = array(
 						'type' => $blockType->id,
 						'fields' => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceLanguage, $targetLanguage, $blockData, true),
@@ -188,6 +188,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 				}
 			}
 		}
+
 		return $post;
 	}
 
