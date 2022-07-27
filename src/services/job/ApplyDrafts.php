@@ -19,7 +19,7 @@ class ApplyDrafts extends BaseJob
     public $orderId;
     public $elementIds;
 
-    public function execute($queue): void
+    public function execute($queue)
     {
         Translations::$plugin->draftRepository->applyDrafts($this->orderId, $this->elementIds, $queue);
     }
@@ -28,7 +28,7 @@ class ApplyDrafts extends BaseJob
         $this->setProgress($queue, $progress);
     }
 
-    protected function defaultDescription(): ?string
+    protected function defaultDescription()
     {
         return Constants::JOB_APPLYING_DRAFT;
     }

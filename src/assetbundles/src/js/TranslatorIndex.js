@@ -65,7 +65,7 @@
                 }
             });
 
-            $(".settings.icon").on('click', function() {
+            $("#action-button").on('click', function() {
                 if (self.hasSelections()) {
                     self.toggleEditDeleteButton();
                 }
@@ -84,90 +84,76 @@
                     return;
                 }
 
-                $data = {
+                data = {
                     translatorIds: null
                 };
 
                 $("#content input[type=checkbox]").filter("tbody :checked").each(function() {
-                    if ($data.translatorIds) {
-                        $data.translatorIds += "," + $(this).data("id");
+                    if (data.translatorIds) {
+                        data.translatorIds += "," + $(this).data("id");
                     } else {
-                        $data.translatorIds = $(this).data("id");
+                        data.translatorIds = $(this).data("id");
                     }
                 });
 
-                params = {
-                    data: $data
-                }
-
-                Craft.sendActionRequest('POST', 'translations/translator/delete', params)
-                    .then(() => {
+                Craft.postActionRequest('translations/translator/delete', data, $.proxy(function(response, textStatus) {
+                    if (textStatus === 'success') {
                         location.reload();
-                    })
-                    .catch(({response}) => {
-                        $message = 'An unknown error occurred.';
-                        if (response.data.message != null) {
-                            $message = response.data.message;
-                        }
-                        Craft.cp.displayError(Craft.t('app', $message));
-                    });
+                    } else {
+                        Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
+                    }
+                }, this));
             });
         },
 
         _getTranslatorsData: function(key) {
             $mainDiv = $('<div>', {class: "translations-element-index"});
 
-            params = {
-                data: {service: key}
-            }
+            Craft.postActionRequest('translations/translator/get-translators', {service: key}, $.proxy(function(response, textStatus) {
+                if (textStatus === 'success' && response.data != "") {
+                    $table = $('<table>', {class: "data"});
+                    $table.appendTo($mainDiv);
+                    $thead = $('<thead>\
+                        <tr>\
+                            <th class="checkbox-cell selectallcontainer orderable">\
+                                <input type="checkbox" title="select-all" id="translator-0"/>\
+                                <label for="translator-0"></label>\
+                            </th>\
+                            <th>Name</th>\
+                            <th>Status</th>\
+                            <th>Service</th>\
+                        </tr>\
+                    </thead>');
+                    $thead.appendTo($table);
 
-            Craft.sendActionRequest('POST', 'translations/translator/get-translators', params)
-                .then((response) => {
-                    if (response.data != "") {
-                        $table = $('<table>', {class: "data"});
-                        $table.appendTo($mainDiv);
-                        $thead = $('<thead>\
-                            <tr>\
-                                <td class="checkbox-cell selectallcontainer orderable">\
-                                    <input type="checkbox" title="select-all" id="translator-0"/>\
-                                    <label for="translator-0"></label>\
-                                </td>\
-                                <th>Name</th>\
-                                <th>Status</th>\
-                                <th>Service</th>\
-                            </tr>\
-                        </thead>');
-                        $thead.appendTo($table);
+                    $tbody = $('<tbody>');
+                    $tbody.appendTo($table);
 
-                        $tbody = $('<tbody>');
-                        $tbody.appendTo($table);
+                    $.each(response.data, function() {
+                        $tr = $('<tr>');
 
-                        $.each(response.data, function() {
-                            $tr = $('<tr>');
+                        $id = "translator-"+this.id;
+                        $service = this.service == "export_import" ? "Export/Import" 
+                            : this.service.substr(0,1).toUpperCase()+this.service.substr(1);
+                        $url = "translators/detail/"+this.id;
+                        $statusClass = this.status == "active" ? "green" : "red";
+                        $status = this.status.substr(0,1).toUpperCase()+this.status.substr(1);
+                        $label = this.label !== "" ? this.label : $service;
 
-                            $id = "translator-"+this.id;
-                            $service = this.service == "export_import" ? "Export/Import"
-                                : this.service.substr(0,1).toUpperCase()+this.service.substr(1);
-                            $url = "translators/detail/"+this.id;
-                            $statusClass = this.status == "active" ? "green" : "red";
-                            $status = this.status.substr(0,1).toUpperCase()+this.status.substr(1);
-                            $label = this.label !== "" ? this.label : $service;
+                        $td = $("<td class=checkbox-cell><input type=checkbox title=select id="+$id+"\
+                            data-url="+$url+" data-id="+this.id+"> <label for="+$id+"></label></td>"+'\
+                            <td><a href='+$url+'>'+$label+'\
+                            </a></td><td><span class="status '+$statusClass+'"></span>\
+                            '+$status+'</td><td>'+$service+'</td>');
 
-                            $td = $("<td class=checkbox-cell><input type=checkbox title=select id="+$id+"\
-                                data-url="+$url+" data-id="+this.id+"> <label for="+$id+"></label></td>"+'\
-                                <td><a href='+$url+'>'+$label+'\
-                                </a></td><td><span class="status '+$statusClass+'"></span>\
-                                '+$status+'</td><td>'+$service+'</td>');
-
-                            $td.appendTo($tr);
-                            $tr.appendTo($tbody);
-                        });
-                    }
-                })
-                .catch(() => {
+                        $td.appendTo($tr);
+                        $tr.appendTo($tbody);
+                    });
+                } else {
                     Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
                     return null;
-                });
+                }
+            }, this));
 
             return $mainDiv;
         }

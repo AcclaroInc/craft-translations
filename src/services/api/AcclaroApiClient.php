@@ -107,19 +107,16 @@ class AcclaroApiClient
         if ($files) {
             foreach ($files as $key => $file) {
                 if ( ! is_array( $file ) ) {
-                    try {
-                        $response = $this->client->request($method, $endpoint . '?' . http_build_query($query, '', '&'), [
-                            'multipart' => [
-                                [
-                                    'name' => 'file',
-                                    'contents' => fopen($file, 'r'),
-                                    'filename' => pathinfo($file)['basename']
-                                ]
+                    // var_dump(pathinfo($file));
+                    $response = $this->client->request($method, $endpoint.'?'.http_build_query($query, '', '&'), [
+                        'multipart' => [
+                            [
+                                'name' => 'file',
+                                'contents' => fopen( $file, 'r' ),
+                                'filename' => pathinfo($file)['basename']
                             ]
-                        ]);
-                    } catch (Exception $e) {
-                        Craft::error($e, Constants::PLUGIN_HANDLE);
-                    }
+                        ]
+                    ]);
                 }
             }
         } else {
@@ -130,6 +127,7 @@ class AcclaroApiClient
             try {
                 $response = $this->client->send($request, ['timeout' => 0]);
             } catch (Exception $e) {
+                //@TODO
 				Craft::error($e, Constants::PLUGIN_HANDLE);
                 return null;
             }
@@ -138,7 +136,7 @@ class AcclaroApiClient
         if ($this->loggingEnabled) $this->log($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
-            Craft::error('Error code recieved in response', Constants::PLUGIN_HANDLE);
+            //@TODO
             return null;
         }
 

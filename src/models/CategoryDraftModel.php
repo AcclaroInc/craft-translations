@@ -10,13 +10,13 @@
 
 namespace acclaro\translations\models;
 
-use craft\elements\Asset;
+use craft\elements\Category;
 use craft\behaviors\DraftBehavior;
 use craft\validators\SiteIdValidator;
 use acclaro\translations\Translations;
 use craft\behaviors\FieldLayoutBehavior;
 use craft\behaviors\CustomFieldBehavior;
-use acclaro\translations\records\AssetDraftRecord;
+use acclaro\translations\records\CategoryDraftRecord;
 
 use Craft;
 use craft\base\Model;
@@ -26,9 +26,9 @@ use craft\base\Model;
  * @package   Translations
  * @since     1.0.0
  */
-class AssetDraftModel extends Asset
+class CategoryDraftModel extends Category
 {
-    protected $_asset = null;
+    protected $_category = null;
 
     public $id;
 
@@ -36,12 +36,12 @@ class AssetDraftModel extends Asset
 
     public $name;
 
-    public $assetId;
+    public $categoryId;
 
     public $site;
 
     public $data;
-
+    
     public $sourceSite;
 
     /**
@@ -59,31 +59,36 @@ class AssetDraftModel extends Asset
     public function rules()
     {
         $rules = parent::rules();
-        $rules[] = [['name', 'assetId', 'site', 'data'], 'required'];
+        $rules[] = [['name', 'categoryId', 'site', 'data'], 'required'];
         $rules[] = ['site', SiteIdValidator::class];
 
         return $rules;
     }
 
+    public function getFieldLayout()
+    {
+        
+        return parent::getFieldLayout();
+    }
+
     public function getHandle()
     {
-        return $this->getAsset()->handle;
+        return $this->getCategory()->handle;
     }
 
     public static function populateModel($attributes)
     {
-        if ($attributes instanceof AssetDraftRecord) {
+        if ($attributes instanceof CategoryDraftRecord) {
             $attributes = $attributes->getAttributes();
         }
 
-        $assetData = json_decode($attributes['data'], true);
-        $fieldContent = isset($assetData['fields']) ? $assetData['fields'] : null;
-        // $attributes['draftId'] = $attributes['id'];
-        $attributes['id'] = $attributes['assetId'];
+        $categoryData = json_decode($attributes['data'], true);
+        $fieldContent = isset($categoryData['fields']) ? $categoryData['fields'] : null;
+        $attributes['id'] = $attributes['categoryId'];
         
-        $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'assetId')));
+        $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'categoryId')));
         
-        $attributes = array_merge($attributes, $assetData);
+        $attributes = array_merge($attributes, $categoryData);
         
         $draft = parent::setAttributes($attributes);
 
@@ -104,18 +109,18 @@ class AssetDraftModel extends Asset
         return $draft;
     }
 
-    public function getAsset()
+    public function getCategory()
     {
-        if (is_null($this->assetId)) {
-            $this->_asset = Translations::$plugin->assetDraftRepository->getAssetById($this->id); // this works for creating orders
+        if (is_null($this->categoryId)) {
+            $this->_category = Translations::$plugin->categoryRepository->getCategoryById($this->id); // this works for creating orders
         } else {
-            $this->_asset = Translations::$plugin->assetDraftRepository->getAssetById($this->assetId); // this works for edit draft
+            $this->_category = Translations::$plugin->categoryRepository->getCategoryById($this->categoryId); // this works for edit draft
         }
 
-        return $this->_asset;
+        return $this->_category;
     }
 
-    public function getUrl($transform = null, ?bool $generateNow = null)
+    public function getUrl()
     {
         return '';
     }
@@ -125,9 +130,10 @@ class AssetDraftModel extends Asset
      */
     public function getCpEditUrl()
     {
-        $asset = $this->getAsset();
+        $category = $this->getCategory();
 
-        $path = 'translations/assets/'.$asset->id.'/drafts/'.$this->draftId;
+        $catUrl = $category->id . ($category->slug ? '-' . $category->slug : '');
+        $path = 'translations/categories/'.$category->getGroup()->handle.'/'.$catUrl.'/drafts/'.$this->draftId;
         
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
@@ -144,12 +150,12 @@ class AssetDraftModel extends Asset
         ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
-            'elementType' => Asset::class,
+            'elementType' => Category::class,
         ];
         $behaviors['draft'] = [
             'class' => DraftBehavior::class,
             'creatorId' => 1,
-            'draftName' => 'Asset Draft',
+            'draftName' => 'Category Draft',
             'draftNotes' => '',
             'trackChanges' => true,
         ];

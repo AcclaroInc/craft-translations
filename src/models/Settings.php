@@ -36,7 +36,7 @@ class Settings extends Model
     /** @var int The Volume ID where uploads will be saved */
     public $uploadVolume = 0;
 
-    public function rules(): array
+    public function rules()
     {
         return [];
     }

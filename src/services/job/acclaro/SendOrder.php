@@ -20,7 +20,7 @@ class SendOrder extends BaseJob
     public $sandboxMode;
     public $settings;
 
-    public function execute($queue): void
+    public function execute($queue)
     {
 
         Translations::$plugin->orderRepository->sendAcclaroOrder($this->order, $this->settings, $queue);
@@ -30,7 +30,7 @@ class SendOrder extends BaseJob
         $this->setProgress($queue, $progress);
     }
 
-    protected function defaultDescription(): ?string
+    protected function defaultDescription()
     {
         return Constants::JOB_ACCLARO_SENDING_ORDER;
     }

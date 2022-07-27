@@ -23,13 +23,12 @@ class ExportController extends Controller
         $this->requirePostRequest();
         $request = Craft::$app->getRequest();
 
+        // Get the criteria param
+        $criteria = $request->getBodyParam('criteria');
+
         $exporter = new Exporter($request->getRequiredParam('type', 'Raw'));
         $elementType = $request->getRequiredParam('elementType');
         $exporter->setElementType($elementType);
-
-        if ($orderIds = $request->getBodyParam('orderIds')) {
-            $exporter->setOrderIds(explode(',', $orderIds));
-        }
 
         $filename = $exporter->getFilename();
 
@@ -110,7 +109,7 @@ class ExportController extends Controller
 
 		fclose($previewFile);
 
-		return $this->asSuccess(null, ['previewFile' => $fileName]);
+		return $this->asJson(['success' => true, 'previewFile' => $fileName]);
 	}
 
     /**

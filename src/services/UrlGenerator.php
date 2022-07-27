@@ -17,6 +17,7 @@ use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
 
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
@@ -58,14 +59,9 @@ class UrlGenerator
         $sitesService = Craft::$app->getSites();
         $targetSite = $sitesService->getSiteById($file->targetSite) ?? $sitesService->getSiteById($file->sourceSite) ?? $sitesService->getPrimarySite();
 
-        $data = [
-            'site' => $targetSite->handle,
-        ];
-
         if ($element instanceof GlobalSet) {
             if ($file->draftId && $file->isComplete()) {
-                $url = sprintf('translations/globals/%s/drafts/%s?site=%s', $element->handle, $file->draftId, $data['site']);
-                return Translations::$plugin->urlHelper->cpUrl($url);
+                return Translations::$plugin->urlHelper->cpUrl('translations/globals/'.$element->handle.'/drafts/'.$file->draftId);
             }
             return preg_replace(
                 '/(\/'.Craft::$app->sites->getSiteById($element->siteId)->handle.')/',
@@ -74,29 +70,44 @@ class UrlGenerator
             );
         }
 
+        if ($element instanceof Category) {
+            $catUri = $element->id.'-'.$element->slug;
+
+            if ($file->draftId && $file->isComplete()) {
+                return Translations::$plugin->urlHelper->cpUrl("translations/categories/".$element->getGroup()->handle."/".$catUri."/drafts/".$file->draftId);
+            }
+            return Translations::$plugin->urlHelper->url(
+                $element->getCpEditUrl($element),
+                ['site' => $targetSite->handle]
+            );
+        }
+
         if ($element instanceof Asset) {
             if ($file->draftId && $file->isComplete()) {
-                $url = sprintf('translations/assets/%s/drafts/%s?site=%s', $element->id, $file->draftId, $data['site']);
-                return Translations::$plugin->urlHelper->cpUrl($url);
+                return Translations::$plugin->urlHelper->cpUrl('translations/assets/'.$element->id.'/drafts/'.$file->draftId);
             }
             return Translations::$plugin->urlHelper->url($element->getCpEditUrl(),
                 ['site' => $targetSite->handle]
             );
         }
 
-        if ($file->isPublished()) {
-            $element = $element->getIsDraft() ? $element->getCanonical(true) : $element;
-        } elseif ($file->isComplete() && $file->hasDraft()) {
+        $data = [
+            'site' => $targetSite->handle,
+        ];
+
+        if ($file->draftId && $file->isComplete()) {
             $data['draftId'] = $file->draftId;
         }
-
+        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+            $element = $element->getIsDraft() ? $element->getCanonical(true) : $element;
+        }
         return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), $data);
     }
 
     public function generateFileWebUrl(Element $element, FileModel $file)
     {
-        if ($file->isPublished()) {
-            if (!$file->hasPreview()) {
+        if ($file->status === Constants::FILE_STATUS_PUBLISHED) {
+            if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
                 return '';
             }
 
@@ -113,19 +124,19 @@ class UrlGenerator
 
     public function generateElementPreviewUrl(Element $element, $siteId = null)
     {
-        if ($element instanceof GlobalSet || $element instanceof Asset) {
+        if ($element instanceof GlobalSet || $element instanceof Category || $element instanceof Asset) {
             return '';
         }
 
         $className = get_class($element);
 
-        if (($className === Entry::class || $className === Category::class) && !$element->getIsDraft()) {
+        if ($className === Entry::class && !$element->getIsDraft()) {
             $previewUrl = $element->url;
         } else {
             $route = [
                 'preview/preview', [
                     'elementType' => $className,
-                    'canonicalId' => $element->getCanonicalId(),
+                    'sourceId' => $element->getCanonicalId(),
                     'siteId' => $siteId ? $siteId : $element->siteId,
                     'draftId' => $element->draftId,
                     'revisionId' => $element->revisionId
@@ -162,7 +173,7 @@ class UrlGenerator
             $uri = $targets[0]['urlFormat'] ?? null;
 
             if ($uri) {
-                return $this->normalizeUri($uri, $element);
+                return str_replace('//', '/', $this->normalizeUri($uri, $element));
             }
         }
 

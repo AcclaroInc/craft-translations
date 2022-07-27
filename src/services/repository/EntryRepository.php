@@ -12,16 +12,16 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\elements\User;
+use craft\elements\Entry;
 use craft\base\Component;
 use craft\services\Drafts;
 use craft\events\DraftEvent;
 use craft\behaviors\DraftBehavior;
 use acclaro\translations\Translations;
-use craft\base\ElementInterface;
 
 class EntryRepository extends Component
 {
-    public function createDraft(ElementInterface $entry, $site, $orderName)
+    public function createDraft(Entry $entry, $site, $orderName)
     {
         $allSitesHandle = Translations::$plugin->siteRepository->getAllSitesHandle();
 
@@ -49,12 +49,12 @@ class EntryRepository extends Component
         }
     }
 
-	private function makeNewDraft($canonical, $creatorId, $name, $notes, $newAttributes, $provisional = false)
+	private function makeNewDraft($source, $creatorId, $name, $notes, $newAttributes, $provisional = false)
 	{
-		$canonical = $canonical->getIsDraft() ? $canonical->getCanonical() : $canonical;
+		$canonical = $source->getIsDraft() ? $source->getCanonical() : $source;
 		// Fire a 'beforeCreateDraft' event
         $event = new DraftEvent([
-            'canonical' => $canonical,
+            'source' => $source,
             'creatorId' => $creatorId,
             'provisional' => $provisional,
             'draftName' => $name,
@@ -67,7 +67,7 @@ class EntryRepository extends Component
 		$transaction = Craft::$app->getDb()->beginTransaction();
         try {
             // Create the draft row
-            $draftId = (new Drafts())->insertDraftRow($name, $notes, $creatorId, $canonical->id, $canonical::trackChanges(), $provisional);
+            $draftId = (new Drafts())->insertDraftRow($name, $notes, $creatorId, $canonical->id, $source::trackChanges(), $provisional);
 
             // Duplicate the element
             $newAttributes['isProvisionalDraft'] = $provisional;
@@ -78,10 +78,10 @@ class EntryRepository extends Component
                 'creatorId' => $creatorId,
                 'draftName' => $name,
                 'draftNotes' => $notes,
-                'trackChanges' => $canonical::trackChanges(),
+                'trackChanges' => $source::trackChanges(),
             ];
 
-            $draft = Craft::$app->getElements()->duplicateElement($canonical, $newAttributes);
+            $draft = Craft::$app->getElements()->duplicateElement($source, $newAttributes);
 
             $transaction->commit();
         } catch (\Throwable $e) {
@@ -92,7 +92,7 @@ class EntryRepository extends Component
         // Fire an 'afterCreateDraft' event
         if ($this->hasEventHandlers('afterCreateDraft')) {
             $this->trigger('afterCreateDraft', new DraftEvent([
-                'canonical' => $canonical,
+                'source' => $source,
                 'creatorId' => $creatorId,
                 'provisional' => $provisional,
                 'draftName' => $name,

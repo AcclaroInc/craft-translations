@@ -30,6 +30,12 @@ class GlobalSetDraftModel extends GlobalSet
 {
     protected $_globalSet = null;
 
+    public $id;
+
+    public $draftId;
+
+    public $name;
+
     public $globalSetId;
 
     public $site;
@@ -37,10 +43,10 @@ class GlobalSetDraftModel extends GlobalSet
     public $data;
 
     /**
-     * @param array $attributes
+     * @param array|null    $attributes
      */
     public function __construct(
-        $attributes = []
+        $attributes = null
     ) {
         parent::__construct($attributes);
     }
@@ -48,7 +54,7 @@ class GlobalSetDraftModel extends GlobalSet
     /**
      * @inheritdoc
      */
-    public function rules(): array
+    public function rules()
     {
         $rules = parent::rules();
         $rules[] = [['name', 'globalSetId', 'site', 'data'], 'required'];
@@ -61,10 +67,10 @@ class GlobalSetDraftModel extends GlobalSet
         return $rules;
     }
 
-    public function getFieldLayout(): ?\craft\models\FieldLayout
+    public function getFieldLayout()
     {
         $globalSet = $this->getGlobalSet();
-
+        
         return $globalSet->getFieldLayout();
     }
 
@@ -82,11 +88,11 @@ class GlobalSetDraftModel extends GlobalSet
         $globalSetData = json_decode($attributes['data'], true);
         $fieldContent = isset($globalSetData['fields']) ? $globalSetData['fields'] : null;
         $attributes['id'] = $attributes['globalSetId'];
-
+        
         $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'globalSetId')));
-
+        
         $attributes = array_merge($attributes, $globalSetData);
-
+        
         $draft = parent::setAttributes($attributes);
 
         if ($fieldContent) {
@@ -117,7 +123,7 @@ class GlobalSetDraftModel extends GlobalSet
         return $this->_globalSet;
     }
 
-    public function getUrl(): ?string
+    public function getUrl()
     {
         return '';
     }
@@ -125,19 +131,19 @@ class GlobalSetDraftModel extends GlobalSet
     /**
      * {@inheritdoc}
      */
-    public function getCpEditUrl(): ?string
+    public function getCpEditUrl()
     {
         $globalSet = $this->getGlobalSet();
 
         $path = 'translations/globals/'.$globalSet->handle.'/drafts/'.$this->draftId;
-
+        
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
 
     /**
      * @inheritdoc
      */
-    public function behaviors(): array
+    public function behaviors()
     {
         $behaviors = parent::behaviors();
         $behaviors['customFields'] = [

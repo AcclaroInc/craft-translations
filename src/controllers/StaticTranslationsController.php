@@ -54,7 +54,7 @@ class StaticTranslationsController extends Controller
 
         Translations::$plugin->staticTranslationsRepository->set($lang, $translations);
 
-        return $this->asSuccess('Static Translations saved.', [
+        return $this->asJson([
             'success' => true,
             'errors' => []
         ]);
@@ -77,7 +77,7 @@ class StaticTranslationsController extends Controller
         $elementQuery = StaticTranslations::find();
         $elementQuery->status = null;
         $elementQuery->source = [$source];
-        $elementQuery->search = Craft::$app->request->getBodyParam('search', null);
+        $elementQuery->search = Craft::$app->request->getRequiredBodyParam('search', null);
         $elementQuery->siteId = $siteId;
 
         $translations = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
@@ -112,7 +112,7 @@ class StaticTranslationsController extends Controller
      */
     public function actionExportFile()
     {
-        $filename = Craft::$app->getRequest()->getQueryParam('filename');
+        $filename = Craft::$app->getRequest()->getRequiredQueryParam('filename');
         if (!is_file($filename) || !Path::ensurePathIsContained($filename)) {
             throw new NotFoundHttpException(Craft::t('app', 'Invalid file name: {filename}', [
                 'filename' => $filename

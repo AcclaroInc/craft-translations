@@ -20,7 +20,7 @@ class UpdateReviewFileUrls extends BaseJob
     public $sandboxMode;
     public $settings;
 
-    public function execute($queue): void
+    public function execute($queue)
     {
         $acclaroApiClient = new AcclaroApiClient(
             $this->settings['apiToken'],
@@ -48,7 +48,7 @@ class UpdateReviewFileUrls extends BaseJob
         }
     }
 
-    protected function defaultDescription(): ?string
+    protected function defaultDescription()
     {
         return Constants::JOB_ACCLARO_UPDATING_REVIEW_URL;
     }

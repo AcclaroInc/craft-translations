@@ -255,8 +255,7 @@ class ElementToFileConverter
     	return $msg;
     }
 
-    public function csvToJson($file_content)
-    {
+    private function csvToJson($file_content) {
         $jsonData = [];
         $contentArray = explode("\n", $file_content, 2);
 

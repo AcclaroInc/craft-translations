@@ -10,13 +10,13 @@ class OrderQuery extends ElementQuery
     /**
      * @inheritdoc
      */
-    protected array $defaultOrderBy = ['translations_orders.dateCreated' => SORT_DESC];
+    protected $defaultOrderBy = ['translations_orders.dateCreated' => SORT_DESC];
 
-    public array|string|null $status = null;
+    public $status;
 
     public $elementIds;
     
-    public function status(array|string|null $value): self
+    public function status($value)
     {
         $this->status = $value;
 

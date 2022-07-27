@@ -15,9 +15,9 @@ use craft\elements\Entry;
 
 class ElementRepository
 {
-    public function getElementById($elementId, $siteId = null)
+	public function getElementById($elementId, $siteId)
     {
-        return Craft::$app->getElements()->getElementById($elementId, null, $siteId);
+		return Craft::$app->elements->getElementById($elementId, null, $siteId);
     }
 
     public function getElementByDraftId($draftId, $siteId = null)
@@ -25,12 +25,11 @@ class ElementRepository
         if (! $siteId) {
             $siteId = Craft::$app->getSites()->getPrimarySite()->id;
         }
-
         return Entry::find()
             ->draftId($draftId)
             ->provisionalDrafts(false)
             ->siteId($siteId)
-            ->status(null)
+            ->anyStatus()
             ->one();
     }
 }

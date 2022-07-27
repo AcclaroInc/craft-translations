@@ -45,7 +45,7 @@ class OrderDelete extends Delete
     /**
      * @inheritdoc
      */
-    public function getConfirmationMessage(): ?string
+    public function getConfirmationMessage()
     {
         if ($this->confirmationMessage !== null) {
             return $this->confirmationMessage;
@@ -89,6 +89,11 @@ class OrderDelete extends Delete
                         switch (get_class($element)) {
                             case ($element instanceof GlobalSet):
                                 $elementRepository = Translations::$plugin->globalSetDraftRepository;
+                                $draft = $elementRepository->getDraftById($file->draftId);
+                                $elementRepository->deleteDraft($draft);
+                                break;
+                            case ($element instanceof Category):
+                                $elementRepository = Translations::$plugin->categoryDraftRepository;
                                 $draft = $elementRepository->getDraftById($file->draftId);
                                 $elementRepository->deleteDraft($draft);
                                 break;

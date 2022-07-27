@@ -1,6 +1,5 @@
 {% extends "_layouts/cp" %}
-{% import '_includes/forms' as forms %}
-{% import 'translations/_components/_forms/button' as button %}
+{% import 'translations/_macros' as macros %}
 
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
 
@@ -14,35 +13,24 @@
 
 {% set disabled = '' %}
 {% if (orderCountAcclaro == 0) %}
-    {% set disabled = 'link-disabled' %}
+    {% set disabled = 'disabled' %}
 {% endif %}
 
 {% block actionButton %}
     <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
-        {{ forms.hidden({
-            name: 'action',
-            value: 'translations/order/sync-orders'
-        }) }}
+        <input type="hidden" name="action" value="translations/order/sync-orders">
         {{ csrfInput() }}
-
-        {{ button.syncOrderButton(disabled) }}
+        <div class="btngroup" style="margin-right:5px;">
+            <button type="submit" class="btn big {{ disabled }} icon" data-icon="refresh" value="submit" {{ disabled }}>{{ "Sync orders"|t('app') }}</button>
+        </div>
+        <div class="sync-status"></div>
     </form>
-
-    {{ button.anchorButton({
-        label: 'New order',
-        class: 'submit',
-        href: url('translations/orders/create'),
-        attributes: {
-            data: {
-                icon: 'language',
-            },
-        }
-    }) }}
+    <a class="btn big submit icon btn-create-new-order" data-icon="language" href="{{ url('translations/orders/create') }}">{{ 'New order'|t }}</a>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
 
-{% set sources = craft.app.elementSources.getSources(elementType, 'index') %}
+{% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}
 {% set customizableSources = (sources is not empty and context == 'index' and currentUser.can('customizeSources')) %}
 
 {% set showSiteMenu = (craft.app.getIsMultiSite() ? (showSiteMenu ?? 'auto') : false) %}

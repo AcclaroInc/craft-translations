@@ -20,16 +20,11 @@ Craft.Translations.CategoryTranslations = {
     },
 
     isEditCategoryScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="elements/save"]').length > 0 ||
-        $('form#main-form input[type=hidden][name=action][value="elements/save-draft"]').length > 0;
+        return $('form#main-form input[type=hidden][name=action][value="categories/save-category"]').length > 0;
     },
 
     getEditCategoryId: function() {
-        return $('form#main-form input[type=hidden][name=elementId]').val();
-    },
-
-    isCreatingFresh: function() {
-        return $('form#main-form input[type=hidden][name=fresh]').val();
+        return $('form#main-form input[type=hidden][name=sourceId]').val();
     },
 
     updateSelectedCategories: function() {
@@ -83,24 +78,25 @@ Craft.Translations.CategoryTranslations = {
     initAddToTranslationOrderButton: function(orders, categoryId) {
         var self = this;
 
+        //var sourceSite = $('form#main-form input[type=hidden][name=siteId]').val();
+
         var $btncontainer = document.createElement('div');
-            $btncontainer.id = "translations-field";
-            $btncontainer.className = "field";
+        $btncontainer.id = "translations-field";
+        $btncontainer.className = "field";
 
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
         if (this.isEditCategoryScreen()) {
-            $settings = $('#slug-field').closest('div.meta')
-
-            $settings.prepend($btncontainer);
+            $settings = document.getElementById('settings');
+            $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
 
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
-        } else if (!this.isCreatingFresh()) {
-            $btngroup.insertBefore('#header #action-buttons');
+        } else {
+            $btngroup.insertBefore('#header #action-button');
         }
 
 
