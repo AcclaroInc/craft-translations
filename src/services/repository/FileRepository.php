@@ -529,6 +529,12 @@ class FileRepository
             $sourceContent = json_decode($converter->xmlToJson($source), true);
             $currentContent = json_decode($converter->xmlToJson($currentContent), true);
 
+            /**
+             * Replace `\u00a0` created by mysql with `space`
+             * as mysql replaces any space before special char like ?, ! with `\u00a0`
+             */
+            $sourceContent = str_replace('\u{00a0}', ' ', $sourceContent);
+
             $sourceContent = json_encode(array_values($sourceContent['content']));
             $currentContent = json_encode(array_values($currentContent['content']));
 
@@ -540,6 +546,45 @@ class FileRepository
         }
 
         return false;
+    }
+
+    /**
+     * Return a preview setting array used for creating per file preview
+     *
+     * @param \acclaro\translations\models\FileModel $file
+     *
+     *@return array $settings
+     */
+    public function getPreviewSettings(FileModel $file)
+    {
+        $settings = [];
+        $element = $file->getElement(false);
+
+        if ($element) {
+            $security = Craft::$app->getSecurity();
+
+            if ($previewTargets = $element->getPreviewTargets() ?? []) {
+                if ($file->hasDraft() && $file->isComplete()) {
+                    Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
+                } else {
+                    Craft::$app->getSession()->authorize("previewElement:$element->id");
+                }
+            }
+
+            $settings = [
+                'canonicalId' => $element->id,
+                'draftId' => $file->draftId ?? null,
+                'elementType' => get_class($element),
+                'enablePreview' => true,
+                'isLive' => !($file->isComplete() && $file->hasDraft()),
+                'previewTargets' => $previewTargets,
+                'previewToken' => $security->generateRandomString() ?? null,
+                'siteId' => $file->targetSite,
+                'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite) : null,
+            ];
+        }
+
+        return $settings;
     }
 
     // Draft Actions
