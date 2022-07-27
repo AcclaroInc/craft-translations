@@ -27,9 +27,10 @@ class NewAndModifiedAssets extends AssetBundle
         $this->js = [
             'js/RecentlyModified.js',
             'js/diff2html.min.js',
+            'js/OrderEntries.js',
             'js/RecentEntries.js',
         ];
-        
+
         $this->css = [
             'css/diff2html.min.css',
         ];

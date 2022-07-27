@@ -1,5 +1,4 @@
-{% extends "_layouts/elementindex" %}
-{% import 'translations/_macros' as macros %}
+{% extends "_layouts/cp" %}
 
 {% set title = "Static Translations"|t('app') %}
 {% set elementType = 'acclaro\\translations\\elements\\StaticTranslations' %}
@@ -21,7 +20,7 @@
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\StaticTranslationsAssets") %}
 
-{% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}
+{% set sources = craft.app.elementSources.getSources(elementType, 'index', true) %}
 {% set customizableSources = (sources is not empty and context == 'index' and currentUser.can('customizeSources')) %}
 
 {% block sidebar %}
@@ -38,6 +37,13 @@
         {% endif %}
     {% endif %}
 {% endblock %}
+
+{% block toolbar %}
+    {% include '_elements/toolbar' with {
+        showSiteMenu: true,
+    } %}
+{% endblock %}
+
 
 {% block content %}
     <form method="post" id="static-translation" accept-charset="utf-8">
@@ -64,8 +70,19 @@
 
 {% endblock %}
 
-{% js %}
+{% block initJs %}
+    Craft.elementIndex = Craft.createElementIndex('{{ elementType|e("js") }}', $('#page-container'), {
+        elementTypeName: '{{ elementInstance.displayName()|e("js") }}',
+        elementTypePluralName: '{{ elementInstance.pluralDisplayName()|e("js") }}',
+        context: '{{ context }}',
+        storageKey: 'elementindex.{{ elementType|e("js") }}',
+        criteria: Craft.defaultIndexCriteria,
+        toolbarSelector: '#toolbar',
+    });
+
     $(document).ready(function() {
         Craft.Translations.StaticTranslations.init();
     });
-{% endjs %}
+{% endblock %}
+
+{% js block('initJs') %}

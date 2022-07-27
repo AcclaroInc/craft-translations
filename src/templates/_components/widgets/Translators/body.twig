@@ -1,3 +1,5 @@
+{% import 'translations/_components/_forms/button' as button %}
+
 <div class="translators-container scroll-x-auto">
     {% if translators|length %}
         <table class="data fullwidth table">
@@ -39,9 +41,13 @@
                 </tr>
             {% endfor %}
         </table>
-        
-        <div class="" style="float:right;">
-            <a class="btn icon add" href="{{ url('translations/translators/new') }}" style="margin-top:1em;">Add new</a>
+
+        <div class="buttons right">
+            {{ button.anchorButton({
+                label: 'Add new'|t('app'),
+                class: 'icon add',
+                href: url('translations/translators/new')
+            }) }}
         </div>
     {% else %}
         <table class="data fullwidth table">

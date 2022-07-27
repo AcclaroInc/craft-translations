@@ -1,0 +1,113 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% do view.setIsDeltaRegistrationActive(true) %}
+
+{% set crumbs = [
+    { label: 'Translations'|t, url: url('translations') },
+    { label: 'Orders'|t, url: url('translations/orders') },
+    { label: element.title, url: 'javascript:void(0)' },
+] %}
+
+{% block contextMenu %}
+    <div class="select">
+        <select class="site">
+            <option value="{{ selectedSite.handle }}" selected>{{ selectedSite.name }}</option>
+            <!-- NOTE: Remove if not needed, Commented as user can confuse draft with other sites. -->
+            {# {% for site in craft.app.sites.getAllSites() %}
+                <option value="{{ site.handle }}"{% if site.id == selectedSite.id %} selected {% endif %}>{{ site.name }}</option>
+            {% endfor %} #}
+        </select>
+    </div>
+{% endblock %}
+
+{% block actionButton %}
+    {% if assetUrl %}
+        <a class="btn" href="{{ assetUrl }}" target="_blank" data-icon="preview">{{ 'View'|t('app') }}</a>
+    {% endif %}
+
+    <div class="btngroup">
+        <input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
+        <div class="btn submit menubtn"></div>
+        <div class="menu">
+            <ul>
+                <ul>
+                    <li><a class="formsubmit" data-action="{{ publishSourceAction }}">{{ 'Publish draft'|t }}</a></li>
+                </ul>
+                <hr>
+                <ul>
+                    <li><a class="formsubmit" data-action="{{ deleteSourceAction }}" data-confirm="{{ 'Are you sure you want to delete this draft?'|t }}">{{ 'Delete draft'|t }}</a></li>
+                </ul>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% set form = element.getFieldLayout().createForm(element, isRevision or not canEdit, {
+    registerDeltas: true,
+}) %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    {{ form.render()|raw }}
+    {{ hiddenInput('assetId', asset.id) }}
+    {{ hiddenInput('draftId', element.id) }}
+    {{ hiddenInput('siteId', element.site) }}
+    {{ hiddenInput('fieldLayoutId', asset.getFieldLayout().id) }}
+    {{ actionInput(saveSourceAction) }}
+{% endblock %}
+
+{% block details %}
+    {{ previewHtml|raw }}
+    <div class="meta">
+        <div id="new-filename-field" class="field first" data-attribute="new-filename">
+            <div class="heading">
+                <label id="new-filename-label" for="new-filename">
+                    Filename
+                    <span class="visually-hidden">Required</span>
+                    <span class="required" aria-hidden="true"></span>
+                </label>
+            </div>
+            <div class="input ltr">
+                <input type="text" id="new-filename" class="text filename fullwidth" name="newFilename" value="{{ asset.filename }}" autocomplete="off" dir="ltr">
+            </div>
+        </div>
+    </div>
+
+    <dl class="meta read-only">
+        <div class="data">
+            <dt class="heading">Location</dt>
+            <dd class="value">{{ volume.name }}</dd>
+        </div>
+        <div class="data">
+            <dt class="heading">File Size</dt>
+            <dd class="value">{{ formattedSize }}</dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Uploaded by</dt>
+            <dd class="value">
+                {% include '_elements/element' with {
+					element: author,
+				} %}
+            </dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Dimensions</dt>
+            <dd class="value">{{ dimensions }}</dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Created at</dt>
+            <dd class="value">
+                <label>{{ asset.dateCreated ? asset.dateCreated|date('n/j/Y') : 'N/A' }}</label>
+				<label class="pl-10">{{ asset.dateCreated ? asset.dateCreated|date('h:i A') : '' }}</label>
+            </dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Updated at</dt>
+            <dd class="value">
+                <label>{{ asset.dateUpdated ? asset.dateUpdated|date('n/j/Y') : 'N/A' }}</label>
+				<label class="pl-10">{{ asset.dateUpdated ? asset.dateUpdated|date('h:i A') : '' }}</label>
+            </dd>
+        </div>
+    </dl>
+{% endblock %}
