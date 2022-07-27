@@ -16,6 +16,8 @@ class Exporter extends ElementExporter
 
     protected $allSites;
 
+    protected null|array $selectedOrderIds = null;
+
     protected $allTranslators;
 
     protected $keyMap = [
@@ -39,7 +41,7 @@ class Exporter extends ElementExporter
      * @param  ElementQueryInterface  $query
      * @return array|callable|resource|string
      */
-    public function export(ElementQueryInterface $query)
+    public function export(ElementQueryInterface $query): mixed
     {
         $this->setSitesArray();
 
@@ -56,6 +58,7 @@ class Exporter extends ElementExporter
         $query->with($eagerLoadableFields);
 
         foreach ($query->each() as $element) {
+            if ($this->selectedOrderIds && !in_array($element->id, $this->selectedOrderIds)) continue;
             // Get the basic array representation excluding custom fields
             $attributes = array_flip($element->attributes());
 
@@ -88,6 +91,11 @@ class Exporter extends ElementExporter
         return $this->filterResponseData($data);
     }
 
+    public function setOrderIds($ids)
+    {
+        $this->selectedOrderIds = $ids;
+    }
+
     /**
      * @param $data
      * @return array
@@ -110,7 +118,6 @@ class Exporter extends ElementExporter
 
         return $rawData;
     }
-
 
     /**
      * @param $ids
@@ -154,7 +161,7 @@ class Exporter extends ElementExporter
     {
         $elementIds = json_decode($elementIds, true);
         foreach ($elementIds as $elementId){
-            $element = Craft::$app->getElements()->getElementById($elementId, null, $sourceSite);
+            $element = Translations::$plugin->elementRepository->getElementById($elementId, $sourceSite);
             $this->elementsTitle[$elementId] = is_object($element) ? $element->title : 'N/A';
         }
 

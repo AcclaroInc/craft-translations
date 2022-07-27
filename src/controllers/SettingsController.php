@@ -16,12 +16,12 @@ use craft\web\Controller;
 use craft\helpers\Path;
 use craft\helpers\FileHelper;
 use craft\helpers\App as CraftApp;
-use craft\base\VolumeInterface;
 use yii\web\NotFoundHttpException;
 
 use acclaro\translations\elements\Order;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\DeleteDrafts;
+use craft\models\Volume;
 
 /**
  * @author    Acclaro
@@ -219,7 +219,7 @@ class SettingsController extends Controller
 
         $allVolumes = Craft::$app->getVolumes()->getAllVolumes();
 
-        $variables['volumeOptions'] = array_map(function (VolumeInterface $volume) {
+        $variables['volumeOptions'] = array_map(function (Volume $volume) {
         	return [
         		'label' => $volume->name,
         		'value' => $volume->id,

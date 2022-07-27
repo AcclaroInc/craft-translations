@@ -4,10 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.0.0-beta.1 - 2022-07-14
+
+### Fixed
+- An issue where `New translations` button on entry index page remains active on switching entry groups.
+- An issue where deleting draft from `globalsetdraft/assetdraft` detail page was removing order file.
+
+### Updated
+- Craft minimum version from 3.7.33 to 4.0.0
+- Requires PHP ^8.0.2
+- Category draft's custom logic with craft's native code. (Craft now supports category drafts)
+- Download TM files action disabled by default.
+
+### Added
+- Support for Craft 4.
+- Logging in webhook flow for api orders.
+
+### Removed
+- Removed unsused `editDraftAssets`.
+- Removed `translations_categorydrafts` table.
+
+### Chore
+- Code refactoring and cleanup.
+
 ## 2.2.2 - 2022-07-06
 
 ### Fixed
-- An issue where order fails to open when `previewUrl` length exceeds 255 chars. (#341) 
+- An issue where order fails to open when `previewUrl` length exceeds 255 chars. (#341)
 
 ### Updated
 - Removed the use of `filetype` param in API order sync call.
@@ -56,7 +79,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 - Plugin uninstallation bug (https://github.com/AcclaroInc/craft-translations/pull/313)
-  
+
 ## 2.1.3 - 2022-02-21
 
 ### Fixed
@@ -512,7 +535,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Removed
 - Removed `UpdateDraftFromXML`
-- Truncate `translations_files` and `translations_orders` tables to be compliant with new Craft draft service 
+- Truncate `translations_files` and `translations_orders` tables to be compliant with new Craft draft service
 
 ## 1.1.1 - 2019-07-03
 ### Added

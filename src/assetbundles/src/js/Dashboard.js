@@ -108,19 +108,18 @@
                 $container.removeClass('scaleout');
 
                 if (!settingsHtml) {
-                    var data = {
+                    var params = {
                         type: type
                     };
 
-                    Craft.postActionRequest('translations/widget/create-widget', data, function(response, textStatus) {
-                        if (textStatus === 'success' && response.success) {
+                    Craft.sendActionRequest('POST', 'translations/widget/create-widget', {data: params})
+                        .then((response) => {
                             $container.removeClass('loading');
                             widget.update(response);
-                        }
-                        else {
+                        })
+                        .catch(() => {
                             widget.destroy();
-                        }
-                    });
+                        })
                 }
             },
 
@@ -348,41 +347,41 @@
                 e.preventDefault();
                 this.$settingsSpinner.removeClass('hidden');
 
-                var action = this.$container.hasClass('new') ? 'translations/widget/create-widget' : 'translations/widget/save-widget-settings',
-                    data = this.$settingsForm.serialize();
+                var action = this.$container.hasClass('new') ? 'translations/widget/create-widget' : 'translations/widget/save-widget-settings';
+                data = this.$settingsForm.serialize();
 
-                Craft.postActionRequest(action, data, $.proxy(function(response, textStatus) {
-                    this.$settingsSpinner.addClass('hidden');
+                Craft.sendActionRequest('POST', action, {data})
+                    .then((response) => {
+                        this.$settingsSpinner.addClass('hidden');
 
-                    if (textStatus === 'success') {
                         if (this.$settingsErrorList) {
                             this.$settingsErrorList.remove();
                             this.$settingsErrorList = null;
                         }
 
-                        if (response.success) {
-                            Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
+                        Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
 
-                            // Make sure the widget is still allowed to be shown, just in case
-                            if (!response.info) {
-                                this.destroy();
-                            }
-                            else {
-                                this.update(response);
-                                this.hideSettings();
-                            }
-                            window.location.reload();
+                        // Make sure the widget is still allowed to be shown, just in case
+                        if (!response.data.info) {
+                            this.destroy();
                         }
                         else {
-                            Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
-
-                            if (response.errors) {
-                                this.$settingsErrorList = Craft.ui.createErrorList(response.errors)
-                                    .insertAfter(this.$settingsContainer);
-                            }
+                            this.update(response.data);
+                            this.hideSettings();
                         }
-                    }
-                }, this));
+                        window.location.reload();
+                    }).catch(({response}) => {
+                        if (this.$settingsErrorList) {
+                            this.$settingsErrorList.remove();
+                            this.$settingsErrorList = null;
+                        }
+                        Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
+
+                        if (response.data.errors) {
+                            this.$settingsErrorList = Craft.ui.createErrorList(response.data.errors)
+                                .insertAfter(this.$settingsContainer);
+                        }
+                    });
             },
 
             update: function(response) {
@@ -425,7 +424,7 @@
 
                 Craft.initUiElements(this.$bodyContainer);
                 Craft.appendHeadHtml(response.headHtml);
-                Craft.appendFootHtml(response.footHtml);
+                Craft.appendBodyHtml(response.footHtml);
 
                 this.setSettingsHtml(response.info.settingsHtml, function() {
                     eval(response.info.settingsJs);
@@ -606,20 +605,19 @@
                 }
 
                 // Save the change
-                var data = {
+                var params = {
                     id: widgetIds,
                     colspan: newColspan
                 };
 
-                Craft.postActionRequest('translations/widget/change-widget-colspan', data, function(response, textStatus) {
-                    if (textStatus === 'success' && response.success) {
+                Craft.sendActionRequest('POST', 'translations/widget/change-widget-colspan', {data: params})
+                    .then((response) => {
                         Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
                         location.reload();
-                    }
-                    else {
+                    })
+                    .catch(() => {
                         Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
-                    }
-                });
+                    })
             }
         });
 })(jQuery);

@@ -33,7 +33,7 @@ class Translators extends Widget
     /**
      * @inheritdoc
      */
-    public static function iconPath()
+    public static function icon(): ?string
     {
         return Craft::getAlias('@acclaro/translations/icon-mask.svg');
     }
@@ -41,10 +41,10 @@ class Translators extends Widget
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
-        
+
         return $rules;
     }
 
@@ -59,12 +59,12 @@ class Translators extends Widget
     /**
      * @inheritdoc
      */
-    public function getBodyHtml()
+    public function getBodyHtml(): ?string
     {
         $view = Craft::$app->getView();
-        
+
         $translators = $this->_getTranslators();
-        
+
         return $view->renderTemplate('translations/_components/widgets/Translators/body', ['translators' => $translators]);
     }
 
