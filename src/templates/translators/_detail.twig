@@ -1,6 +1,5 @@
 {% extends '_layouts/cp' %}
 {% import '_includes/forms' as forms %}
-{% import 'translations/_components/_forms/button' as button %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}
 
@@ -15,14 +14,10 @@
 {% block actionButton %}
     {# ! NOTE: hidden button we don't support draft as of now #}
     <div class="btngroup hidden">
-        {{ button.button({
-            type: 'submit',
-            label: 'Save as draft',
-            class: 'link-disabled',
-            attributes: {
-                name: 'submit',
-            }
-        }) }}
+        <button type="submit" name="submit" value=""
+            class="btn big disabled">
+            {{ 'Save as draft'|t }}
+        </button>
     </div>
 {% endblock %}
 

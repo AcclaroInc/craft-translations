@@ -27,12 +27,12 @@
                     autoShow: false,
                 });
 
-                var $data = {
+                var data = {
                     limit: params
                 };
 
-                Craft.sendActionRequest('POST', 'translations/widget/get-language-coverage', {data: $data})
-                    .then((response) => {
+                Craft.postActionRequest('translations/widget/get-language-coverage', data, $.proxy(function(response, textStatus) {
+                    if (textStatus === 'success') {
                         this.$widget.removeClass('loading');
                         this.$widget.find('.elements').removeClass('hidden');
 
@@ -73,17 +73,11 @@
 
                             this.$body.html(widgetHtml);
                         }
-    
+
                         window.translationsdashboard.widgets[widgetId].updateContainerHeight();
                         window.translationsdashboard.grid.refreshCols(true, true);
-                    })
-                    .catch(({response}) => {
-                        var widgetHtml = `
-                        <td style="text-align:center;">Error fetching coverage information.</td>
-                        `;
-                        
-                        this.$body.html(widgetHtml);
-                    })
+                    }
+                }, this));
             },
         });
 })(jQuery);

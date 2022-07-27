@@ -36,7 +36,7 @@ class ElementTranslator
 
         }
 
-        foreach ($element->getFieldLayout()->getCustomFields() as $layoutField) {
+        foreach ($element->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
             $fieldSource = $this->fieldToTranslationSource($element, $field, $sourceSite);
 
@@ -136,7 +136,7 @@ class ElementTranslator
     {
         $post = array();
 
-        foreach($element->getFieldLayout()->getCustomFields() as $key => $layoutField) {
+        foreach($element->getFieldLayout()->getFields() as $key => $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
             $fieldHandle = $field->handle;
 
@@ -173,7 +173,7 @@ class ElementTranslator
     {
         $source = array();
 
-        foreach($element->getFieldLayout()->getCustomFields() as $layoutField) {
+        foreach($element->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             $fieldSource = $this->fieldToPostArray($element, $field);
@@ -192,7 +192,7 @@ class ElementTranslator
             $wordCount += Translations::$plugin->wordCounter->getWordCount($element->title);
             $wordCount += Translations::$plugin->wordCounter->getWordCount($element->slug);
         }
-        foreach($element->getFieldLayout()->getCustomFields() as $layoutField) {
+        foreach($element->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             $wordCount += $this->getFieldWordCount($element, $field);
@@ -246,6 +246,8 @@ class ElementTranslator
     public function getFieldWordCount(Element $element, Field $field)
     {
         $fieldType = $field;
+
+        $fieldHandle = $field->handle;
 
         // Check if field is translatable or is nested field
         if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {

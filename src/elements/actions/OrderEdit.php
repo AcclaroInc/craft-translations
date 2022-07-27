@@ -20,7 +20,7 @@ class OrderEdit extends Edit
      /**
      * @inheritdoc
      */
-    public function getTriggerHtml(): ?string
+    public function getTriggerHtml()
     {
         $type = Json::encode(static::class);
 

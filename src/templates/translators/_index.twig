@@ -1,5 +1,5 @@
 {% extends '_layouts/cp' %}
-{% import 'translations/_components/_forms/button' as button %}
+{% import 'translations/_macros' as macros %}
 
 {% set title = 'Translators'|t %}
 {% set elementType = 'acclaro\\translations\\elements\\\Translator' %}
@@ -22,22 +22,8 @@
             <li><a class="error delete-translator disabled" title="{{ 'Delete translator service'|t }}" data-confirm="{{ 'Are you sure you want to delete selected translators?'|t }}">Delete</a></li>
         </ul>
     </div>
-
-    {{ button.anchorButton({
-        label: 'New order'|t,
-        href: url('translations/orders/create'),
-        attributes: {
-            data: {
-                icon: 'language',
-            },
-        }
-    }) }}
-
-    {{ button.anchorButton({
-        label: 'New translator'|t,
-        class: 'submit icon add',
-        href: url('translations/translators/new')
-    }) }}
+    <a class="btn big icon btn-create-new-order" href="{{ url('translations/orders/create') }}" data-icon="language" style="margin-left:5px;">{{ 'New order'|t }}</a>
+    <a class="btn big submit add icon" href="{{ url('translations/translators/new') }}">{{ 'New translator'|t }}</a>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}
@@ -46,7 +32,8 @@
     { label: 'Translations'|t, url: url('translations') },
 ] %}
 
-{% set sources = craft.app.elementSources.getSources(elementType, 'index') %}
+{% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}
+{% set customizableSources = (sources is not empty and context == 'index' and currentUser.can('customizeSources')) %}
 
 {% block sidebar %}
     {% if sources is not empty %}
@@ -62,10 +49,10 @@
         <table class="data">
             <thead>
                 <tr>
-                    <td class="checkbox-cell selectallcontainer orderable" role="checkbox">
+                    <th class="checkbox-cell selectallcontainer orderable" role="checkbox">
                         <input type="checkbox" class="thin" title="select all" id="translator-0"/>
                         <label for="translator-0"></label>
-                    </td>
+                    </th>
                     <th>{{ 'Name'|t }}</th>
                     <th>{{ 'Status'|t }}</th>
                     <th>{{ 'Service'|t }}</th>

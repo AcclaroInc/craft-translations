@@ -65,7 +65,7 @@ class FileModel extends Model
 
     public $reference;
 
-    public function init(): void
+    public function init()
     {
         parent::init();
 
@@ -76,7 +76,7 @@ class FileModel extends Model
         $this->targetSite = $this->targetSite ?: '';
     }
 
-    public function rules(): array
+    public function rules()
     {
         return [
             [['orderId', 'elementId', 'draftId', 'sourceSite', 'targetSite'], 'required'],
@@ -133,7 +133,7 @@ class FileModel extends Model
 
     public function hasDraft()
     {
-        return $this->_service->getDraft($this);
+        return $this->draftId ?: null;
     }
 
     public function isNew()
@@ -178,7 +178,7 @@ class FileModel extends Model
 
 	public function getUiLabel()
 	{
-        if ($this->isComplete() && $this->hasDraft()) {
+		if ($this->isComplete()) {
 			return Translations::$plugin->orderRepository->getFileTitle($this);
 		}
 		if ($element = $this->getElement($this->isPublished())) {
@@ -188,16 +188,9 @@ class FileModel extends Model
 		return 'Not Found!';
 	}
 
-    public function hasPreview()
-    {
-        $element = $this->getElement();
-
-        return $element instanceof (Constants::CLASS_ENTRY) || $element instanceof (Constants::CLASS_CATEGORY);
-    }
-
 	public function getPreviewUrl()
 	{
-        $previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($this->getElement(), $this);
+		$previewUrl = Translations::$plugin->urlGenerator->generateFileWebUrl($this->getElement($this->isPublished()), $this);
 
 		if ($this->isPublished()) return $previewUrl;
 
@@ -215,16 +208,15 @@ class FileModel extends Model
 		return $hasDiff;
 	}
 
-    public function getElement()
+	public function getElement($isApplied = null)
 	{
-        $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->targetSite);
+		$site = $isApplied ? $this->targetSite : $this->sourceSite;
+		$element = Craft::$app->getElements()->getElementById($this->elementId, null, $site);
 
 		if (! $element) {
-            $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
+			$element = Craft::$app->getElements()->getElementById($this->elementId, null, $this->sourceSite);
 		}
-
-        /** Check element as an entry could have been deleted */
-        if ($element && $element->getIsDraft()) {
+		if ($isApplied && $element->getIsDraft()) {
 			$element = $element->getCanonical();
 		}
 
@@ -251,15 +243,15 @@ class FileModel extends Model
 
     public function getTmMisalignmentFile()
     {
-        $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
+        $element = Craft::$app->elements->getElementById($this->elementId, null, $this->sourceSite);
 
         $targetSite = $this->targetSite;
         $source = $this->source;
 
-        $targetElement = Translations::$plugin->elementRepository->getElementById($this->elementId, $targetSite);
+        $targetElement = Craft::$app->elements->getElementById($this->elementId, null, $targetSite);
 
         if ($this->isComplete()) {
-            $draft = $this->_service->getDraft($this);
+            $draft = Translations::$plugin->draftRepository->getDraftById($this->draftId, $targetSite);
             $targetElement = $draft ?: $targetElement;
         }
 

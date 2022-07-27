@@ -4,8 +4,8 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.4.0';
-    const CRAFT_MIN_VERSION = '4.0.0';
+    const PLUGIN_SCHEMA_VERSION = '1.3.9';
+    const CRAFT_MIN_VERSION = '3.7.36';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
 
@@ -146,6 +146,7 @@ class Constants
     const TABLE_TRANSLATORS         = '{{%translations_translators}}';
     const TABLE_TRANSLATIONS        = '{{%translations_translations}}';
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
+    const TABLE_CATEGORY_DRAFT      = '{{%translations_categorydrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
 
     // Job Descriptions
@@ -265,12 +266,7 @@ class Constants
         'newism\fields\fields\Embed',
         'newism\fields\fields\PersonName',
         'newism\fields\fields\Gender',
-        'ether\seo\fields\SeoField',
-        'ether\notes\Field',
-        'amici\SuperDynamicFields\fields\SueprDynamicDropdownField',
-        'amici\SuperDynamicFields\fields\SueprDynamicRadioField',
-        'amici\SuperDynamicFields\fields\SueprDynamicCheckboxesField',
-        'amici\SuperDynamicFields\fields\SueprDynamicMultiSelectField',
+        'ether\seo\fields\SeoField'
     ];
 
     const UNRELATED_FIELD_TYPES = [
@@ -280,7 +276,6 @@ class Constants
         'craft\fields\Lightswitch',
         'craft\fields\Time',
         'craft\fields\Url',
-        'craft\fields\Users',
-        'craft\fields\Money',
+        'craft\fields\Users'
     ];
 }

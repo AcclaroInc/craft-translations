@@ -13,10 +13,6 @@ namespace acclaro\translations\services\repository;
 use Craft;
 use Exception;
 use yii\db\Query;
-use craft\elements\Asset;
-use craft\elements\Category;
-use craft\elements\GlobalSet;
-
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
@@ -213,8 +209,7 @@ class FileRepository
 
         if ($record && $record->draftId) {
             $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
-            if ($element)
-                Craft::$app->getElements()->deleteElement($element);
+            Craft::$app->getElements()->deleteElement($element);
         }
 
         return $record->delete();
@@ -231,18 +226,8 @@ class FileRepository
 
         foreach($records as $record) {
             if ($record && $record->draftId) {
-                $file = new FileModel($record->toArray([
-                    'id',
-                    'orderId',
-                    'elementId',
-                    'draftId',
-                    'sourceSite',
-                    'targetSite',
-                    'status',
-                ]));
-
-                if ($element = $file->hasDraft())
-                    Craft::$app->getElements()->deleteElement($element);
+                $element = Translations::$plugin->elementRepository->getElementByDraftId($record->draftId, $record->sourceSite);
+                Craft::$app->getElements()->deleteElement($element);
             }
             $record->delete();
         }
@@ -385,7 +370,7 @@ class FileRepository
 
     public function createOrderFile($order, $elementId, $targetSite)
     {
-        $element = Translations::$plugin->elementRepository->getElementById($elementId);
+        $element = Craft::$app->getElements()->getElementById($elementId);
         $wordCount = Translations::$plugin->elementTranslator->getWordCount($element) ?? 0;
 
         $file = $this->makeNewFile();
@@ -418,7 +403,7 @@ class FileRepository
             return 0;
         }
 
-        $element = Translations::$plugin->elementRepository->getElementById($elementId);
+        $element = Craft::$app->getElements()->getElementById($elementId);
 
         if (! $element) return 0;
 
@@ -501,11 +486,12 @@ class FileRepository
     public function checkTmMisalignments($file)
     {
         try {
-            $element = $file->getElement();
+            $elementRepository = Translations::$plugin->elementRepository;
+            $element = $elementRepository->getElementById($file->elementId, $file->targetSite);
             $source = $file->source;
 
             if ($file->isComplete()) {
-                $element = $this->getDraft($file);
+                $element = $elementRepository->getElementByDraftId($file->draftId, $file->targetSite);
                 $source = $file->target;
             }
 
@@ -540,31 +526,6 @@ class FileRepository
         }
 
         return false;
-    }
-
-    // Draft Actions
-
-    public function getDraft(FileModel $file)
-    {
-        $draft = null;
-
-        if ($file->draftId && $element = $file->getElement()) {
-            switch (get_class($element)) {
-                case GlobalSet::class:
-                    $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
-                    break;
-                case Category::class:
-                    $draft = Translations::$plugin->categoryRepository->getDraftById($file->draftId, $file->targetSite);
-                    break;
-                case Asset::class:
-                    $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
-                    break;
-                default:
-                    $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
-            }
-        }
-
-        return $draft;
     }
 
     public function createReferenceData(array $data, $ignoreCommon = true)

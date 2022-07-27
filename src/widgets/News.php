@@ -32,7 +32,7 @@ class News extends Widget
     /**
      * @inheritdoc
      */
-    public static function icon(): ?string
+    public static function iconPath()
     {
         return Craft::getAlias('@app/icons/feed.svg');
     }
@@ -42,12 +42,12 @@ class News extends Widget
     /**
      * @inheritdoc
      */
-    public function rules(): array
+    public function rules()
     {
         $rules = parent::rules();
-
+        
         $rules[] = ['limit', 'number', 'integerOnly' => true];
-
+        
         return $rules;
     }
 
@@ -62,7 +62,7 @@ class News extends Widget
     /**
      * @inheritdoc
      */
-    public function getSettingsHtml(): ?string
+    public function getSettingsHtml()
     {
         return Craft::$app->getView()->renderTemplate('translations/_components/widgets/News/settings',
             [
@@ -73,12 +73,12 @@ class News extends Widget
     /**
      * @inheritdoc
      */
-    public function getBodyHtml(): ?string
+    public function getBodyHtml()
     {
         $view = Craft::$app->getView();
-
+        
         $articles = $this->_getArticles();
-
+        
         return $view->renderTemplate('translations/_components/widgets/News/body', ['articles' => $articles]);
     }
 

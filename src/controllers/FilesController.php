@@ -33,7 +33,7 @@ use acclaro\translations\services\job\ImportFiles;
  */
 class FilesController extends Controller
 {
-    protected array|int|bool $allowAnonymous = ['actionImportFile', 'actionExportFile', 'actionCreateExportZip'];
+    protected $allowAnonymous = ['actionImportFile', 'actionExportFile', 'actionCreateExportZip'];
 
     /**
      * @var Order
@@ -71,8 +71,9 @@ class FilesController extends Controller
         // Open zip
         if ($zip->open($zipDest, $zip::CREATE) !== true)
         {
+            $errors[] = 'Unable to create zip file: '.$zipDest;
             Craft::error('['. __METHOD__ .'] Unable to create zip file: '.$zipDest, 'translations');
-            return $this->asFailure('Unable to create zip file: '.$zipDest);
+            return false;
         }
 
         $transaction = Craft::$app->getDb()->beginTransaction();
@@ -86,7 +87,7 @@ class FilesController extends Controller
                 // skip failed files
                 if ($file->isCanceled()) continue;
 
-                $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
+                $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
                 $targetSite = $file->targetSite;
 
@@ -150,13 +151,17 @@ class FilesController extends Controller
         if(count($errors) > 0)
         {
             $transaction->rollBack();
-            return $this->asFailure(implode('\n', $errors));
+            return $errors;
         }
 
-        Craft::$app->getElements()->saveElement($order, true, true, false);
-        $transaction->commit();
+        if (Craft::$app->getElements()->saveElement($order, true, true, false)) {
+            $transaction->commit();
+            return $this->asJson(['translatedFiles' => $zipDest]);
+        } else {
+            $transaction->rollBack();
+            return false;
+        }
 
-        return $this->asSuccess(null, ['translatedFiles' => $zipDest]);
     }
 
     /**
@@ -258,7 +263,7 @@ class FilesController extends Controller
                                 if (! Craft::$app->getElements()->saveElement($asset)) {
                                     $errors = $asset->getFirstErrors();
 
-                                    return $this->asFailure(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                                    return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                                 }
 
                                 $assetIds[] = $asset->id;
@@ -336,7 +341,7 @@ class FilesController extends Controller
                         if (! Craft::$app->getElements()->saveElement($asset)) {
                             $errors = $asset->getFirstErrors();
 
-                            return $this->asFailure(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                            return $this->asErrorJson(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
                         }
 
                         $totalWordCount = Translations::$plugin->fileRepository->getUploadedFilesWordCount($asset, $file->extension);
@@ -409,7 +414,7 @@ class FilesController extends Controller
             $error = "File not found.";
             if ($file && (in_array($file->status, [Constants::FILE_STATUS_REVIEW_READY, Constants::FILE_STATUS_COMPLETE, Constants::FILE_STATUS_PUBLISHED]))) {
                 try {
-                    $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
+                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
                     $data['diff'] = Translations::$plugin->fileRepository->getSourceTargetDifferences($file->source, $file->target);
 
@@ -457,7 +462,7 @@ class FilesController extends Controller
 
             // Open zip
             if ($zip->open($zipDest, $zip::CREATE) !== true) {
-                return $this->asFailure('Unable to create zip file: '.$zipDest);
+                throw new \Exception('Unable to create zip file: '.$zipDest);
             }
 
             //Iterate over each file on this order
@@ -470,7 +475,7 @@ class FilesController extends Controller
                     $fileContent = $tmFile['fileContent'];
 
                     if (! $fileContent || ! $zip->addFromString($fileName, $fileContent)) {
-                        return $this->asFailure('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
+                        throw new \Exception('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
                     }
 
                     $file->reference = $tmFile['reference'];
@@ -482,10 +487,10 @@ class FilesController extends Controller
             $zip->close();
         } catch(\Exception $e) {
             Craft::error('['. __METHOD__ .']' . $e->getMessage(), 'translations');
-            return $this->asFailure($e->getMessage());
+            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
 
-        return $this->asSuccess(null, ['tmFiles' => $zipDest]);
+        return $this->asJson(['success' => true, 'tmFiles' => $zipDest]);
     }
 
     /**

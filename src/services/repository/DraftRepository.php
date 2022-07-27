@@ -14,6 +14,7 @@ use Craft;
 use Exception;
 use craft\elements\Asset;
 use craft\elements\Entry;
+use craft\elements\Category;
 use craft\elements\GlobalSet;
 use yii\web\NotFoundHttpException;
 use craft\errors\InvalidElementException;
@@ -27,12 +28,30 @@ use acclaro\translations\services\job\CreateDrafts;
 
 class DraftRepository
 {
+    /**
+     * @return \craft\elements\Entry|null
+     */
+    public function makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes)
+    {
+        $draft = Craft::$app->getDrafts()->createDraft(
+            $entry,
+            $creatorId,
+            $name,
+            $notes,
+            $newAttributes
+        );
+
+        $draft->setAttributes($newAttributes, false);
+
+        return $draft;
+    }
+
     public function getDraftById($draftId, $siteId)
     {
         $draft = Entry::find()
             ->draftId($draftId)
             ->siteId($siteId)
-            ->status(null)
+            ->anyStatus()
             ->one();
 
         return $draft;
@@ -48,42 +67,12 @@ class DraftRepository
         return Craft::$app->elements->saveElement($element, true, true, false);
     }
 
-    public function publishDraft($element, FileModel $file, $draft)
+    public function publishDraft(Entry $draft)
     {
-        $success = null;
+        // Let's save the draft before we pass it to publishDraft()
+        Craft::$app->elements->saveElement($draft, true, true, false);
 
-        if ($draft) {
-            switch (get_class($element)) {
-                case Asset::class:
-                    $assetDraftRepo = Translations::$plugin->assetDraftRepository;
-
-                    // keep original asset name
-                    $draft->name = $element->title;
-                    $draft->site = $file->targetSite;
-
-                    $success = $assetDraftRepo->publishDraft($draft);
-
-                    if ($success) {
-                        $assetDraftRepo->deleteDraft($draft);
-                    }
-                    break;
-                case GlobalSet::class:
-                    $globalSetDraftRepo = Translations::$plugin->globalSetDraftRepository;
-
-                    // keep original global set name
-                    $draft->name = $element->name;
-                    $success = $globalSetDraftRepo->publishDraft($draft);
-
-                    if ($success) {
-                        $globalSetDraftRepo->deleteDraft($draft);
-                    }
-                    break;
-                default:
-                    $success = $this->applyTranslationDraft($file->id, $file, $draft);
-            }
-        }
-
-        return $success;
+        return Craft::$app->getDrafts()->publishDraft($draft);
     }
 
     public function isTranslationDraft($draftId, $elementId=null)
@@ -139,7 +128,7 @@ class DraftRepository
 
         // Get file's draft
         if(!$draft){
-            $draft = $file->hasDraft();
+            $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
 
         if (!$draft) {
@@ -153,7 +142,7 @@ class DraftRepository
             }
 
             // Apply the draft to the entry
-            $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
+            $newEntry = Craft::$app->getDrafts()->publishDraft($draft);
         } catch (InvalidElementException $e) {
             Craft::$app->getSession()->setError(Craft::t('app', 'Couldn’t publish draft.'));
             // Send the draft back to the template
@@ -181,27 +170,32 @@ class DraftRepository
                 continue;
             }
 
-            $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
+            $element = Craft::$app->getElements()->getElementById($file->elementId, null, $order->sourceSite);
             $isFileReady = $file->isReviewReady();
 
             if ($queue) {
                 $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
             }
 
-            // Create draft only if not already exist
-            if ($file->hasDraft()) {
+			// Create draft only if not already exist
+			if ($file->draftId && $this->getDraftById($file->draftId, $file->targetSite)) {
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
-            } else {
-                $isNewDraft = true;
-                $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+			} else {
+				$isNewDraft = true;
+				$this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
             }
 
             try {
                 if ($isFileReady) {
-                    // Translation Service Always Local
+                    $translation_service = $order->translator->service;
+                    if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
+                        $translation_service = Constants::TRANSLATOR_DEFAULT;
+                    }
+
+                    //Translation Service
                     $translationService = Translations::$plugin->translatorFactory
-                        ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, $order->translator->getSettings());
+                        ->makeTranslationService($translation_service, $order->translator->getSettings());
 
                     $translationService->updateIOFile($order, $file);
 
@@ -240,16 +234,19 @@ class DraftRepository
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
     {
 		$element = $element->getIsDraft() ? $element->getCanonical() : $element;
-
         switch (get_class($element)) {
+            case Entry::class:
+                $draft = Translations::$plugin->entryRepository->createDraft($element, $site, $order->title);
+                break;
             case GlobalSet::class:
                 $draft = Translations::$plugin->globalSetDraftRepository->createDraft($element, $site, $order->title);
+                break;
+            case Category::class:
+                $draft = Translations::$plugin->categoryDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
                 break;
             case Asset::class:
                 $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
                 break;
-            default:
-                $draft = Translations::$plugin->entryRepository->createDraft($element, $site, $order->title);
         }
 
         if (!($file instanceof FileModel)) {
@@ -261,7 +258,7 @@ class DraftRepository
             return false;
         }
 
-        if (!$file->hasPreview()) {
+        if ($draft instanceof GlobalSet || $draft instanceof Category || $draft instanceof Asset) {
             $targetSite = $draft->site;
         } else {
             $targetSite = $draft->siteId;
@@ -326,10 +323,70 @@ class DraftRepository
                     $applyDraft->updateProgress($queue, $currentElement++ / $totalElements);
                 }
 
-                $draft = $file->hasDraft();
-                $element = $file->getElement();
-                $success = $this->publishDraft($element, $file, $draft);
+                $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
+                if ($element instanceof GlobalSet) {
+                    $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+
+                    // keep original global set name
+                    $draft->name = $element->name;
+
+                    if ($draft) {
+                        $success = Translations::$plugin->globalSetDraftRepository->publishDraft($draft);
+
+                        if ($success) {
+                            Translations::$plugin->globalSetDraftRepository->deleteDraft($draft);
+                        }
+                    } else {
+                        $success = false;
+                    }
+
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                } else if ($element instanceof Category) {
+                    $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+
+                    // keep original category name
+                    $draft->name = $element->title;
+                    $draft->site = $file->targetSite;
+
+                    if ($draft) {
+                        $success = Translations::$plugin->categoryDraftRepository->publishDraft($draft);
+
+                        if ($success) {
+                            Translations::$plugin->categoryDraftRepository->deleteDraft($draft);
+                        }
+                    } else {
+                        $success = false;
+                    }
+
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                } else if ($element instanceof Asset) {
+                    $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+
+                    // keep original asset name
+                    $draft->name = $element->title;
+                    $draft->site = $file->targetSite;
+
+                    if ($draft) {
+                        $success = Translations::$plugin->assetDraftRepository->publishDraft($draft);
+
+                        if ($success) {
+                            Translations::$plugin->assetDraftRepository->deleteDraft($draft);
+                        }
+                    } else {
+                        $success = false;
+                    }
+
+                    // $uri = Translations::$plugin->urlGenerator->generateFileUrl($element, $file);
+                } else {
+                    $draft = $this->getDraftById($file->draftId, $file->targetSite);
+
+                    if ($draft) {
+                        $success = $this->applyTranslationDraft($file->id, $file, $draft);
+                    } else {
+                        $success = false;
+                    }
+                }
                 if ($success) {
                     $oldTokenRoute = json_encode(array(
                         'action' => 'entries/view-shared-entry',
@@ -385,8 +442,6 @@ class DraftRepository
      */
     public function deleteDraft($draftId, $siteId)
     {
-        if (! $draftId) return;
-
         $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {

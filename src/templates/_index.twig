@@ -1,5 +1,5 @@
 {% extends "_layouts/cp" %}
-{% import 'translations/_components/_forms/button' as button %}
+{# {% import 'translations/_macros' as macros %} #}
 
 {% set title = "Translation Dashboard"|t %}
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
@@ -19,32 +19,27 @@
 {% endblock %}
 
 {% block actionButton %}
-    {{ button.anchorButton({
-        label: 'New order',
-        class: 'submit',
-        href: url('translations/orders/create'),
-        attributes: {
-            data: {
-                icon: 'language',
-            },
-        }
-    }) }}
+    <a class="btn submit icon btn-create-new-order" data-icon="language" href="{{ url('translations/orders/create') }}" style="margin-right: 5px;">{{ 'New order'|t }}</a>
+    <div class="buttons secondary-buttons">
+        <div class="newwidget btngroup">
+            <div id="newwidgetmenubtn" class="btn submit menubtn add icon {% if isSelectableWidget is empty %} disabled {% endif %}">{{ 'New widget'|t('app') }}</div>
+            <div class="menu newwidgetmenu">
+                <ul>
+                    {% for type, info in widgetTypes if info.selectable %}
+                        <li>
+                            <a data-type="{{ type }}" 
+                                data-name="{{ info.name }}">
+                                <span class="icon">{{ info.iconSvg|raw }}</span>
+                                {{ info.name == 'Modified Source Entries' ? 'New & Modified Entries' : info.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
 
-    {{ button.newWidgetButton({
-        isSelectableWidget: isSelectableWidget,
-        widgetTypes: widgetTypes,
-    }) }}
-
-    {{ button.button({
-        id: "widgetManagerBtn",
-        class: 'icon submit',
-        attributes: {
-            title: 'Settings'|t('app'),
-            data: {
-                icon: 'settings',
-            },
-        },
-    }) }}
+        <div id="widgetManagerBtn" class="btn settings icon submit" title="{{ 'Settings'|t('app') }}"></div>
+    </div>
 {% endblock %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}

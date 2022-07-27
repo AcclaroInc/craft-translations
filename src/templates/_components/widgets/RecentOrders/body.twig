@@ -1,6 +1,3 @@
-{% import '_includes/forms' as forms %}
-{% import 'translations/_components/_forms/button' as button %}
-
 <div class="recentorders-container scroll-x-auto">
     {% if orders|length %}
         <table class="data fullwidth table">
@@ -30,28 +27,24 @@
                 </tr>
             {% endfor %}
         </table>
-        <div class="buttons right">
+        <div class="buttons right" style="margin-top:14px;">
 
             {% set disabled = '' %}
             {% if (orderCountAcclaro == 0) %}
-                {% set disabled = 'link-disabled' %}
+                {% set disabled = 'disabled' %}
             {% endif %}
 
-            {{ button.anchorButton({
-                label: 'View all orders'|t('app'),
-                href: url('translations/orders')
-            }) }}
-
-            <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
-                {{ forms.hidden({
-                    name: 'action',
-                    value: 'translations/order/sync-orders'
-                }) }}
-
-                {{ csrfInput() }}
-
-                {{ button.syncOrderButton(disabled) }}
-            </form>
+            <a class="btn" href="{{ url('translations/orders') }}">{{ 'View all orders'|t }}</a>
+            <div class="btngroup">
+                <form id="sync-orders" class="utility orders" method="post" accept-charset="UTF-8">
+                    <input type="hidden" name="action" value="translations/order/sync-orders">
+                    {{ csrfInput() }}
+                    <div class="btngroup" style="margin-right:5px;">
+                        <button type="submit" class="btn submit {{ disabled }} icon" data-icon="refresh" value="submit" {{ disabled }}>{{ "Sync orders"|t('app') }}</button>
+                    </div>
+                    <div class="sync-status"></div>
+                </form>
+            </div>
         </div>
     {% else %}
         <table class="data fullwidth table">

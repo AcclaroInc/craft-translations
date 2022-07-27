@@ -43,20 +43,12 @@ class StaticTranslations extends Element
         return Translations::$plugin->translator->translate('app', 'Static Translation');
     }
 
-    /**
-     * @inheritdoc
-     */
-    public static function pluralDisplayName(): string
-    {
-        return Craft::t('app', 'Static Translations');
-    }
-
-    public function __toString(): string
+    public function __toString()
     {
         try{
             return $this->original;
         } catch (\Exception $e) {
-            \yii\base\ErrorHandler::convertExceptionToError($e);
+            ErrorHandler::convertExceptionToError($e);
         }
     }
 
@@ -176,14 +168,6 @@ class StaticTranslations extends Element
         return $attributes;
     }
 
-    protected static function defineDefaultTableAttributes(string $source): array
-    {
-        return [
-            'original',
-            'field'
-        ];
-    }
-
     public static function find(): ElementQueryInterface
     {
         return new StaticTranslationQuery(get_called_class());
@@ -192,17 +176,18 @@ class StaticTranslations extends Element
     /**
      * @inheritdoc
      */
-    public static function indexHtml(ElementQueryInterface $elementQuery, ?array $disabledElementIds, array $viewState, ?string $sourceKey, ?string $context, bool $includeContainer, bool $showCheckboxes): string
+    public static function indexHtml(ElementQueryInterface $elementQuery, array $disabledElementIds = null, array $viewState, string $sourceKey = null, string $context = null, bool $includeContainer, bool $showCheckboxes): string
     {
+
         // if not getting siteId then set primary site id
         if (empty($elementQuery->siteId)) {
             $primarySite = Craft::$app->getSites()->getPrimarySite();
             $elementQuery->siteId = $primarySite->id;
         }
 
-        $attributes = self::removeDisplayName(Craft::$app->getElementSources()->getTableAttributes(static::class, $sourceKey));
-
+        $attributes = Craft::$app->getElementIndexes()->getTableAttributes(static::class, $sourceKey);
         if (!empty($elementQuery->siteId)) {
+
             $currentSite = Craft::$app->getSites()->getSiteById($elementQuery->siteId);
             $lang = Craft::$app->getI18n()->getLocaleById($currentSite->language);
             $trans = 'Target: '.ucfirst($lang->displayName).' ('.$currentSite->language.')';
@@ -219,7 +204,6 @@ class StaticTranslations extends Element
             'viewMode' => $viewState['mode'],
             'context' => $context,
             'disabledElementIds' => $disabledElementIds,
-            'collapsedElementIds' => Craft::$app->getRequest()->getParam('collapsedElementIds'),
             'attributes' => $attributes,
             'elements' => $elements,
             'showCheckboxes' => $showCheckboxes
@@ -258,13 +242,5 @@ class StaticTranslations extends Element
         $translations = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
 
         return count($translations);
-    }
-
-    /**
-     * Used to remove default first column in attributes
-     */
-    private static function removeDisplayName($attributes) {
-        unset($attributes[0]);
-        return $attributes;
     }
 }

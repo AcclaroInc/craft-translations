@@ -33,13 +33,13 @@
                     autoShow: false,
                 });
 
-                var $data = {
+                var data = {
                     limit: params.limit,
                     days: params.days
                 };
 
-                Craft.sendActionRequest('POST', 'translations/widget/get-recent-entries', {data: $data})
-                    .then((response) => {
+                Craft.postActionRequest('translations/widget/get-recent-entries', data, $.proxy(function(response, textStatus) {
+                    if (textStatus === 'success') {
                         this.$widget.removeClass('loading');
                         this.$widget.find('.elements').removeClass('hidden');
 
@@ -82,42 +82,42 @@
 
                             this.$widget.find('#recent-entries-widget').html(widgetHtml);
                         }
+                    }
 
-                        window.translationsdashboard.widgets[widgetId].updateContainerHeight();
-                        window.translationsdashboard.grid.refreshCols(true, true);
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    window.translationsdashboard.grid.refreshCols(true, true);
 
-                        $('.new-entry-check .checkbox').on('click', function(e) {
-                            $(e.target).closest('tr[id^=item-entry-]').toggleClass('sel');
-                            Craft.Translations.RecentEntries.prototype.updateSelected();
-                        });
+                    $('.new-entry-check .checkbox').on('click', function(e) {
+                        $(e.target).closest('tr[id^=item-entry-]').toggleClass('sel');
+                        Craft.Translations.RecentEntries.prototype.updateSelected();
+                    });
 
-                        $('.view-diff-entry').on('click', function(e) {
-                            e.preventDefault();
+                    $('.view-diff-entry').on('click', function(e) {
+                        e.preventDefault();
 
-                            var diffHtml = content[$(e.target).attr('data-id')].diff;
+                        var diffHtml = content[$(e.target).attr('data-id')].diff;
 
-                            var classNames = [
-                                'entryId',
-                                'entryName',
-                                'siteLabel',
-                                'fileDate',
-                                'entryDate',
-                                'wordDifference'
-                            ];
+                        var classNames = [
+                            'entryId',
+                            'entryName',
+                            'siteLabel',
+                            'fileDate',
+                            'entryDate',
+                            'wordDifference'
+                        ];
 
-                            // Show the modal
-                            $modal_entry.show();
+                        // Show the modal
+                        $modal_entry.show();
 
-                            // Set modification details
-                            for (let index = 0; index < classNames.length; index++) {
-                                $('.' + classNames[index]).html(content[$(e.target).attr('data-id')][classNames[index]]);
-                            }
+                        // Set modification details
+                        for (let index = 0; index < classNames.length; index++) {
+                            $('.' + classNames[index]).html(content[$(e.target).attr('data-id')][classNames[index]]);
+                        }
 
-                            // Add the diff html
-                            document.getElementById("modal-body-entry").innerHTML = diffHtml;
-                        });
+                        // Add the diff html
+                        document.getElementById("modal-body-entry").innerHTML = diffHtml;
 
-                        $('#modal-body-entry').on('click', 'div.diff-copy', function (event) {
+                        $('#modal-body-entry').on('click', 'div.diff-copy', function(event) {
                             Craft.Translations.OrderEntries.copyTextToClipboard(event);
                         });
 
@@ -125,7 +125,8 @@
                             e.preventDefault();
                             $modal_entry.hide();
                         });
-                    })
+                    });
+                }, this));
             },
             updateSelected: function() {
                 var entries = [];
@@ -137,9 +138,9 @@
                 this.entries = unique(entries);
 
                 if (this.entries.length) {
-                    $('#new-entry-orders').removeClass('link-disabled');
+                    $('#new-entry-orders').removeClass('disabled');
                 } else {
-                    $('#new-entry-orders').addClass('link-disabled');
+                    $('#new-entry-orders').addClass('disabled');
                 }
 
                 var elements = '';
@@ -147,12 +148,8 @@
                     elements += '&elements[]=' + this.entries[i];
                 }
 
-                if (elements !== '') {
-                    $url = Craft.getUrl('translations/orders/create?sourceSite=' + Craft.siteId);
-
-                    $('#new-entry-orders').attr('href', $url + elements);
-                } else {
-                    $('#new-entry-orders').attr('href', '#');
+                if (!$('#new-entry-orders').hasClass('disabled')) {
+                    $('#new-entry-orders').attr('href', Craft.getUrl('translations/orders/create?sourceSite='+ Craft.siteId + elements));
                 }
             }
         });

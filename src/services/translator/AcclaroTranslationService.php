@@ -77,17 +77,11 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
-        if ($order->isCanceled()) {
-            $error = sprintf('Can not update canceled order. OrderId: %s', $order->id);
-            Craft::error($error, Constants::PLUGIN_HANDLE);
-            return;
-        }
+        if ($order->isCanceled()) return;
 
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
         if (empty($orderResponse->status)) {
-            $error = sprintf('Empty order response from acclaro. OrderId: %s', $order->id);
-            Craft::error($error, Constants::PLUGIN_HANDLE);
             return;
         }
 
@@ -127,17 +121,11 @@ class AcclaroTranslationService implements TranslationServiceInterface
     public function updateFile(Order $order, FileModel $file)
     {
         try {
-            if ($file->isCanceled()) {
-                $error = sprintf('Can not update canceled file. FileId: %s', $file->id);
-                Craft::error($error, Constants::PLUGIN_HANDLE);
-                return;
-            }
+            if ($file->isCanceled()) return;
 
             $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
 
             if (!is_array($fileInfoResponse)) {
-                $error = sprintf('Invalid file Info from acclaro. FileId: %s', $file->id);
-                Craft::error($error, Constants::PLUGIN_HANDLE);
                 return;
             }
             // find the matching file
@@ -242,7 +230,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         if ($file) {
 
-            $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
+            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);

@@ -8,7 +8,6 @@
 	var hasOrderId = $("input[type=hidden][name=id]").val() != '';
 	var isInProgress = $("#order-attr").data("status") === "in progress";
 	var hasCompleteFiles = $("#order-attr").data("has-completed-file");
-	var isTmAligned = $("#order-attr").data("is-tm-aligned");
 
 	/**
 	 * Order entries class
@@ -302,25 +301,23 @@
 				fileId: $fileId
 			};
 
-			Craft.sendActionRequest('POST', 'translations/files/get-file-diff', {data: fileData})
-				.then((response) => {
-					data = response.data.data;
+			Craft.postActionRequest('translations/files/get-file-diff', fileData, function(response, textStatus) {
+				if (textStatus === 'success' && response.success) {
+					data = response.data;
 
 					diffHtml = self.createDiffHtmlView(data);
 					diffHtml.attr("id", "data-"+$fileId)
 					$("#data-"+$fileId).replaceWith(diffHtml);
 					diffHtml.show();
-				})
-				.catch(() => {
+				} else {
 					Craft.cp.displayNotice(Craft.t('app', response.error));
-				})
-				.finally(() => {
-					// Copy text to clipboard
-					var $copyBtn = $("#data-"+$fileId).find('.diff-copy');
-					$($copyBtn).on('click', function(event) {
-						self.copyTextToClipboard(event);
-					});
+				}
+				// Copy text to clipboard
+				var $copyBtn = $("#data-"+$fileId).find('.diff-copy');
+				$($copyBtn).on('click', function(event) {
+					self.copyTextToClipboard(event);
 				});
+			});
 		},
 		createDiffHtmlView: function(data) {
 			var diffData = data.diff;
@@ -476,7 +473,6 @@
 
             $downloadTmAction = $('<a>', {
                 'href': '#',
-                'class': isTmAligned ? 'link-disabled' : '',
                 'text': $label,
             });
             $downloadTmLi.append($downloadTmAction);
@@ -519,18 +515,16 @@
 						'files': JSON.stringify(files)
 					};
 
-					Craft.sendActionRequest('POST', 'translations/export/export-preview-links', {data: $data})
-						.then((response) => {
-							if (response.data.previewFile) {
-								var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.data.previewFile }) }).hide();
-								$('#regenerate-preview-urls').append($iframe);
-								self.toggleLoader();
-							}
-						})
-						.catch(() => {
+					Craft.postActionRequest('translations/export/export-preview-links', $data, function (response, textStatus) {
+						if (response.success && response.previewFile) {
+							var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.previewFile }) }).hide();
+							$('#regenerate-preview-urls').append($iframe);
+							self.toggleLoader();
+						} else {
 							Craft.cp.displayError(Craft.t('app', 'Unable to download your file.'));
 							self.toggleLoader();
-						});
+						}
+					});
 				}
 			});
 		},
@@ -557,24 +551,27 @@
                     sync: 'translations/files/sync-tm-files'
                 }
 
-                Craft.sendActionRequest('POST', actions[action], {data: $data})
-					.then((response) => {
-						if (!isDefaultTranslator) {
-							Craft.cp.displayNotice('Translation memory files sent successfully.');
+                Craft.postActionRequest(actions[action], $data, function(response, textStatus) {
+                    if (textStatus === 'success') {
+                        if (response.success && !isDefaultTranslator) {
+                            Craft.cp.displayNotice('Translation memory files sent successfully.');
 							location.reload();
-						} else if (response.data.tmFiles) {
-							let $downloadForm = $('#regenerate-preview-urls');
-							let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.tmFiles})}).hide();
-							$downloadForm.append($iframe);
+                        } else if (response.success && response.tmFiles) {
+                            let $downloadForm = $('#regenerate-preview-urls');
+                            let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.tmFiles})}).hide();
+                            $downloadForm.append($iframe);
 							setTimeout(function() {
 								location.reload();
 							}, 100);
-						}
-					})
-					.catch(() => {
-						Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
+                        } else {
+                            Craft.cp.displayError(Craft.t('app', response.message));
+							self.toggleLoader();
+                        }
+                    } else {
+                        Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
 						self.toggleLoader();
-					});
+                    }
+                });
 
             });
 		},

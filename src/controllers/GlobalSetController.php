@@ -62,7 +62,7 @@ class GlobalSetController extends Controller
         }
 
         $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($variables['draftId']);
-
+        
         $variables['drafts'] = Translations::$plugin->globalSetDraftRepository->getDraftsByGlobalSetId($globalSet->id, $draft->site);
 
         $variables['draft'] = $draft;
@@ -82,7 +82,7 @@ class GlobalSetController extends Controller
     {
         $this->requirePostRequest();
 
-        $site = $this->request->getBodyParam('site', Craft::$app->sites->getPrimarySite()->id);
+        $site = $this->request->getParam('site', Craft::$app->sites->getPrimarySite()->id);
 
         $globalSetId = $this->request->getParam('globalSetId');
 
@@ -107,13 +107,13 @@ class GlobalSetController extends Controller
             $draft->id = $globalSetId;
             $draft->site = $site;
         }
-
+        
         $fields = $this->request->getParam('fields') ?? [];
 
         if ($fields) {
             $draft->setFieldValues($fields);
         }
-
+        
         if (Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
 
@@ -171,27 +171,27 @@ class GlobalSetController extends Controller
         try {
             if ($file) {
                 $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
-
+    
                 $file->status = Constants::FILE_STATUS_PUBLISHED;
                 $file->draftId = 0;
-
+    
                 Translations::$plugin->fileRepository->saveFile($file);
-
+    
                 $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
                 Translations::$plugin->orderRepository->saveOrder($order);
             }
-
+    
             if (Translations::$plugin->globalSetDraftRepository->publishDraft($draft)) {
                 $this->redirect($globalSet->getCpEditUrl(), 302, true);
-
+                
                 Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
                 $transaction->commit();
-
+                
                 return Translations::$plugin->globalSetDraftRepository->deleteDraft($draft);
             } else {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
                 $transaction->rollBack();
-
+    
                 // Send the draft back to the template
                 Craft::$app->urlManager->setRouteParams(array(
                     'draft' => $draft
@@ -224,21 +224,6 @@ class GlobalSetController extends Controller
         $globalSet = $draft->getGlobalSet();
 
         Translations::$plugin->globalSetDraftRepository->deleteDraft($draft);
-
-        $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId, $globalSet->id);
-
-        if ($file) {
-            $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
-
-            $file->status = Constants::FILE_STATUS_CANCELED;
-            $file->draftId = null;
-            $file->dateDelivered = null;
-
-            Translations::$plugin->fileRepository->saveFile($file);
-
-            $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
-            Translations::$plugin->orderRepository->saveOrder($order);
-        }
 
         Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
 

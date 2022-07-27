@@ -15,12 +15,13 @@ use Craft;
 
 use craft\queue\BaseJob;
 use craft\elements\Entry;
+use acclaro\translations\Translations;
 
 class DeleteDrafts extends BaseJob
 {
     public $drafts;
 
-    public function execute($queue): void
+    public function execute($queue)
     {
         $totalElements = count($this->drafts);
         $currentElement = 0;
@@ -32,10 +33,10 @@ class DeleteDrafts extends BaseJob
 
             try {
                 $draft = Entry::find()
-                    ->draftId($id)
-                    ->status(null)
-                    ->siteId('*')
-                    ->one();
+                            ->draftId($id)
+                            ->anyStatus()
+                            ->siteId('*')
+                            ->one();
 
 
                 if ($draft) {
@@ -49,7 +50,7 @@ class DeleteDrafts extends BaseJob
         }
     }
 
-    protected function defaultDescription(): ?string
+    protected function defaultDescription()
     {
         return Constants::JOB_DELETING_DRAFT;
     }

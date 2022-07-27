@@ -38,7 +38,7 @@ class OrderRepository
      */
     public function getOrderById($orderId)
     {
-        return Translations::$plugin->elementRepository->getElementById($orderId);
+        return Craft::$app->elements->getElementById($orderId);
     }
 
     /**
@@ -94,7 +94,7 @@ class OrderRepository
     }
 
     /**
-     * @return array
+     * @return \craft\elements\db\ElementQuery
      */
     public function getInProgressOrders()
     {
@@ -112,7 +112,7 @@ class OrderRepository
     }
 
     /**
-     * @return array
+     * @return \craft\elements\db\ElementQuery
      */
     public function getInProgressOrdersByTranslatorId($translatorId)
     {
@@ -124,7 +124,7 @@ class OrderRepository
     }
 
     /**
-     * @return array
+     * @return \craft\elements\db\ElementQuery
      */
     public function getCompleteOrders()
     {
@@ -483,19 +483,19 @@ class OrderRepository
      */
     public function getFileTitle($file) {
 
-        $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
+		$element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
 
         if ($element instanceof GlobalSet) {
             $draftElement = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
         } else if ($element instanceof Category) {
-            $draftElement = Translations::$plugin->categoryRepository->getDraftById($file->draftId, $file->targetSite);
+            $draftElement = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
         } else if ($element instanceof Asset) {
             $draftElement = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
         } else {
             $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
 
-        return $draftElement->title ?? $draftElement->name ?? $element->title;
+		return $draftElement->title ?? $element->title;
     }
 
     /**
@@ -514,10 +514,6 @@ class OrderRepository
 
                 try {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
-
-                    /** Skip in case the source entry is deleted */
-                    if (! $element) throw new Exception('Source entry not found');
-
                     $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
                     $converter = Translations::$plugin->elementToFileConverter;
 
@@ -561,7 +557,7 @@ class OrderRepository
 		$originalIds = [];
 
 		foreach ($order->getFiles() as $file) {
-            if ($file->isPublished() || $file->isNew() || $file->isModified()) continue;
+			if ($file->isPublished() || $file->isNew()) continue;
 
 			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
 		}
