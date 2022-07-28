@@ -27,6 +27,8 @@ class Settings extends Model
 
     public $apiLogging;
 
+    public $allowLocalOrder;
+
     public $twigSearchFilterSingleQuote = "";
 
     public $twigSearchFilterDoubleQuote = "";

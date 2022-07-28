@@ -6,6 +6,7 @@ use Craft;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 
 class CraftApiClient
 {
@@ -75,8 +76,8 @@ class CraftApiClient
 
             return $responseJson['data']['entry'] ?? null;
         } catch(\Exception $e) {
-            Craft::error('Exception fetching IsoMapping', Constants::PLUGIN_HANDLE);
-            Craft::error($e->getMessage(), Constants::PLUGIN_HANDLE);
+            Translations::$plugin->logHelper->log('Exception fetching IsoMapping', Constants::LOG_LEVEL_ERROR);
+            Translations::$plugin->logHelper->log($e->getMessage(), Constants::LOG_LEVEL_ERROR);
             return null;
         }
     }
@@ -154,7 +155,7 @@ class CraftApiClient
             try {
                 mkdir($alias, 0777, true);
             } catch (\Exception $e) {
-                Craft::error($e->getMessage(), Constants::PLUGIN_HANDLE);
+                Translations::$plugin->logHelper->log($e->getMessage(), Constants::LOG_LEVEL_ERROR);
             }
         }
 

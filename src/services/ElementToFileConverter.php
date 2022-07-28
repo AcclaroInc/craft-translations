@@ -223,7 +223,7 @@ class ElementToFileConverter
                 $errors = $this->reportXmlErrors();
                 if($errors)
                 {
-                    Craft::error(Translations::$plugin->translator->translate('app', "We found errors parsing file's xml."  . $errors));
+                    Translations::$plugin->logHelper->log(Translations::$plugin->translator->translate('app', "We found errors parsing file's xml."  . $errors),Constants::LOG_LEVEL_ERROR);
                     return false;
                 }
             }
@@ -234,7 +234,7 @@ class ElementToFileConverter
 
             return (string)$element->getAttribute('elementId');
         } catch(\Exception $e) {
-            Craft::error(Translations::$plugin->translator->translate('app', $e->getMessage()));
+            Translations::$plugin->logHelper->log(Translations::$plugin->translator->translate('app', $e->getMessage()), Constants::LOG_LEVEL_ERROR);
         }
 
     }
@@ -260,10 +260,11 @@ class ElementToFileConverter
         $contentArray = explode("\n", $file_content, 2);
 
         if (count($contentArray) != 2) {
-            Craft::error(
+            Translations::$plugin->logHelper->log(
                 Translations::$plugin->translator->translate(
-                    'app', "file you are trying to import has invalid content."
-                )
+                    'app', "file you are trying to import has invalid content."),
+                    Constants::LOG_LEVEL_ERROR
+
             );
             return false;
         }
@@ -272,10 +273,10 @@ class ElementToFileConverter
         $values = explode('","', $contentArray[1]);
 
         if (count($keys) != count($values)) {
-            Craft::error(
+            Translations::$plugin->logHelper->log(
                 Translations::$plugin->translator->translate(
                     'app', "csv file you are trying to import has header and value mismatch."
-                )
+                ),Constants::LOG_LEVEL_ERROR
             );
             return false;
         }
@@ -314,7 +315,7 @@ class ElementToFileConverter
             $errors = $this->reportXmlErrors();
             if($errors)
             {
-                Craft::error(Translations::$plugin->translator->translate('app', "We found errors parsing file's xml."  . $errors));
+                Translations::$plugin->logHelper->log(Translations::$plugin->translator->translate('app', "We found errors parsing file's xml."  . $errors), Constants::LOG_LEVEL_ERROR);
                 return false;
             }
         }

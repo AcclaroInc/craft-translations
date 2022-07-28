@@ -164,7 +164,7 @@ class SettingsController extends Controller
         {
             $error = 'Unable to create zip file: '.$zipDest;
             $errors[] = $error;
-            Craft::error('['. __METHOD__ .'] ' . $error, 'translations' );
+            Translations::$plugin->logHelper->log('['. __METHOD__ .'] ' . $error, Constants::LOG_LEVEL_ERROR );
             return false;
         }
 
@@ -177,7 +177,7 @@ class SettingsController extends Controller
             {
                 $error = 'There was an error adding the file '.$file.' to the zip: '.$zipName;
                 $errors[] = $error;
-                Craft::error('['. __METHOD__ .'] ' . $error, 'translations');
+                Translations::$plugin->logHelper->log('['. __METHOD__ .'] ' . $error, Constants::LOG_LEVEL_ERROR);
             }
         }
 
@@ -212,6 +212,7 @@ class SettingsController extends Controller
         $variables['trackSourceChanges'] = $settings->trackSourceChanges;
         $variables['trackTargetChanges'] = $settings->trackTargetChanges;
         $variables['apiLogging'] = $settings->apiLogging;
+        $variables['allowLocalOrder'] = $settings->allowLocalOrder;
         $variables['uploadVolume'] = $settings->uploadVolume;
         $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
         $variables['twigSearchFilterDoubleQuote'] = !empty($settings->twigSearchFilterDoubleQuote) ? $settings->twigSearchFilterDoubleQuote : "";
@@ -247,6 +248,7 @@ class SettingsController extends Controller
         $trackSourceChanges = $request->getParam('trackSourceChanges');
         $trackTargetChanges = $request->getParam('trackTargetChanges');
         $apiLogging = $request->getParam('apiLogging');
+        $allowLocalOrder = $request->getParam('allowLocalOrder');
         $selectedVolume = $request->getParam('uploadVolume');
         $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
         $twigSearchFilterDoubleQuote = $request->getParam('twigSearchFilterDoubleQuote');
@@ -262,6 +264,7 @@ class SettingsController extends Controller
                 'trackSourceChanges'            => $trackSourceChanges,
                 'trackTargetChanges'            => $trackTargetChanges,
                 'apiLogging'		            => $apiLogging,
+                'allowLocalOrder'               => $allowLocalOrder,
                 'uploadVolume'                  => $selectedVolume,
                 'twigSearchFilterSingleQuote'   => $twigSearchFilterSingleQuote,
                 'twigSearchFilterDoubleQuote'   => $twigSearchFilterDoubleQuote,
