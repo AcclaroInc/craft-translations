@@ -206,7 +206,7 @@ class AssetDraftRepository
         $success = Craft::$app->elements->saveElement($asset);
         
         if (!$success) {
-            Craft::error( '['. __METHOD__ .'] Couldn’t publish draft "'.$draft->title.'"', 'translations' );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t publish draft "'.$draft->title.'"', Constants::LOG_LEVEL_ERROR );
             return false;
         }
 
@@ -231,7 +231,7 @@ class AssetDraftRepository
 
             return $draft;
         } catch (Exception $e) {
-            Craft::error( '['. __METHOD__ .'] CreateAssetDraft exception:: '.$e->getMessage(), 'translations');
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] CreateAssetDraft exception:: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR);
             return [];
         }
 

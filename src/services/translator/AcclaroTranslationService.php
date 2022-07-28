@@ -138,7 +138,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             /** @var object $fileInfo */
             if (empty($fileInfo->targetfile)) {
                 if ($fileInfo->filetype == Constants::ACCLARO_SOURCE_FILE_TYPE) {
-                    Craft::error('[' . __METHOD__ . '] target file missing for fileId: ' . $file->id , 'translations');
+                    Translations::$plugin->logHelper->log('[' . __METHOD__ . '] target file missing for fileId: ' . $file->id , Constants::LOG_LEVEL_ERROR);
                 }
                 return;
             }
@@ -157,7 +157,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             if ($target) $file->target = $target;
 
         } catch (\Exception $e) {
-            Craft::error(  '['. __METHOD__ .'] Couldn’t update file. Error: '.$e->getMessage(), 'translations' );
+            Translations::$plugin->logHelper->log(  '['. __METHOD__ .'] Couldn’t update file. Error: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR );
         }
     }
 

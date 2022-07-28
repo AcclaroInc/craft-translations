@@ -254,7 +254,7 @@ class DraftRepository
         }
 
         if (empty($draft)) {
-            Craft::error(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), 'translations' );
+            Translations::$plugin->logHelper->log(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), Constants::LOG_LEVEL_ERROR );
             return false;
         }
 
@@ -423,7 +423,7 @@ class DraftRepository
             }
         } catch(Exception $e) {
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not publish draft Error: ' .$e->getMessage()));
-            Craft::error('Could not publish draft Error: ' .$e->getMessage());
+            Translations::$plugin->logHelper->log('Could not publish draft Error: ' .$e->getMessage(), Constants::LOG_LEVEL_ERROR);
         }
 
         $order->status = Translations::$plugin->orderRepository->getNewStatus($order);

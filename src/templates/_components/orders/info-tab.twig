@@ -30,7 +30,7 @@
 			<div class="float-right">
 			{% if orderId %}
 				<a class="right" href="{{ url('translations/translators/detail/'~order.translatorId) }}"
-				> {{ translatorOptions[order.translatorId] }} </a>
+				> {{ translatorOption[order.translatorId] }} </a>
 			{% else %}
 				<label class="right"> {{ "N/A" }} </label>
 			{% endif %}

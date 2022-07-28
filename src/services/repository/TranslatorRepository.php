@@ -13,6 +13,7 @@ namespace acclaro\translations\services\repository;
 use Craft;
 use Exception;
 use acclaro\translations\Constants;
+use acclaro\translations\elements\Translator;
 use acclaro\translations\models\TranslatorModel;
 use acclaro\translations\records\TranslatorRecord;
 
@@ -149,13 +150,14 @@ class TranslatorRepository
         }
 
         return $options;
+        // return $this->getActiveTranslators();
     }
 
     /**
      * @return slug => label
      */
     public function getTranslationServices()
-    {
+    {  
         return array(
             'acclaro' => 'Acclaro',
             'export_import' =>'Export/Import',

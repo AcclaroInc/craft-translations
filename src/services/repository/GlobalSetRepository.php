@@ -13,6 +13,7 @@ namespace acclaro\translations\services\repository;
 use Craft;
 use craft\elements\GlobalSet;
 use acclaro\translations\Translations;
+use acclaro\translations\Constants;
 
 class GlobalSetRepository
 {
@@ -39,7 +40,7 @@ class GlobalSetRepository
     {
         $success = Craft::$app->elements->saveElement($globalSet);
         if (!$success) {
-            Craft::error( '['. __METHOD__ .'] Couldn’t save the Global Set "'.$globalSet->title.'"', 'translations' );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t save the Global Set "'.$globalSet->title.'"', Constants::LOG_LEVEL_ERROR );
         }
     }
 }
