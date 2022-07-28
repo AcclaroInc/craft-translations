@@ -202,7 +202,7 @@ class CategoryDraftRepository
         $success = Craft::$app->elements->saveElement($category);
         
         if (!$success) {
-            Craft::error( '['. __METHOD__ .'] Couldn’t publish draft "'.$draft->title.'"', 'translations' );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t publish draft "'.$draft->title.'"', Constants::LOG_LEVEL_ERROR );
             return false;
         }
 
@@ -256,7 +256,7 @@ class CategoryDraftRepository
             return $draft;
         } catch (Exception $e) {
 
-            Craft::error( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), 'translations');
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR);
             return [];
         }
 

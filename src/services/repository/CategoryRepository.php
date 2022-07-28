@@ -12,6 +12,8 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use craft\elements\Category;
+use acclaro\translations\Translations;
+use acclaro\translations\Constants;
 
 class CategoryRepository
 {
@@ -32,7 +34,7 @@ class CategoryRepository
     {
         $success = Craft::$app->elements->saveElement($category);
         if (!$success) {
-            Craft::error( '['. __METHOD__ .'] Couldn’t save the category "'.$category->title.'"', 'translations' );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t save the category "'.$category->title.'"', Constants::LOG_LEVEL_ERROR );
         }
     }
 }

@@ -305,7 +305,7 @@ class BaseController extends Controller
 
         $success = Craft::$app->getElements()->saveElement($order);
         if (!$success) {
-            Craft::error( '['. __METHOD__ .'] Couldn’t save the order', 'translations' );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t save the order', Constants::LOG_LEVEL_ERROR );
         }
 
         Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Added to order.'));
