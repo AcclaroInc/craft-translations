@@ -13,8 +13,6 @@ use Spatie\GuzzleRateLimiterMiddleware\RateLimiterMiddleware;
 
 class AcclaroApiClient
 {
-    protected $loggingEnabled;
-
     public function __construct(
         $apiToken,
         $sandboxMode = false,
@@ -32,8 +30,6 @@ class AcclaroApiClient
 			),
 			'handler' => $stack
         ]);
-
-		$this->loggingEnabled = Translations::getInstance()->settings->apiLogging;
     }
 
     /**
@@ -47,32 +43,30 @@ class AcclaroApiClient
     }
 
     /**
-     * Log api call
+     * Log's request and response for api call
      *
      * @param Request|\GuzzleHttp\Psr7\Response $object
      * @return void
      */
 
     public function apiLog($object, $endpoint)
-    {   
-        if($this->loggingEnabled){
-            if ($object instanceof Request) {
+    {
+        if ($object instanceof Request) {
+            Translations::$plugin->logHelper->log(
+                sprintf("AcclaroApi: [%s], Request: {%s}", $endpoint, $object->getUri()), Constants::LOG_LEVEL_INFO
+            );
+        } else {
+            if ($object->getStatusCode() != 200) {
                 Translations::$plugin->logHelper->log(
-                    sprintf("AcclaroApi: [%s], Request: {%s}", $endpoint, $object->getUri()), Constants::LOG_LEVEL_INFO
+                    sprintf("AcclaroApi: [%s], Error: {%s}", $endpoint, $object->getBody()), Constants::LOG_LEVEL_ERROR
                 );
             } else {
-                if ($object->getStatusCode() != 200) {
-                    Translations::$plugin->logHelper->log(
-                        sprintf("AcclaroApi: [%s], Error: {%s}", $endpoint, $object->getBody()), Constants::LOG_LEVEL_INFO
-                    );
-                } else {
-                    Translations::$plugin->logHelper->log(
-                        sprintf("AcclaroApi: [%s], Response: {%s}", $endpoint, $object->getBody()), Constants::LOG_LEVEL_INFO
-                    );
-                }
+                Translations::$plugin->logHelper->log(
+                    sprintf("AcclaroApi: [%s], Response: {%s}", $endpoint, $object->getBody()), Constants::LOG_LEVEL_INFO
+                );
             }
         }
-		
+
     }
 
     /**
@@ -130,7 +124,6 @@ class AcclaroApiClient
             try {
                 $response = $this->client->send($request, ['timeout' => 0]);
             } catch (Exception $e) {
-                //@TODO
 				Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
                 return null;
             }
@@ -139,7 +132,7 @@ class AcclaroApiClient
         $this->apiLog($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
-            //@TODO
+            // being logged from apiLog()
             return null;
         }
 
@@ -456,7 +449,6 @@ class AcclaroApiClient
         try {
             $response = $this->client->send($request, ['timeout' => 2]);
         } catch (Exception $e) {
-            //@TODO
 			Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
             return null;
         }

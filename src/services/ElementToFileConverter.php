@@ -264,7 +264,7 @@ class ElementToFileConverter
                 Translations::$plugin->translator->translate(
                     'app', "file you are trying to import has invalid content."),
                     Constants::LOG_LEVEL_ERROR
-                
+
             );
             return false;
         }
@@ -315,7 +315,7 @@ class ElementToFileConverter
             $errors = $this->reportXmlErrors();
             if($errors)
             {
-                Translations::$plugin->logHelper->log(Translations::$plugin->translator->translate('app', "We found errors parsing file's xml."  . $errors),Constants::LOG_LEVEL_ERROR);
+                Translations::$plugin->logHelper->log(Translations::$plugin->translator->translate('app', "We found errors parsing file's xml."  . $errors), Constants::LOG_LEVEL_ERROR);
                 return false;
             }
         }

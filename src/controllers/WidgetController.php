@@ -91,11 +91,11 @@ class WidgetController extends Controller
                 case $currentUser->can('translations:translator'):
                     return $this->redirect(Constants::URL_TRANSLATOR, 302, true);
                     break;
-                
+
                 case $currentUser->can('translations:settings'):
                     return $this->redirect(Constants::URL_SETTINGS, 302, true);
                     break;
-                
+
                 default:
                     return $this->redirect(Constants::URL_ENTRIES, 302, true);
                     break;
@@ -191,7 +191,7 @@ class WidgetController extends Controller
         $variables['widgetTypes'] = $widgetTypeInfo;
         $variables['selectedSubnavItem'] = 'dashboard';
         $variables['isSelectableWidget'] = $isSelectableWidget;
-        
+
         return $this->renderTemplate('translations/_index', $variables);
     }
 
@@ -354,7 +354,7 @@ class WidgetController extends Controller
                 ->site($site)
                 // ->enabledForSite()
                 ->count();
-                
+
                 // Get in progress entry translation count
                 $inQueue = FileRecord::find()
                     ->select(['elementId'])
@@ -382,14 +382,14 @@ class WidgetController extends Controller
                 $data[$i]['enabledEntries'] = $enabledEntries;
                 $data[$i]['inQueue'] = $inQueue;
                 $data[$i]['translated'] = $translated;
-                $data[$i]['percentage'] = $enabledEntries ? number_format((($translated / $enabledEntries)*100), 0) : 0;    
+                $data[$i]['percentage'] = $enabledEntries ? number_format((($translated / $enabledEntries)*100), 0) : 0;
                 $data[$i]['color'] = $colorArr[$this->getClosest((int) $data[$i]['percentage'], $colorArr)];
-    
+
                 // Sort the data by highest percentage
                 usort($data, function($a, $b) {
                     return $b['percentage'] <=> $a['percentage'];
                 });
-    
+
                 if ($i + 1 < $limit) {
                     $i++;
                 } else {
@@ -397,7 +397,7 @@ class WidgetController extends Controller
                 }
             }
         }
-        
+
         return $this->asJson([
             'success' => true,
             'data' => $data,
@@ -501,12 +501,12 @@ class WidgetController extends Controller
                         $data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
                         $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
                         $data[$i]['diff'] = $diffHtml;
-    
+
                         // Sort data array by most recent
                         usort($data, function($a, $b) {
                             return $b['entryDateTimestamp'] <=> $a['entryDateTimestamp'];
                         });
-    
+
                         // Only return set limit
                         if ($i + 1 < $limit) {
                             $i++;
@@ -621,7 +621,7 @@ class WidgetController extends Controller
             NewAndModifiedEntries::class,
             LanguageCoverage::class,
         ];
-        
+
         return $widgetTypes;
     }
 
@@ -718,7 +718,7 @@ class WidgetController extends Controller
             return false;
         }
         if ($runValidation && !$widget->validate()) {
-            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Widget not saved due to validation error.', Constants::LOG_LEVEL_INFO );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Widget not saved due to validation error.', Constants::LOG_LEVEL_ERROR );
             return false;
         }
         $transaction = Craft::$app->getDb()->beginTransaction();
@@ -945,7 +945,7 @@ class WidgetController extends Controller
         if (!$user) {
             throw new \Exception('No logged-in user');
         }
-        
+
         // Get value from user preferences
         $usersService = new Users();
         $hasTranslationsDashboard = $usersService->getUserPreference($user->id, 'hasTranslationsDashboard');
@@ -965,7 +965,7 @@ class WidgetController extends Controller
 
         return $widgets;
     }
-    
+
     /**
      * @return Query
      */

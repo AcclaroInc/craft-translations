@@ -92,7 +92,7 @@ class Translations extends Plugin
             Plugins::class,
             Plugins::EVENT_AFTER_LOAD_PLUGINS,
             function () {
-                if ($this::getInstance()->settings->apiLogging) {
+                if (self::getInstance()->settings->apiLogging) {
                     Craft::debug(
                         '['. __METHOD__ .'] Plugins::EVENT_AFTER_LOAD_PLUGINS',
                         'translations'
@@ -115,9 +115,9 @@ class Translations extends Plugin
 
         // Prune deleted sites translations from `translation_translations` table
         Event::on(Sites::class, Sites::EVENT_BEFORE_DELETE_SITE, function (DeleteSiteEvent $event) {
-            Translations::$plugin->logHelper->log(
+            self::$plugin->logHelper->log(
                 '[' . __METHOD__ . '] Sites::EVENT_BEFORE_DELETE_SITE',
-                Constants::LOG_LEVEL_DEBUG
+                Constants::LOG_LEVEL_INFO
             );
 
             $this->_onDeleteSite($event);
@@ -127,16 +127,14 @@ class Translations extends Plugin
             Drafts::class,
             Drafts::EVENT_BEFORE_APPLY_DRAFT,
             function (DraftEvent $event) {
-                if($this::getInstance()->settings->apiLogging){
-                    Craft::info(
-                        Craft::t(
-                            'translations',
-                            '{name} Drafts::EVENT_BEFORE_APPLY_DRAFT',
-                            ['name' => $this->name]
-                        ),
-                        'translations'
-                    );
-                }
+                self::$plugin->logHelper->log(
+                    Craft::t(
+                        'translations',
+                        '{name} Drafts::EVENT_BEFORE_APPLY_DRAFT',
+                        ['name' => $this->name]
+                    ),
+                    Constants::LOG_LEVEL_INFO
+                );
 
                 $this->_onBeforePublishDraft($event);
             }
@@ -146,10 +144,11 @@ class Translations extends Plugin
             Drafts::class,
             Drafts::EVENT_AFTER_APPLY_DRAFT,
             function (DraftEvent $event) {
-                Translations::$plugin->logHelper->log(
+                self::$plugin->logHelper->log(
                     '['. __METHOD__ .'] Drafts::EVENT_AFTER_APPLY_DRAFT',
-                    Constants::LOG_LEVEL_DEBUG
+                    Constants::LOG_LEVEL_INFO
                 );
+
                 if ($event->draft) {
                     $this->_onApplyDraft($event);
                 }
@@ -160,9 +159,9 @@ class Translations extends Plugin
             Entry::class,
             Entry::EVENT_AFTER_SAVE,
             function (ModelEvent $event) {
-                Translations::$plugin->logHelper->log(
+                self::$plugin->logHelper->log(
                     '['. __METHOD__ .'] Elements::EVENT_AFTER_SAVE_ELEMENT',
-                    Constants::LOG_LEVEL_DEBUG
+                    Constants::LOG_LEVEL_INFO
                 );
 
                 $this->_onSaveEntry($event);
@@ -173,9 +172,9 @@ class Translations extends Plugin
             Elements::class,
             Elements::EVENT_BEFORE_DELETE_ELEMENT,
             function (DeleteElementEvent $event) {
-                Translations::$plugin->logHelper->log(
+                self::$plugin->logHelper->log(
                     '['. __METHOD__ .'] Elements::EVENT_BEFORE_DELETE_ELEMENT',
-                    Constants::LOG_LEVEL_DEBUG
+                    Constants::LOG_LEVEL_INFO
                 );
 
                 $this->_onDeleteElement($event);
@@ -186,9 +185,9 @@ class Translations extends Plugin
             Plugins::class,
             Plugins::EVENT_AFTER_INSTALL_PLUGIN,
             function (PluginEvent $event) {
-                Translations::$plugin->logHelper->log(
+                self::$plugin->logHelper->log(
                     '['. __METHOD__ .'] Plugins::EVENT_AFTER_INSTALL_PLUGIN',
-                    Constants::LOG_LEVEL_DEBUG
+                    Constants::LOG_LEVEL_INFO
                 );
                 if ($event->plugin === $this) {
                     $request = Craft::$app->getRequest();
@@ -200,7 +199,7 @@ class Translations extends Plugin
                 }
             }
         );
-        if($this::getInstance()->settings->apiLogging) {
+        if(self::getInstance()->settings->apiLogging) {
             Craft::info(
                 Craft::t(
                     'translations',
@@ -685,9 +684,9 @@ class Translations extends Plugin
             UserPermissions::class,
             UserPermissions::EVENT_REGISTER_PERMISSIONS,
             function (RegisterUserPermissionsEvent $event) {
-                Translations::$plugin->logHelper->log(
+                self::$plugin->logHelper->log(
                     '['. __METHOD__ .'] UserPermissions::EVENT_REGISTER_PERMISSIONS',
-                    Constants::LOG_LEVEL_DEBUG
+                    Constants::LOG_LEVEL_INFO
                 );
                 // Register our custom permissions
                 $event->permissions[Craft::t('translations', 'Translations')] = $this->customAdminCpPermissions();

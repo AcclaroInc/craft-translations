@@ -127,7 +127,7 @@ class FilesController extends Controller
 
                         if (! $zip->addFromString("references/" . $fileName, $tmFile['fileContent'])) {
                             $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
-                            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_DEBUG );
+                            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_ERROR );
                         }
                     }
 
