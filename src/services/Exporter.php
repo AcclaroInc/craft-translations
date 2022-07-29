@@ -103,9 +103,6 @@ class Exporter extends ElementExporter
 
             $attributeArr = [];
             foreach ($order as $key => $value){
-                if($key=='status') {
-                    $value = ucwords($value);
-                }
                 $attributeArr[ucfirst($key)] = $value;
             }
             $rawData[] = $attributeArr;

@@ -98,10 +98,7 @@ class OrderController extends Controller
 		$variables['orientation'] = Craft::$app->getLocale()->orientation;
 		$variables['chkDuplicateEntries'] = Translations::getInstance()->settings->chkDuplicateEntries;
         $variables['tagGroup'] = Craft::$app->getTags()->getTagGroupByHandle(Constants::ORDER_TAG_GROUP_HANDLE);
-        $variables['allowLocalOrder'] =  Translations::getInstance()->settings->allowLocalOrder;
         $variables['apiLogging'] =  Translations::getInstance()->settings->apiLogging;
-
-        $variables['translatorOptions']=[];
 
         $variables['versionsByElementId'] = [];
         $variables['elements'] = [];
@@ -112,23 +109,8 @@ class OrderController extends Controller
 		$variables['isDefaultTranslator'] = true;
 		$variables['elementWordCounts'] = array();
         $variables['orderWordCount'] = 0;
-        $variables['translatorOption'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
+        $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
 
-
-        if(Translations::getInstance()->settings->allowLocalOrder==false){
-            foreach ($variables['translatorOption'] as $key => $value) {
-                if($key==1){
-                    continue;
-                }
-                else{
-                    $variables['translatorOptions'][$key]=$value;
-                }    
-               
-            }
-        }
-        else{
-            $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
-        }
         if ($variables['isProcessing']) {
             $submitAction = Craft::$app->getRequest()->getParam('submit');
             if ($submitAction == "draft" || $submitAction == "publish") {
@@ -296,9 +278,6 @@ class OrderController extends Controller
                 $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
 
                 if ($translator->service === Constants::TRANSLATOR_DEFAULT) {
-                    $variables['defaultTranslatorId'] = $translatorId;
-                }
-                else{
                     $variables['defaultTranslatorId'] = $translatorId;
                 }
             }

@@ -212,7 +212,6 @@ class SettingsController extends Controller
         $variables['trackSourceChanges'] = $settings->trackSourceChanges;
         $variables['trackTargetChanges'] = $settings->trackTargetChanges;
         $variables['apiLogging'] = $settings->apiLogging;
-        $variables['allowLocalOrder'] = $settings->allowLocalOrder;
         $variables['uploadVolume'] = $settings->uploadVolume;
         $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
         $variables['twigSearchFilterDoubleQuote'] = !empty($settings->twigSearchFilterDoubleQuote) ? $settings->twigSearchFilterDoubleQuote : "";
@@ -248,7 +247,6 @@ class SettingsController extends Controller
         $trackSourceChanges = $request->getParam('trackSourceChanges');
         $trackTargetChanges = $request->getParam('trackTargetChanges');
         $apiLogging = $request->getParam('apiLogging');
-        $allowLocalOrder = $request->getParam('allowLocalOrder');
         $selectedVolume = $request->getParam('uploadVolume');
         $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
         $twigSearchFilterDoubleQuote = $request->getParam('twigSearchFilterDoubleQuote');
@@ -264,7 +262,6 @@ class SettingsController extends Controller
                 'trackSourceChanges'            => $trackSourceChanges,
                 'trackTargetChanges'            => $trackTargetChanges,
                 'apiLogging'		            => $apiLogging,
-                'allowLocalOrder'               => $allowLocalOrder,
                 'uploadVolume'                  => $selectedVolume,
                 'twigSearchFilterSingleQuote'   => $twigSearchFilterSingleQuote,
                 'twigSearchFilterDoubleQuote'   => $twigSearchFilterDoubleQuote,
