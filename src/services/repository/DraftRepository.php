@@ -178,7 +178,7 @@ class DraftRepository
             }
 
 			// Create draft only if not already exist
-			if ($file->draftId && $this->getDraftById($file->draftId, $file->targetSite)) {
+			if ($file->hasDraft()) {
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
 			} else {
@@ -265,12 +265,6 @@ class DraftRepository
         }
 
         try {
-            // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId);
-            if (!empty($isExistingFile)) {
-                return;
-            }
-
             $file->draftId = $draft->draftId;
             $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
             $file->status = Constants::FILE_STATUS_COMPLETE;

@@ -107,17 +107,6 @@
             name: 'apiLogging',
             on: apiLogging,
         }) }}
-        <hr>
-        <h3>{{ "Local order"|t('app') }}</h3>
-
-        {{ forms.lightswitchField({
-            first: true,
-            label: "Enable local order"|t('app'),
-            instructions: "Creates a local order."|t('app'),
-            id: 'allowLocalOrder',
-            name: 'allowLocalOrder',
-            on: allowLocalOrder,
-        }) }}
 
         <div class="buttons">
             <input type="submit" id="save-configuration" class="btn" value="{{ "Save"|t('app') }}" />
@@ -129,7 +118,7 @@
 
 {% js %}
     $( document ).ready(function() {
-        $('#chkDuplicateEntries, #apiLogging, #trackSourceChanges,#allowLocalOrder, #trackTargetChanges').change(function() {
+        $('#chkDuplicateEntries, #apiLogging, #trackSourceChanges, #trackTargetChanges').change(function() {
             $('#save-configuration').toggleClass('submit');
         });
     });

@@ -495,7 +495,7 @@ class OrderRepository
             $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
 
-		return $draftElement->title ?? $element->title;
+		return $draftElement->title ?? $draftElement->name ?? $element->title;
     }
 
     /**

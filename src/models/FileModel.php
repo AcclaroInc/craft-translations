@@ -133,7 +133,7 @@ class FileModel extends Model
 
     public function hasDraft()
     {
-        return $this->draftId ?: null;
+        return $this->_service->getDraft($this);
     }
 
     public function isNew()

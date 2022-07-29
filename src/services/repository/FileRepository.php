@@ -528,6 +528,31 @@ class FileRepository
         return false;
     }
 
+    // Draft Actions
+
+    public function getDraft(FileModel $file)
+    {
+        $draft = null;
+
+        if ($file->draftId && $element = $file->getElement()) {
+            switch (get_class($element)) {
+                case GlobalSet::class:
+                    $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+                    break;
+                case Category::class:
+                    $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+                    break;
+                case Asset::class:
+                    $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+                    break;
+                default:
+                    $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+            }
+        }
+
+        return $draft;
+    }
+
     public function createReferenceData(array $data, $ignoreCommon = true)
     {
         $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
