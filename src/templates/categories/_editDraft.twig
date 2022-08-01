@@ -1,5 +1,4 @@
 {% extends "_layouts/element" %}
-{% import "_includes/forms" as forms %}
 
 {% set saveShortcutRedirect = continueEditingUrl %}
 {% set saveSourceAction = 'translations/category/save-draft' %}
@@ -33,7 +32,7 @@
 {% endblock %}
 
 {% block actionButton %}
-<div class="btngroup">
+<div class="btngroup {{ canEdit ? '' : 'disabled noClick' }}">
     <input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
     <div class="btn submit menubtn"></div>
     <div class="menu">
