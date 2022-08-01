@@ -12,8 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - An issue where entry was missing assets fields after merging into draft ([AcclaroInc#362](https://github.com/AcclaroInc/craft-translations/pull/362))
 - An issue where seomatic image field missing after merge into draft ([AcclaroInc#372](https://github.com/AcclaroInc/craft-translations/pull/372))
 - A bug where global config settings for track source/target changes was interfering with submitted orders track changes light switch.
-- An issue where category drafts were missing content from non localised blocks.
-- An issue where category draft title were updated but not saved.
+- An issue where category drafts were missing content from non-localized blocks and draft titles were updated but not saved ([AcclaroInc#375](https://github.com/AcclaroInc/craft-translations/pull/375)).
 - An issue where category drafts were not editable and leading to error when saved or published from draft detail page.
 
 ### Updated
