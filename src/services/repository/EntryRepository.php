@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\repository;
 
+use acclaro\translations\Constants;
 use Craft;
 use craft\elements\User;
 use craft\elements\Entry;
@@ -44,7 +45,7 @@ class EntryRepository extends Component
 
             return $draft;
         } catch (\Exception $e) {
-            Craft::error( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), 'translations' );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR );
             return [];
         }
     }

@@ -27,7 +27,7 @@ class TranslatorRepository
         $record = TranslatorRecord::findOne($translatorId);
 
         if (! $record) return null;
-        
+
         $translator = new TranslatorModel($record->toArray([
             'id',
             'label',
@@ -40,7 +40,7 @@ class TranslatorRepository
 
         return $translator;
     }
-    
+
     /**
      * @param  int|string $service
      * @return \acclaro\translations\models\TranslatorModel
@@ -49,7 +49,7 @@ class TranslatorRepository
     {
         $records = TranslatorRecord::find()->all();
         $translators = array();
-        
+
         foreach ($records as $key => $record) {
             $translators[$key] = new TranslatorModel($record->toArray([
                 'id',
@@ -64,7 +64,7 @@ class TranslatorRepository
 
         return $translators;
     }
-    
+
     /**
      * @return array \acclaro\translations\models\TranslatorModel
      */
@@ -72,7 +72,7 @@ class TranslatorRepository
     {
         $records = TranslatorRecord::find()->all();
         $translators = array();
-        
+
         foreach ($records as $key => $record) {
             $translators[$key] = new TranslatorModel($record->toArray([
                 'id',
@@ -231,7 +231,7 @@ class TranslatorRepository
     public function deleteTranslator(TranslatorModel $translator)
     {
         $record = TranslatorRecord::findOne($translator->id);
-        
+
         $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
 
         try {

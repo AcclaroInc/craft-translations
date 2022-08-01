@@ -8,6 +8,7 @@
 	var hasOrderId = $("input[type=hidden][name=id]").val() != '';
 	var isInProgress = $("#order-attr").data("status") === "in progress";
 	var hasCompleteFiles = $("#order-attr").data("has-completed-file");
+	var isTmAligned = $("#order-attr").data("is-tm-aligned");
 
 	/**
 	 * Order entries class
@@ -473,6 +474,7 @@
 
             $downloadTmAction = $('<a>', {
                 'href': '#',
+                'class': isTmAligned ? 'link-disabled' : '',
                 'text': $label,
             });
             $downloadTmLi.append($downloadTmAction);

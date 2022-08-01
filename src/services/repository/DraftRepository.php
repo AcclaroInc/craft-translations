@@ -178,7 +178,7 @@ class DraftRepository
             }
 
 			// Create draft only if not already exist
-			if ($file->draftId && $this->getDraftById($file->draftId, $file->targetSite)) {
+			if ($file->hasDraft()) {
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
 			} else {
@@ -254,7 +254,7 @@ class DraftRepository
         }
 
         if (empty($draft)) {
-            Craft::error(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), 'translations' );
+            Translations::$plugin->logHelper->log(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), Constants::LOG_LEVEL_ERROR );
             return false;
         }
 
@@ -265,12 +265,6 @@ class DraftRepository
         }
 
         try {
-            // Prevent duplicate files
-            $isExistingFile = $this->isTranslationDraft($draft->draftId);
-            if (!empty($isExistingFile)) {
-                return;
-            }
-
             $file->draftId = $draft->draftId;
             $file->previewUrl = Translations::$plugin->urlGenerator->generateElementPreviewUrl($draft, $targetSite);
             $file->status = Constants::FILE_STATUS_COMPLETE;
@@ -423,7 +417,7 @@ class DraftRepository
             }
         } catch(Exception $e) {
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not publish draft Error: ' .$e->getMessage()));
-            Craft::error('Could not publish draft Error: ' .$e->getMessage());
+            Translations::$plugin->logHelper->log('Could not publish draft Error: ' .$e->getMessage(), Constants::LOG_LEVEL_ERROR);
         }
 
         $order->status = Translations::$plugin->orderRepository->getNewStatus($order);

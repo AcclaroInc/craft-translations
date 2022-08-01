@@ -495,7 +495,7 @@ class OrderRepository
             $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
 
-		return $draftElement->title ?? $element->title;
+		return $draftElement->title ?? $draftElement->name ?? $element->title;
     }
 
     /**
@@ -557,7 +557,7 @@ class OrderRepository
 		$originalIds = [];
 
 		foreach ($order->getFiles() as $file) {
-			if ($file->isPublished() || $file->isNew()) continue;
+			if ($file->isPublished() || $file->isNew() || $file->isModified()) continue;
 
 			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
 		}

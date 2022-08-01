@@ -164,7 +164,7 @@ class SettingsController extends Controller
         {
             $error = 'Unable to create zip file: '.$zipDest;
             $errors[] = $error;
-            Craft::error('['. __METHOD__ .'] ' . $error, 'translations' );
+            Translations::$plugin->logHelper->log('['. __METHOD__ .'] ' . $error, Constants::LOG_LEVEL_ERROR );
             return false;
         }
 
@@ -177,7 +177,7 @@ class SettingsController extends Controller
             {
                 $error = 'There was an error adding the file '.$file.' to the zip: '.$zipName;
                 $errors[] = $error;
-                Craft::error('['. __METHOD__ .'] ' . $error, 'translations');
+                Translations::$plugin->logHelper->log('['. __METHOD__ .'] ' . $error, Constants::LOG_LEVEL_ERROR);
             }
         }
 

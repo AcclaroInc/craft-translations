@@ -15,6 +15,8 @@ use Exception;
 use ReflectionClass;
 use acclaro\translations\models\TranslationModel;
 use acclaro\translations\records\TranslationRecord;
+use acclaro\translations\Translations;
+use acclaro\translations\Constants;
 
 class TranslationRepository
 {
@@ -180,7 +182,7 @@ class TranslationRepository
                 $record->delete();
             }
         } catch (\Exception $e) {
-            Craft::error("Error deleting translations for Site Id: $siteId", 'translations');
+            Translations::$plugin->logHelper->log("Error deleting translations for Site Id: $siteId", Constants::LOG_LEVEL_ERROR);
         }
     }
 }

@@ -13,6 +13,9 @@ namespace acclaro\translations\services\repository;
 use Craft;
 use Exception;
 use yii\db\Query;
+use craft\elements\Asset;
+use craft\elements\Category;
+use craft\elements\GlobalSet;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
@@ -522,10 +525,35 @@ class FileRepository
                 return true;
             }
         } catch (\Exception $e) {
-            Craft::error($e, Constants::PLUGIN_HANDLE);
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
         }
 
         return false;
+    }
+
+    // Draft Actions
+
+    public function getDraft(FileModel $file)
+    {
+        $draft = null;
+
+        if ($file->draftId && $element = $file->getElement()) {
+            switch (get_class($element)) {
+                case GlobalSet::class:
+                    $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($file->draftId);
+                    break;
+                case Category::class:
+                    $draft = Translations::$plugin->categoryDraftRepository->getDraftById($file->draftId);
+                    break;
+                case Asset::class:
+                    $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+                    break;
+                default:
+                    $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
+            }
+        }
+
+        return $draft;
     }
 
     public function createReferenceData(array $data, $ignoreCommon = true)

@@ -4,10 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.3 - 2022-08-01
+
+### Fixed
+- An issue where target content was missing after merging into draft ([AcclaroInc#358](https://github.com/AcclaroInc/craft-translations/pull/358))
+- An issue where exported redactor links were missing some required data ([AccclaroInc#364](https://github.com/AcclaroInc/craft-translations/pull/364))
+- An issue where entry was missing assets fields after merging into draft ([AcclaroInc#362](https://github.com/AcclaroInc/craft-translations/pull/362))
+- An issue where seomatic image field missing after merge into draft ([AcclaroInc#372](https://github.com/AcclaroInc/craft-translations/pull/372))
+- A bug where global config settings for track source/target changes was interfering with submitted orders track changes light switch.
+- An issue where category drafts were missing content from non-localized blocks and draft titles were updated but not saved ([AcclaroInc#375](https://github.com/AcclaroInc/craft-translations/pull/375)).
+- An issue where category drafts were not editable and leading to error when saved or published from draft detail page.
+
+### Updated
+- To prevent target entry sync for old orders which were created before `track target content` feature was introduced.
+- The disable logging behaviour changed from only disabling api calls to completely disabled plugin logs ([AcclaroInc#373](https://github.com/AcclaroInc/craft-translations/pull/373))
+- Download/Sync TM files option only available when user can see alert icon for target mismatch.
+
 ## 2.2.2 - 2022-07-06
 
 ### Fixed
-- An issue where order fails to open when `previewUrl` length exceeds 255 chars. (#341) 
+- An issue where order fails to open when `previewUrl` length exceeds 255 chars. (#341)
 
 ### Updated
 - Removed the use of `filetype` param in API order sync call.
@@ -56,7 +72,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 - Plugin uninstallation bug (https://github.com/AcclaroInc/craft-translations/pull/313)
-  
+
 ## 2.1.3 - 2022-02-21
 
 ### Fixed
@@ -512,7 +528,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Removed
 - Removed `UpdateDraftFromXML`
-- Truncate `translations_files` and `translations_orders` tables to be compliant with new Craft draft service 
+- Truncate `translations_files` and `translations_orders` tables to be compliant with new Craft draft service
 
 ## 1.1.1 - 2019-07-03
 ### Added

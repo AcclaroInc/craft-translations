@@ -25,6 +25,7 @@ use yii\web\NotFoundHttpException;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\ImportFiles;
+use craft\helpers\Console;
 
 /**
  * @author    Acclaro
@@ -72,7 +73,7 @@ class FilesController extends Controller
         if ($zip->open($zipDest, $zip::CREATE) !== true)
         {
             $errors[] = 'Unable to create zip file: '.$zipDest;
-            Craft::error('['. __METHOD__ .'] Unable to create zip file: '.$zipDest, 'translations');
+            Translations::$plugin->logHelper->log('['. __METHOD__ .'] Unable to create zip file: '.$zipDest, Constants::LOG_LEVEL_ERROR);
             return false;
         }
 
@@ -114,7 +115,7 @@ class FilesController extends Controller
 
                 if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
                     $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
-                    Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
+                    Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_ERROR );
                 }
 
                 /** Check if entry exists in target site for reference comparison */
@@ -126,7 +127,7 @@ class FilesController extends Controller
 
                         if (! $zip->addFromString("references/" . $fileName, $tmFile['fileContent'])) {
                             $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
-                            Craft::error( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, 'translations' );
+                            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_ERROR );
                         }
                     }
 
@@ -486,7 +487,7 @@ class FilesController extends Controller
             // Close zip
             $zip->close();
         } catch(\Exception $e) {
-            Craft::error('['. __METHOD__ .']' . $e->getMessage(), 'translations');
+            Translations::$plugin->logHelper->log('['. __METHOD__ .']' . $e->getMessage(), Constants::LOG_LEVEL_ERROR);
             return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
         }
 
@@ -501,8 +502,8 @@ class FilesController extends Controller
         $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
-        //Iterate over each file on this order
-        if ($order->files) {
+        //Iterate over each file on this order and only process if trackTargetChanges is enabled
+        if ($order->files && $order->trackTargetChanges) {
             foreach ($order->getFiles() as $file) {
                 if (in_array($file->id, $files) && $file->hasTmMisalignments()) {
                     $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
