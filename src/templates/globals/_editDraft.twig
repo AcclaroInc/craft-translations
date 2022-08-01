@@ -13,7 +13,7 @@
     </div>
     <div class="select" style="margin-left:0.75em;">
         <select onchange="document.location.href=this.options[this.selectedIndex].value;">
-            <option value="{{ url('globals/'~craft.app.sites.getSiteById(draft.site).handle~'/'~globalSetHandle) }}"{>{{ 'Current'|t }}</option>
+            <option value="{{ url('globals/'~craft.app.sites.getSiteById(draft.site).handle~'/'~globalSetHandle) }}">{{ 'Current'|t }}</option>
             {% for d in drafts %}
             <option value="{{ d.cpEditUrl }}"{% if draftId == d.draftId %} selected{% endif %}>{{ d.name }}</option>
             {% endfor %}

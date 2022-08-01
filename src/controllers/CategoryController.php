@@ -29,6 +29,11 @@ class CategoryController extends Controller
     {
         $variables = Craft::$app->getRequest()->resolve()[1];
 
+        /** @var craft\elements\User $currentUser */
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        $variables['canEdit'] = $currentUser->can('translations:orders:create');
+
         if (empty($variables['slug'])) {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'categoryGroup')));
             return;
@@ -91,13 +96,14 @@ class CategoryController extends Controller
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
                 return;
             }
+
+            $draft->title = $this->request->getParam('title') ?? $draft->title;
+            $draft->slug = $this->request->getParam('slug') ?? $draft->slug;
         } else {
             $draft = Translations::$plugin->categoryDraftRepository->makeNewDraft();
             $draft->id = $category->id;
             $draft->site = $site;
         }
-
-        $fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
 
         $fields = $this->request->getParam('fields') ?? [];
 
@@ -133,7 +139,7 @@ class CategoryController extends Controller
         $category = Translations::$plugin->categoryRepository->getCategoryById($categoryId, $siteId);
 
         if (!$category) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No category exists with the ID “{id}”.', array('id' => $draft->id)));
+            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No category exists with the ID “{id}”.', array('id' => $categoryId)));
             return;
         }
 

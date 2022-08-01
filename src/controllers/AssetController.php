@@ -19,6 +19,11 @@ class AssetController extends BaseController
         $data = Craft::$app->getRequest()->resolve()[1];
         $siteService = Craft::$app->getSites();
 
+        /** @var craft\elements\User $currentUser */
+        $currentUser = Craft::$app->getUser()->getIdentity();
+
+        $variables['canEdit'] = $currentUser->can('translations:orders:create');
+
         $site = $siteService->getSiteByHandle($data['site'] ?? $siteService->getCurrentSite()->handle);
 
         if (empty($data['elementId'])) {
