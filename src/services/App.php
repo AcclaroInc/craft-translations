@@ -166,7 +166,13 @@ class App extends Component
      */
     public $orderEdit;
 
-    public function init(): void
+      /**
+     * @var LogHelper
+     */
+    public $logHelper;
+
+
+    public function init()
     {
         $this->services = new Services();
         $this->urlHelper = new UrlHelper();
@@ -197,5 +203,6 @@ class App extends Component
         $this->orderSearchParams = new OrderSearchParams();
         $this->orderDelete = new OrderDelete();
         $this->orderEdit = new OrderEdit();
+        $this->logHelper = new LogHelper();
     }
 }
