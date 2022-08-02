@@ -555,7 +555,7 @@ class FileRepository
      *
      *@return array $settings
      */
-    public function getPreviewSettings(FileModel $file)
+    public function getFilePreviewSettings(FileModel $file)
     {
         $settings = [];
         $element = $file->getElement(false);
@@ -583,6 +583,23 @@ class FileRepository
                 'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite) : null,
             ];
         }
+
+        return $settings;
+    }
+
+    /**
+     * Return a preview setting array used for creating per entry preview
+     *
+     * @param \acclaro\translations\models\FileModel $file
+     *
+     *@return array $settings
+     */
+    public function getEntryPreviewSettings(FileModel $file)
+    {
+        $settings = [
+            'id' => sprintf("filePreview-%s", $file->id),
+            'elementType' => get_class($file->getElement(false))
+        ];
 
         return $settings;
     }

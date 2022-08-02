@@ -231,9 +231,14 @@ class FileModel extends Model
 		return $element;
 	}
 
-    public function getPreviewSettings()
+    public function getFilePreviewSettings()
     {
-        return $this->_service->getPreviewSettings($this);
+        return $this->_service->getFilePreviewSettings($this);
+    }
+
+    public function getEntryPreviewSettings()
+    {
+        return $this->_service->getEntryPreviewSettings($this);
     }
 
     public function hasTmMisalignments($ignoreReference = false)

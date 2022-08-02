@@ -823,6 +823,11 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     align-items: center;
 }
 
+td .elements .element, td .elements .element.sel:focus {
+    background-color: inherit !important;
+    cursor: pointer;
+}
+
 tr.clone-modal-tr:not(.disabled):hover tr.file-diff-data th,
 tr.clone-modal-tr:not(.disabled):hover tr.file-diff-data td {
     background-color: white !important;

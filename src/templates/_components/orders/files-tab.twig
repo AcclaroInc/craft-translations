@@ -56,45 +56,48 @@
 							</td>
 
 							<td>
-								<table>
-									<tr>
-										<td>
-											<a href="{{ file.cpEditUrl }}">
-												{{ file.uiLabel }}
-											</a>
-											{% set sourceUpdated = file.elementId in isSourceChanged %}
-											{% set targetUpdated = order.trackTargetChanges and file.hasTmMisAlignments and not file.isNew and not file.isModified %}
+								<div id="{{ "filePreview-"~ file.id }}">
+									<div class="elements">
+										<div class="element small" title="{{ file.uiLabel ~" - " ~siteObjects[file.targetSite].name }}" data-id="{{ file.elementId }}" data-editable="" data-site-id={{ file.targetSite }} {% if file.isComplete %} data-draft-id={{ file.draftId }} {% endif %}>
+											<div class="label">
+												<span class="title">{{ file.uiLabel }}</span>
+											</div>
+										</div>
+										{% set sourceUpdated = file.elementId in isSourceChanged %}
+										{% set targetUpdated = order.trackTargetChanges and file.hasTmMisAlignments and not file.isNew and not file.isModified %}
 
-											{# Ignore target changes for api order that are completed #}
-											{% if not order.hasDefaultTranslator and (order.isReviewReady or order.isComplete or order.isPublished) %}
-												{% set targetUpdated = false %}
-											{% endif %}
+										{# Ignore target changes for api order that are completed #}
+										{% if not order.hasDefaultTranslator and (order.isReviewReady or order.isComplete or order.isPublished) %}
+											{% set targetUpdated = false %}
+										{% endif %}
 
-											{# Create Preview for each target entry #}
-											{% if file.hasPreview %}
-												{% set fileId = 'file_' ~ file.id %}
+										{# Create Preview for each target entry #}
+										{% if file.hasPreview %}
+											{% set fileId = 'file_' ~ file.id %}
 
-												<a id="{{ fileId }}" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+											<a id="{{ fileId }}" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 
-												{% js %}
-													new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.previewSettings|json_encode|raw }});
-												{% endjs %}
-											{% endif %}
+											{% js %}
+												new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.filePreviewSettings|json_encode|raw }});
+											{% endjs %}
+										{% endif %}
 
-											{% if canUpdateFiles and not file.isPublished and (sourceUpdated or targetUpdated) %}
-												<span class="warning order-warning font-size-15" data-icon="alert">
-													{% if sourceUpdated %}
-														<li> {{ 'Source entry content has been modified since order was created.' }} </li>
-													{% endif %}
+										{% if canUpdateFiles and not file.isPublished and (sourceUpdated or targetUpdated) %}
+											<span class="warning order-warning font-size-15" data-icon="alert">
+												{% if sourceUpdated %}
+													<li> {{ 'Source entry content has been modified since order was created.' }} </li>
+												{% endif %}
 
-													{% if targetUpdated %}
-														<li> {{ 'Target entry content has been modified since order was created.' }} </li>
-													{% endif %}
-												</span>
-											{% endif %}
-										</td>
-									</tr>
-								</table>
+												{% if targetUpdated %}
+													<li> {{ 'Target entry content has been modified since order was created.' }} </li>
+												{% endif %}
+											</span>
+										{% endif %}
+									</div>
+								</div>
+								{% js %}
+									new Craft.Translations.EntryPreview({{ file.entryPreviewSettings|json_encode|raw }});
+								{% endjs %}
 							</td>
 
 							<td>
