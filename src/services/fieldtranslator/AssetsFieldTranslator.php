@@ -60,7 +60,8 @@ class AssetsFieldTranslator extends GenericFieldTranslator
             return '';
         }
 
-        foreach ($blocks as $i => $block) {
+        foreach ($blocks as $i => $block)
+        {
             $post[$fieldHandle][$block->id] = $block->id;
         }
         return $post;
@@ -68,6 +69,8 @@ class AssetsFieldTranslator extends GenericFieldTranslator
 
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
     {
+        $postArray = [];
+
         $fieldHandle = $field->handle;
 
         $blocks = $element->getFieldValue($fieldHandle)->siteid($sourceSite)->all();
@@ -97,12 +100,13 @@ class AssetsFieldTranslator extends GenericFieldTranslator
                     Translations::$plugin->draftRepository->saveDraft($element);
                 }
 
+                $postArray[$fieldHandle][$block->id] = $block->id;
             } catch (Exception $e) {
                 continue;
             }
         }
 
-        return [];
+        return $postArray;
     }
 
     public function getWordCount(ElementTranslator $elementTranslator, Element $element, Field $field)

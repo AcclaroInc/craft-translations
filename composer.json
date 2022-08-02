@@ -26,7 +26,6 @@
     "require": {
         "craftcms/cms": "^4.0.0",
         "guzzlehttp/guzzle": "^7.0",
-        "php": "^8.0.2",
         "composer/composer": "^2.1.9",
 		"spatie/guzzle-rate-limiter-middleware": "^2.0"
     },

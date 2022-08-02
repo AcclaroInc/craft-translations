@@ -10,9 +10,12 @@
 
 namespace acclaro\translations\services\repository;
 
+
 use Craft;
 use craft\elements\Tag;
 use acclaro\translations\elements\Order;
+use acclaro\translations\Translations;
+use acclaro\translations\Constants;
 
 class TagRepository
 {
@@ -29,7 +32,7 @@ class TagRepository
     {
         $success = Craft::$app->elements->saveElement($tag, true, false);
         if (!$success) {
-            Craft::error( '['. __METHOD__ .'] Couldn’t save the tag "'.$tag->title.'"', 'translations' );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t save the tag "'.$tag->title.'"', Constants::LOG_LEVEL_ERROR );
         }
     }
 

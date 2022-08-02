@@ -104,7 +104,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         $targetData = Translations::$plugin->elementTranslator->getTargetData($translatedContent);
 
         switch (true) {
-                // Update GlobalSet Drafts
+            // Update GlobalSet Drafts
             case $draft instanceof GlobalSet:
                 $draft->siteId = $targetSite;
 
@@ -122,7 +122,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     return false;
                 }
                 break;
-                // Update Asset Drafts
+            // Update Asset Drafts
             case $draft instanceof Asset:
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->siteId = $targetSite;

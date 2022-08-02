@@ -693,16 +693,18 @@ class Order extends Element
 
     public function shouldTrackSourceContent()
     {
-        if ($this->trackChanges === NULL) return Translations::getInstance()->settings->trackSourceChanges;
+        if (!$this->id) {
+            return Translations::getInstance()->settings->trackSourceChanges;
+        }
 
-        return (bool) $this->trackChanges;
+        return $this->trackChanges;
     }
 
     public function shouldTrackTargetContent()
     {
-        if ($this->trackTargetChanges === NULL) return Translations::getInstance()->settings->trackTargetChanges;
+        if (! $this->id) return Translations::getInstance()->settings->trackTargetChanges;
 
-        return (bool) $this->trackTargetChanges;
+        return $this->trackTargetChanges;
     }
 
 	public function isExportImportAllowed()

@@ -52,16 +52,8 @@ class SeomaticMetaFieldTranslator extends GenericFieldTranslator
 
         $meta = $element->getFieldValue($fieldHandle);
 
-        $source = array();
+        $source[$fieldHandle] = $field->serializeValue($meta);
 
-        if( $meta )
-        {
-            foreach($meta->metaGlobalVars as $key => $value)
-            {
-                $source[$fieldHandle]['metaGlobalVars'][$key] = $value;
-            }
-        }
-        
         return $source;
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Translations for Craft plugin for Craft CMS 3.x
  *
@@ -14,6 +15,7 @@ use craft\base\Field;
 use craft\base\Element;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
+use craft\redactor\Field as RedactorField;
 
 class GenericFieldTranslator implements TranslatableFieldInterface
 {
@@ -24,19 +26,26 @@ class GenericFieldTranslator implements TranslatableFieldInterface
 
     public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
-        return $this->getFieldValue($elementTranslator, $element, $field);
+        $fieldValue = $this->getFieldValue($elementTranslator, $element, $field);
+
+        return $field instanceof RedactorField ? $field->serializeValue($fieldValue) : $fieldValue;
     }
-    
+
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
     {
-        return $fieldData;
+        if ($element->siteId != $targetSite) {
+            // Get element in target site so redactor links can be set for target sites using normalise
+            $element = Translations::$plugin->elementRepository->getElementById($element->id, $targetSite) ?? $element;
+        }
+
+        return $field instanceof RedactorField ? $field->normalizeValue($fieldData, $element) : $fieldData;
     }
-    
+
     public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
         return $this->getFieldValue($elementTranslator, $element, $field);
     }
-    
+
     public function getWordCount(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
         return Translations::$plugin->wordCounter->getWordCount($this->getFieldValue($elementTranslator, $element, $field));
