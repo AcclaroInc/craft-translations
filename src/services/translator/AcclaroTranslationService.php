@@ -79,7 +79,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         if ($order->isCanceled()) {
             $error = sprintf('Can not update canceled order. OrderId: %s', $order->id);
-            Craft::error($error, Constants::PLUGIN_HANDLE);
+            Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
             return;
         }
 
@@ -87,7 +87,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         if (empty($orderResponse->status)) {
             $error = sprintf('Empty order response from acclaro. OrderId: %s', $order->id);
-            Craft::error($error, Constants::PLUGIN_HANDLE);
+            Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
             return;
         }
 
@@ -129,7 +129,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
         try {
             if ($file->isCanceled()) {
                 $error = sprintf('Can not update canceled file. FileId: %s', $file->id);
-                Craft::error($error, Constants::PLUGIN_HANDLE);
+                Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
                 return;
             }
 
@@ -137,7 +137,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             if (!is_array($fileInfoResponse)) {
                 $error = sprintf('Invalid file Info from acclaro. FileId: %s', $file->id);
-                Craft::error($error, Constants::PLUGIN_HANDLE);
+                Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
                 return;
             }
             // find the matching file

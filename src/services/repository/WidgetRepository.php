@@ -23,7 +23,7 @@ use craft\widgets\MissingWidget;
 use craft\errors\WidgetNotFoundException;
 use craft\errors\MissingComponentException;
 use acclaro\translations\records\WidgetRecord;
-
+use acclaro\translations\Translations;
 // Widget Classes
 use acclaro\translations\widgets\News;
 use acclaro\translations\widgets\Translators;
@@ -163,7 +163,7 @@ class WidgetRepository extends BaseComponent
             return false;
         }
         if ($runValidation && !$widget->validate()) {
-            Craft::info('[' . __METHOD__ . '] Widget not saved due to validation error.', 'translations');
+            Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Widget not saved due to validation error.', Constants::LOG_LEVEL_ERROR);
             return false;
         }
         $transaction = Craft::$app->getDb()->beginTransaction();
@@ -348,11 +348,11 @@ class WidgetRepository extends BaseComponent
             return $this->_getDefaultWidgetIconSvg($widget);
         }
         if (!is_file($iconPath)) {
-            Craft::warning('[' . __METHOD__ . '] Widget icon file doesn\'t exist: {$iconPath}', 'translations');
+            Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Widget icon file doesn\'t exist: {$iconPath}', Constants::LOG_LEVEL_WARNING);
             return $this->_getDefaultWidgetIconSvg($widget);
         }
         if (!FileHelper::isSvg($iconPath)) {
-            Craft::warning('[' . __METHOD__ . '] Widget icon file is not an SVG: {$iconPath}', 'translations');
+            Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Widget icon file is not an SVG: {$iconPath}', Constants::LOG_LEVEL_WARNING);
             return $this->_getDefaultWidgetIconSvg($widget);
         }
         return file_get_contents($iconPath);
