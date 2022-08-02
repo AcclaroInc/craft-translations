@@ -116,7 +116,7 @@ class AcclaroApiClient
                             ]
                         ]);
                     } catch (Exception $e) {
-                        Craft::error($e, Constants::PLUGIN_HANDLE);
+                        Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
                     }
                 }
             }
@@ -136,7 +136,7 @@ class AcclaroApiClient
         $this->apiLog($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
-            Craft::error('Error code recieved in response', Constants::PLUGIN_HANDLE);
+            Translations::$plugin->logHelper->log('Error code recieved in response', Constants::LOG_LEVEL_ERROR);
             return null;
         }
 

@@ -658,6 +658,7 @@ class OrderController extends Controller
         $variables['isChanged'] = null;
         $variables['isEditable'] = true;
         $variables['isSubmitted'] = null;
+        $variables['isTargetChanged'] = [];
         $variables['selectedSubnavItem'] = 'orders';
 		$variables['isDefaultTranslator'] = false;
         $variables['orderId'] = null;
@@ -673,8 +674,8 @@ class OrderController extends Controller
         $newOrder = $this->service->makeNewOrder($variables['sourceSite']);
 
         $newOrder->title = $data['title'] ?? '';
-        $newOrder->trackChanges = $data['trackChanges'] ?? null;
-		$newOrder->trackTargetChanges = $data['trackTargetChanges'] ?? null;
+        $newOrder->trackChanges = $variables['shouldTrackSourceContent'] = $data['trackChanges'] ?? null;
+		$newOrder->trackTargetChanges = $variables['shouldTrackTargetContent'] = $data['trackTargetChanges'] ?? null;
 		$newOrder->includeTmFiles = $data['includeTmFiles'] ?? null;
         $newOrder->targetSites = json_encode($data['targetSites'] ?? '');
         $newOrder->elementIds = json_encode($elementIds);
@@ -807,8 +808,8 @@ class OrderController extends Controller
         $translator = $order->getTranslator();
 
         $authenticate = Translations::$plugin->services->authenticateService(
-          $translator->service,
-          $translator->getSettings()
+            $translator->service,
+            $translator->getSettings()
         );
 
         $isDefaultTranslator = $translator->service === Constants::TRANSLATOR_DEFAULT;
@@ -1482,7 +1483,7 @@ class OrderController extends Controller
             Craft::$app->getSession()->setNotice('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
-            Craft::error($e, 'translations');
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
 
             return $this->asFailure($e->getMessage());
         }

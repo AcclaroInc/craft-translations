@@ -224,7 +224,7 @@
 						Recommended for continuous translation workflows.</p>'|t('app'),
 					id: "trackChanges",
 					name: "trackChanges",
-					on: order.shouldTrackSourceContent
+					on: shouldTrackSourceContent is defined ? shouldTrackSourceContent : order.shouldTrackSourceContent
 				}) }}
 			</div>
 
@@ -236,7 +236,7 @@
 						Recomended when making changes to translated target content.</p>'|t('app'),
 					id: "trackTargetChanges",
 					name: "trackTargetChanges",
-					on: order.shouldTrackTargetContent
+					on: shouldTrackTargetContent is defined ? shouldTrackTargetContent : order.shouldTrackTargetContent
 				}) }}
 			</div>
 
