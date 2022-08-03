@@ -378,12 +378,14 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
     public function getOrderQuote($orderId)
     {
-        return $this->acclaroApiClient->getQuoteDetails($orderId);
+        $res = $this->acclaroApiClient->getQuoteDetails($orderId);
+
+        return $res->total ?? "Unable to get quote";
     }
 
-    public function acceptOrderQuote($orderId)
+    public function acceptOrderQuote($orderId, $comment = '')
     {
-        $this->acclaroApiClient->approveQuote($orderId);
+        return $this->acclaroApiClient->approveQuote($orderId, $comment);
     }
 
     public function getOrderQuoteDocument($orderId)

@@ -14,7 +14,7 @@
 			value: 'translations/order/accept-quote',
 		}) }}
 
-		{% set quoteActions = order.isGettingQuote ? 'noClick disabled' : '' %}
+		{% set quoteActions = order.isAwaitingApproval ? '' : 'noClick disabled' %}
 
 		<div class="field">
 			<div class="heading">

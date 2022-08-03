@@ -25,7 +25,6 @@ use yii\web\NotFoundHttpException;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\services\job\ImportFiles;
-use craft\helpers\Console;
 
 /**
  * @author    Acclaro
@@ -532,16 +531,16 @@ class FilesController extends Controller
                         json_decode($translator->settings, true)
                     );
 
-                $file = $translatorService->getOrderQuoteDocument($order->serviceOrderId);
+                $response = $translatorService->getOrderQuoteDocument($order->serviceOrderId);
 
-                if (empty($file)) {
+                if (empty($response)) {
                     return $this->asFailure('Unable to get quote file from translator');
                 }
 
-                return $this->asSuccess(null, ['document' => $file]);
+                return $this->asSuccess(null, ['document' => $response]);
             }
         } catch(\Exception $e) {
-            Craft::error($e, 'translations');
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
             return $this->asFailure($e->getMessage());
         }
     }

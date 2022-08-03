@@ -55,7 +55,7 @@
             "files": {label: "Order details"|t, url: "#files"},
         } %}
 
-		{% if order.requestQuote and (order.isGettingQuote or order.isAwaitingApproval) %}
+		{% if order.requestQuote %}
 			{% set tabs = tabs|merge({
 				"quote": {label: "Order quote"|t, url: "#quote"}
 			}) %}
@@ -91,7 +91,7 @@
 		{% include "translations/_components/orders/settings-tab" %}
 		{% include "translations/_components/orders/files-tab" %}
 
-		{% if order.requestQuote and (order.isGettingQuote or order.isAwaitingApproval) %}
+		{% if order.requestQuote %}
 			{% include "translations/_components/orders/quote-tab" %}
 		{% endif %}
 

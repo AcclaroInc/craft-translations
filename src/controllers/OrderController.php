@@ -347,7 +347,7 @@ class OrderController extends Controller
 				}
 
                 if ($order->requestQuote() && !$order->isGettingQuote()) {
-                    $variables['orderQuote'] = $translationService->getOrderQuote($order->id) ?? "Unable to fetch quote value";
+                    $variables['orderQuote'] = $translationService->getOrderQuote($order->serviceOrderId) ?? "Unable to fetch quote value";
                 }
 			}
         }
@@ -1513,6 +1513,7 @@ class OrderController extends Controller
         $this->requirePostRequest();
 
         $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $comment = Craft::$app->getRequest()->getBodyParam('quoteComment');
         $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
 
         if (!$order) return $this->asFailure('Order not found');
@@ -1526,16 +1527,19 @@ class OrderController extends Controller
                         json_decode($translator->settings, true)
                     );
 
-                $file = $translatorService->acceptOrderQuote($order->serviceOrderId);
+                $response = $translatorService->acceptOrderQuote($order->serviceOrderId, $comment);
 
-                if (empty($file)) {
+                if (empty($response)) {
                     return $this->asFailure('Unable to approve quote');
                 }
             }
         } catch (\Exception $e) {
-            Craft::error($e, 'translations');
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
             return $this->asFailure($e->getMessage());
         }
+
+        $order->status = Constants::ORDER_STATUS_NEW;
+        Craft::$app->getElements()->saveElement($order, true, true, false);
 
         return $this->asSuccess("Quote approve request sent");
     }
@@ -1549,6 +1553,7 @@ class OrderController extends Controller
         $this->requirePostRequest();
 
         $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $comment = Craft::$app->getRequest()->getBodyParam('quoteComment');
         $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
 
         if (!$order) return $this->asFailure('Order not found');
@@ -1562,16 +1567,19 @@ class OrderController extends Controller
                         json_decode($translator->settings, true)
                     );
 
-                $file = $translatorService->declineOrderQuote($order->serviceOrderId);
+                $response = $translatorService->declineOrderQuote($order->serviceOrderId, $comment);
 
-                if (empty($file)) {
-                    return $this->asFailure('Unable to decline quote request');
+                if (empty($response)) {
+                    return $this->asFailure('Unable to decline quote');
                 }
             }
         } catch (\Exception $e) {
-            Craft::error($e, 'translations');
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
             return $this->asFailure($e->getMessage());
         }
+
+        $order->status = Constants::ORDER_STATUS_GETTING_QUOTE;
+        Craft::$app->getElements()->saveElement($order, true, true, false);
 
         return $this->asSuccess("Quote decline request sent");
     }
