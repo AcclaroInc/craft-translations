@@ -529,14 +529,14 @@ class FileRepository
             $sourceContent = json_decode($converter->xmlToJson($source), true);
             $currentContent = json_decode($converter->xmlToJson($currentContent), true);
 
+            $sourceContent = json_encode(array_values($sourceContent['content']));
+            $currentContent = json_encode(array_values($currentContent['content']));
+
             /**
              * Replace `\u00a0` created by mysql with `space`
              * as mysql replaces any space before special char like ?, ! with `\u00a0`
              */
             $sourceContent = str_replace('\u{00a0}', ' ', $sourceContent);
-
-            $sourceContent = json_encode(array_values($sourceContent['content']));
-            $currentContent = json_encode(array_values($currentContent['content']));
 
             if (md5($sourceContent) !== md5($currentContent)) {
                 return true;
