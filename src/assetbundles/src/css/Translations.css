@@ -551,6 +551,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 .visual iframe {
     width: calc(50% - 2px);
     min-height: 1000px;
+    display: inline-block !important;
 }
 
 @media only screen and (max-width: 720px) {
