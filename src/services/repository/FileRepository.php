@@ -529,14 +529,14 @@ class FileRepository
             $sourceContent = json_decode($converter->xmlToJson($source), true);
             $currentContent = json_decode($converter->xmlToJson($currentContent), true);
 
+            $sourceContent = json_encode(array_values($sourceContent['content']));
+            $currentContent = json_encode(array_values($currentContent['content']));
+
             /**
              * Replace `\u00a0` created by mysql with `space`
              * as mysql replaces any space before special char like ?, ! with `\u00a0`
              */
             $sourceContent = str_replace('\u{00a0}', ' ', $sourceContent);
-
-            $sourceContent = json_encode(array_values($sourceContent['content']));
-            $currentContent = json_encode(array_values($currentContent['content']));
 
             if (md5($sourceContent) !== md5($currentContent)) {
                 return true;
@@ -555,7 +555,7 @@ class FileRepository
      *
      *@return array $settings
      */
-    public function getPreviewSettings(FileModel $file)
+    public function getFilePreviewSettings(FileModel $file)
     {
         $settings = [];
         $element = $file->getElement(false);
@@ -567,22 +567,46 @@ class FileRepository
                 if ($file->hasDraft() && $file->isComplete()) {
                     Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
                 } else {
-                    Craft::$app->getSession()->authorize("previewElement:$element->id");
+                    if ($element->getIsDraft()) {
+                        Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
+                    } else {
+                        Craft::$app->getSession()->authorize("previewElement:$element->id");
+                    }
                 }
             }
 
             $settings = [
-                'canonicalId' => $element->id,
-                'draftId' => $file->draftId ?? null,
+                'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
                 'elementType' => get_class($element),
                 'enablePreview' => true,
-                'isLive' => !($file->isComplete() && $file->hasDraft()),
+                'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
                 'previewTargets' => $previewTargets,
                 'previewToken' => $security->generateRandomString() ?? null,
                 'siteId' => $file->targetSite,
                 'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite) : null,
             ];
+
+            if ($file->isComplete() || $element->getIsDraft()) {
+                $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
+            }
         }
+
+        return $settings;
+    }
+
+    /**
+     * Return a preview setting array used for creating per entry preview
+     *
+     * @param \acclaro\translations\models\FileModel $file
+     *
+     *@return array $settings
+     */
+    public function getEntryPreviewSettings(FileModel $file)
+    {
+        $settings = [
+            'id' => sprintf("filePreview-%s", $file->id),
+            'elementType' => get_class($file->getElement(false))
+        ];
 
         return $settings;
     }

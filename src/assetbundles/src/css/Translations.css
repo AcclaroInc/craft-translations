@@ -551,6 +551,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 .visual iframe {
     width: calc(50% - 2px);
     min-height: 1000px;
+    display: inline-block !important;
 }
 
 @media only screen and (max-width: 720px) {
@@ -825,6 +826,11 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 .scroll-x-auto {
     overflow-x: auto;
     align-items: center;
+}
+
+td .elements .element, td .elements .element.sel:focus {
+    background-color: inherit !important;
+    cursor: pointer;
 }
 
 tr.clone-modal-tr:not(.disabled):hover tr.file-diff-data th,
