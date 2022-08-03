@@ -482,6 +482,25 @@ class Order extends Element
         return $this->_elements;
     }
 
+    /**
+     * User in order details settings tab entry table
+     */
+    public function getEntryPreviewSettings($element)
+    {
+        $settings = [
+            'elementType' => get_class($element)
+        ];
+
+        if ($element->getIsDraft()) {
+            $settings['id'] = sprintf('entryPreview-%s', $element->getCanonicalId());
+            $settings['draftId'] = $element->draftId;
+        } else {
+            $settings['id'] = sprintf('entryPreview-%s', $element->id);
+        }
+
+        return $settings;
+    }
+
     public function getUrl(): ?string
     {
         return Constants::URL_ORDER_DETAIL . $this->id;
