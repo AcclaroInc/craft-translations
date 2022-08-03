@@ -428,7 +428,8 @@ class OrderRepository
         $orderIds = [];
         foreach ($elements as $element) {
 			$canonicalElement = $element->getIsDraft() ? $element->getCanonical() : $element;
-            $orders = Translations::$plugin->fileRepository->getOrdersByElement($canonicalElement->id);
+            $elementIds = $this->getDraftIds($canonicalElement);
+            $orders = $this->getOrdersByElement($elementIds);
             if ($orders) {
                 $orderIds[$element->id] = $orders;
             }
@@ -568,4 +569,57 @@ class OrderRepository
 
 		return $originalIds;
 	}
+
+    /**
+     * @param  int|string $elementId
+     * @return int[]
+     */
+    private function getOrdersByElement($elementId)
+    {
+        $query = (new Query())
+            ->select('files.orderId')
+            ->from([Constants::TABLE_ORDERS . ' orders'])
+            ->innerJoin(Constants::TABLE_FILES . ' files', '[[files.orderId]] = [[orders.id]]')
+            ->where(['files.elementId' => $elementId])
+            ->andWhere(['orders.status' => [
+                Constants::ORDER_STATUS_NEW,
+                Constants::ORDER_STATUS_GETTING_QUOTE,
+                Constants::ORDER_STATUS_NEEDS_APPROVAL,
+                Constants::ORDER_STATUS_IN_PREPARATION,
+                Constants::ORDER_STATUS_IN_PROGRESS,
+                Constants::ORDER_STATUS_REVIEW_READY,
+                Constants::ORDER_STATUS_COMPLETE
+            ]])
+            ->andWhere(['dateDeleted' => null])
+            ->groupBy('orderId')
+            ->all();
+
+        $orderIds = [];
+
+        foreach ($query as $key => $id) {
+            $orderIds[] = $id['orderId'];
+        }
+
+        return $orderIds;
+    }
+
+    /**
+     * Returns all element ids of drafts of a entry including canonical
+     */
+    private function getDraftIds($element)
+    {
+        $draftIds = [];
+        $drafts = Craft::$app->getDrafts()->getEditableDrafts($element);
+
+        foreach ($drafts as $draft) {
+            if (Translations::$plugin->draftRepository->isTranslationDraft($draft->draftId)) {
+                continue;
+            }
+            array_push($draftIds, $draft->id);
+        }
+
+        array_push($draftIds, $element->id);
+
+        return $draftIds;
+    }
 }

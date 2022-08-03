@@ -12,7 +12,6 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
-use yii\db\Query;
 use craft\elements\Asset;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
@@ -310,40 +309,6 @@ class FileRepository
         }
 
         return $filePreviewUrls;
-    }
-
-    /**
-     * @param  int|string $elementId
-     * @return int[]
-     */
-    public function getOrdersByElement(int $elementId)
-    {
-
-        $query = (new Query())
-            ->select('files.orderId')
-            ->from([Constants::TABLE_ORDERS . ' translations_orders'])
-            ->innerJoin(Constants::TABLE_FILES . ' files', '[[files.orderId]] = [[translations_orders.id]]')
-            ->where(['files.elementId' => $elementId,])
-            ->andWhere(['translations_orders.status' => [
-                Constants::ORDER_STATUS_NEW,
-                Constants::ORDER_STATUS_GETTING_QUOTE,
-                Constants::ORDER_STATUS_NEEDS_APPROVAL,
-                Constants::ORDER_STATUS_IN_PREPARATION,
-                Constants::ORDER_STATUS_IN_PROGRESS,
-                Constants::ORDER_STATUS_REVIEW_READY,
-                Constants::ORDER_STATUS_COMPLETE
-                ]])
-            ->andWhere(['dateDeleted' => null])
-            ->groupBy('orderId')
-            ->all();
-
-        $orderIds = [];
-
-        foreach ($query as $key => $id) {
-            $orderIds[] = $id['orderId'];
-        }
-
-        return $orderIds;
     }
 
     /**
