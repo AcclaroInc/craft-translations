@@ -80,7 +80,7 @@ class ImportFiles extends BaseJob
 
             // check if the file is empty
             if (empty($file_content)) {
-                $this->log(sprintf(
+                $this->orderLog(sprintf(
                     "File {%s} you are trying to import is empty.",
                     $this->assetName($asset)
                 ));
@@ -94,7 +94,7 @@ class ImportFiles extends BaseJob
             } else if ($this->fileFormat === Constants::FILE_FORMAT_XML) {
                 return $this->processXmlFile($asset, $file_content);
             } else {
-                $this->log(sprintf(
+                $this->orderLog(sprintf(
                     "File {%s} is invalid, please try again with a valid zip/xml/json/csv file.",
                     $this->assetName($asset)
                 ));
@@ -102,7 +102,7 @@ class ImportFiles extends BaseJob
             }
         } else {
             //Invalid
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} is invalid, please try again with a valid zip/xml/json/csv file.",
                 $this->assetName($asset)
             ));
@@ -122,7 +122,7 @@ class ImportFiles extends BaseJob
         $file_content = json_decode($file_content, true);
 
         if (! is_array($file_content)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} you are trying to import has invalid content.",
                 $this->assetName($asset)
             ));
@@ -136,7 +136,7 @@ class ImportFiles extends BaseJob
         $elementId = $file_content['elementId'];
 
         if (in_array($elementId, $this->discardElements)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} has source entry changes, please update source.",
                 $this->assetName($asset)
             ));
@@ -158,7 +158,7 @@ class ImportFiles extends BaseJob
         //Validate If the file was found
         if (!isset($file) || is_null($file))
         {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} does not match any known entries.",
                 $this->assetName($asset)
             ));
@@ -166,7 +166,7 @@ class ImportFiles extends BaseJob
         }
 
         if ($this->verifyJsonKeysMismatch($file_content, $file->source)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} failed to import due to the keys mismatches in the file.",
                 $this->assetName($asset)
             ));
@@ -181,7 +181,7 @@ class ImportFiles extends BaseJob
                 $message = 'has been modified, please download again and try with latest files.';
             }
 
-            $this->log(sprintf("File {%s} %s", $this->assetName($asset), $message));
+            $this->orderLog(sprintf("File {%s} %s", $this->assetName($asset), $message));
             return $file->isModified() ? false : '';
         }
 
@@ -210,7 +210,7 @@ class ImportFiles extends BaseJob
             //Save Order with status complete
             $translationService->updateOrder($this->order);
 
-            $this->log(sprintf("File {%s} imported successfully!", $this->assetName($asset)));
+            $this->orderLog(sprintf("File {%s} imported successfully!", $this->assetName($asset)));
 
             return true;
         } else {
@@ -237,21 +237,21 @@ class ImportFiles extends BaseJob
                 $errors = $this->reportXmlErrors();
                 if($errors)
                 {
-                    $this->log(sprintf(
+                    $this->orderLog(sprintf(
                         "We found errors in {%s} : {%s}", $this->assetName($asset) , $errors
                     ));
                     return false;
                 }
             }
         } catch(Exception $e) {
-            $this->log($e->getMessage());
+            $this->orderLog($e->getMessage());
             return false;
         }
 
         // Source & Target Sites
         $sites = $dom->getElementsByTagName('sites');
         if ($sites->length == 0) {
-            $this->log(sprintf("File {%s} is missing sites key.", $this->assetName($asset)));
+            $this->orderLog(sprintf("File {%s} is missing sites key.", $this->assetName($asset)));
             return false;
         }
         $sites = isset($sites[0]) ? $sites[0] : $sites;
@@ -261,14 +261,14 @@ class ImportFiles extends BaseJob
         // Meta ElementId
         $element = $dom->getElementsByTagName('meta');
         if ($element->length == 0) {
-            $this->log(sprintf("File {%s} is missing meta key.", $this->assetName($asset)));
+            $this->orderLog(sprintf("File {%s} is missing meta key.", $this->assetName($asset)));
             return false;
         }
         $element = isset($element[0]) ? $element[0] : $element;
         $elementId = (string)$element->getAttribute('elementId');
 
         if (in_array($elementId, $this->discardElements)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} has source entry changes, please update source..",
                 $this->assetName($asset)
             ));
@@ -292,7 +292,7 @@ class ImportFiles extends BaseJob
 
         //Validate If the file was found
         if (!isset($file) || is_null($file)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} does not match any known entries.",
                 $this->assetName($asset)
             ));
@@ -300,7 +300,7 @@ class ImportFiles extends BaseJob
         }
 
         if ($this->matchXmlKeys($dom, $file)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} failed to import due to the resname mismatches in the XML.",
                 $this->assetName($asset)
             ));
@@ -316,7 +316,7 @@ class ImportFiles extends BaseJob
             if ($file->isModified()) {
                 $message = 'has been modified, please download again and try with latest files.';
             }
-            $this->log(sprintf("File {%s} %s", $this->assetName($asset), $message));
+            $this->orderLog(sprintf("File {%s} %s", $this->assetName($asset), $message));
 
             return $file->isModified() ? false : '';
         }
@@ -346,7 +346,7 @@ class ImportFiles extends BaseJob
             //Save Order with new status
             $translationService->updateOrder($this->order);
 
-            $this->log(sprintf("File {%s} imported successfully!", $this->assetName($asset)));
+            $this->orderLog(sprintf("File {%s} imported successfully!", $this->assetName($asset)));
 
             return $success;
         } else {
@@ -376,7 +376,7 @@ class ImportFiles extends BaseJob
         $elementId = $file_content['elementId'];
 
         if (in_array($elementId, $this->discardElements)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} has source entry changes, please update source.",
                 $this->assetName($asset)
             ));
@@ -399,7 +399,7 @@ class ImportFiles extends BaseJob
         //Validate If the file was found
         if (!isset($file) || is_null($file))
         {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} does not match any known entries.",
                 $this->assetName($asset)
             ));
@@ -408,7 +408,7 @@ class ImportFiles extends BaseJob
         }
 
         if ($this->verifyJsonKeysMismatch($file_content, $file->source)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} failed to import due to the keys mismatches in the file.",
                 $this->assetName($asset)
             ));
@@ -423,7 +423,7 @@ class ImportFiles extends BaseJob
             if ($file->isModified()) {
                 $message = 'has been modified, please download again and try with latest files.';
             }
-            $this->log(sprintf("File {%s} %s", $this->assetName($asset), $message));
+            $this->orderLog(sprintf("File {%s} %s", $this->assetName($asset), $message));
 
             return $file->isModified() ? false : '';
         }
@@ -453,7 +453,7 @@ class ImportFiles extends BaseJob
             //Update Order status
             $translationService->updateOrder($this->order);
 
-            $this->log(sprintf("File {%s} imported successfully!", $this->assetName($asset)));
+            $this->orderLog(sprintf("File {%s} imported successfully!", $this->assetName($asset)));
 
             return true;
         } else {
@@ -483,12 +483,12 @@ class ImportFiles extends BaseJob
             if (!$dom->loadXML( $xmlSource )) {
                 $errors = $this->reportXmlErrors();
                 if ($errors) {
-                    $this->log(sprintf("We found errors on source xml : ", $errors));
+                    $this->orderLog(sprintf("We found errors on source xml : ", $errors));
                     return true;
                 }
             }
         } catch(Exception $e) {
-            $this->log(sprintf($e->getMessage()));
+            $this->orderLog(sprintf($e->getMessage()));
             return true;
         }
 
@@ -530,7 +530,7 @@ class ImportFiles extends BaseJob
         $contentArray = explode("\n", $file_content, 2);
 
         if (count($contentArray) != 2) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} you are trying to import has invalid content.",
                 $this->assetName($asset)
             ));
@@ -544,7 +544,7 @@ class ImportFiles extends BaseJob
         $values = explode("!@#$", $contentArray[1]);
 
         if (count($keys) != count($values)) {
-            $this->log(sprintf(
+            $this->orderLog(sprintf(
                 "File {%s} you are trying to import has header and value mismatch.",
                 $this->assetName($asset)
             ));
@@ -600,7 +600,7 @@ class ImportFiles extends BaseJob
         return array_diff($data['target'], $data['source']);
     }
 
-    private function log($message)
+    private function orderLog($message)
     {
         $this->order->logActivity(
             Translations::$plugin->translator->translate('app', $message)

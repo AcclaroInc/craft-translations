@@ -13,8 +13,6 @@ use Spatie\GuzzleRateLimiterMiddleware\RateLimiterMiddleware;
 
 class AcclaroApiClient
 {
-    protected $loggingEnabled;
-
     public function __construct(
         $apiToken,
         $sandboxMode = false,
@@ -32,8 +30,6 @@ class AcclaroApiClient
 			),
 			'handler' => $stack
         ]);
-
-		$this->loggingEnabled = Translations::getInstance()->settings->apiLogging;
     }
 
     /**
@@ -47,28 +43,30 @@ class AcclaroApiClient
     }
 
     /**
-     * Log api call
+     * Log's request and response for api call
      *
      * @param Request|\GuzzleHttp\Psr7\Response $object
      * @return void
      */
-    public function log($object, $endpoint)
+
+    public function apiLog($object, $endpoint)
     {
-		if ($object instanceof Request) {
-			Craft::info(
-				sprintf("AcclaroApi: [%s], Request: {%s}", $endpoint, $object->getUri()), Constants::PLUGIN_HANDLE
-			);
-		} else {
-			if ($object->getStatusCode() != 200) {
-				Craft::info(
-					sprintf("AcclaroApi: [%s], Error: {%s}", $endpoint, $object->getBody()), Constants::PLUGIN_HANDLE
-				);
-			} else {
-				Craft::info(
-					sprintf("AcclaroApi: [%s], Response: {%s}", $endpoint, $object->getBody()), Constants::PLUGIN_HANDLE
-				);
-			}
-		}
+        if ($object instanceof Request) {
+            Translations::$plugin->logHelper->log(
+                sprintf("AcclaroApi: [%s], Request: {%s}", $endpoint, $object->getUri()), Constants::LOG_LEVEL_INFO
+            );
+        } else {
+            if ($object->getStatusCode() != 200) {
+                Translations::$plugin->logHelper->log(
+                    sprintf("AcclaroApi: [%s], Error: {%s}", $endpoint, $object->getBody()), Constants::LOG_LEVEL_ERROR
+                );
+            } else {
+                Translations::$plugin->logHelper->log(
+                    sprintf("AcclaroApi: [%s], Response: {%s}", $endpoint, $object->getBody()), Constants::LOG_LEVEL_INFO
+                );
+            }
+        }
+
     }
 
     /**
@@ -118,27 +116,27 @@ class AcclaroApiClient
                             ]
                         ]);
                     } catch (Exception $e) {
-                        Craft::error($e, Constants::PLUGIN_HANDLE);
+                        Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
                     }
                 }
             }
         } else {
             $request = new Request($method, $endpoint.'?'.http_build_query($query, '', '&'));
 
-            if ($this->loggingEnabled) $this->log($request, $endpoint);
+            $this->apiLog($request, $endpoint);
 
             try {
                 $response = $this->client->send($request, ['timeout' => 0]);
             } catch (Exception $e) {
-				Craft::error($e, Constants::PLUGIN_HANDLE);
+				Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
                 return null;
             }
         }
 
-        if ($this->loggingEnabled) $this->log($response, $endpoint);
+        $this->apiLog($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
-            Craft::error('Error code recieved in response', Constants::PLUGIN_HANDLE);
+            Translations::$plugin->logHelper->log('Error code recieved in response', Constants::LOG_LEVEL_ERROR);
             return null;
         }
 
@@ -147,7 +145,7 @@ class AcclaroApiClient
         $responseJson = json_decode($body, true);
 
         if (!isset($responseJson['data']) || $responseJson['success'] === false) {
-			Craft::error($body, Constants::PLUGIN_HANDLE);
+			Translations::$plugin->logHelper->log($body, Constants::LOG_LEVEL_ERROR);
             return null;
         }
 
@@ -517,17 +515,16 @@ class AcclaroApiClient
 
         $request = new Request(Constants::REQUEST_METHOD_GET, $endpoint.'?'.http_build_query($query, '', '&'));
 
-        if ($this->loggingEnabled) $this->log($request, $endpoint);
+        $this->apiLog($request, $endpoint);
 
         try {
             $response = $this->client->send($request, ['timeout' => 2]);
         } catch (Exception $e) {
-            //@TODO
-			Craft::error($e, Constants::PLUGIN_HANDLE);
+			Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
             return null;
         }
 
-        if ($this->loggingEnabled) $this->log($response, $endpoint);
+        $this->apiLog($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
             //@TODO

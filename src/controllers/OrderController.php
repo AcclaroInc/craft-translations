@@ -26,6 +26,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
 use acclaro\translations\services\repository\OrderRepository;
+use craft\helpers\Console;
 
 /**
  * @author    Acclaro
@@ -97,6 +98,7 @@ class OrderController extends Controller
 		$variables['orientation'] = Craft::$app->getLocale()->orientation;
 		$variables['chkDuplicateEntries'] = Translations::getInstance()->settings->chkDuplicateEntries;
         $variables['tagGroup'] = Craft::$app->getTags()->getTagGroupByHandle(Constants::ORDER_TAG_GROUP_HANDLE);
+        $variables['apiLogging'] =  Translations::getInstance()->settings->apiLogging;
 
         $variables['versionsByElementId'] = [];
         $variables['elements'] = [];
@@ -277,6 +279,7 @@ class OrderController extends Controller
         } else {
             foreach ($variables['translatorOptions'] as $translatorId => $val) {
                 $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
+
                 if ($translator->service === Constants::TRANSLATOR_DEFAULT) {
                     $variables['defaultTranslatorId'] = $translatorId;
                 }
@@ -510,7 +513,7 @@ class OrderController extends Controller
             $success = Craft::$app->getElements()->saveElement($order, true, true, false);
 
             if (!$success) {
-                Craft::error('[' . __METHOD__ . '] Couldn’t save the order', 'translations');
+                Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
                 $transaction->rollBack();
                 return $this->asFailure("Error saving Order.");
             } else {
@@ -568,7 +571,7 @@ class OrderController extends Controller
                 $success = Translations::$plugin->fileRepository->createOrderFiles($order, $wordCounts);
 
                 if (! $success) {
-                    Craft::error('[' . __METHOD__ . '] Couldn’t create the order file', 'translations');
+                    Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t create the order file', Constants::LOG_LEVEL_ERROR);
                     $transaction->rollBack();
 
                     return $this->asFailure("Error saving order files.");
@@ -579,7 +582,7 @@ class OrderController extends Controller
                     $success = Craft::$app->getElements()->saveElement($order, true, true, false);
 
                     if (! $success) {
-                        Craft::error('[' . __METHOD__ . '] Couldn’t save the order', 'translations');
+                        Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
                         $transaction->rollBack();
                         return $this->asFailure("Couldn’t save the order.");
                     }
@@ -619,7 +622,7 @@ class OrderController extends Controller
             }
             $transaction->commit();
         } catch (Exception $e) {
-            Craft::error('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), 'translations');
+            Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), Constants::LOG_LEVEL_ERROR);
             $transaction->rollBack();
             return $this->asFailure($e->getMessage());
         }
@@ -666,6 +669,7 @@ class OrderController extends Controller
         $variables['isChanged'] = null;
         $variables['isEditable'] = true;
         $variables['isSubmitted'] = null;
+        $variables['isTargetChanged'] = [];
         $variables['selectedSubnavItem'] = 'orders';
 		$variables['isDefaultTranslator'] = false;
         $variables['orderId'] = null;
@@ -681,8 +685,8 @@ class OrderController extends Controller
         $newOrder = $this->service->makeNewOrder($variables['sourceSite']);
 
         $newOrder->title = $data['title'] ?? '';
-        $newOrder->trackChanges = $data['trackChanges'] ?? null;
-		$newOrder->trackTargetChanges = $data['trackTargetChanges'] ?? null;
+        $newOrder->trackChanges = $variables['shouldTrackSourceContent'] = $data['trackChanges'] ?? null;
+		$newOrder->trackTargetChanges = $variables['shouldTrackTargetContent'] = $data['trackTargetChanges'] ?? null;
 		$newOrder->includeTmFiles = $data['includeTmFiles'] ?? null;
 		$newOrder->requestQuote = $data['requestQuote'] ?? null;
         $newOrder->targetSites = json_encode($data['targetSites'] ?? '');
@@ -816,8 +820,8 @@ class OrderController extends Controller
         $translator = $order->getTranslator();
 
         $authenticate = Translations::$plugin->services->authenticateService(
-          $translator->service,
-          $translator->getSettings()
+            $translator->service,
+            $translator->getSettings()
         );
 
         $isDefaultTranslator = $translator->service === Constants::TRANSLATOR_DEFAULT;
@@ -1019,7 +1023,7 @@ class OrderController extends Controller
         } catch (Exception $e) {
             $actionName = $action == "publish" ? "publish" : "merge";
             $order->logActivity(Translations::$plugin->translator->translate('app', "Could not $actionName draft Error: " . $e->getMessage()));
-            Craft::error( '['. __METHOD__ .'] Couldn’t save the draft. Error: '.$e->getMessage(), 'translations' );
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t save the draft. Error: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR );
             $order->status = 'failed';
             Craft::$app->getElements()->saveElement($order);
             Craft::$app->getSession()->setNotice(
@@ -1356,7 +1360,7 @@ class OrderController extends Controller
             $success = Craft::$app->getElements()->saveElement($order, true, true, false);
 
             if (! $success) {
-                Craft::error('[' . __METHOD__ . '] Couldn’t save the order', 'translations');
+                Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
                 Craft::$app->getSession()->setNotice(
                     Translations::$plugin->translator->translate('app', 'Error saving Order.')
                 );
@@ -1367,7 +1371,7 @@ class OrderController extends Controller
                 return $this->redirect(Constants::URL_ORDERS, 302, true);
             }
         } catch (Exception $e) {
-            Craft::error('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), 'translations');
+            Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), Constants::LOG_LEVEL_ERROR);
             Craft::$app->getSession()->setError(Translations::$plugin->translator
                 ->translate('app', 'Error saving draft. Error: '.$e->getMessage()));
         }
@@ -1492,7 +1496,7 @@ class OrderController extends Controller
             Craft::$app->getSession()->setNotice('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
-            Craft::error($e, 'translations');
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
 
             return $this->asFailure($e->getMessage());
         }

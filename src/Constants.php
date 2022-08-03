@@ -18,6 +18,12 @@ class Constants
     const TRANSLATOR_STATUS_ACTIVE      = 'active';
     const TRANSLATOR_STATUS_INACTIVE    = 'inactive';
 
+    // Logging
+    const LOG_LEVEL_ERROR   = 'error';
+    const LOG_LEVEL_WARNING = 'warning';
+    const LOG_LEVEL_DEBUG   = 'debug';
+    const LOG_LEVEL_INFO    = 'info';
+
     // Orders
     const ORDER_STATUS_NEW              = 'new';
     const ORDER_STATUS_PENDING          = 'pending';

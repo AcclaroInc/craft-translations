@@ -542,7 +542,7 @@ class FileRepository
                 return true;
             }
         } catch (\Exception $e) {
-            Craft::error($e, Constants::PLUGIN_HANDLE);
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
         }
 
         return false;
