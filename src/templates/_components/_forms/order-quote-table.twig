@@ -1,0 +1,44 @@
+{% if orderQuote is defined and orderQuote is not null %}
+    <table class="data fullwidth">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Units</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in orderQuote['lines'] %}
+                {% if item['quantity'] == 0 and item['unitprice'] == 0 and item['price'] == 0 %}
+                    <tr class="bold">
+                        <td>{{ item['description'] }}</td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td class="pdl-30">{{ item['description'] }}</td>
+                        <td>{{ item['quantity'] }}</td>
+                        <td>{{ '$'~ item['unitprice'] }}</td>
+                        <td>{{ '$'~ item['price'] }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+
+            <thead>
+                <tr>
+                    <th>Net Price</th>
+                    <th></th>
+                    <th></th>
+                    <th>{{ "$"~ orderQuote['total'] }}</th>
+                </tr>
+            </thead>
+        </tbody>
+    </table>
+{% else %}
+    <div class="field" style="margin-left:250px !important; margin-top:100px !important;">
+        <div class="meta">
+            <label class="bold"> {{ orderQuote is defined ? "Error fetching quote details" : "Your quote is being processed by translator" }} </label>
+        </div>
+    </div>
+{% endif %}

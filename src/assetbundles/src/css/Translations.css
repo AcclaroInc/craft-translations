@@ -810,8 +810,25 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     align-items: center;
 }
 
-.wd-50 {
-    width: 50%;
+.wd-65 {
+    width: 65%;
+}
+
+td.pdl-30 {
+    padding-left: 30px !important;
+}
+
+tr.total > th {
+    border-top: 1px solid black !important;
+    border-bottom: 1px solid black;
+}
+
+tr.bold > td {
+    font-weight: 500;
+}
+
+tr.bold:hover > td {
+    background-color: unset !important;
 }
 
 #approve-publish-form .footer,

@@ -413,6 +413,8 @@
         $headerContainer: null,
         $files: null,
         $isMobile: null,
+        $quoteActionMenu: null,
+        $quoteActionBtn: null,
 
         init: function() {
             var self = this;
@@ -1175,25 +1177,31 @@
             }
         },
         _addQuoteActions: function () {
+            var self = this;
             $quoteTab = $(document).find('#quote');
 
             // Only register if detail page has quote tab
             if ($quoteTab.length > 0) {
                 $btngroup = $('#quote-action-buttons');
 
-                $menubtn = $('<div>', {'class': 'btn submit menubtn'});
-                $menubtn.appendTo($btngroup);
+                this.$quoteActionBtn = $('<div>', {'class': 'btn submit menubtn'});
+                this.$quoteActionBtn.appendTo($btngroup);
 
-                $menubtn.on('click', function(e) {
+                this.$quoteActionMenu = $('<div>', {'class': 'menu'});
+                this.$quoteActionMenu.appendTo($btngroup);
+
+                this.$quoteActionBtn.on('click', function(e) {
                     e.preventDefault();
-                });
 
-                $menu = $('<div>', {'class': 'menu'});
-                $menu.appendTo($btngroup);
+                    // Make quote action listbox align with menubtn
+                    right = $(document).width() - self.$quoteActionBtn.offset().left - 37;
+                    self.$quoteActionMenu.css('left', "auto");
+                    self.$quoteActionMenu.css('right', right+"px");
+                });
 
                 $dropdown = $('<ul>', {'class': ''});
 
-                $dropdown.appendTo($menu);
+                $dropdown.appendTo(this.$quoteActionMenu);
 
                 $item = $('<li>');
                 $item.appendTo($dropdown);
@@ -1207,19 +1215,20 @@
                 $declineLink.appendTo($item);
                 this.declineQuoteRequest($declineLink);
 
-                $dropdown.append($('<hr>'));
+                // TODO: will add download option later
+                // $dropdown.append($('<hr>'));
 
-                $item = $('<li>');
-                $item.appendTo($dropdown);
+                // $item = $('<li>');
+                // $item.appendTo($dropdown);
 
-                $downloadLink = $('<a>', {
-                    'class': 'translations-submit-order',
-                    'href': '#',
-                    'text': 'Download quote'
-                });
+                // $downloadLink = $('<a>', {
+                //     'class': 'translations-submit-order',
+                //     'href': '#',
+                //     'text': 'Download quote'
+                // });
 
-                $downloadLink.appendTo($item);
-                this.downloadQuote($downloadLink);
+                // $downloadLink.appendTo($item);
+                // this.downloadQuote($downloadLink);
             }
         },
         declineQuoteRequest: function (that) {

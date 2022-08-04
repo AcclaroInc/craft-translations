@@ -380,7 +380,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $res = $this->acclaroApiClient->getQuoteDetails($orderId);
 
-        return $res->total ?? "Unable to get quote";
+        return is_object($res) ? json_decode(json_encode($res), true): null;
     }
 
     public function acceptOrderQuote($orderId, $comment = '')

@@ -32,31 +32,24 @@
 			</div>
 		</div>
 
-		<div class="meta">
-			<div class="field wd-50">
+		<div class="flex flex-start">
+			<div class="wd-65">
+				{% include "translations/_components/_forms/order-quote-table" %}
+			</div>
+			<div class="field ml-auto">
 				<div class="heading">
-					<label>Total</label>
+					<label>Comments</label>
 				</div>
 				<div class="input ltr">
-					<div class="float-right">
-						<label class="right"> {{ orderQuote|default('N/A') }} </label>
-					</div>
+					{{ forms.textarea({
+						id: "quoteComment",
+						name: "quoteComment",
+						rows: 10,
+						cols: 40,
+						placeholder: "Add your comment here...",
+						title: "comments"
+					}) }}
 				</div>
-			</div>
-		</div>
-		<div class="field">
-			<div class="heading">
-				<label>Comments</label>
-			</div>
-			<div class="input ltr">
-				{{ forms.textarea({
-					id: "quoteComment",
-					name: "quoteComment",
-					rows: 5,
-					cols: 60,
-					placeholder: "Add your comment here...",
-					title: "comments"
-				}) }}
 			</div>
 		</div>
 	</form>

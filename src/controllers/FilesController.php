@@ -513,6 +513,8 @@ class FilesController extends Controller
         return $this->asJson(['success' => true]);
     }
 
+    // TODO: will be used when we provide download quote document option
+    // Need to work on parsing the response from acclaro
     public function actionQuoteDocument()
     {
         $this->requireLogin();

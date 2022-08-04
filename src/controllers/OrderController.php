@@ -347,7 +347,7 @@ class OrderController extends Controller
 				}
 
                 if ($order->requestQuote() && !$order->isGettingQuote()) {
-                    $variables['orderQuote'] = $translationService->getOrderQuote($order->serviceOrderId) ?? "Unable to fetch quote value";
+                    $variables['orderQuote'] = $translationService->getOrderQuote($order->serviceOrderId);
                 }
 			}
         }
