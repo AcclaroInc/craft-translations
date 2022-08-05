@@ -117,9 +117,15 @@ class OrderController extends Controller
                 $variables['isProcessing'] = $submitAction;
             }
             if (Craft::$app->getSession()->get('importQueued')) {
-                Craft::$app->getSession()->set('importQueued', "0");
+                Craft::$app->getSession()->remove('importQueued');
             } else {
                 $variables['isProcessing'] = null;
+            }
+
+            // Added here when api order is created and inject after reload.
+            if ($newJs = Craft::$app->getSession()->get('registerJs')) {
+                Craft::$app->getSession()->remove('registerJs');
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, ' . $newJs . '); });');
             }
         }
 
@@ -632,13 +638,13 @@ class OrderController extends Controller
         );
 
         if ($job) {
-            $this->setSuccessFlash(
-                Translations::$plugin->translator->translate(
-                    'app',
-                    'Sending order to Acclaro, refer queue for updates'
-                )
-            );
-            return $this->asSuccess(null, [], $redirectUrl);
+            $params = [
+                'id' => (int) $job,
+                'notice' => 'Translation order sent',
+                'url' => $redirectUrl
+            ];
+            Craft::$app->getSession()->set('registerJs', json_encode($params));
+            return $this->asSuccess(null, [], $redirectUrl . "&isProcessing=1");
         } else {
             $this->setSuccessFlash(
                 Translations::$plugin->translator->translate('app', 'New order created: ' . $order->title)
@@ -1038,12 +1044,6 @@ class OrderController extends Controller
                 'url' => Constants::URL_ORDER_DETAIL . $order->id
             ];
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
-        } else if(is_null($job)) {
-            Craft::$app->getSession()->setNotice(
-                Translations::$plugin->translator->translate(
-                    'app', $action == "draft" ? 'Translation draft(s) saved' : 'Translation draft(s) published'
-                )
-            );
         } else {
             Craft::$app->getSession()->setNotice(
                 Translations::$plugin->translator->translate(
