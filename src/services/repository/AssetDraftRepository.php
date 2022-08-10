@@ -52,7 +52,15 @@ class AssetDraftRepository
                 'data'
             ]));
 
+            $assetDraft->avoidFilenameConflicts = true;
+            $assetDraft->setScenario(Asset::SCENARIO_CREATE);
+
             $asset = Craft::$app->assets->getAssetById($assetDraft->assetId);
+
+            $assetDraft->tempFilePath = null;
+            $assetDraft->setFilename($asset->getFilename());
+            $assetDraft->newFolderId = $asset->folderId;
+            $assetDraft->setVolumeId($asset->volumeId);
 
             $assetDraft->draftId = $assetDraft->id;
             $assetDraft->folderId = $asset->folderId;
