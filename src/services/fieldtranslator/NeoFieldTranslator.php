@@ -20,7 +20,7 @@ class NeoFieldTranslator extends GenericFieldTranslator
     /**
      * {@inheritdoc}
      */
-    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field)
+    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite = null)
     {
         $source = array();
 
@@ -32,18 +32,18 @@ class NeoFieldTranslator extends GenericFieldTranslator
                 $blockId = 'new' . ++$new;
                 $keyPrefix = sprintf('%s.%s', $field->handle, $blockId);
 
-                $source = array_merge($source, $this->blockToTranslationSource($elementTranslator, $block, $keyPrefix));
+                $source = array_merge($source, $this->blockToTranslationSource($elementTranslator, $block, $keyPrefix, $sourceSite));
             }
         }
 
         return $source;
     }
 
-    public function blockToTranslationSource(ElementTranslator $elementTranslator, Block $block, $keyPrefix = '')
+    public function blockToTranslationSource(ElementTranslator $elementTranslator, Block $block, $keyPrefix = '', $sourceSite = null)
     {
         $source = array();
 
-        $blockSource = $elementTranslator->toTranslationSource($block);
+        $blockSource = $elementTranslator->toTranslationSource($block, $sourceSite);
 
         foreach ($blockSource as $key => $value) {
             $key = sprintf('%s.%s', $keyPrefix, $key);

@@ -468,34 +468,25 @@ class FileRepository
         try {
             $element = $file->getElement();
             $source = $file->source;
+            $sourceSite = $file->sourceSite;
 
             if ($file->isComplete()) {
                 $element = $this->getDraft($file);
                 $source = $file->target;
+                $sourceSite = $file->targetSite;
             }
 
             // Skip incase entry doesn't exist for target site
             if (!$element) return false;
 
-            $wordCount = Translations::$plugin->elementTranslator->getWordCount($element);
             $converter = Translations::$plugin->elementToFileConverter;
 
-            $currentContent = $converter->convert(
-                $element,
-                Constants::FILE_FORMAT_XML,
-                [
-                    'sourceSite'    => $file->sourceSite,
-                    'targetSite'    => $file->targetSite,
-                    'wordCount'     => $wordCount,
-                    'orderId'       => $file->orderId
-                ]
-            );
+            $currentContent = Translations::$plugin->elementTranslator->toTranslationSource($element, $sourceSite);
+            $currentContent = json_encode(array_map("strval", array_values($currentContent)));
 
             $sourceContent = json_decode($converter->xmlToJson($source), true);
-            $currentContent = json_decode($converter->xmlToJson($currentContent), true);
 
             $sourceContent = json_encode(array_values($sourceContent['content']));
-            $currentContent = json_encode(array_values($currentContent['content']));
 
             /**
              * Replace `\u00a0` created by mysql with `space`
