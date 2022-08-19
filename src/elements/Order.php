@@ -82,6 +82,8 @@ class Order extends Element
 
     public $asynchronousPublishing;
 
+    public $requestQuote;
+
     public $tags;
 
     /**
@@ -482,6 +484,25 @@ class Order extends Element
         return $this->_elements;
     }
 
+    /**
+     * User in order details settings tab entry table
+     */
+    public function getEntryPreviewSettings($element)
+    {
+        $settings = [
+            'elementType' => get_class($element)
+        ];
+
+        if ($element->getIsDraft()) {
+            $settings['id'] = sprintf('entryPreview-%s', $element->getCanonicalId());
+            $settings['draftId'] = $element->draftId;
+        } else {
+            $settings['id'] = sprintf('entryPreview-%s', $element->id);
+        }
+
+        return $settings;
+    }
+
     public function getUrl(): ?string
     {
         return Constants::URL_ORDER_DETAIL . $this->id;
@@ -604,7 +625,11 @@ class Order extends Element
                 $statusLabel = 'Modified';
                 break;
             case Constants::ORDER_STATUS_GETTING_QUOTE:
+                $statusLabel = 'Getting quote';
+                break;
             case Constants::ORDER_STATUS_NEEDS_APPROVAL:
+                $statusLabel = 'Needs approval';
+                break;
             case Constants::ORDER_STATUS_IN_PROGRESS:
             case Constants::ORDER_STATUS_IN_REVIEW:
                 $statusLabel = 'In progress';
@@ -754,9 +779,24 @@ class Order extends Element
         return $this->status === Constants::ORDER_STATUS_COMPLETE;
     }
 
+    public function isGettingQuote()
+    {
+        return $this->status === Constants::ORDER_STATUS_GETTING_QUOTE;
+    }
+
+    public function isAwaitingApproval()
+    {
+        return $this->status === Constants::ORDER_STATUS_NEEDS_APPROVAL;
+    }
+
     public function isPublished()
     {
         return $this->status === Constants::ORDER_STATUS_PUBLISHED;
+    }
+
+    public function requestQuote()
+    {
+        return $this->requestQuote;
     }
 
     public function shouldIncludeTmFiles()
@@ -802,6 +842,7 @@ class Order extends Element
         $record->trackChanges =  $this->trackChanges;
 		$record->trackTargetChanges =  $this->trackTargetChanges;
 		$record->includeTmFiles =  $this->includeTmFiles;
+		$record->requestQuote =  $this->requestQuote;
 
         $record->save(false);
 

@@ -33,7 +33,7 @@ Craft.Translations.AssetsTranslations = {
     },
 
     getEditAssetId: function() {
-        return $('form#main-form input[type=hidden][name=sourceId]').val();
+        return $('form#main-form input[type=hidden][name=elementId]').val();
     },
 
     updateSelectedAssets: function() {

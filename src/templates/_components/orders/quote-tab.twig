@@ -1,0 +1,56 @@
+{% import '_includes/forms' as forms %}
+
+<div id="quote" class="{% if not (selectedTab|default(null) == 'quote') %} hidden {% endif %}">
+	<form method="post" id="quote-form" accept-charset="UTF-8">
+		{{ csrfInput() }}
+
+		{{ forms.hidden({
+			name: 'id',
+			value: orderId,
+		}) }}
+
+		{{ forms.hidden({
+			name: 'action',
+			value: 'translations/order/accept-quote',
+		}) }}
+
+		{% set quoteActions = order.isAwaitingApproval ? '' : 'noClick disabled' %}
+
+		<div class="field">
+			<div class="heading">
+				<label>Quote details</label>
+
+				<div id="quote-action-buttons" class="btngroup ml-auto {{ quoteActions }}">
+
+					{{ forms.button({
+						type: "submit",
+						label: "Accept",
+						spinner: true,
+						class: "submit"
+					}) }}
+				</div>
+			</div>
+		</div>
+
+		<div class="flex flex-start">
+			<div class="field wd-65">
+				{% include "translations/_components/_forms/order-quote-table" %}
+			</div>
+			<div class="ml-auto">
+				<div class="heading">
+					<label>Comments</label>
+				</div>
+				<div class="input ltr">
+					{{ forms.textarea({
+						id: "quoteComment",
+						name: "quoteComment",
+						rows: 10,
+						cols: 40,
+						placeholder: "Add your comment here...",
+						title: "comments"
+					}) }}
+				</div>
+			</div>
+		</div>
+	</form>
+</div>

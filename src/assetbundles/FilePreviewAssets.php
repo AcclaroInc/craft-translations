@@ -26,6 +26,11 @@ class FilePreviewAssets extends AssetBundle
 
         $this->js = [
             'js/FilePreview.js',
+            'js/EntryPreview.js',
+        ];
+
+        $this->css = [
+            'css/FilePreview.css'
         ];
 
         parent::init();

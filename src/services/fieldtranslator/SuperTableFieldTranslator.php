@@ -22,7 +22,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 	/**
 	 * {@inheritdoc}
 	 */
-	public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field)
+	public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite = null)
 	{
 		$source = array();
 
@@ -39,7 +39,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 					if (is_array($block)) {
 						foreach ($block as $key => $elem) {
 							$blockId = sprintf('new%s', ++$new);
-							$blockSource = $elementTranslator->toTranslationSource($elem);
+							$blockSource = $elementTranslator->toTranslationSource($elem, $sourceSite);
 							foreach ($blockSource as $key => $value) {
 								$key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
 
@@ -47,7 +47,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 							}
 						}
 					} else {
-						$blockSource = $elementTranslator->toTranslationSource($block);
+						$blockSource = $elementTranslator->toTranslationSource($block, $sourceSite);
 						foreach ($blockSource as $key => $value) {
 							$blockId = sprintf('new%s', ++$new);
 							$key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
@@ -59,7 +59,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 					$blockElem = $element->getFieldValue($fieldHandle);
 					foreach ($blockElem as $key => $block) {
 						$blockId = sprintf('new%s', ++$new);
-						$blockSource = $elementTranslator->toTranslationSource($block);
+						$blockSource = $elementTranslator->toTranslationSource($block, $sourceSite);
 						foreach ($blockSource as $key => $value) {
 							$key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
 
