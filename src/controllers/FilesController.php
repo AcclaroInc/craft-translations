@@ -513,6 +513,32 @@ class FilesController extends Controller
         return $this->asJson(['success' => true]);
     }
 
+    /**
+     * Returns entry editor content for file preview
+     */
+    public function actionGetElementContent()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        $fileId = Craft::$app->getRequest()->getBodyParam('fileId');
+
+        $html = "";
+
+        try {
+            $file = Translations::$plugin->fileRepository->getFileById($fileId);
+
+            $element = $file->getElement();
+            $form = $element->getFieldLayout()->createForm($element, false, ["registerDeltas" => true]);
+            $html = $form->render();
+        } catch(\Exception $e) {
+            Craft::error($e);
+            return $this->asFailure(null, ['message' => "Error loading preview html."]);
+        }
+
+        return $this->asSuccess(null, ['html' => $html]);
+    }
+
     // Private Methods
 	/**
      * Show Flash Notifications and Errors to the translator

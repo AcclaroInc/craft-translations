@@ -14,6 +14,7 @@
         previewLinks: null,
         scrollY: null,
         hasSpinner: null,
+        $originalContent: null,
 
         get slideout() {
             return this.$container.data("slideout");
@@ -21,6 +22,7 @@
 
         init: function (t, e) {
             this.$container = $('#files'),
+            this.$originalContent = $('#content'),
             this.setSettings(e, Craft.Translations.FilePreview.defaults),
 
             this.previewLinks = [],
@@ -110,6 +112,7 @@
 
             if ($preview.length >= 1) {
                 $preview.remove();
+                this.toogleContent();
                 $(document).find('div.modal-shade.dark').remove();
                 this.preview = null;
             }
@@ -117,16 +120,47 @@
 
         openPreview: function () {
             var t = this;
+            t.$originalContent.attr('id', 'original-content');
+            t.toogleContent(t.$previewBtn.siblings('div.hidden'));
 
-            return new Promise((function (e, i) {
-                t.openingPreview = !0,
-                t.ensureIsDraftOrRevision(!0)
-                    .then((function () {
-                        t.scrollY = window.scrollY, t.getPreview().open(),
-                        t.openingPreview = !1, e();
-                    }))
-                    .catch(i);
-            }));
+            let params = {
+                fileId: t.$previewBtn.parents('tr').data('file-id')
+            };
+            Craft.sendActionRequest('POST', 'translations/files/get-element-content', { data: params })
+                .then((response) => {
+                    mainDiv = t.$previewBtn.siblings('div.hidden');
+                    if (mainDiv.children().length > 0) {
+                        mainDiv.children().remove();
+                    }
+                    t.$previewBtn.siblings('div.hidden').append(response.data.html);
+                })
+                .catch((response) => {
+                    Craft.cp.displayError(Craft.t('app', response.message));
+                })
+                .finally(() => {
+                    return new Promise((function (e, i) {
+                        t.openingPreview = !0,
+                        t.ensureIsDraftOrRevision(!0)
+                            .then((function () {
+                                t.scrollY = window.scrollY, t.getPreview().open(),
+                                t.openingPreview = !1, e();
+                            }))
+                            .catch(i);
+                    }));
+                });
+        },
+
+        toogleContent: function (element = null) {
+            if (element) {
+                this.$originalContent.attr('id', 'original-content');
+                element.attr('id', 'content');
+            } else {
+                let content = $(document).find('#content');
+                if (content.data('id') != undefined) {
+                    content.attr('id', content.data('id'));
+                }
+                this.$originalContent.attr('id', 'content');
+            }
         },
 
         ensureIsDraftOrRevision: function (t) {
