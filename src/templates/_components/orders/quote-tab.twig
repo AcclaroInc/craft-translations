@@ -11,7 +11,7 @@
 
 		{{ forms.hidden({
 			name: 'action',
-			value: 'translations/order/accept-quote',
+			value: '',
 		}) }}
 
 		{% set quoteActions = order.isAwaitingApproval ? '' : 'noClick disabled' %}
@@ -20,37 +20,34 @@
 			<div class="heading">
 				<label>Quote details</label>
 
-				<div id="quote-action-buttons" class="btngroup ml-auto {{ quoteActions }}">
+				<div id="quote-actions" class="ml-auto {{ quoteActions }}">
 
 					{{ forms.button({
-						type: "submit",
+						label: "Decline",
+						spinner: true,
+						class: "margin-right-10",
+						attributes: {
+							data: {
+								action: "translations/order/decline-quote"
+							}
+						}
+					}) }}
+					{{ forms.button({
 						label: "Accept",
 						spinner: true,
-						class: "submit"
+						class: "submit",
+						attributes: {
+							data: {
+								action: "translations/order/accept-quote"
+							}
+						}
 					}) }}
 				</div>
+			</div>
+			<div class="input ltr scroll-x-auto">
+				{% include "translations/_components/_forms/order-quote-table" %}
 			</div>
 		</div>
 
-		<div class="flex flex-start">
-			<div class="field wd-65">
-				{% include "translations/_components/_forms/order-quote-table" %}
-			</div>
-			<div class="ml-auto">
-				<div class="heading">
-					<label>Comments</label>
-				</div>
-				<div class="input ltr">
-					{{ forms.textarea({
-						id: "quoteComment",
-						name: "quoteComment",
-						rows: 10,
-						cols: 40,
-						placeholder: "Add your comment here...",
-						title: "comments"
-					}) }}
-				</div>
-			</div>
-		</div>
 	</form>
 </div>

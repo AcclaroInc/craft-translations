@@ -513,40 +513,6 @@ class FilesController extends Controller
         return $this->asJson(['success' => true]);
     }
 
-    // TODO: will be used when we provide download quote document option
-    // Need to work on parsing the response from acclaro
-    public function actionQuoteDocument()
-    {
-        $this->requireLogin();
-
-        $orderId = Craft::$app->getRequest()->getParam('id');
-        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
-
-        if (!$order) return $this->asFailure('Order not found');
-
-        try {
-            $translator = $order->getTranslator();
-            if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
-                $translatorService = Translations::$plugin->translatorFactory
-                    ->makeTranslationService(
-                        $translator->service,
-                        json_decode($translator->settings, true)
-                    );
-
-                $response = $translatorService->getOrderQuoteDocument($order->serviceOrderId);
-
-                if (empty($response)) {
-                    return $this->asFailure('Unable to get quote file from translator');
-                }
-
-                return $this->asSuccess(null, ['document' => $response]);
-            }
-        } catch(\Exception $e) {
-            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
-            return $this->asFailure($e->getMessage());
-        }
-    }
-
     // Private Methods
 	/**
      * Show Flash Notifications and Errors to the translator

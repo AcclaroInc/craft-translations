@@ -1539,6 +1539,7 @@ class OrderController extends Controller
         }
 
         $order->status = Constants::ORDER_STATUS_NEW;
+        $order->logActivity("Order quote accepted");
         Craft::$app->getElements()->saveElement($order, true, true, false);
 
         return $this->asSuccess("Quote approve request sent");
@@ -1579,6 +1580,7 @@ class OrderController extends Controller
         }
 
         $order->status = Constants::ORDER_STATUS_GETTING_QUOTE;
+        $order->logActivity("Order quote declined");
         Craft::$app->getElements()->saveElement($order, true, true, false);
 
         return $this->asSuccess("Quote decline request sent");
