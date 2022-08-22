@@ -21,11 +21,10 @@
 
         getElementsContainer: function () { return this.$container.children(".elements") },
 
-        getElements: function () { return this.$elementsContainer.children().children().not('a') },
+        getElements: function () { return this.$elementsContainer.find('div.label') },
 
         resetElements: function () {
-            null !== this.$elements ? this.removeElements(this.$elements) : this.$elements = $(),
-                this.addElements(this.getElements())
+            this.$elements = this.addElements(this.getElements())
         },
 
         addElements: function (t) {
