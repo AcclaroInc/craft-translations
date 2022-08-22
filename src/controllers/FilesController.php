@@ -528,9 +528,9 @@ class FilesController extends Controller
         try {
             $file = Translations::$plugin->fileRepository->getFileById($fileId);
 
-            $element = $file->getElement();
+            $element = $file->getElement(false);
 
-            if ($file->hasPreview() && $draft = $file->hasDraft()) {
+            if ($file->isComplete() && $file->hasPreview() && $draft = $file->hasDraft()) {
                 $element = $draft;
             }
 
