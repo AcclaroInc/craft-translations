@@ -50,7 +50,7 @@
                                     <div class="elements">
                                         <div class="element small" title="{{ element.uiLabel ~" - " ~siteObjects[order.sourceSite].name }}" data-id="{{ element.id }}" data-editable="" data-site-id={{ order.sourceSite }} {% if entryPreviewSettings["draftId"] is defined %} data-draft-id="{{ entryPreviewSettings["draftId"] }}" {% endif %}>
                                             <div class="label">
-                                                <span class="title">{{ element.uiLabel }}</span>
+                                                <span class="title color-blue">{{ element.uiLabel }}</span>
                                             </div>
                                             {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
                                                 <span class="order-warning font-size-15" data-icon="info">
