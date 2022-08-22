@@ -962,6 +962,10 @@ td.target{
     color: red;
 }
 
+.color-blue {
+    color: #0B69A3;
+}
+
 .mr--10 {
     margin-right: -10px;
 }

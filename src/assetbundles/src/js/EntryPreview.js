@@ -46,7 +46,7 @@
                 var i = $(t.currentTarget);
                 !Garnish.hasAttr(i, "data-editable") || i.hasClass("disabled") || i.hasClass("loading") || (e.elementEditor = e.createElementEditor(i))
             },
-                this.addListener(t, "dblclick", this._handleShowElementEditor)
+                this.addListener(t, "click", this._handleShowElementEditor)
         },
 
         createElementEditor: function (t, e) {
