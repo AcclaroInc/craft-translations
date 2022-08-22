@@ -966,6 +966,11 @@ td.target{
     color: #0B69A3;
 }
 
+.color-blue:hover {
+    color: blue;
+    text-decoration: underline;
+}
+
 .mr--10 {
     margin-right: -10px;
 }
