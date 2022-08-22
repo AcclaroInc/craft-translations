@@ -513,38 +513,35 @@ class FilesController extends Controller
         return $this->asJson(['success' => true]);
     }
 
-    // TODO: will be used when we provide download quote document option
-    // Need to work on parsing the response from acclaro
-    public function actionQuoteDocument()
+    /**
+     * Returns entry editor content for file preview
+     */
+    public function actionGetElementContent()
     {
         $this->requireLogin();
+        $this->requirePostRequest();
 
-        $orderId = Craft::$app->getRequest()->getParam('id');
-        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        $fileId = Craft::$app->getRequest()->getBodyParam('fileId');
 
-        if (!$order) return $this->asFailure('Order not found');
+        $html = "";
 
         try {
-            $translator = $order->getTranslator();
-            if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
-                $translatorService = Translations::$plugin->translatorFactory
-                    ->makeTranslationService(
-                        $translator->service,
-                        json_decode($translator->settings, true)
-                    );
+            $file = Translations::$plugin->fileRepository->getFileById($fileId);
 
-                $response = $translatorService->getOrderQuoteDocument($order->serviceOrderId);
+            $element = $file->getElement(false);
 
-                if (empty($response)) {
-                    return $this->asFailure('Unable to get quote file from translator');
-                }
-
-                return $this->asSuccess(null, ['document' => $response]);
+            if ($file->isComplete() && $file->hasPreview() && $draft = $file->hasDraft()) {
+                $element = $draft;
             }
+
+            $form = $element->getFieldLayout()->createForm($element, true);
+            $html = $form->render();
         } catch(\Exception $e) {
-            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
-            return $this->asFailure($e->getMessage());
+            Craft::error($e);
+            return $this->asFailure(null, ['message' => "Error loading preview html."]);
         }
+
+        return $this->asSuccess(null, ['html' => $html]);
     }
 
     // Private Methods
