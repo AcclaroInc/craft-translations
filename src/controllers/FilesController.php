@@ -529,7 +529,12 @@ class FilesController extends Controller
             $file = Translations::$plugin->fileRepository->getFileById($fileId);
 
             $element = $file->getElement();
-            $form = $element->getFieldLayout()->createForm($element, false, ["registerDeltas" => true]);
+
+            if ($file->hasPreview() && $draft = $file->hasDraft()) {
+                $element = $draft;
+            }
+
+            $form = $element->getFieldLayout()->createForm($element, true);
             $html = $form->render();
         } catch(\Exception $e) {
             Craft::error($e);
