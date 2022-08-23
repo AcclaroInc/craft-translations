@@ -4,18 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-# 3.0.0 - 2022-08-23
+## 3.0.0 - 2022-08-23
 
 ### Fixed
-- Target change alert after merge into draft ([AcclaroInc#488](https://github.com/AcclaroInc/pm-craft-translations/issues/488))
+- Track target content changes alerts ([AcclaroInc#488](https://github.com/AcclaroInc/pm-craft-translations/issues/488))
 - An issue where order details page loads without order id when order is being submitted to api translator from queue.
 
 ### Updated
-- Existing entry preview functionality ([AcclaroInc#490](https://github.com/AcclaroInc/pm-craft-translations/issues/490))
-- Existing file draft preview functionality similar to craft's live preview.
+- Entry draft live-preview feature.
 
 ### Added
-- Feature requesting order quote, accept/decline quote based on order is processed ([AcclaroInc#11](https://github.com/AcclaroInc/pm-craft-translations/issues/11))
+- Entry quick-edit feature ([AcclaroInc#490](https://github.com/AcclaroInc/pm-craft-translations/issues/490))
+- Request a quote feature ([AcclaroInc#11](https://github.com/AcclaroInc/pm-craft-translations/issues/11))
 
 ## 2.2.3 - 2022-08-01
 
