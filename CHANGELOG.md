@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 # 3.0.0 - 2022-08-23
 
 ### Fixed
-- Target change alert after merge into draft ([AcclaroInc#330](https://github.com/AcclaroInc/craft-translations/pull/330))
+- Track target content changes alerts ([AcclaroInc#330](https://github.com/AcclaroInc/craft-translations/pull/330))
 - An issue where order details page loads without order id when order is being submitted to api translator from queue.
 
 ### Updated
@@ -15,7 +15,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - Existing file draft preview functionality similar to craft's live preview.
 
 ### Added
-- Feature requesting order quote, accept/decline quote based on order is processed ([AcclaroInc#366](https://github.com/AcclaroInc/craft-translations/pull/366))
+- Entry quick-edit feature ([AcclaroInc#379](https://github.com/AcclaroInc/craft-translations/pull/379))
+- Request a quote feature ([AcclaroInc#366](https://github.com/AcclaroInc/craft-translations/pull/366))
 
 
 ## 2.2.3 - 2022-08-01
