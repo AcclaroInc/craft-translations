@@ -136,7 +136,7 @@ class AcclaroApiClient
         $this->apiLog($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
-            Translations::$plugin->logHelper->log('Error code recieved in response', Constants::LOG_LEVEL_ERROR);
+            // being logged from apiLog()
             return null;
         }
 
