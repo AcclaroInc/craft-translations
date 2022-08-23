@@ -11,7 +11,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - An issue where order details page loads without order id when order is being submitted to api translator from queue.
 
 ### Updated
-- Existing entry preview functionality ([AcclaroInc#379](https://github.com/AcclaroInc/craft-translations/pull/379))
 - Existing file draft preview functionality similar to craft's live preview.
 
 ### Added
