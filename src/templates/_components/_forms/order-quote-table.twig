@@ -11,30 +11,11 @@
             </tr>
         </thead>
         <tbody>
-            {% set commentBox = true %}
             {% for item in orderQuote['lines'] %}
                 {% if item['quantity'] == 0 and item['unitprice'] == 0 and item['price'] == 0 %}
                     <tr class="bold">
                         <td>{{ item['description'] }}</td>
                         <td></td><td></td><td></td>
-                        {% if commentBox %}
-                            {% set commentBox = false %}
-                            <td rowspan="{{ orderQuote['lines']|length }}" style="vertical-align:top;max-width:170px;">
-                                <div class="heading">
-                                    <label>Comments</label>
-                                </div>
-                                <div class="input ltr">
-                                    {{ forms.textarea({
-                                        id: "quoteComment",
-                                        name: "quoteComment",
-                                        rows: 10,
-                                        cols: 30,
-                                        placeholder: "Add your comment here...",
-                                        title: "comments"
-                                    }) }}
-                                </div>
-                            </td>
-                        {% endif %}
                     </tr>
                 {% else %}
                     <tr>
@@ -56,10 +37,30 @@
             </thead>
         </tbody>
     </table>
-{% else %}
-    <div class="field" style="margin-left:10px !important; margin-top:20px !important;">
-        <div class="meta">
-            <label class="bold"> {{ orderQuote is defined ? "Error fetching quote details" : "Your quote is being processed by translator" }} </label>
+    {% set commentBox = true %}
+    {% if commentBox %}
+        {% set commentBox = false %}
+        <div class="field">
+            <div class="heading">
+                <label>Comments</label>
+            </div>
+            <div class="input ltr">
+                {{ forms.textarea({
+                    id: "quoteComment",
+                    name: "quoteComment",
+                    class: "fullwidth",
+                    rows: 10,
+                    cols: 50,
+                    placeholder: "Add your comment here...",
+                    title: "comments"
+                }) }}
+            </div>
         </div>
+    {% endif %}
+{% else %}
+    <div class="readable">
+        <p class="zilch">
+            {{ orderQuote is defined ? "Error fetching quote." : "Your quote is being processed, please check back later." }}
+        </p>
     </div>
 {% endif %}
