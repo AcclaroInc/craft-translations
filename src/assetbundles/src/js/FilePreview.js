@@ -16,10 +16,6 @@
         hasSpinner: null,
         $originalContent: null,
 
-        get slideout() {
-            return this.$container.data("slideout");
-        },
-
         init: function (t, e) {
             this.$container = $('#files'),
             this.$originalContent = $('#content'),
@@ -28,7 +24,7 @@
             this.previewLinks = [],
             this.previewTokenQueue = this._createQueue(),
             this.$previewBtn = this.$container.find(t);
-            var s = $("#page-title") ?? this.slideout.$toolbar;
+            var s = $("#page-title");
 
             if ($('#page-title').find('div.revision-spinner').length == 0) {
                 this.$spinner = $("<div/>", { class: "revision-spinner spinner hidden", title: Craft.t("app", "Loading") }).appendTo(s);
@@ -37,7 +33,7 @@
             }
 
             if (this.settings.previewTargets.length) {
-                this.settings.enablePreview && this.addListener(this.$previewBtn, "click", "openPreview");
+                this.addListener(this.$previewBtn, "click", "openPreview");
             }
         },
 
@@ -95,9 +91,18 @@
         getPreview: function () {
             var t = this;
 
-            return this.preview ||
-                (this.preview = new Craft.Preview(this),
-                    this.preview.on("open", (function () {})),
+            return (this.preview = new Craft.Preview(this),
+                this.preview.on("open", (function () {
+                        $preview = $(document).find('div[aria-labelledby=lp-preview-heading]');
+
+                        if ($preview.length) {
+                            $preview.find('.lp-editor-container').addClass('hidden');
+                            $button = $preview.find('div.lp-editor-container header button');
+                            $button.addClass('margin-right-10');
+                            $preview.find('.lp-preview-container').addClass('w-100');
+                            $preview.find('.lp-preview-container header').prepend($button);
+                        }
+                    })),
                     this.preview.on("close", (function () {
                         t.scrollY && (window.scrollTo(0, t.scrollY), t.scrollY = null);
 
@@ -112,7 +117,6 @@
 
             if ($preview.length >= 1) {
                 $preview.remove();
-                this.toogleContent();
                 $(document).find('div.modal-shade.dark').remove();
                 this.preview = null;
             }
@@ -120,47 +124,16 @@
 
         openPreview: function () {
             var t = this;
-            t.$originalContent.attr('id', 'original-content');
-            t.toogleContent(t.$previewBtn.siblings('div.hidden'));
 
-            let params = {
-                fileId: t.$previewBtn.parents('tr').data('file-id')
-            };
-            Craft.sendActionRequest('POST', 'translations/files/get-element-content', { data: params })
-                .then((response) => {
-                    mainDiv = t.$previewBtn.siblings('div.hidden');
-                    if (mainDiv.children().length > 0) {
-                        mainDiv.children().remove();
-                    }
-                    t.$previewBtn.siblings('div.hidden').append(response.data.html);
-                })
-                .catch((response) => {
-                    Craft.cp.displayError(Craft.t('app', response.message));
-                })
-                .finally(() => {
-                    return new Promise((function (e, i) {
-                        t.openingPreview = !0,
-                        t.ensureIsDraftOrRevision(!0)
-                            .then((function () {
-                                t.scrollY = window.scrollY, t.getPreview().open(),
-                                t.openingPreview = !1, e();
-                            }))
-                            .catch(i);
-                    }));
-                });
-        },
-
-        toogleContent: function (element = null) {
-            if (element) {
-                this.$originalContent.attr('id', 'original-content');
-                element.attr('id', 'content');
-            } else {
-                let content = $(document).find('#content');
-                if (content.data('id') != undefined) {
-                    content.attr('id', content.data('id'));
-                }
-                this.$originalContent.attr('id', 'content');
-            }
+            return new Promise((function (e, i) {
+                t.openingPreview = !0,
+                t.ensureIsDraftOrRevision(!0)
+                    .then((function () {
+                        t.scrollY = window.scrollY, t.getPreview().open(),
+                        t.openingPreview = !1, e();
+                    }))
+                    .catch(i);
+            }));
         },
 
         ensureIsDraftOrRevision: function (t) {
@@ -193,7 +166,7 @@
     },{
         defaults:
         {
-            canonicalId: null, draftId: null, elementType: null, enablePreview: !1, isLive: !1, previewTargets: [], previewToken: null, siteId: null, siteToken: null
+            canonicalId: null, draftId: null, elementType: null, isLive: !1, previewTargets: [], previewToken: null, siteId: null, siteToken: null
         }
     });
 

@@ -761,7 +761,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 }
 
 .w-100 {
-    width: 100%;
+    width: 100% !important;
 }
 
 .fw-400 {
