@@ -1,5 +1,3 @@
-{% do view.setIsDeltaRegistrationActive(true) %}
-
 <table class="data fullwidth" dir="ltr">
     <thead>
         <tr>
@@ -77,17 +75,6 @@
                                         {% set fileId = 'file_' ~ file.id %}
 
                                         <a id="{{ fileId }}" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
-
-                                        {# Register once or seo tabs css won't work #}
-                                        {% if registerDeltas %}
-                                            {% set registerDeltas = false %}
-                                            {% set fileForm = element.getFieldLayout().createForm(element, false, {registerDeltas: true}) %}
-                                            <div id="{{fileId}}-content" data-id="{{fileId}}-content" class="hidden">
-                                                {{ fileForm.render()|raw }}
-                                            </div>
-                                        {% else %}
-                                            <div id="{{fileId}}-content" data-id="{{fileId}}-content" class="hidden"></div>
-                                        {% endif %}
 
 
                                         {% js %}
