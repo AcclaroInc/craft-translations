@@ -147,10 +147,10 @@
 			$clone.find("input[type=checkbox]").addClass("clone");
 			$clone.addClass("clone-modal-tr");
 
-			$status = $clone.find("td .status").data("status") == 1;
-			$isReady = $.trim($clone.find("td .status").parent("td").text()) == "Ready for review";
-			$isComplete = $.trim($clone.find("td .status").parent("td").text()) == "Ready to apply";
-			$isApplied = $.trim($clone.find("td .status").parent("td").text()) == "Applied";
+			$status = $clone.find("td span.status").data("status") == 1;
+			$isReady = $.trim($clone.find("td span.status").parent("td").text()) == "Ready for review";
+			$isComplete = $.trim($clone.find("td span.status").parent("td").text()) == "Ready to apply";
+			$isApplied = $.trim($clone.find("td span.status").parent("td").text()) == "Applied";
 
 			if ($status) {
 				$icon = $clone.find("td .icon");
@@ -182,7 +182,7 @@
 		showFirstTdComparison: function() {
 			$row = $(".modal.elementselectormodal").find("tr.clone-modal-tr");
 			$row.each(function() {
-				if ($(this).find(".status").data("status") == 1) {
+				if ($(this).find("span.status").data("status") == 1) {
 					self._addDiffViewEvent(this);
 					$(this).find(".icon").removeClass("desc");
 					$(this).find(".icon").addClass("asc");
@@ -260,7 +260,7 @@
 
 			$($tableContent).on('click', '.diff-clone-row', function(e) {
 				$row = $(this).closest('tr.diff-clone');
-				isCollapsable = $row.find(".status").data("status") == 1;
+				isCollapsable = $row.find("span.status").data("status") == 1;
 
 				if (! isCollapsable) {
 					return;

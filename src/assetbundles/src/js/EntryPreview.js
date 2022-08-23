@@ -32,7 +32,7 @@
             this.thumbLoader.load(t),
                 this._handleShowElementEditor = function (t) {
                 var i = $(t.currentTarget);
-                !Garnish.hasAttr(i, "data-editable") || i.hasClass("disabled") || i.hasClass("loading") || (e.elementEditor = e.createElementEditor(i))
+                e.elementEditor = e.createElementEditor(i);
             },
                 this.addListener(t, "click", this._handleShowElementEditor)
         },
