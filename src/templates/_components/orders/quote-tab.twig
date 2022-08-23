@@ -19,33 +19,33 @@
 		<div class="field">
 			<div class="heading">
 				<label>Quote details</label>
-
-				<div id="quote-actions" class="ml-auto {{ quoteActions }}">
-
-					{{ forms.button({
-						label: "Decline",
-						spinner: true,
-						class: "margin-right-10",
-						attributes: {
-							data: {
-								action: "translations/order/decline-quote"
-							}
-						}
-					}) }}
-					{{ forms.button({
-						label: "Accept",
-						spinner: true,
-						class: "submit",
-						attributes: {
-							data: {
-								action: "translations/order/accept-quote"
-							}
-						}
-					}) }}
-				</div>
 			</div>
 			<div class="input ltr scroll-x-auto">
 				{% include "translations/_components/_forms/order-quote-table" %}
+			</div>
+		</div>
+		<div class="field">
+			<div id="quote-actions" class="flex flex-justify-end {{ quoteActions }}">
+				{{ forms.button({
+					label: "Decline quote",
+					spinner: true,
+					class: "margin-right-10",
+					attributes: {
+						data: {
+							action: "translations/order/decline-quote"
+						}
+					}
+				}) }}
+				{{ forms.button({
+					label: "Accept quote",
+					spinner: true,
+					class: "submit",
+					attributes: {
+						data: {
+							action: "translations/order/accept-quote"
+						}
+					}
+				}) }}
 			</div>
 		</div>
 

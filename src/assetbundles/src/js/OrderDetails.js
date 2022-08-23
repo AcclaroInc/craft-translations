@@ -858,7 +858,7 @@
                 });
                 $cancelOrderBody.appendTo($cancelOrderDiv);
                 var $cancelOrderLink = $('<a>', {
-                    class: 'translations-submit-order right color-red',
+                    class: 'translations-submit-order right error delete',
                     href: '#',
                     text: 'Cancel order',
                 });
