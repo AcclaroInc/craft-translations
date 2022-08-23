@@ -60,9 +60,9 @@
                     {% else %}
                         <div id="{{ "filePreview-"~ file.id }}">
                             <div class="elements">
-                                <div class="element small" title="{{ file.uiLabel ~" - " ~siteObjects[file.targetSite].name }}" data-id="{{ file.elementId }}" data-editable="" data-site-id={{ file.targetSite }} {% if file.isComplete or element.isDraft %} data-draft-id={{ file.isComplete ? file.draftId : element.draftId }} {% endif %}>
-                                    <div class="label">
-                                        <span class="title">{{ file.uiLabel }}</span>
+                                <div class="element small" title="{{ file.uiLabel ~" - " ~siteObjects[file.targetSite].name }}">
+                                    <div class="label" data-id="{{ file.elementId }}" data-editable="" data-site-id={{ file.targetSite }} {% if file.isComplete or element.isDraft %} data-draft-id={{ file.isComplete ? file.draftId : element.draftId }} {% endif %}>
+                                        <span class="title color-blue">{{ file.uiLabel }}</span>
                                     </div>
                                     {% set sourceUpdated = file.elementId in isSourceChanged %}
                                     {% set targetUpdated = order.trackTargetChanges and file.hasTmMisAlignments and not file.isNew and not file.isModified %}

@@ -534,12 +534,11 @@ class FileRepository
             $settings = [
                 'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
                 'elementType' => get_class($element),
-                'enablePreview' => true,
                 'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
                 'previewTargets' => $previewTargets,
                 'previewToken' => $security->generateRandomString() ?? null,
                 'siteId' => $file->targetSite,
-                'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite) : null,
+                'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
             ];
 
             if ($file->isComplete() || $element->getIsDraft()) {

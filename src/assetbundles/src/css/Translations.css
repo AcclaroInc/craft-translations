@@ -761,7 +761,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 }
 
 .w-100 {
-    width: 100%;
+    width: 100% !important;
 }
 
 .fw-400 {
@@ -960,6 +960,15 @@ td.target{
 
 .color-red {
     color: red;
+}
+
+.color-blue {
+    color: #0B69A3;
+}
+
+.color-blue:hover {
+    color: blue;
+    text-decoration: underline;
 }
 
 .mr--10 {
