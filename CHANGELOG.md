@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-# 3.0.0 - 2022-08-24
+## 3.0.0 - 2022-08-24
 
 ### Fixed
 - Track target content changes alerts ([AcclaroInc#488](https://github.com/AcclaroInc/pm-craft-translations/issues/488))
