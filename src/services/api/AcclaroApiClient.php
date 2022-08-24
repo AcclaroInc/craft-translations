@@ -105,15 +105,19 @@ class AcclaroApiClient
         if ($files) {
             foreach ($files as $key => $file) {
                 if ( ! is_array( $file ) ) {
-                    $response = $this->client->request($method, $endpoint.'?'.http_build_query($query, '', '&'), [
-                        'multipart' => [
-                            [
-                                'name' => 'file',
-                                'contents' => fopen( $file, 'r' ),
-                                'filename' => pathinfo($file)['basename']
+                    try {
+                        $response = $this->client->request($method, $endpoint . '?' . http_build_query($query, '', '&'), [
+                            'multipart' => [
+                                [
+                                    'name' => 'file',
+                                    'contents' => fopen($file, 'r'),
+                                    'filename' => pathinfo($file)['basename']
+                                ]
                             ]
-                        ]
-                    ]);
+                        ]);
+                    } catch (Exception $e) {
+                        Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
+                    }
                 }
             }
         } else {
@@ -256,6 +260,73 @@ class AcclaroApiClient
     {
         return $this->post(Constants::ACCLARO_API_SUBMIT_ORDER, array(
             'orderid' => $orderId,
+        ));
+    }
+
+    /**
+     * Request a quote for order.
+     *
+     * @param int $orderId
+     * @return void|object
+     */
+    public function requestOrderQuote($orderId)
+    {
+        return $this->get(Constants::ACCLARO_API_REQUEST_ORDER_QUOTE, array(
+            'orderid' => $orderId,
+        ));
+    }
+
+    /**
+     * Get quote-details for order.
+     *
+     * @param int $orderId
+     * @return void|object
+     */
+    public function getQuoteDetails($orderId)
+    {
+        return $this->get(Constants::ACCLARO_API_GET_QUOTE_DETAILS, array(
+            'orderid' => $orderId,
+        ));
+    }
+
+    /**
+     * Get quote as document for order.
+     *
+     * @param int $orderId
+     * @return void|object
+     */
+    public function getQuoteDocument($orderId)
+    {
+        return $this->get(Constants::ACCLARO_API_GET_QUOTE_DOCUMENT, array(
+            'orderid' => $orderId,
+        ));
+    }
+
+    /**
+     * Approve a quote.
+     *
+     * @param int $orderId
+     * @return void|object
+     */
+    public function approveQuote($orderId, $comment = null)
+    {
+        return $this->post(Constants::ACCLARO_API_QUOTE_APPROVE, array(
+            'orderid' => $orderId,
+            'comment' => $comment
+        ));
+    }
+
+    /**
+     * Decline a quote.
+     *
+     * @param int $orderId
+     * @return void|object
+     */
+    public function declineQuote($orderId, $comment = null)
+    {
+        return $this->post(Constants::ACCLARO_API_QUOTE_DECLINE, array(
+            'orderid' => $orderId,
+            'comment' => $comment
         ));
     }
 

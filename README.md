@@ -15,8 +15,8 @@ The Translations plugin provides a simple way to translate your content from sta
   *Need support for a specific plugin? [Contact us](http://www.acclaro.com/translation-services-cost/?utm_campaign=Craft%20Plugin%20Store&utm_source=Craft%20Plugin%20Store%20Listing%20-%20Third%20Party%20Plugins%20Quote&utm_medium=Listing) for a quote.*
 
 ## ⚠️ System Requirements
-- Craft CMS 3.7.33 or later.
-- PHP 7.2+
+- Craft CMS 4.0.0 or later.
+- PHP 8.0.2+
 - PHP [DOM](https://docs.craftcms.com/v3/requirements.html#optional-php-extensions) Extension
 - Craft [Multi-site](https://craftcms.com/docs/3.x/sites.html) configuration
 
@@ -49,7 +49,7 @@ The license fee for this plugin is $999.00 via the Craft Plugin Store. Annual li
 We offer a 30-day money back guarantee for the software plugin purchase if you are not satisfied.
 
 ### Terms
-Prior to download, installation and use of the Translation Plugin for Craft on a public site, site owners are required to purchase the plugin from the Craft plugin store or submit payment directly to Acclaro for purchases outside of the store. 
+Prior to download, installation and use of the Translation Plugin for Craft on a public site, site owners are required to purchase the plugin from the Craft plugin store or submit payment directly to Acclaro for purchases outside of the store.
 
 Any usage of the plugin either on production or in a sandbox environment indicates your acceptance of the legal terms described in the [Craft Software License](https://craftcms.github.io/license/). Any usage of Acclaro Translation Service API integrations indicates acceptance of the terms and conditions as set forth in the [Acclaro User Agreement](https://my.acclaro.com/p.php/useragreement) and [Privacy Policy](https://www.acclaro.com/privacy-policy/).
 

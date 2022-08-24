@@ -10,7 +10,7 @@
 			{% if not isDefaultTranslator and not order.isPending %}
 				{% if order.serviceOrderId %}
 					{% if isCancelable %}
-						<table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc"></th></thead></table>
+						<table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc orderable"><button></button></th></thead></table>
 					{% endif %}
 					<a class="right pt-5 mr--10" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
 				{% else %}
@@ -29,7 +29,9 @@
 		<div class="input ltr">
 			<div class="float-right">
 			{% if orderId %}
-				<a class="right" href="{{ url('translations/translators/detail/'~order.translatorId) }}"> {{ translatorOptions[order.translatorId] }} </a>
+				<a class="right" href="{{ url('translations/translators/detail/'~order.translatorId) }}">
+					{{ translatorOptions[order.translatorId] }}
+				</a>
 			{% else %}
 				<label class="right"> {{ "N/A" }} </label>
 			{% endif %}

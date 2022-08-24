@@ -1,13 +1,7 @@
-{% extends "_layouts/element" %}
+{% extends "_layouts/cp" %}
 {% import "_includes/forms" as forms %}
 
-{% set canUpdateSource = canEdit %}
-{% set saveSourceAction = 'translations/asset/save-draft' %}
-{% set deleteSourceAction = 'translations/asset/delete-draft' %}
-{% set publishSourceAction = 'translations/asset/publish-draft' %}
 {% do view.setIsDeltaRegistrationActive(true) %}
-
-{% hook "cp.assets.edit" %}
 
 {% set crumbs = [
     { label: 'Translations'|t, url: url('translations') },
@@ -20,9 +14,9 @@
         <select class="site">
             <option value="{{ selectedSite.handle }}" selected>{{ selectedSite.name }}</option>
             <!-- NOTE: Remove if not needed, Commented as user can confuse draft with other sites. -->
-            <!-- {% for site in craft.app.sites.getAllSites() %}
+            {# {% for site in craft.app.sites.getAllSites() %}
                 <option value="{{ site.handle }}"{% if site.id == selectedSite.id %} selected {% endif %}>{{ site.name }}</option>
-            {% endfor %} -->
+            {% endfor %} #}
         </select>
     </div>
 {% endblock %}
@@ -49,191 +43,71 @@
     </div>
 {% endblock %}
 
+{% set form = element.getFieldLayout().createForm(element, isRevision or not canEdit, {
+    registerDeltas: true,
+}) %}
+{% set fullPageForm = true %}
+
 {% block content %}
+    {{ form.render()|raw }}
     {{ hiddenInput('assetId', asset.id) }}
     {{ hiddenInput('draftId', element.id) }}
-    {{ hiddenInput('site', element.site) }}
+    {{ hiddenInput('siteId', element.site) }}
+    {{ hiddenInput('fieldLayoutId', asset.getFieldLayout().id) }}
     {{ actionInput(saveSourceAction) }}
-    {{ csrfInput() }}
-    {{ parent() }}
-
 {% endblock %}
 
 {% block details %}
     {{ previewHtml|raw }}
-    {{ parent() }}
-{% endblock %}
-
-{% block settings %}
-    {{ forms.textField({
-        label: 'Filename'|t('app'),
-        id: 'filename',
-        name: 'filename',
-        value: asset.filename,
-        errors: asset.getErrors('newLocation'),
-    }) }}
-{% endblock %}
-
-{# {% block meta %}
-    <div class="data">
-        <h5 class="heading">{{ 'Location'|t('app') }}</h5>
-        <div class="value">
-            {{ volume.name|t('site') }}
-            {% if element.folderPath %}
-                → {{ element.folderPath|trim('/')|replace('/', ' → ') }}
-            {% endif %}
+    <div class="meta">
+        <div id="new-filename-field" class="field first" data-attribute="new-filename">
+            <div class="heading">
+                <label id="new-filename-label" for="new-filename">
+                    Filename
+                    <span class="visually-hidden">Required</span>
+                    <span class="required" aria-hidden="true"></span>
+                </label>
+            </div>
+            <div class="input ltr">
+                <input type="text" id="new-filename" class="text filename fullwidth" name="newFilename" value="{{ asset.filename }}" autocomplete="off" dir="ltr">
+            </div>
         </div>
     </div>
 
-    {% if formattedSize %}
+    <dl class="meta read-only">
         <div class="data">
-            <h5 class="heading">{{ 'File size'|t('app') }}</h5>
-            {{ tag('div', {
-                id: 'file-size-value',
-                class: 'value',
-                text: formattedSize,
-                title: formattedSizeInBytes,
-                aria: {
-                    label: formattedSizeInBytes,
-                },
-            }) }}
+            <dt class="heading">Location</dt>
+            <dd class="value">{{ volume.name }}</dd>
         </div>
-    {% endif %}
-
-    {% set uploader = element.getUploader() %}
-    {% if uploader %}
         <div class="data">
-            <h5 class="heading">{{ 'Uploaded by'|t('app') }}</h5>
-            <div class="value" id="uploader-element">
+            <dt class="heading">File Size</dt>
+            <dd class="value">{{ formattedSize }}</dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Uploaded by</dt>
+            <dd class="value">
                 {% include '_elements/element' with {
-                    element: uploader,
-                } %}
-            </div>
-            {% js %}
-            new Craft.ElementThumbLoader().load($('#uploader-element'));
-            {% endjs %}
+					element: author,
+				} %}
+            </dd>
         </div>
-    {% endif %}
-
-    {% if dimensions %}
         <div class="data">
-            <h5 class="heading">{{ 'Dimensions'|t('app') }}</h5>
-            <div id="dimensions-value" class="value">{{ dimensions }}</div>
+            <dt class="heading">Dimensions</dt>
+            <dd class="value">{{ dimensions }}</dd>
         </div>
-    {% endif %}
-
-    {{ parent() }}
-{% endblock %} #}
-
-{# {% js on ready %}
-    var assetId = {{ asset.id|json_encode|raw }};
-    var $previewThumbContainer = $('#preview-thumb-container');
-
-    function updatePreviewThumb() {
-        $previewThumbContainer.addClass('loading');
-        Craft.postActionRequest('assets/preview-thumb', {
-            assetId: assetId,
-            width: 350,
-            height: 190
-        }, function(response, textStatus) {
-            $previewThumbContainer.removeClass('loading');
-            if (textStatus === 'success') {
-                $previewThumbContainer.find('img').replaceWith(response.img);
-            }
-        });
-    }
-
-    $('#download-btn').on('click', function() {
-        var $form = Craft.createForm().appendTo(Garnish.$bod);
-        $(Craft.getCsrfInput()).appendTo($form);
-        $('<input/>', {
-            type: 'hidden',
-            name: 'action',
-            value: 'assets/download-asset'
-        }).appendTo($form);
-        $('<input/>', {
-            type: 'hidden',
-            name: 'assetId',
-            value: assetId
-        }).appendTo($form);
-        $('<input/>', {
-            type: 'submit',
-            value: 'Submit',
-        }).appendTo($form);
-        $form.submit();
-        $form.remove();
-    });
-
-    $('#replace-btn').on('click', function() {
-        var $fileInput = $('<input type="file" name="replaceFile" class="replaceFile hidden"/>')
-            .appendTo(Garnish.$bod);
-        var uploader = new Craft.Uploader($fileInput, {
-            url: Craft.getActionUrl('assets/replace-file'),
-            dropZone: null,
-            fileInput: $fileInput,
-            paramName: 'replaceFile',
-            events: {
-                fileuploadstart: function() {
-                    $previewThumbContainer.addClass('loading');
-                },
-                fileuploaddone: function(event, data) {
-                    if (data.result.error) {
-                        $previewThumbContainer.removeClass('loading');
-                        alert(data.result.error);
-                    } else {
-                        $('#filename').val(data.result.filename);
-                        $('#file-size-value')
-                            .text(data.result.formattedSize)
-                            .attr('title', data.result.formattedSizeInBytes);
-                        var $dimensionsVal = $('#dimensions-value');
-                        if (data.result.dimensions) {
-                            if (!$dimensionsVal.length) {
-                                $('<div class="data">' +
-                                    '<div class="heading">' + {{ 'Dimensions'|t('app')|json_encode|raw }} + '</div>' +
-                                    '<div id="dimensions-value" class="value"></div>' +
-                                    '</div>').appendTo($('#meta-details'));
-                                $dimensionsVal = $('#dimensions-value');
-                            }
-                            $dimensionsVal.text(data.result.dimensions);
-                        } else if ($dimensionsVal.length) {
-                            $dimensionsVal.parent().remove();
-                        }
-                        updatePreviewThumb();
-                        Craft.cp.runQueue();
-                    }
-                }
-            }
-        });
-        uploader.setParams({
-            assetId: assetId
-        });
-        $fileInput.click();
-    });
-
-    $('#edit-btn').on('click', function() {
-        new Craft.AssetImageEditor(assetId, {
-            onSave: function () {
-                updatePreviewThumb();
-            },
-            allowDegreeFractions: Craft.isImagick
-        });
-    });
-
-    var settings = {};
-
-    {% if dimensions %}
-        {% set previewDimensions = dimensions|split('×') %}
-        settings.startingWidth = {{ previewDimensions[0] }};
-        settings.startingHeight = {{ previewDimensions[1] }};
-    {% endif %}
-
-    $('#preview-btn').on('click', function() {
-        new Craft.PreviewFileModal(assetId, null, settings);
-    });
-
-    $('div.select select.site').on('change', function() {
-        var site = $(this).val();
-        var url = (window.location.href).split("?")[0];
-        window.location.href = url+"?site="+site;
-    });
-{% endjs %} #}
+        <div class="data">
+            <dt class="heading">Created at</dt>
+            <dd class="value">
+                <label>{{ asset.dateCreated ? asset.dateCreated|date('n/j/Y') : 'N/A' }}</label>
+				<label class="pl-10">{{ asset.dateCreated ? asset.dateCreated|date('h:i A') : '' }}</label>
+            </dd>
+        </div>
+        <div class="data">
+            <dt class="heading">Updated at</dt>
+            <dd class="value">
+                <label>{{ asset.dateUpdated ? asset.dateUpdated|date('n/j/Y') : 'N/A' }}</label>
+				<label class="pl-10">{{ asset.dateUpdated ? asset.dateUpdated|date('h:i A') : '' }}</label>
+            </dd>
+        </div>
+    </dl>
+{% endblock %}

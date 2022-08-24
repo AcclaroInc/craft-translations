@@ -33,7 +33,7 @@ class TranslatorController extends Controller
         $this->requirePostRequest();
 
         if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:delete')) {
-            return;
+            return $this->asFailure('User does not have permission to perform this action.', []);
         }
 
         $translatorIds = Craft::$app->getRequest()->getBodyParam('translatorIds');
@@ -43,8 +43,7 @@ class TranslatorController extends Controller
             $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
 
             if (!$translator) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Invalid translator.'));
-                return $this->asJson(["success" => false]);
+                return $this->asFailure('Invalid translator.', []);
             }
 
             // check if translator has any pending orders
@@ -53,19 +52,15 @@ class TranslatorController extends Controller
             $pendingOrdersCount = count($pendingOrders);
     
             if ($pendingOrdersCount > 0) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'The translator cannot be deleted as orders have been created already.'));
-    
-                return $this->asJson(["success" => false]);
+                return $this->asFailure('The translator cannot be deleted as orders have been created already.', []);
             }
     
             Translations::$plugin->translatorRepository->deleteTranslator($translator);
         }
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translators deleted.'));
+        $this->setSuccessFlash('Translators deleted.');
 
-        return $this->asJson([
-            "success" => true
-        ]);
+        return $this->asSuccess(null, []);
     }
 
     /**
@@ -85,21 +80,18 @@ class TranslatorController extends Controller
         if ($translatorId) {
 
             if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:edit')) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User is not permitted for this operation.'));
-                return;
+                return $this->asFailure(Translations::$plugin->translator->translate('app', 'User is not permitted for this operation.'));
             }
 
             $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
 
             if (!$translator) {
                 // throw new HttpException(400, 'Invalid Translator');
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Invalid Translator'));
-                return;
+                return $this->asFailure(Translations::$plugin->translator->translate('app', 'Invalid Translator'));
             }
         } else {
             if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:create')) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'User is not permitted to create new translator.'));
-                return;
+                return $this->asFailure(Translations::$plugin->translator->translate('app', 'User is not permitted to create new translator.'));
             }
             $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
         }
@@ -120,7 +112,7 @@ class TranslatorController extends Controller
             if (! $auth) {
                 $translator->status = "";
                 $variables['translator'] = $translator;
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Api token could not be authenticated.'));
+                $this->setFailFlash(Translations::$plugin->translator->translate('app', 'Api token could not be authenticated.'));
                 return $this->renderTemplate('translations/translators/_detail', $variables);
             }
         }
@@ -128,13 +120,8 @@ class TranslatorController extends Controller
         $translator->status = Constants::TRANSLATOR_STATUS_ACTIVE;
         Translations::$plugin->translatorRepository->saveTranslator($translator);
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Translator saved.'));
-
-        if ($isContinue) {
-            $this->redirect('translations/translators/new');
-        } else {
-            $this->redirect('translations/translators');
-        }
+        $redirectTo = $isContinue ? 'translations/translators/new' : 'translations/translators';
+        return $this->asSuccess('Translator saved.', [], $redirectTo);
     }
 
     /**
@@ -196,9 +183,6 @@ class TranslatorController extends Controller
             $translators = Translations::$plugin->translatorRepository->getTranslators();
         }
 
-        return $this->asJson([
-            "success" => true,
-            "data"    => json_decode(json_encode($translators), true)
-        ]);
+        return $this->asSuccess(null, json_decode(json_encode($translators), true));
     }
 }

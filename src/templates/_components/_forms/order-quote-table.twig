@@ -1,0 +1,66 @@
+{% import '_includes/forms' as forms %}
+
+{% if orderQuote is defined and orderQuote is not null %}
+    <table class="data fullwidth">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Units</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in orderQuote['lines'] %}
+                {% if item['quantity'] == 0 and item['unitprice'] == 0 and item['price'] == 0 %}
+                    <tr class="bold">
+                        <td>{{ item['description'] }}</td>
+                        <td></td><td></td><td></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td class="pdl-30">{{ item['description'] }}</td>
+                        <td>{{ item['quantity'] }}</td>
+                        <td>{{ '$'~ item['unitprice'] }}</td>
+                        <td>{{ '$'~ item['price'] }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+
+            <thead>
+                <tr>
+                    <th>Net Price</th>
+                    <th></th>
+                    <th></th>
+                    <th>{{ "$"~ orderQuote['total'] }}</th>
+                </tr>
+            </thead>
+        </tbody>
+    </table>
+    {% set commentBox = true %}
+    {% if commentBox %}
+        {% set commentBox = false %}
+        <div class="field">
+            <div class="heading">
+                <label>Comments</label>
+            </div>
+            <div class="input ltr">
+                {{ forms.textarea({
+                    id: "quoteComment",
+                    name: "quoteComment",
+                    class: "fullwidth",
+                    rows: 10,
+                    cols: 50,
+                    placeholder: "Add your comment here...",
+                    title: "comments"
+                }) }}
+            </div>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="readable">
+        <p class="zilch">
+            {{ orderQuote is defined ? "Error fetching quote." : "Your quote is being processed, please check back later." }}
+        </p>
+    </div>
+{% endif %}

@@ -77,11 +77,17 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateOrder(Order $order)
     {
-        if ($order->isCanceled()) return;
+        if ($order->isCanceled()) {
+            $error = sprintf('Can not update canceled order. OrderId: %s', $order->id);
+            Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
+            return;
+        }
 
         $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
 
         if (empty($orderResponse->status)) {
+            $error = sprintf('Empty order response from acclaro. OrderId: %s', $order->id);
+            Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
             return;
         }
 
@@ -94,20 +100,24 @@ class AcclaroTranslationService implements TranslationServiceInterface
             }
         }
 
-        $orderStatus = Translations::$plugin->orderRepository->getNewStatus($order);
+        // Ignore changing order status untill order is in quote flow
+        if ($order->isGettingQuote() || $order->isAwaitingApproval()) {
+            $order->status = $orderResponse->status;
+        } else {
+            $orderStatus = Translations::$plugin->orderRepository->getNewStatus($order);
 
-        if ($order->status !== $orderStatus) {
-			$order->status = $orderStatus;
-            $order->logActivity(
-                sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''), $order->getStatusLabel())
-            );
+            if ($order->status !== $orderStatus) {
+                $order->status = $orderStatus;
+                $order->logActivity(
+                    sprintf(Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''), $order->getStatusLabel())
+                );
+            }
         }
 
         if ($order->title !== $orderResponse->name) {
             Translations::$plugin->orderRepository->saveOrderName($order->id, $orderResponse->name);
         }
 
-        $order->status = $orderStatus;
         // check if due date set then update it
         if($orderResponse->duedate){
             $dueDate = new \DateTime($orderResponse->duedate);
@@ -121,11 +131,17 @@ class AcclaroTranslationService implements TranslationServiceInterface
     public function updateFile(Order $order, FileModel $file)
     {
         try {
-            if ($file->isCanceled()) return;
+            if ($file->isCanceled()) {
+                $error = sprintf('Can not update canceled file. FileId: %s', $file->id);
+                Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
+                return;
+            }
 
             $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
 
             if (!is_array($fileInfoResponse)) {
+                $error = sprintf('Invalid file Info from acclaro. FileId: %s', $file->id);
+                Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
                 return;
             }
             // find the matching file
@@ -230,7 +246,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         if ($file) {
 
-            $element = Craft::$app->elements->getElementById($file->elementId, null, $file->sourceSite);
+            $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
 
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
@@ -358,5 +374,27 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $this->acclaroApiClient->addOrderTags($order->serviceOrderId, $title);
             }
         }
+    }
+
+    public function getOrderQuote($orderId)
+    {
+        $res = $this->acclaroApiClient->getQuoteDetails($orderId);
+
+        return is_object($res) ? json_decode(json_encode($res), true): null;
+    }
+
+    public function acceptOrderQuote($orderId, $comment = '')
+    {
+        return $this->acclaroApiClient->approveQuote($orderId, $comment);
+    }
+
+    public function getOrderQuoteDocument($orderId)
+    {
+        return $this->acclaroApiClient->getQuoteDocument($orderId);
+    }
+
+    public function declineOrderQuote($orderId, $comment = '')
+    {
+        return $this->acclaroApiClient->declineQuote($orderId, $comment);
     }
 }

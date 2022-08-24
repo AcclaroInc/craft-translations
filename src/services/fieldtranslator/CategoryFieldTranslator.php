@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Translations for Craft plugin for Craft CMS 3.x
  *

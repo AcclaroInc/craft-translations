@@ -41,7 +41,7 @@ class OrderController extends Controller
      * @var    bool|array Allows anonymous access to this controller's actions.
      * @access protected
      */
-    protected $allowAnonymous = true;
+    protected array|bool|int $allowAnonymous = self::ALLOW_ANONYMOUS_LIVE | self::ALLOW_ANONYMOUS_OFFLINE;
 
     /**
      * @var int
@@ -117,9 +117,15 @@ class OrderController extends Controller
                 $variables['isProcessing'] = $submitAction;
             }
             if (Craft::$app->getSession()->get('importQueued')) {
-                Craft::$app->getSession()->set('importQueued', "0");
+                Craft::$app->getSession()->remove('importQueued');
             } else {
                 $variables['isProcessing'] = null;
+            }
+
+            // Added here when api order is created and inject after reload.
+            if ($newJs = Craft::$app->getSession()->get('registerJs')) {
+                Craft::$app->getSession()->remove('registerJs');
+                Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, ' . $newJs . '); });');
             }
         }
 
@@ -191,14 +197,17 @@ class OrderController extends Controller
 			if ($orderIncludeTmFiles = Craft::$app->getRequest()->getQueryParam('includeTmFiles')) {
 				$order->includeTmFiles = $orderIncludeTmFiles;
 			}
+
+			if ($requestOrderQuote = Craft::$app->getRequest()->getQueryParam('requestQuote')) {
+				$order->requestQuote = $requestOrderQuote;
+			}
 		}
 
 		$finalElements = $order->getElements();
 
         if ($variables['inputElements']) {
             foreach ($variables['inputElements'] as $elementId) {
-                $element = Craft::$app->getElements()
-                    ->getElementById((int) $elementId, null, $order->sourceSite);
+                $element = Translations::$plugin->elementRepository->getElementById((int) $elementId, $order->sourceSite);
 
                 if ($element) {
                     $variables['elements'][] = $element;
@@ -342,6 +351,10 @@ class OrderController extends Controller
 				if ($orderStatus !== Constants::ORDER_STATUS_COMPLETE) {
 					$variables['isUpdateable'] = true;
 				}
+
+                if ($order->requestQuote() && !$order->isGettingQuote()) {
+                    $variables['orderQuote'] = $translationService->getOrderQuote($order->serviceOrderId);
+                }
 			}
         }
 
@@ -385,11 +398,11 @@ class OrderController extends Controller
         $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
 
         if (!$currentUser->can('translations:orders:create')) {
-            return $this->asJson(["success" => false, "message" => "User does not have permission to perform this action."]);
+            return $this->asFailure("User does not have permission to perform this action.");
         }
 
         if ($sourceSite && !Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
-            return $this->asJson(["success" => false, "message" => "Source site is not supported."]);
+            return $this->asFailure("Source site is not supported.");
         }
 
         if ($orderId) {
@@ -432,6 +445,7 @@ class OrderController extends Controller
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
+			$order->requestQuote = Craft::$app->getRequest()->getBodyParam('requestQuote');
 			$order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
 
@@ -463,7 +477,7 @@ class OrderController extends Controller
             if (!$authenticate && $service == Constants::TRANSLATOR_ACCLARO) {
                 $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
                 $transaction->rollBack();
-                return $this->asJson(["success" => false, "message" => $message]);
+                return $this->asFailure($message);
             }
 
             // Calculating total Entries and their WordCount
@@ -493,7 +507,7 @@ class OrderController extends Controller
                             $element->section->name
                         );
                         $transaction->rollBack();
-                        return $this->asJson(["success" => false, "message" => $message]);
+                        return $this->asFailure($message);
                     }
                 }
             }
@@ -507,7 +521,7 @@ class OrderController extends Controller
             if (!$success) {
                 Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
                 $transaction->rollBack();
-                return $this->asJson(["success" => false, "message" => "Error saving Order."]);
+                return $this->asFailure("Error saving Order.");
             } else {
                 // Check supported languages for order service
                 if ($order->getTranslator()->service !== Constants::TRANSLATOR_DEFAULT) {
@@ -552,12 +566,9 @@ class OrderController extends Controller
 
                         if ($unsupported || !empty($unsupportedLangs)) {
                             $transaction->rollBack();
-                            return $this->asJson(
-                                ["success" => false,
-                                "message" => "The following language pair(s) are not supported by "
+                            return $this->asFailure("The following language pair(s) are not supported by "
                                 .ucfirst($order->getTranslator()->service).": "
                                 .implode(", ", array_column($unsupportedLangs, "language"))
-                                ]
                             );
                         }
                     }
@@ -569,7 +580,7 @@ class OrderController extends Controller
                     Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t create the order file', Constants::LOG_LEVEL_ERROR);
                     $transaction->rollBack();
 
-                    return $this->asJson(["success" => false, "message" => "Error saving order."]);
+                    return $this->asFailure("Error saving order files.");
                 } else {
                     $order->status = Constants::ORDER_STATUS_NEW;
                     $order->dateOrdered = new DateTime();
@@ -579,7 +590,7 @@ class OrderController extends Controller
                     if (! $success) {
                         Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
                         $transaction->rollBack();
-                        return $this->asJson(["success" => false, "message" => "Couldn’t save the order."]);
+                        return $this->asFailure("Couldn’t save the order.");
                     }
                 }
 
@@ -608,16 +619,18 @@ class OrderController extends Controller
                     }
                 }
 
-                $order->logActivity(sprintf(
-                    Translations::$plugin->translator->translate('app', 'Order submitted to %s'),
-                    $order->translator->getName()
-                ));
+                $orderAction = sprintf('Order submitted to %s', $order->translator->getName());
+
+                if ($order->requestQuote())
+                    $orderAction = sprintf('Order quote requested from %s', $order->translator->getName());
+
+                $order->logActivity(Translations::$plugin->translator->translate('app', $orderAction));
             }
             $transaction->commit();
         } catch (Exception $e) {
             Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), Constants::LOG_LEVEL_ERROR);
             $transaction->rollBack();
-            return $this->asJson(["success" => false, "message" => "Couldn’t save the order. Error: ".$e->getMessage()]);
+            return $this->asFailure($e->getMessage());
         }
 
         $redirectUrl = Translations::$plugin->urlHelper->cpUrl(
@@ -625,18 +638,18 @@ class OrderController extends Controller
         );
 
         if ($job) {
-            Craft::$app->getSession()->setNotice(
-                Translations::$plugin->translator->translate(
-                    'app',
-                    'Sending order to Acclaro, refer queue for updates'
-                )
-            );
-            return $this->asJson(["success" => true, "message" => "", "url" => $redirectUrl]);
+            $params = [
+                'id' => (int) $job,
+                'notice' => 'Translation order sent',
+                'url' => $redirectUrl
+            ];
+            Craft::$app->getSession()->set('registerJs', json_encode($params));
+            return $this->asSuccess(null, [], $redirectUrl . "&isProcessing=1");
         } else {
-            Craft::$app->getSession()->setNotice(
+            $this->setSuccessFlash(
                 Translations::$plugin->translator->translate('app', 'New order created: ' . $order->title)
             );
-            return $this->asJson(["success" => true, "message" => "", "url" => $redirectUrl]);
+            return $this->asSuccess(null, [], $redirectUrl);
         }
     }
 
@@ -662,6 +675,7 @@ class OrderController extends Controller
         $variables['isChanged'] = null;
         $variables['isEditable'] = true;
         $variables['isSubmitted'] = null;
+        $variables['isTargetChanged'] = [];
         $variables['selectedSubnavItem'] = 'orders';
 		$variables['isDefaultTranslator'] = false;
         $variables['orderId'] = null;
@@ -677,9 +691,10 @@ class OrderController extends Controller
         $newOrder = $this->service->makeNewOrder($variables['sourceSite']);
 
         $newOrder->title = $data['title'] ?? '';
-        $newOrder->trackChanges = $data['trackChanges'] ?? null;
-		$newOrder->trackTargetChanges = $data['trackTargetChanges'] ?? null;
+        $newOrder->trackChanges = $variables['shouldTrackSourceContent'] = $data['trackChanges'] ?? null;
+		$newOrder->trackTargetChanges = $variables['shouldTrackTargetContent'] = $data['trackTargetChanges'] ?? null;
 		$newOrder->includeTmFiles = $data['includeTmFiles'] ?? null;
+		$newOrder->requestQuote = $data['requestQuote'] ?? null;
         $newOrder->targetSites = json_encode($data['targetSites'] ?? '');
         $newOrder->elementIds = json_encode($elementIds);
         $newOrder->comments = $data['comments'] ?? '';
@@ -710,8 +725,7 @@ class OrderController extends Controller
         $variables['elements'] = [];
 
         foreach ($data['elements'] as $elementId) {
-            $element = Craft::$app->getElements()
-                ->getElementById((int) $elementId, null, $variables['order']->sourceSite);
+            $element = Translations::$plugin->elementRepository->getElementById((int) $elementId, $variables['order']->sourceSite);
 
             if ($element) {
                 $variables['elements'][] = $element;
@@ -797,35 +811,30 @@ class OrderController extends Controller
         $sourceSite = Craft::$app->getRequest()->getBodyParam('sourceSite');
 
         if (!$currentUser->can('translations:orders:create')) {
-            return $this->asJson(
-                [
-                    "success" => false,
-                    "message" => "User does not have permission to perform this action."
-                ]
-            );
+            return $this->asFailure("User does not have permission to perform this action.");
         }
 
         if (!$orderId = Craft::$app->getRequest()->getParam('id')) {
-            return $this->asJson(["success" => false, "message" => "Invalid OrderId."]);
+            return $this->asFailure("Invalid OrderId.");
         }
 
         if (!$order = $this->service->getOrderById($orderId)) {
-            return $this->asJson(["success" => false, "message" => "Invalid Order."]);
+            return $this->asFailure("Invalid Order.");
         }
 
         // Authenticate service
         $translator = $order->getTranslator();
 
         $authenticate = Translations::$plugin->services->authenticateService(
-          $translator->service,
-          $translator->getSettings()
+            $translator->service,
+            $translator->getSettings()
         );
 
         $isDefaultTranslator = $translator->service === Constants::TRANSLATOR_DEFAULT;
 
         if (!$authenticate && !$isDefaultTranslator) {
             $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
-            return $this->asJson(["success" => false, "message" => $message]);
+            return $this->asFailure($message);
         }
 
         $queueOrders = Craft::$app->getSession()->get('queueOrders');
@@ -834,7 +843,7 @@ class OrderController extends Controller
                 Craft::$app->getQueue()->status($key) == Queue::STATUS_WAITING ||
                 Craft::$app->getQueue()->status($key) == Queue::STATUS_RESERVED
             ) {
-                return $this->asJson(["success" => false, "message" => "This order is currently being processed."]);
+                return $this->asFailure("This order is currently being processed.");
             } else {
                 unset($queueOrders[$key]);
                 Craft::$app->getSession()->set('queueOrders', $queueOrders);
@@ -957,9 +966,9 @@ class OrderController extends Controller
 
 			Craft::$app->getElements()->saveElement($order);
 
-			return $this->asJson(['success' => true, 'message' => "Order updated."]);
+			return $this->asSuccess("Order updated.");
         } catch (Exception $e) {
-            return $this->asJson(["success" => false, "message" => $e->getMessage()]);
+            return $this->asFailure($e->getMessage());
         }
     }
 
@@ -1031,16 +1040,10 @@ class OrderController extends Controller
         if ($job) {
             $params = [
                 'id' => (int) $job,
-                'notice' => $action == "draft" ? 'Translation drafts saved' : 'Entries published',
+                'notice' => $action == "draft" ? 'Translation draft(s) saved' : 'Translation draft(s) published',
                 'url' => Constants::URL_ORDER_DETAIL . $order->id
             ];
             Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
-        } else if(is_null($job)) {
-            Craft::$app->getSession()->setNotice(
-                Translations::$plugin->translator->translate(
-                    'app', $action == "draft" ? 'Translation drafts saved' : 'Entries published'
-                )
-            );
         } else {
             Craft::$app->getSession()->setNotice(
                 Translations::$plugin->translator->translate(
@@ -1298,6 +1301,7 @@ class OrderController extends Controller
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
+			$order->requestQuote = Craft::$app->getRequest()->getBodyParam('requestQuote');
             $order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : '[]';
 
@@ -1386,9 +1390,9 @@ class OrderController extends Controller
         $orderId = Craft::$app->getRequest()->getBodyParam('id');
         $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
 
-        if (! $order) return $this->asJson(['success' => false, 'message' => 'Order not found']);
+        if (! $order) return $this->asFailure('Order not found');
 
-        $elements = Craft::$app->getRequest()->getBodyParam('update-elements');
+        $elements = Craft::$app->getRequest()->getRequiredBodyParam('selected');
         if ($elements) $elements = json_decode($elements, true);
 
         $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
@@ -1402,7 +1406,7 @@ class OrderController extends Controller
 
             if (!$authenticate && $translator->service !== Constants::TRANSLATOR_DEFAULT) {
                 $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
-                return $this->asJson(["success" => false, "message" => $message]);
+                return $this->asFailure($message);
             }
         }
 
@@ -1424,7 +1428,7 @@ class OrderController extends Controller
                 if (in_array($file->elementId, $elements)) {
                     if ($file->isPublished()) continue;
 
-                    $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
+                    $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
 
                     $file->source = Translations::$plugin->elementToFileConverter->convert(
                         $element,
@@ -1492,10 +1496,93 @@ class OrderController extends Controller
             Craft::$app->getSession()->setNotice('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
 
-            return $this->asJson(['success' => false, 'message' => 'Error updating source. Error: ' . $e->getMessage()]);
+            return $this->asFailure($e->getMessage());
         }
 
-        return $this->asJson(['success' => true, 'message' => 'Entries updated.']);
+        return $this->asSuccess('Entries updated.');
+    }
+
+    /**
+     * Accept order quote
+     */
+    public function actionAcceptQuote()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $comment = Craft::$app->getRequest()->getBodyParam('quoteComment');
+        $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
+
+        if (!$order) return $this->asFailure('Order not found');
+
+        try {
+            $translator = $order->getTranslator();
+            if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
+                $translatorService = Translations::$plugin->translatorFactory
+                    ->makeTranslationService(
+                        $translator->service,
+                        json_decode($translator->settings, true)
+                    );
+
+                $response = $translatorService->acceptOrderQuote($order->serviceOrderId, $comment);
+
+                if (empty($response)) {
+                    return $this->asFailure('Unable to approve quote');
+                }
+            }
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
+            return $this->asFailure($e->getMessage());
+        }
+
+        $order->status = Constants::ORDER_STATUS_NEW;
+        $order->logActivity("Order quote accepted");
+        Craft::$app->getElements()->saveElement($order, true, true, false);
+
+        return $this->asSuccess("Quote approve request sent");
+    }
+
+    /**
+     * Decline order quote
+     */
+    public function actionDeclineQuote()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $comment = Craft::$app->getRequest()->getBodyParam('quoteComment');
+        $order = Translations::$plugin->orderRepository->getOrderById((int) $orderId);
+
+        if (!$order) return $this->asFailure('Order not found');
+
+        try {
+            $translator = $order->getTranslator();
+            if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
+                $translatorService = Translations::$plugin->translatorFactory
+                    ->makeTranslationService(
+                        $translator->service,
+                        json_decode($translator->settings, true)
+                    );
+
+                $response = $translatorService->declineOrderQuote($order->serviceOrderId, $comment);
+
+                if (empty($response)) {
+                    return $this->asFailure('Unable to decline quote');
+                }
+            }
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
+            return $this->asFailure($e->getMessage());
+        }
+
+        $order->status = Constants::ORDER_STATUS_GETTING_QUOTE;
+        $order->logActivity("Order quote declined");
+        Craft::$app->getElements()->saveElement($order, true, true, false);
+
+        return $this->asSuccess("Quote decline request sent");
     }
 }

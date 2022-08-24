@@ -4,8 +4,8 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.3.9';
-    const CRAFT_MIN_VERSION = '3.7.36';
+    const PLUGIN_SCHEMA_VERSION = '1.4.1';
+    const CRAFT_MIN_VERSION = '4.0.0';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
 
@@ -152,7 +152,6 @@ class Constants
     const TABLE_TRANSLATORS         = '{{%translations_translators}}';
     const TABLE_TRANSLATIONS        = '{{%translations_translations}}';
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
-    const TABLE_CATEGORY_DRAFT      = '{{%translations_categorydrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
 
     // Job Descriptions
@@ -205,6 +204,12 @@ class Constants
     const ACCLARO_API_DELETE_ORDER_TAG          = 'orders/{orderid}/tag-delete';
     const ACCLARO_API_ADD_ORDER_COMMENT         = 'orders/{orderid}/comment';
     const ACCLARO_API_REQUEST_ORDER_CALLBACK    = 'orders/{orderid}/callback';
+
+    const ACCLARO_API_REQUEST_ORDER_QUOTE       = 'orders/{orderid}/quote';
+    const ACCLARO_API_GET_QUOTE_DETAILS         = 'orders/{orderid}/quote-details';
+    const ACCLARO_API_GET_QUOTE_DOCUMENT        = 'orders/{orderid}/quote-document';
+    const ACCLARO_API_QUOTE_APPROVE             = 'orders/{orderid}/quote-approve';
+    const ACCLARO_API_QUOTE_DECLINE             = 'orders/{orderid}/quote-decline';
 
     const ACCLARO_API_SEND_SOURCE_FILE      = 'orders/{orderid}/files';
     const ACCLARO_API_SEND_REFERENCE_FILE   = 'orders/{orderid}/reference-file';
@@ -272,7 +277,12 @@ class Constants
         'newism\fields\fields\Embed',
         'newism\fields\fields\PersonName',
         'newism\fields\fields\Gender',
-        'ether\seo\fields\SeoField'
+        'ether\seo\fields\SeoField',
+        'ether\notes\Field',
+        'amici\SuperDynamicFields\fields\SueprDynamicDropdownField',
+        'amici\SuperDynamicFields\fields\SueprDynamicRadioField',
+        'amici\SuperDynamicFields\fields\SueprDynamicCheckboxesField',
+        'amici\SuperDynamicFields\fields\SueprDynamicMultiSelectField',
     ];
 
     const UNRELATED_FIELD_TYPES = [
@@ -282,6 +292,7 @@ class Constants
         'craft\fields\Lightswitch',
         'craft\fields\Time',
         'craft\fields\Url',
-        'craft\fields\Users'
+        'craft\fields\Users',
+        'craft\fields\Money',
     ];
 }

@@ -139,6 +139,7 @@ class Install extends Migration
 					'includeTmFiles'            => $this->integer()->defaultValue(0),
 					'trackTargetChanges'        => $this->integer()->defaultValue(0),
                     'asynchronousPublishing'    => $this->integer()->defaultValue(0),
+                    'requestQuote'              => $this->integer()->defaultValue(0),
                     'dateCreated'               => $this->dateTime()->notNull(),
                     'dateUpdated'               => $this->dateTime()->notNull(),
                     'uid'                       => $this->uid(),
@@ -199,25 +200,6 @@ class Install extends Migration
                     'dateCreated' => $this->dateTime()->notNull(),
                     'dateUpdated' => $this->dateTime()->notNull(),
                     'uid' => $this->uid(),
-                ]
-            );
-        }
-
-        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_CATEGORY_DRAFT);
-        if ($tableSchema === null) {
-            $tablesCreated = true;
-            $this->createTable(
-                Constants::TABLE_CATEGORY_DRAFT,
-                [
-                    'id'            => $this->primaryKey(),
-                    'name'          => $this->string()->notNull(),
-                    'title'         => $this->string()->notNull(),
-                    'categoryId'    => $this->integer()->notNull(),
-                    'site'          => $this->integer()->notNull(),
-                    'data'          => $this->mediumText()->notNull(),
-                    'dateCreated'   => $this->dateTime()->notNull(),
-                    'dateUpdated'   => $this->dateTime()->notNull(),
-                    'uid'           => $this->uid()
                 ]
             );
         }
@@ -302,8 +284,6 @@ class Install extends Migration
         $this->dropTableIfExists(Constants::TABLE_FILES);
 
         $this->dropTableIfExists(Constants::TABLE_GLOBAL_SET_DRAFT);
-
-        $this->dropTableIfExists(Constants::TABLE_CATEGORY_DRAFT);
 
         $this->dropTableIfExists(Constants::TABLE_ASSET_DRAFT);
 

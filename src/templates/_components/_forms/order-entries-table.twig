@@ -1,0 +1,130 @@
+{% import '_includes/forms' as forms %}
+
+<div id="text-field" class="field" style="margin-top: -20px">
+    <div class="heading" style="min-height: 40px;">
+        <label id="entries-label" for="entries">
+            Source entries
+            <span class="required"></span>
+        </label>
+        <div id='toolbar' class='btngroup flex flex-nowrap margin-left disabled noClick' style='max-width: 10px'>
+            <div class="btn menubtn" data-icon='settings' title='Actions' id='element-action-menu-icon'></div>
+        </div>
+        <div class="translations-loader hidden"></div>
+    </div>
+    {% if elements %}
+        <div class="input ltr scroll-x-auto">
+            <table id="elements-table" class="data fullwidth" dir="ltr">
+                <thead>
+                    <tr>
+                        <th class="thin checkbox-cell all-element-checkbox">
+                            <input class="checkbox hidden" id="element-0" type="checkbox"/>
+                            <label class="checkbox" for="element-0"></label>
+                        </th>
+                        <th>{{ 'Title'|t }}</th>
+                        <th>{{ 'Version'|t }}</th>
+                        <th>{{ 'Section'|t }}</th>
+                        <th>{{ 'Date Updated'|t }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for element in elements %}
+                        {% set canonicalId = element.isDraft ? element.canonicalId : element.id %}
+                        {% set sourceUpdated = element.id in isSourceChanged|default([]) %}
+                        {% set targetUpdated = element.id in isTargetChanged|default([]) %}
+
+                        <tr data-word-count="{{ elementWordCounts[element.id] }}"
+                            data-element-id="{{ element.id }}" data-canonical-id="{{ canonicalId }}"
+                            data-is-updated="{% if sourceUpdated %} 1 {% else %} 0 {% endif %}"
+                            data-is-target-updated="{% if targetUpdated %} 1 {% else %} 0 {% endif %}">
+                            {{ forms.hidden({
+                                name: 'elements[]',
+                                value: element.id
+                            }) }}
+                            <td class="thin checkbox-cell element">
+                                <input class="checkbox hidden" data-element="{{ element.id }}" id="element-{{ element.id }}" type="checkbox"/>
+                                <label class="checkbox" for="element-{{ element.id }}"></label>
+                            </td>
+                            <td>
+                                {% set entryPreviewSettings = order.entryPreviewSettings(element) %}
+                                <div id="{{ entryPreviewSettings['id'] }}">
+                                    <div class="elements">
+                                        <div class="element small" title="{{ element.uiLabel ~" - " ~siteObjects[order.sourceSite].name }}">
+                                            <div class="label" data-id="{{ element.id }}" data-editable="" data-site-id={{ order.sourceSite }} {% if entryPreviewSettings["draftId"] is defined %} data-draft-id="{{ entryPreviewSettings["draftId"] }}" {% endif %}>
+                                                <span class="title text-link">{{ element.uiLabel }}</span>
+                                            </div>
+                                            {% if duplicateEntries[element.id] is defined and chkDuplicateEntries %}
+                                                <span class="order-warning font-size-15" data-icon="info">
+                                                    {{ 'This entry is included<br>in the following orders:' }}
+                                                    <ul style="list-style:disc;padding:5px 0 0 15px;">
+                                                        {% for orderId in duplicateEntries[element.id] %}
+                                                        <li>
+                                                            <a href="{{ url('translations/orders/detail/'~orderId) }}" target="_blank">#{{ orderId }}</a>
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </span>
+                                            {% endif %}
+                                            {% if canUpdateFiles and (sourceUpdated or targetUpdated) %}
+                                                <span class="warning order-warning font-size-15" data-icon="alert">
+                                                    <ul style="list-style:disc;padding:5px 0 0 15px;">
+                                                        {% if sourceUpdated %}
+                                                            {{ '<li>Source entry content has been modified since order was created.</li>' }}
+                                                        {% endif %}
+                                                        {% if targetUpdated %}
+                                                            {{ '<li>Target entry content has been modified since order was created.</li>' }}
+                                                        {% endif %}
+                                                    </ul>
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% js %}
+                                        new Craft.Translations.EntryPreview({{ entryPreviewSettings|json_encode|raw }});
+                                    {% endjs %}
+                                </div>
+                            </td>
+                            <td>
+                                {% set versionId = "version_" ~ element.id %}
+                                {% set versionOptions = {(element.id):'Current'|t ~ '...'} %}
+                                {% if versionsByElementId[element.id] is defined %}
+                                    {% set versionOptions = versionsByElementId[element.id] %}
+                                {% endif %}
+                                {{ forms.selectField({
+                                    value: element.id,
+                                    options: versionOptions,
+                                    name: 'version',
+                                    id: versionId,
+                                    class: isEditable
+                                }) }}
+                            </td>
+                            <td>
+                                {% if element.className == constant('acclaro\\translations\\Constants::CLASS_GLOBAL_SET') %}
+                                    {{ 'Globals' }}
+                                {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_CATEGORY') %}
+                                    {{ 'Category' }}
+                                {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
+                                    {{ 'Asset' }}
+                                {% else %}
+                                    {{ element.section.name }}
+                                {% endif %}
+
+                            </td>
+                            <td>
+                                {{ element.dateUpdated ? element.dateUpdated|date('M j, Y g:i a') : '--' }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+<div class="field {{ isEditable }}" data-position="left" data-colspan="1">
+    <div class="buttons flex">
+        <div class="submit">
+            <input type="hidden" id="originalElementIds" value="{{ order.elementIds|json_decode()|join(',') }}">
+            <button type="button" class="btn add icon dashed addEntries">{{ 'Add an entry'|t }}</button>
+        </div>
+    </div>
+</div>

@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+# 3.0.0 - 2022-08-24
+
+### Fixed
+- Track target content changes alerts ([AcclaroInc#488](https://github.com/AcclaroInc/pm-craft-translations/issues/488))
+- An issue where order details page loads without order id when order is being submitted to api translator from queue.
+- An issue where deleting draft from `globalsetdraft/assetdraft` detail page was removing order file.
+
+### Updated
+- Requires Craft `4.0.0+`
+- Requires PHP `8.0.2+`
+- Category draft's custom logic with craft's native code. (Craft now supports category drafts)
+- Download TM files action disabled by default.
+- Entry draft live-preview feature.
+
+### Added
+- Entry quick-edit feature ([AcclaroInc#490](https://github.com/AcclaroInc/pm-craft-translations/issues/490))
+- Request a quote feature ([AcclaroInc#11](https://github.com/AcclaroInc/pm-craft-translations/issues/11))
+- Logging in webhook flow for api orders.
+
+### Removed
+- Removed unsused `editDraftAssets`.
+- Removed `translations_categorydrafts` table.
+
+### Chore
+- Code refactoring and cleanup.
+
+
 ## 2.2.3 - 2022-08-01
 
 ### Fixed
@@ -19,6 +46,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - To prevent target entry sync for old orders which were created before `track target content` feature was introduced.
 - The disable logging behaviour changed from only disabling api calls to completely disabled plugin logs ([AcclaroInc#373](https://github.com/AcclaroInc/craft-translations/pull/373))
 - Download/Sync TM files option only available when user can see alert icon for target mismatch.
+
+## 3.0.0-beta.1 - 2022-07-14
+
+### Fixed
+- An issue where `New translations` button on entry index page remains active on switching entry groups.
+- An issue where deleting draft from `globalsetdraft/assetdraft` detail page was removing order file.
+
+### Updated
+- Craft minimum version from 3.7.33 to 4.0.0
+- Requires PHP ^8.0.2
+- Category draft's custom logic with craft's native code. (Craft now supports category drafts)
+- Download TM files action disabled by default.
+
+### Added
+- Support for Craft 4.
+- Logging in webhook flow for api orders.
+
+### Removed
+- Removed unsused `editDraftAssets`.
+- Removed `translations_categorydrafts` table.
+
+### Chore
+- Code refactoring and cleanup.
 
 ## 2.2.2 - 2022-07-06
 

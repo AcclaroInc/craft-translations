@@ -19,7 +19,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
     /**
      * {@inheritdoc}
      */
-    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field)
+    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite = null)
     {
         $source = array();
 
@@ -30,7 +30,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             $new = 0;
             foreach ($blocks as $block) {
                 $blockId = sprintf('new%s', ++$new);
-                $blockSource = $elementTranslator->toTranslationSource($block);
+                $blockSource = $elementTranslator->toTranslationSource($block, $sourceSite);
 
                 foreach ($blockSource as $key => $value) {
                     $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);

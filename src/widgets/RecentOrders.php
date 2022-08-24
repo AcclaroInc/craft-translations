@@ -34,7 +34,7 @@ class RecentOrders extends Widget
     /**
      * @inheritdoc
      */
-    public static function iconPath()
+    public static function icon(): ?string
     {
         return Craft::getAlias('@app/icons/clock.svg');
     }
@@ -44,12 +44,12 @@ class RecentOrders extends Widget
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
-        
+
         $rules[] = ['limit', 'number', 'integerOnly' => true];
-        
+
         return $rules;
     }
 
@@ -64,7 +64,7 @@ class RecentOrders extends Widget
     /**
      * @inheritdoc
      */
-    public function getSettingsHtml()
+    public function getSettingsHtml(): ?string
     {
         return Craft::$app->getView()->renderTemplate('translations/_components/widgets/RecentOrders/settings',
             [
@@ -75,14 +75,14 @@ class RecentOrders extends Widget
     /**
      * @inheritdoc
      */
-    public function getBodyHtml()
+    public function getBodyHtml(): ?string
     {
         $view = Craft::$app->getView();
-        
+
         $orders = $this->_getOrders();
 
         $orderCountAcclaro = Translations::$plugin->orderRepository->getAcclaroOrdersCount();
-        
+
         return $view->renderTemplate('translations/_components/widgets/RecentOrders/body', ['orders' => $orders, 'orderCountAcclaro' => $orderCountAcclaro]);
     }
 
@@ -114,7 +114,7 @@ class RecentOrders extends Widget
         $query = Order::find()
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->limit($this->limit);
-        
+
         return $query->all();
     }
 

@@ -8,48 +8,45 @@ Craft.Translations.StaticTranslations = {
 
     saveStaticTranslation: function() {
 
-        var data = $("#static-translation").serializeArray();
-        data.push(
-            {name: 'source', value: Craft.elementIndex.sourceKey},
-            {name: 'siteId', value: Craft.elementIndex.siteId}
-            );
-        Craft.postActionRequest('translations/static-translations/save', data, $.proxy(function(response, textStatus) {
-            if (textStatus === 'success') {
-                if (response.success) {
-                    Craft.cp.displayNotice(Craft.t('app', 'Static Translations saved.'));
-                    Craft.elementIndex.updateElements();
-                }
-            } else {
-                Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
-            }
+        form = $("#static-translation");
+        postData = Garnish.getPostData(form),
+        $data = Craft.expandPostArray(postData);
+        $data['source'] = Craft.elementIndex.sourceKey;
+        $data['siteId'] = Craft.elementIndex.siteId;
 
-            $('.save-static-translation').removeClass('disabled');
-            $('.save-static-translation').attr("disabled", false);
-
-        }, this));
+        Craft.sendActionRequest('POST', 'translations/static-translations/save', {data: $data})
+            .then((response) => {
+                Craft.cp.displayNotice(Craft.t('app', response.data.message));
+                Craft.elementIndex.updateElements();
+            })
+            .catch(({response}) => {
+                Craft.cp.displayError(Craft.t('app', response.data.error));
+            })
+            .finally(() => {
+                $('.save-static-translation').removeClass('disabled');
+                $('.save-static-translation').attr("disabled", false);
+            });
 
 
     },
 
     exportStaticTranslation: function() {
 
-        var data = {
+        params = {
             siteId: Craft.elementIndex.siteId,
             sourceKey: Craft.elementIndex.sourceKey,
             search: Craft.elementIndex.searchText
         };
 
-        Craft.postActionRequest('translations/static-translations/export', data, $.proxy(function(response, textStatus) {
-            if (textStatus === 'success') {
-                if (response.success) {
-                    var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/static-translations/export-file', {'filename': response.filePath})}).hide();
-                    $('#static-translation').append($iframe);
-                    Craft.cp.displayNotice(Craft.t('app', 'Static Translations exported.'));
-                }
-            } else {
-                Craft.cp.displayError(Craft.t('app', 'An unknown error occurred.'));
-            }
-        }, this));
+        Craft.sendActionRequest('POST', 'translations/static-translations/export', {data: params})
+            .then((response) => {
+                var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/static-translations/export-file', {'filename': response.data.filePath})}).hide();
+                $('#static-translation').append($iframe);
+                Craft.cp.displayNotice(Craft.t('app', 'Static Translations exported.'));
+            })
+            .catch(({response}) => {
+                Craft.cp.displayError(Craft.t('app', response.data.error));
+            });
 
     },
 
@@ -65,7 +62,6 @@ Craft.Translations.StaticTranslations = {
             $('.save-static-translation').attr("disabled", true);
 
             e.preventDefault();
-            console.log(Craft.elementIndex);
             self.saveStaticTranslation();
         });
 

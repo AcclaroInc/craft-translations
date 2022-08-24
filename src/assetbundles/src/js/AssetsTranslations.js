@@ -29,11 +29,11 @@ Craft.Translations.AssetsTranslations = {
     },
 
     isEditAssetScreen: function() {
-        return $('form#main-form input[type=hidden][name=action][value="assets/save-asset"]').length > 0;
+        return $('form#main-form input[type=hidden][name=action][value="elements/save"]').length > 0;
     },
 
     getEditAssetId: function() {
-        return $('form#main-form input[type=hidden][name=sourceId]').val();
+        return $('form#main-form input[type=hidden][name=elementId]').val();
     },
 
     updateSelectedAssets: function() {
@@ -87,7 +87,6 @@ Craft.Translations.AssetsTranslations = {
     addTranslationOrderButton: function(orders, assetId) {
         var self = this;
         assetId = this.getEditAssetId();
-        //var sourceSite = $('form#main-form input[type=hidden][name=siteId]').val();
 
         var $btncontainer = document.createElement('div');
         $btncontainer.id = "translations-field";
@@ -96,7 +95,7 @@ Craft.Translations.AssetsTranslations = {
         var $btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
         if (this.isEditAssetScreen()) {
-            $settings = document.getElementById('settings');
+            $settings = document.getElementById('new-filename-field').closest('div.meta');
             $settings.insertBefore($btncontainer, $settings.firstChild);
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
@@ -105,7 +104,7 @@ Craft.Translations.AssetsTranslations = {
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
         } else {
-            $btngroup.insertBefore('#header #action-button');
+            $btngroup.insertBefore('header#header > div:last');
         }
 
 

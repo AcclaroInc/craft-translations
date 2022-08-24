@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Translations for Craft plugin for Craft CMS 3.x
  *
@@ -17,12 +18,14 @@ use acclaro\translations\services\ElementTranslator;
 
 class VizyFieldTranslator extends GenericFieldTranslator
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite = null)
-    {
-        $source = [];
+	protected $skipNsmFields = ['sex', 'country', 'countryCode', 'administrativeArea', 'mapUrl', 'sortingCode', 'placeData', 'recipient', 'locale', 'dependentLocality', 'additionalName'];
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite = null)
+	{
+		$source = [];
 
 		$blocks = $element->getFieldValue($field->handle)->all();
 
@@ -37,10 +40,10 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	}
 
 	/**
-     * {@inheritdoc}
-     */
-    public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $targetData)
-    {
+	 * {@inheritdoc}
+	 */
+	public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $targetData)
+	{
 		$postArray = [];
 
 		$blocks = $element->getFieldValue($field->handle)->all();
@@ -76,7 +79,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 				$source = array_merge($source, $this->customFieldsToSourceArray($block->serializeValue(), $key));
 				break;
 			default:
-				foreach ($block->getFieldLayout()->getFields() as $field) {
+				foreach ($block->getFieldLayout()->getCustomFields() as $field) {
 					if ($this->getIsTranslatable($field)) {
 						$newKey = sprintf('%s.%s', $key, $field->handle);
 						$value = $block->getFieldValue($field->handle);

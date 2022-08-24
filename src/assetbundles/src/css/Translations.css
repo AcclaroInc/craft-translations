@@ -200,10 +200,6 @@
     margin: 0 0 2em;
 }
 
-/* #import-tool {
-    margin-left: 10px;
-} */
-
 .margin-right-10{
     margin-right: 10px;
 }
@@ -214,8 +210,8 @@
 }
 
 .utility-status .progressbar {
-    left: 75%;
-    width: 25%;
+    left: 50%;
+        width: 50%;
     transform: translateX(-50%) translateY(-50%);
 }
 
@@ -241,7 +237,6 @@
 
 .translations-complete-orders-indicator {
     float: right;
-    /* display: inline-block; */
     padding: 0;
     min-height: 22px;
     border: none;
@@ -395,7 +390,6 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 }
 
 #recently-modified-widget tr.sel .view-diff {
-    margin-right: 10px;
     transition: all 0.05s ease-in-out;
 }
 
@@ -408,7 +402,6 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 }
 
 #recent-entries-widget tr.sel .view-diff-entry {
-    margin-right: 10px;
     transition: all 0.05s ease-in-out;
 }
 
@@ -558,6 +551,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 .visual iframe {
     width: calc(50% - 2px);
     min-height: 1000px;
+    display: inline-block !important;
 }
 
 @media only screen and (max-width: 720px) {
@@ -637,7 +631,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 }
 
 #translations-dashboard .buttons {
-    margin: 0 0 14px;
+    margin: 10px 0 14px;
 }
 
 .btngroup-container {
@@ -767,7 +761,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 }
 
 .w-100 {
-    width: 100%;
+    width: 100% !important;
 }
 
 .fw-400 {
@@ -816,6 +810,27 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     align-items: center;
 }
 
+.wd-65 {
+    width: 65%;
+}
+
+td.pdl-30 {
+    padding-left: 30px !important;
+}
+
+tr.total > th {
+    border-top: 1px solid black !important;
+    border-bottom: 1px solid black;
+}
+
+tr.bold > td {
+    font-weight: 500;
+}
+
+tr.bold:hover > td {
+    background-color: unset !important;
+}
+
 #approve-publish-form .footer,
 .modal .resizehandle {
     z-index: 9;
@@ -828,6 +843,11 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 .scroll-x-auto {
     overflow-x: auto;
     align-items: center;
+}
+
+td .elements .element, td .elements .element.sel:focus {
+    background-color: inherit !important;
+    cursor: pointer;
 }
 
 tr.clone-modal-tr:not(.disabled):hover tr.file-diff-data th,
@@ -938,8 +958,13 @@ td.target{
     background-color: #f3f7fc !important;
 }
 
-.color-red {
-    color: red;
+.text-link {
+    color: var(--link-color);
+    cursor: pointer;
+}
+
+.text-link:hover {
+    text-decoration: underline;
 }
 
 .mr--10 {

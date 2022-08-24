@@ -26,10 +26,10 @@ use acclaro\translations\services\job\RegeneratePreviewUrls;
 class BaseController extends Controller
 {
     /**
-     * @var    bool|array Allows anonymous access to this controller's actions.
+     * @var    array|int|bool Allows anonymous access to this controller's actions.
      * @access protected
      */
-    protected $allowAnonymous = true;
+    protected array|int|bool $allowAnonymous = true;
 
     /**
      * @var int
@@ -262,7 +262,7 @@ class BaseController extends Controller
                 if (!in_array($elementId, $elementIds)) {
                     $elementIds[] = $elementId;
 
-                    $element = Craft::$app->getElements()->getElementById($elementId, null, $order->sourceSite);
+                    $element = Translations::$plugin->elementRepository->getElementById($elementId, $order->sourceSite);
 
                     if ($element instanceof Entry) {
                         $sites = array();
