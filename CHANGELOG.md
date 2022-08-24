@@ -7,15 +7,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 # 3.0.0 - 2022-08-24
 
 ### Fixed
-- Track target content changes alerts ([AcclaroInc#330](https://github.com/AcclaroInc/craft-translations/pull/330))
+- Track target content changes alerts ([AcclaroInc#488](https://github.com/AcclaroInc/pm-craft-translations/issues/488))
 - An issue where order details page loads without order id when order is being submitted to api translator from queue.
+- An issue where deleting draft from `globalsetdraft/assetdraft` detail page was removing order file.
 
 ### Updated
-- Existing file draft preview functionality similar to craft's live preview.
+- Requires Craft `4.0.0+`
+- Requires PHP `8.0.2+`
+- Category draft's custom logic with craft's native code. (Craft now supports category drafts)
+- Download TM files action disabled by default.
+- Entry draft live-preview feature.
 
 ### Added
-- Entry quick-edit feature ([AcclaroInc#379](https://github.com/AcclaroInc/craft-translations/pull/379))
-- Request a quote feature ([AcclaroInc#366](https://github.com/AcclaroInc/craft-translations/pull/366))
+- Entry quick-edit feature ([AcclaroInc#490](https://github.com/AcclaroInc/pm-craft-translations/issues/490))
+- Request a quote feature ([AcclaroInc#11](https://github.com/AcclaroInc/pm-craft-translations/issues/11))
+- Logging in webhook flow for api orders.
+
+### Removed
+- Removed unsused `editDraftAssets`.
+- Removed `translations_categorydrafts` table.
+
+### Chore
+- Code refactoring and cleanup.
 
 
 ## 2.2.3 - 2022-08-01
