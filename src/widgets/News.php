@@ -12,6 +12,8 @@ namespace acclaro\translations\widgets;
 
 use Craft;
 use craft\base\Widget;
+use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 use acclaro\translations\records\WidgetRecord;
 
 /**
@@ -115,7 +117,13 @@ class News extends Widget
             'verify' => false
         ));
 
-        $response = $client->get('feed/');
+        try {
+            $response = $client->get('feed/');
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log("[" . __METHOD__ . "] . $e", Constants::LOG_LEVEL_ERROR);
+            return [];
+        }
+
         $data = $response->getBody()->getContents();
         $feed = simplexml_load_string($data);
 
