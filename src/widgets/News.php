@@ -115,7 +115,13 @@ class News extends Widget
             'verify' => false
         ));
 
-        $response = $client->get('feed/');
+        try {
+            $response = $client->get('feed/');
+        } catch (\Throwable $e) {
+            Craft::$app->getErrorHandler()->logException($e);
+            return [];
+        }
+
         $data = $response->getBody()->getContents();
         $feed = simplexml_load_string($data);
 
