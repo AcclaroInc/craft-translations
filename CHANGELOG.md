@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.0.1 - 2022-09-06
+
+### Fixed
+- Unhandled exception on plugin installation ([AcclaroInc#387](https://github.com/AcclaroInc/craft-translations/issues/387))
+- Exception opening plugin dashboard when acclaro feed is unavailable.
+
 ## 3.0.0 - 2022-08-24
 
 ### Fixed
