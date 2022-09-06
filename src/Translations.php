@@ -178,10 +178,13 @@ class Translations extends Plugin
             Plugins::class,
             Plugins::EVENT_AFTER_INSTALL_PLUGIN,
             function (PluginEvent $event) {
-                self::$plugin->logHelper->log(
-                    '['. __METHOD__ .'] Plugins::EVENT_AFTER_INSTALL_PLUGIN',
-                    Constants::LOG_LEVEL_INFO
-                );
+                if (self::getInstance()->settings->apiLogging) {
+                    Craft::info(
+                        '[' . __METHOD__ . '] Plugins::EVENT_AFTER_INSTALL_PLUGIN',
+                        'translations'
+                    );
+                }
+
                 if ($event->plugin === $this) {
                     $request = Craft::$app->getRequest();
                     if ($request->isCpRequest) {
