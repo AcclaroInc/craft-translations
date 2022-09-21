@@ -23,6 +23,16 @@
             value: 'translations/settings/save-configuration-options',
         }) }}
 
+        {{ forms.hidden({
+            id: 'original-values',
+            value: {
+                'chkDuplicateEntries': chkDuplicateEntries,
+                'trackSourceChanges': trackSourceChanges,
+                'trackTargetChanges': trackTargetChanges,
+                'apiLogging': apiLogging,
+            },
+        }) }}
+
         <h3>{{ "General"|t('app') }}</h3>
 
         {{ forms.lightswitchField({
@@ -119,7 +129,23 @@
 {% js %}
     $( document ).ready(function() {
         $('#chkDuplicateEntries, #apiLogging, #trackSourceChanges, #trackTargetChanges').change(function() {
-            $('#save-configuration').toggleClass('submit');
+            if (isChanged()) {
+                $('#save-configuration').addClass('submit');
+            } else {
+                $('#save-configuration').removeClass('submit');
+            }
         });
+
+        function isChanged() {
+            data = JSON.parse($(document).find('#original-values').val());
+            var $res = false;
+            $.each(data, function($element, original) {
+                current = $('input[name='+$element+']').val();
+                if (current != original) {
+                    $res = true;
+                }
+            });
+            return $res;
+        }
     });
 {% endjs %}
