@@ -485,6 +485,16 @@ class Order extends Element
     }
 
     /**
+     * Returns array of element ids for an order. Ignores elements that are deleted
+     *
+     * @return array
+     */
+    public function getElementsId()
+    {
+        return array_keys($this->getElements());
+    }
+
+    /**
      * User in order details settings tab entry table
      */
     public function getEntryPreviewSettings($element)
