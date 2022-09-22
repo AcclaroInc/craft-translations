@@ -213,6 +213,26 @@ class Order extends Element
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
+			[
+                'key' => 'getting-quotes',
+                'label' => Translations::$plugin->translator->translate('app', 'Getting quotes'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_GETTING_QUOTE
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+			[
+                'key' => 'needs-approval',
+                'label' => Translations::$plugin->translator->translate('app', 'Needs approval'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_NEEDS_APPROVAL
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
             [
                 'key' => 'modified',
                 'label' => Translations::$plugin->translator->translate('app', 'Modified'),
@@ -231,8 +251,6 @@ class Order extends Element
                         Constants::ORDER_STATUS_IN_PROGRESS,
                         Constants::ORDER_STATUS_IN_REVIEW,
                         Constants::ORDER_STATUS_IN_PREPARATION,
-                        Constants::ORDER_STATUS_GETTING_QUOTE,
-                        Constants::ORDER_STATUS_NEEDS_APPROVAL
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
