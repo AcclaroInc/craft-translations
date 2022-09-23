@@ -16,6 +16,7 @@ use craft\elements\Asset;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
+use craft\commerce\elements\Product;
 
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
@@ -119,7 +120,9 @@ class UrlGenerator
 
         $className = get_class($element);
 
-        if (($className === Entry::class || $className === Category::class) && !$element->getIsDraft()) {
+        if ($className === Product::class) {
+            $previewUrl = $element->url;
+        } else if (($className === Entry::class || $className === Category::class) && !$element->getIsDraft()) {
             $previewUrl = $element->url;
         } else {
             $route = [

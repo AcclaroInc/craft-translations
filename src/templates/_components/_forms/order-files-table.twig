@@ -20,6 +20,7 @@
         {% set registerDeltas = true %}
         {% for file in order.files %}
             {% set element = file.element(false) %}
+            {% set isCraftCommerce = element.className == constant('acclaro\\translations\\Constants::CLASS_COMMERCE_PRODUCT') %}
             <tr data-word-count="{{ elementWordCounts[file.elementId] }}" data-element-id="{{ file.elementId }}" class="diff-clone" data-file-id="{{ file.id }}">
 
                 <td class="thin checkbox-cell translations-checkbox-cell file">
@@ -71,14 +72,18 @@
                                     {% endif %}
 
                                     {# Create Preview for each target entry #}
-                                    {% if file.hasPreview %}
+                                    {% if file.hasPreview or isCraftCommerce %}
                                         {% set fileId = 'file_' ~ file.id %}
 
                                         <a id="{{ fileId }}" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 
-
                                         {% js %}
-                                            new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.filePreviewSettings|json_encode|raw }});
+                                            {% if element.className == constant('acclaro\\translations\\Constants::CLASS_COMMERCE_PRODUCT') %}
+                                                {% set hasCommerce = true %}
+                                                new Craft.Translations.CommercePreview({{ file.filePreviewSettings('#'~ fileId)|json_encode|raw }});
+                                            {% else %}
+                                                new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.filePreviewSettings|json_encode|raw }});
+                                            {% endif %}
                                         {% endjs %}
                                     {% endif %}
 
@@ -125,6 +130,8 @@
                         {{ 'Category' }}
                     {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_ASSET') %}
                         {{ 'Asset' }}
+                    {% elseif isCraftCommerce %}
+                        {{ element.type }}
                     {% else %}
                         {{ element.section.name }}
                     {% endif %}

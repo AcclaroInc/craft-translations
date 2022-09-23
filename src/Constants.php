@@ -45,6 +45,8 @@ class Constants
     const CLASS_ASSET       = 'craft\\elements\\Asset';
     const CLASS_ENTRY       = 'craft\\elements\\Entry';
 
+    const CLASS_COMMERCE_PRODUCT    = 'craft\commerce\elements\Product';
+
     // Urls
     const URL_ORDER_DETAIL          = 'translations/orders/detail/';
     const URL_ORDERS                = 'translations/orders/';
