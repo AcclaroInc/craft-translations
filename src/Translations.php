@@ -279,7 +279,7 @@ class Translations extends Plugin
     public function getSettingsResponse(): mixed
     {
         // Just redirect to the plugin settings page
-        Craft::$app->getResponse()->redirect(UrlHelper::cpUrl(Constants::URL_SETTINGS));
+        return Craft::$app->getResponse()->redirect(UrlHelper::cpUrl(Constants::URL_SETTINGS));
     }
 
     protected function createSettingsModel(): ?\craft\base\Model
