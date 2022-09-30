@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.0.2 - 2022-09-30
+
+### Added
+- Date selector in send logs page ([AcclaroInc#397](https://github.com/AcclaroInc/craft-translations/pull/397))
+- New `getting quotes` & `needs approval` status filters on order index page sidebar ([AcclaroInc#395](https://github.com/AcclaroInc/craft-translations/pull/395))
+
+### Updated
+- UX for save button in `settings > config-options`([AcclaroInc#393](https://github.com/AcclaroInc/craft-translations/pull/393))
+- Error opening order details when source entry has been deleted ([AcclaroInc#396](https://github.com/AcclaroInc/craft-translations/pull/396))
+
+### Fixed
+- Plugin settings url throwing error ([AcclaroInc#401](https://github.com/AcclaroInc/craft-translations/pull/401))
+
 ## 3.0.1 - 2022-09-06
 
 ### Fixed
