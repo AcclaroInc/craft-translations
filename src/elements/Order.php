@@ -707,7 +707,11 @@ class Order extends Element
                 $statusColour = 'purple';
                 break;
             case Constants::ORDER_STATUS_GETTING_QUOTE:
+                $statusColour = 'status-getting-quote';
+                break;
             case Constants::ORDER_STATUS_NEEDS_APPROVAL:
+                $statusColour = 'status-needs-approval';
+                break;
             case Constants::ORDER_STATUS_IN_PROGRESS:
             case Constants::ORDER_STATUS_IN_REVIEW:
                 $statusColour = 'orange';
