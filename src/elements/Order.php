@@ -213,6 +213,26 @@ class Order extends Element
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
             ],
+			[
+                'key' => 'getting-quotes',
+                'label' => Translations::$plugin->translator->translate('app', 'Getting quotes'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_GETTING_QUOTE
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
+			[
+                'key' => 'needs-approval',
+                'label' => Translations::$plugin->translator->translate('app', 'Needs approval'),
+                'criteria' => [
+                    'status' => [
+                        Constants::ORDER_STATUS_NEEDS_APPROVAL
+                    ]
+                ],
+                'defaultSort' => ['dateOrdered', 'desc']
+            ],
             [
                 'key' => 'modified',
                 'label' => Translations::$plugin->translator->translate('app', 'Modified'),
@@ -231,8 +251,6 @@ class Order extends Element
                         Constants::ORDER_STATUS_IN_PROGRESS,
                         Constants::ORDER_STATUS_IN_REVIEW,
                         Constants::ORDER_STATUS_IN_PREPARATION,
-                        Constants::ORDER_STATUS_GETTING_QUOTE,
-                        Constants::ORDER_STATUS_NEEDS_APPROVAL
                     ]
                 ],
                 'defaultSort' => ['dateOrdered', 'desc']
@@ -485,6 +503,16 @@ class Order extends Element
     }
 
     /**
+     * Returns array of element ids for an order. Ignores elements that are deleted
+     *
+     * @return array
+     */
+    public function getElementsId()
+    {
+        return array_keys($this->getElements());
+    }
+
+    /**
      * User in order details settings tab entry table
      */
     public function getEntryPreviewSettings($element)
@@ -679,7 +707,11 @@ class Order extends Element
                 $statusColour = 'purple';
                 break;
             case Constants::ORDER_STATUS_GETTING_QUOTE:
+                $statusColour = 'status-getting-quote';
+                break;
             case Constants::ORDER_STATUS_NEEDS_APPROVAL:
+                $statusColour = 'status-needs-approval';
+                break;
             case Constants::ORDER_STATUS_IN_PROGRESS:
             case Constants::ORDER_STATUS_IN_REVIEW:
                 $statusColour = 'orange';

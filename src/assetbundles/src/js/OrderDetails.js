@@ -97,8 +97,10 @@
 		if (haveDifferences(originalSourceSite, site.split(","))) return true;
 
 		// Validate Entries
-		$originalElementIds = $('#originalElementIds').val().split(',');
-		var currentElementIds = getEntryIds(false, true);
+        $originalElementIds = $('#originalElementIds').val();
+        // Check to prevent an array with empty string as value
+        $originalElementIds = $originalElementIds != '' ? $originalElementIds.split(',') : [];
+        var currentElementIds = getEntryIds(false, true);
 
 		if (haveDifferences($originalElementIds, currentElementIds)) return true;
 
