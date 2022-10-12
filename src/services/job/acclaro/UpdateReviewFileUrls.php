@@ -13,11 +13,11 @@ namespace acclaro\translations\services\job\acclaro;
 use acclaro\translations\Constants;
 use craft\queue\BaseJob;
 use acclaro\translations\services\api\AcclaroApiClient;
+use acclaro\translations\Translations;
 
 class UpdateReviewFileUrls extends BaseJob
 {
-    public $order;
-    public $sandboxMode;
+    public $orderId;
     public $settings;
 
     public function execute($queue): void
@@ -27,7 +27,7 @@ class UpdateReviewFileUrls extends BaseJob
             !empty($this->settings['sandboxMode'])
         );
 
-        $order = $this->order;
+        $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
 
         $totalElements = count($order->files);
         $currentElement = 0;
