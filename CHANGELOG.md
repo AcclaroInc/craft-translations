@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.0.3 - 2022-10-12
+
+### Fixed
+- Error On Submitting Order ([AcclaroInc#400](https://github.com/AcclaroInc/craft-translations/issues/400))
+
 ## 3.0.2 - 2022-10-04
 
 ### Added
