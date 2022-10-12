@@ -28,6 +28,15 @@
         {{ 'Download your log files and ' }}<a href="mailto:support@acclaro.com?subject={{subject}}&body={{body}}">send to Acclaro support</a>
     </div>
     <span class="light italic" style="font-style:italic;">{{'Remember to attach the downloaded logs!'}}</span>
+
+    {{ forms.dateField({
+        label: 'Logs will be downloaded for selected date'|t,
+        value: "now"|date('m/d/Y'),
+        name: 'requestedDate',
+        id: 'requestedDate',
+        size: 20,
+        placeholder: 'Optional',
+    }) }}
     <div class="buttons">
         <button type="submit" class="btn submit icon" data-icon="download" value="submit">{{ "Download logs"|t('app') }}</button>
     </div>

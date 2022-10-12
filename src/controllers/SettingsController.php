@@ -148,8 +148,25 @@ class SettingsController extends Controller
     public function actionDownloadLogs()
     {
         $this->requireLogin();
+        $this->requirePostRequest();
+
         if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
             return $this->redirect(Constants::URL_TRANSLATIONS, 302, true);
+        }
+
+        $requestedDate = Craft::$app->getRequest()->getBodyParam('requestedDate');
+
+        $requestedDate = is_array($requestedDate) ? $requestedDate['date'] ?? null : $requestedDate;
+
+        if (!$requestedDate) {
+            return $this->asFailure("Something went wrong with date");
+        }
+
+        $requestedDate = \DateTime::createFromFormat('n/j/Y', $requestedDate)->format('Y-m-d');
+        $errors = \DateTime::getLastErrors();
+
+        if (($errors['warning_count'] + $errors['error_count']) > 0) {
+            return $this->asFailure("Please select a valid date");
         }
 
         $zipName = 'logs';
@@ -169,8 +186,12 @@ class SettingsController extends Controller
         }
 
         $logFiles = array_diff(scandir(Craft::$app->path->getLogPath()), array('.', '..'));
+        $zipHasFiles = false;
 
         foreach ($logFiles as $key => $file) {
+            // Skip if file is of some other date than requested
+            if (!str_contains($file, $requestedDate)) continue;
+
             $file_contents = file_get_contents(Craft::$app->path->getLogPath() .'/'. $file);
 
             if (!$zip->addFromString($file, $file_contents))
@@ -179,6 +200,8 @@ class SettingsController extends Controller
                 $errors[] = $error;
                 Translations::$plugin->logHelper->log('['. __METHOD__ .'] ' . $error, Constants::LOG_LEVEL_ERROR);
             }
+
+            $zipHasFiles = true;
         }
 
         // Close zip
@@ -188,6 +211,8 @@ class SettingsController extends Controller
         {
             return $errors;
         }
+
+        if (!$zipHasFiles) return $this->asSuccess("No logs found for selected date");
 
         if (!is_file($zipDest) || !Path::ensurePathIsContained($zipDest)) {
             throw new NotFoundHttpException(Craft::t('app', 'Invalid file name: {filename}', [

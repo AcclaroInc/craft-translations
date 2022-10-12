@@ -1000,3 +1000,13 @@ td.target{
     border-top-left-radius: 5px !important;
     border-bottom-left-radius: 5px !important;
 }
+
+.status-getting-quote {
+    background-color: #FFCCCC;
+    border: none;
+}
+
+.status-needs-approval {
+    background-color: #EF8686;
+    border: none;
+}

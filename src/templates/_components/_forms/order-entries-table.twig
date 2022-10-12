@@ -125,7 +125,7 @@
 <div class="field {{ isEditable }}" data-position="left" data-colspan="1">
     <div class="buttons flex">
         <div class="submit">
-            <input type="hidden" id="originalElementIds" value="{{ order.elementIds|json_decode()|join(',') }}">
+            <input type="hidden" id="originalElementIds" value="{{ order.elementsId|join(',') }}">
             <button type="button" class="btn add icon dashed addEntries">{{ 'Add an entry'|t }}</button>
         </div>
     </div>
