@@ -1144,7 +1144,7 @@ class OrderController extends Controller
             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                 $job = Craft::$app->queue->push(new SyncOrder([
                     'description' => 'Syncing order '. $order->title,
-                    'order' => $order
+                    'orderId' => $order->id
                 ]));
 
                 if ($job) {
@@ -1205,7 +1205,7 @@ class OrderController extends Controller
                 if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                     $job = Craft::$app->queue->push(new SyncOrder([
                         'description' => 'Syncing order '. $order->title,
-                        'order' => $order
+                        'orderId' => $order->id
                     ]));
                 } else {
                     $this->service->syncOrder($order);

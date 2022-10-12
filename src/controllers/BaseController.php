@@ -347,7 +347,7 @@ class BaseController extends Controller
             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
                 $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
                     'description' => 'Regenerating preview urls for '. $order->title,
-                    'order' => $order,
+                    'orderId' => $order->id,
                     'filePreviewUrls' => $filePreviewUrls,
                     'files' => $files,
                 ]));

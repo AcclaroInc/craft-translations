@@ -196,8 +196,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         $job = Craft::$app->queue->push(new SendOrder([
             'description' => Constants::JOB_ACCLARO_SENDING_ORDER,
-            'order' => $order,
-            'sandboxMode' => $this->sandboxMode,
+            'orderId' => $order->id,
             'settings' => $this->settings
         ]));
 
@@ -209,10 +208,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateReviewFileUrls(Order $order)
     {
-        $job = Craft::$app->queue->push(new UpdateReviewFileUrls([
+        Craft::$app->queue->push(new UpdateReviewFileUrls([
             'description' => Constants::JOB_ACCLARO_UPDATING_REVIEW_URL,
-            'order' => $order,
-            'sandboxMode' => $this->sandboxMode,
+            'orderId' => $order->id,
             'settings' => $this->settings
         ]));
     }
