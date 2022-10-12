@@ -15,12 +15,14 @@ use acclaro\translations\Translations;
 
 class SyncOrder extends BaseJob
 {
-    public $order;
+    public $orderId;
+    public $title;
 
     public function execute($queue): void
     {
-
-        Translations::$plugin->orderRepository->syncOrder($this->order, $queue);
+        $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
+        $this->title = $order->title;
+        Translations::$plugin->orderRepository->syncOrder($order, $queue);
     }
 
     public function updateProgress($queue, $progress) {
@@ -29,6 +31,6 @@ class SyncOrder extends BaseJob
 
     protected function defaultDescription(): ?string
     {
-        return 'Syncing order '. $this->order->title;
+        return 'Syncing order '. $this->title;
     }
 }

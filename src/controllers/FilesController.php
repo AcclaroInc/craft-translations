@@ -387,6 +387,7 @@ class FilesController extends Controller
                 $this->showUserMessages("The file you are trying to import is empty.");
             }
         } catch (\Exception $exception) {
+            Translations::$plugin->logHelper->log($exception, Constants::LOG_LEVEL_ERROR);
             $this->showUserMessages($exception->getMessage());
         }
     }
