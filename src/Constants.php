@@ -4,7 +4,7 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.4.1';
+    const PLUGIN_SCHEMA_VERSION = '1.4.2';
     const CRAFT_MIN_VERSION = '4.0.0';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
@@ -155,6 +155,7 @@ class Constants
     const TABLE_TRANSLATIONS        = '{{%translations_translations}}';
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
+    const TABLE_COMMERCE_DRAFT      = '{{%translations_commercedrafts}}';
 
     // Job Descriptions
     const JOB_ACCLARO_UPDATING_REVIEW_URL   = 'Updating Acclaro review urls';

@@ -76,11 +76,10 @@
                                     {% if file.hasPreview or isCraftCommerce %}
                                         {% set fileId = 'file_' ~ file.id %}
 
-                                            <a id="{{ fileId }}" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                        <a id="{{ fileId }}" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 
                                         {% js %}
                                             {% if element.className == constant('acclaro\\translations\\Constants::CLASS_COMMERCE_PRODUCT') %}
-                                                {% set hasCommerce = true %}
                                                 new Craft.Translations.CommercePreview({{ file.filePreviewSettings('#'~ fileId)|json_encode|raw }});
                                             {% else %}
                                                 new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.filePreviewSettings|json_encode|raw }});

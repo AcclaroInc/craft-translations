@@ -24,6 +24,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\CreateDrafts;
+use craft\commerce\elements\Product;
 
 class DraftRepository
 {
@@ -76,6 +77,17 @@ class DraftRepository
 
                     if ($success) {
                         $globalSetDraftRepo->deleteDraft($draft);
+                    }
+                    break;
+                case Product::class:
+                    $commerceRepository = Translations::$plugin->commerceRepository;
+
+                    // keep original global set name
+                    // $draft->name = $element->name;
+                    $success = $commerceRepository->publishDraft($draft);
+
+                    if ($success) {
+                        $commerceRepository->deleteDraft($draft);
                     }
                     break;
                 default:
@@ -193,8 +205,7 @@ class DraftRepository
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
             } else {
-                $isNewDraft = true;
-                $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+                $isNewDraft = $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
             }
 
             try {
@@ -242,6 +253,9 @@ class DraftRepository
 		$element = $element->getIsDraft() ? $element->getCanonical() : $element;
 
         switch (get_class($element)) {
+            case Product::class:
+                $draft = Translations::$plugin->commerceRepository->createDraft($element, $site, $order->title);
+                break;
             case GlobalSet::class:
                 $draft = Translations::$plugin->globalSetDraftRepository->createDraft($element, $site, $order->title);
                 break;
@@ -274,7 +288,7 @@ class DraftRepository
 
             Translations::$plugin->fileRepository->saveFile($file);
 
-            return $file;
+            return $draft;
         } catch (Exception $e) {
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not create draft Error: ' .$e->getMessage()));
             $file->orderId = $order->id;

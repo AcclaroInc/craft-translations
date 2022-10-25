@@ -16,6 +16,7 @@ use craft\elements\Asset;
 use craft\elements\Entry;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
+use acclaro\translations\Constants;
 use craft\commerce\elements\Product;
 
 use acclaro\translations\Translations;
@@ -65,8 +66,8 @@ class UrlGenerator
 
         if ($element instanceof GlobalSet) {
             if ($file->draftId && $file->isComplete()) {
-                $url = sprintf('translations/globals/%s/drafts/%s?site=%s', $element->handle, $file->draftId, $data['site']);
-                return Translations::$plugin->urlHelper->cpUrl($url);
+                $url = sprintf('translations/globals/%s/drafts/%s', $element->handle, $file->draftId);
+                return Translations::$plugin->urlHelper->cpUrl($url, $data);
             }
             return preg_replace(
                 '/(\/'.Craft::$app->sites->getSiteById($element->siteId)->handle.')/',
@@ -77,12 +78,17 @@ class UrlGenerator
 
         if ($element instanceof Asset) {
             if ($file->draftId && $file->isComplete()) {
-                $url = sprintf('translations/assets/%s/drafts/%s?site=%s', $element->id, $file->draftId, $data['site']);
-                return Translations::$plugin->urlHelper->cpUrl($url);
+                $url = sprintf('translations/assets/%s/drafts/%s', $element->id, $file->draftId);
+                return Translations::$plugin->urlHelper->cpUrl($url, $data);
             }
-            return Translations::$plugin->urlHelper->url($element->getCpEditUrl(),
-                ['site' => $targetSite->handle]
-            );
+            return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), $data);
+        }
+
+        if ($element instanceof (Constants::CLASS_COMMERCE_PRODUCT) && $file->hasDraft() && $file->isComplete()) {
+            $data['draftId'] = $file->draftId;
+            $url = sprintf('translations/products/%s/%s-%s', $element->type, $element->id ,$element->slug);
+
+            return Translations::$plugin->urlHelper->cpUrl($url, $data);
         }
 
         if ($file->isPublished()) {
@@ -114,7 +120,7 @@ class UrlGenerator
 
     public function generateElementPreviewUrl(Element $element, $siteId = null)
     {
-        if ($element instanceof GlobalSet || $element instanceof Asset) {
+        if ($element instanceof GlobalSet || $element instanceof Asset || $element instanceof Product) {
             return '';
         }
 

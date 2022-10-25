@@ -29,6 +29,7 @@ use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
 use acclaro\translations\services\translator\AcclaroTranslationService;
+use craft\commerce\elements\Product;
 
 class OrderRepository
 {
@@ -498,6 +499,8 @@ class OrderRepository
             $draftElement = Translations::$plugin->categoryRepository->getDraftById($file->draftId, $file->targetSite);
         } else if ($element instanceof Asset) {
             $draftElement = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+        } else if ($element instanceof Product) {
+            $draftElement = Translations::$plugin->commerceRepository->getDraftById($file->draftId);
         } else {
             $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }

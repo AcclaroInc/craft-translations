@@ -90,6 +90,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             case $element instanceof GlobalSet:
                 $elementRepository = Translations::$plugin->globalSetDraftRepository;
                 break;
+            case $element instanceof Product:
+                $elementRepository = Translations::$plugin->commerceRepository;
+                break;
             default:
                 $elementRepository = Translations::$plugin->draftRepository;
         }
@@ -141,12 +144,16 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     return false;
                 }
                 break;
+            // Updated Craft Commerce Product Drafts
             case $draft instanceof Product:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
+
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
                 $draft->setFieldValues($post);
                 $draft->siteId = $targetSite;
 
-                $res = Translations::$plugin->commerceRepository->saveDraft($draft);
+                $res = Translations::$plugin->commerceRepository->saveDraft($draft, $post);
                 if ($res !== true) {
                     if (is_array($res)) {
                         $errorMessage = '';
@@ -164,6 +171,7 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
                     return false;
                 }
+                break;
             default:
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;

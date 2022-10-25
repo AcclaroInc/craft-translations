@@ -21,6 +21,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
+use craft\commerce\elements\Product;
 
 class FileRepository
 {
@@ -595,6 +596,9 @@ class FileRepository
                     break;
                 case Asset::class:
                     $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+                    break;
+                case Product::class:
+                    $draft = Translations::$plugin->commerceRepository->getDraftById($file->draftId);
                     break;
                 default:
                     $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
