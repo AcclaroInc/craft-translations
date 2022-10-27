@@ -119,10 +119,6 @@ class CommerceController extends BaseController
             $this->redirect($draft->getCpEditUrl(), 302, true);
         } else {
             Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t save draft.'));
-
-            Craft::$app->urlManager->setRouteParams(array(
-                'commerce' => $draft
-            ));
         }
     }
 
@@ -186,11 +182,6 @@ class CommerceController extends BaseController
             } else {
                 Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
                 $transaction->rollBack();
-
-                //TODO: Send the draft back to the template
-                Craft::$app->urlManager->setRouteParams(array(
-                    'commerce' => $draft
-                ));
             }
         } catch (\Exception $e) {
             $transaction->rollBack();

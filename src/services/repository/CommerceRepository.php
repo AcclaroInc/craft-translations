@@ -53,9 +53,10 @@ class CommerceRepository
 
         $commerceData = json_decode($record['data'], true);
         $fieldContent = isset($commerceData['fields']) ? $commerceData['fields'] : null;
+        $product = $this->getProductById($commerceDraft->productId, $commerceDraft->site);
 
         if ($fieldContent) {
-            $post = array();
+            $post = $product->getSerializedFieldValues();
 
             foreach ($fieldContent as $fieldId => $fieldValue) {
                 $field = Craft::$app->fields->getFieldById($fieldId);
@@ -68,7 +69,6 @@ class CommerceRepository
             $commerceDraft->setFieldValues($post);
         }
         
-        $product = $this->getProductById($commerceDraft->productId, $commerceDraft->site);
         $commerceDraft->setVariants($product->getVariants(true));
 
         return $commerceDraft;
