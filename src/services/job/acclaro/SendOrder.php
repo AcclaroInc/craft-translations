@@ -16,14 +16,13 @@ use acclaro\translations\Translations;
 
 class SendOrder extends BaseJob
 {
-    public $order;
-    public $sandboxMode;
+    public $orderId;
     public $settings;
 
     public function execute($queue): void
     {
-
-        Translations::$plugin->orderRepository->sendAcclaroOrder($this->order, $this->settings, $queue);
+        $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
+        Translations::$plugin->orderRepository->sendAcclaroOrder($order, $this->settings, $queue);
     }
 
     public function updateProgress($queue, $progress) {
