@@ -33,6 +33,8 @@ class CommerceDraftModel extends Product
 
     public $data;
 
+    public $variants;
+
     /**
      * @param array $attributes
      */
@@ -48,7 +50,7 @@ class CommerceDraftModel extends Product
     public function rules(): array
     {
         $rules = parent::rules();
-        $rules[] = [['name', 'productId', 'site', 'data', 'title', 'typeId'], 'required'];
+        $rules[] = [['name', 'productId', 'site', 'data', 'variants', 'title', 'typeId'], 'required'];
         $rules[] = ['site', SiteIdValidator::class];
         $rules[] = [['dateCreated', 'dateUpdated'], DateTimeValidator::class];
         $rules[] = ['enabled', 'default', 'value' => true];
@@ -68,39 +70,6 @@ class CommerceDraftModel extends Product
     public function getHandle()
     {
         return $this->getProduct()->handle;
-    }
-
-    public static function populateModel($attributes)
-    {
-        if ($attributes instanceof CommerceDraftRecord) {
-            $attributes = $attributes->getAttributes();
-        }
-
-        $productData = json_decode($attributes['data'], true);
-        $fieldContent = isset($productData['fields']) ? $productData['fields'] : null;
-        $attributes['id'] = $attributes['productId'];
-
-        $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'productId')));
-
-        $attributes = array_merge($attributes, $productData);
-
-        $draft = parent::setAttributes($attributes);
-
-        if ($fieldContent) {
-            $post = array();
-
-            foreach ($fieldContent as $fieldId => $fieldValue) {
-                $field = Craft::$app->fields->getFieldById($fieldId);
-
-                if ($field) {
-                    $post[$field->handle] = $fieldValue;
-                }
-            }
-
-            $draft->setFieldValues($post);
-        }
-
-        return $draft;
     }
 
     public function getProduct()

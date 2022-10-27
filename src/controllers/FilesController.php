@@ -538,7 +538,7 @@ class FilesController extends Controller
             $form = $element->getFieldLayout()->createForm($element, true);
             $html = $form->render();
         } catch(\Exception $e) {
-            Craft::error($e);
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
             return $this->asFailure(null, ['message' => "Error loading preview html."]);
         }
 

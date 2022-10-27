@@ -27,7 +27,7 @@ class CommerceRepository
 
         return $draft;
     }
-    
+
     public function getProductById($id, $site = null)
     {
         return Commerce::getInstance()->getProducts()->getProductById((int) $id, $site);
@@ -46,12 +46,14 @@ class CommerceRepository
             'productId',
             'typeId',
             'site',
+            'variants',
             'data'
         ]));
 
         $commerceDraft->draftId = $commerceDraft->id;
 
         $commerceData = json_decode($record['data'], true);
+        $variantData = json_decode($record['variant'], true);
         $fieldContent = isset($commerceData['fields']) ? $commerceData['fields'] : null;
         $product = $this->getProductById($commerceDraft->productId, $commerceDraft->site);
 
@@ -68,8 +70,25 @@ class CommerceRepository
 
             $commerceDraft->setFieldValues($post);
         }
-        
-        $commerceDraft->setVariants($product->getVariants(true));
+
+        $variants = $product->getVariants(true);
+
+        if (! empty($variantData)) {
+            foreach ($variants as $key => $variant) {
+                if (isset($variantData[$variant->id])) {
+                    $variant->title = $variantData[$variant->id]['title'];
+                    foreach ($variant->getFieldLayout()->getCustomFields() as $layoutField) {
+                        $field = Craft::$app->fields->getFieldById($layoutField->id);
+
+                        if (isset($variantData[$variant->id][$field->id])) {
+                            $variant->setFieldValue($field->handle, $variantData[$variant->id][$field->id]);
+                        }
+                    }
+                }
+                $variants[$key] = $variant;
+            }
+        }
+        $commerceDraft->setVariants($variants);
 
         return $commerceDraft;
     }
@@ -138,6 +157,27 @@ class CommerceRepository
         }
 
         $record->data = $data;
+        $data = [];
+        
+        if ($draft->getType()->hasVariants) {
+            $variants = $draft->getVariants(true);
+
+            foreach ($variants as $variant) {
+                if (isset($content['variant'][$variant->id])) {
+                    $data[$variant->id]['title'] = $content['variant'][$variant->id]['title'];
+                    foreach ($variant->getFieldLayout()->getCustomFields() as $layoutField) {
+                        $field = Craft::$app->fields->getFieldById($layoutField->id);
+                        
+                        if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
+                            $fieldData = $content['variant'][$variant->id][$field->handle] ?? null;
+                            
+                            if ($fieldData) $data[$variant->id][$field->id] = $fieldData;
+                        }
+                    }
+                }
+            }
+        }
+        $record->variant = $data;
 
         $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
 
@@ -222,11 +262,13 @@ class CommerceRepository
             $draft->siteId = $site;
             $draft->title  = $product->title;
             $draft->typeId = $product->getType()->id;
+            $draft->setVariants($product->getVariants(true));
 
             $post = Translations::$plugin->elementTranslator->toPostArray($product);
-
+            $variants = $post['variant'];
+            unset($post['variant']);
             $draft->setFieldValues($post);
-
+            $post['variant'] = $variants;
             $this->saveDraft($draft, $post);
 
             return $draft;

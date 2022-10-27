@@ -150,7 +150,10 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
 
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+                $variants = $post['variant'];
+                unset($post['variant']);
                 $draft->setFieldValues($post);
+                $post['variant'] = $variants;
                 $draft->siteId = $targetSite;
 
                 $res = Translations::$plugin->commerceRepository->saveDraft($draft, $post);

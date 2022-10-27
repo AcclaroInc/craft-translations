@@ -19,6 +19,7 @@ use craft\elements\Entry;
 use craft\elements\Category;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use craft\commerce\elements\Product;
 
 class ElementTranslator
 {
@@ -43,6 +44,24 @@ class ElementTranslator
             $source = array_merge($source, $fieldSource);
         }
 
+        if ($element instanceof Product && $element->getType()->hasVariants) {
+            $variants = $element->getVariants(true);
+
+            foreach ($variants as $variant) {
+                $variantSource = $this->toTranslationSource($variant, $sourceSite);
+                
+                // Add variant prefix to all variants keys
+                $variantSource = array_combine(array_map(
+                    function($key) use ($variant) {
+                        return sprintf("variant.%s.%s", $variant->id, $key);
+                    },
+                    array_keys($variantSource)
+                ), $variantSource);
+                
+                $source = array_merge($source, $variantSource);
+            }
+        }
+        
         return $source;
     }
 
@@ -166,6 +185,16 @@ class ElementTranslator
             $post = array_merge($post, $fieldPost);
         }
 
+        if ($element instanceof Product && $element->getType()->hasVariants) {
+            $variants = $element->getVariants(true);
+            $variantPost = [];
+            foreach ($variants as $variant) {
+                $variantPost[$variant->id] = $this->toPostArrayFromTranslationTarget($variant, $sourceSite, $targetSite, $targetData['variant'][$variant->id], $includeNonTranslatable);
+                $variantPost[$variant->id]['title'] = $targetData['title'] ?? $variant->title;
+            }
+            $post['variant'] = $variantPost;
+        }
+
         return $post;
     }
 
@@ -179,6 +208,16 @@ class ElementTranslator
             $fieldSource = $this->fieldToPostArray($element, $field);
 
             $source = array_merge($source, $fieldSource);
+        }
+
+        if ($element instanceof Product && $element->getType()->hasVariants) {
+            $variants = $element->getVariants(true);
+            $variantSource = [];
+            foreach ($variants as $variant) {
+                $variantSource[$variant->id] = $variant->getSerializedFieldValues();
+                $variantSource[$variant->id]['title'] = $variant->title;
+            }
+            $source['variant'] = $variantSource;
         }
 
         return $source;

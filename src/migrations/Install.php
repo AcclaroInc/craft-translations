@@ -126,6 +126,7 @@ class Install extends Migration
                     'typeId'        => $this->integer()->notNull(),
                     'site'          => $this->integer()->notNull(),
                     'data'          => $this->mediumText()->notNull(),
+                    'variants'      => $this->mediumText()->notNull(),
                     'dateCreated'   => $this->dateTime()->notNull(),
                     'dateUpdated'   => $this->dateTime()->notNull(),
                     'uid'           => $this->uid()

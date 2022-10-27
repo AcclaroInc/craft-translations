@@ -27,6 +27,7 @@ class m221020_062410_create_commerce_draft_table extends Migration
                 'typeId'        => $this->integer()->notNull(),
                 'site'          => $this->integer()->notNull(),
                 'data'          => $this->mediumText()->notNull(),
+                'variants'      => $this->mediumText()->notNull(),
                 'dateCreated'   => $this->dateTime()->notNull(),
                 'dateUpdated'   => $this->dateTime()->notNull(),
                 'uid'           => $this->uid()
