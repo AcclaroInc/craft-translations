@@ -13,7 +13,6 @@ namespace acclaro\translations\models;
 use Craft;
 use craft\commerce\elements\Product;
 use acclaro\translations\Translations;
-use acclaro\translations\records\CommerceDraftRecord;
 use craft\behaviors\CustomFieldBehavior;
 use craft\behaviors\DraftBehavior;
 use craft\behaviors\FieldLayoutBehavior;

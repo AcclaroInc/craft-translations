@@ -214,6 +214,7 @@ class CommerceRepository
 
         $product->title = $draft->title;
         $product->setFieldValues($post);
+        $product->setVariants($draft->getVariants(true));
 
         $success = Craft::$app->elements->saveElement($product);
 

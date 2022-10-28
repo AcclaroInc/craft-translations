@@ -37,7 +37,7 @@
                 $headinggroup.appendTo($btncontainer);
                 this.$btngroup.appendTo($inputgroup);
                 $inputgroup.appendTo($btncontainer);
-            } else {
+            } else if (this.isIndexScreen()) {
                 this.$btngroup.insertBefore('header#header > div:last');
             }
 
@@ -211,7 +211,10 @@
             }
         },
         isEditScreen: function() {
-            return $('form#main-form input[type=hidden][name=action][value="commerce/products/save-product"]').length > 0;
+            return $('form#main-form input[type=hidden][name=productId]').length > 0;
+        },
+        isIndexScreen: function () {
+            return $('form#main-form').length == 0;
         },
         updateSelectedEntries: function() {
             var entries = [];

@@ -103,7 +103,7 @@ class CommerceController extends BaseController
         $variables = $request->resolve()[1];
         $variants = $request->getBodyParam('variants') ?: [];
         $fields = $request->getBodyParam('fields') ?: [];
-        
+
         $draft = Translations::$plugin->commerceRepository->getDraftById($variables['draftId']);
         $draft->slug = $request->getBodyParam('slug');
         $draft->title = $request->getBodyParam('title', $draft->title);
@@ -112,6 +112,11 @@ class CommerceController extends BaseController
         $draft->updateTitle();
 
         $draft->setVariants($variants);
+        
+        foreach ($draft->getVariants(true) as $variant) {
+            $fields['variant'][$variant->id] = $variant->getSerializedFieldValues();
+            $fields['variant'][$variant->id]['title'] = $variant->title;
+        }
 
         if (Translations::$plugin->commerceRepository->saveDraft($draft, $fields)) {
             Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
