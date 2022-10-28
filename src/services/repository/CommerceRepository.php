@@ -177,7 +177,7 @@ class CommerceRepository
                 }
             }
         }
-        $record->variant = $data;
+        $record->variants = $data;
 
         $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
 
