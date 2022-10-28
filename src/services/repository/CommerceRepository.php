@@ -53,7 +53,7 @@ class CommerceRepository
         $commerceDraft->draftId = $commerceDraft->id;
 
         $commerceData = json_decode($record['data'], true);
-        $variantData = json_decode($record['variant'], true);
+        $variantData = json_decode($record['variants'], true);
         $fieldContent = isset($commerceData['fields']) ? $commerceData['fields'] : null;
         $product = $this->getProductById($commerceDraft->productId, $commerceDraft->site);
 
