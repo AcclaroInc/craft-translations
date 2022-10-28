@@ -81,9 +81,6 @@ class DraftRepository
                     break;
                 case Product::class:
                     $commerceRepository = Translations::$plugin->commerceRepository;
-
-                    // keep original global set name
-                    // $draft->name = $element->name;
                     $success = $commerceRepository->publishDraft($draft);
 
                     if ($success) {
