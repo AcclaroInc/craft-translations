@@ -20,8 +20,8 @@
         {% set registerDeltas = true %}
         {% for file in order.files %}
             {% set element = file.element(false) %}
-            {% set isCraftCommerce = element.className == constant('acclaro\\translations\\Constants::CLASS_COMMERCE_PRODUCT') %}
             {% if element is not null %}
+                {% set isCraftCommerce = element.className == constant('acclaro\\translations\\Constants::CLASS_COMMERCE_PRODUCT') %}
                 <tr data-word-count="{{ elementWordCounts[file.elementId] }}" data-element-id="{{ file.elementId }}" class="diff-clone" data-file-id="{{ file.id }}">
 
                     <td class="thin checkbox-cell translations-checkbox-cell file">
