@@ -81,6 +81,14 @@ class StaticTranslations extends Element
     }
 
     /**
+     * @inheritdoc
+     */
+    public static function sources(string $context): array
+    {
+        return static::defineSources($context);;
+    }
+
+    /**
      * @param string|null $context
      * @return array
      */
