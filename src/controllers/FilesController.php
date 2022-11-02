@@ -119,7 +119,7 @@ class FilesController extends Controller
 
                 /** Check if entry exists in target site for reference comparison */
                 if ($hasMisalignment && Translations::$plugin->elementRepository->getElementById($file->elementId, $file->targetSite)) {
-                    $tmFile = $file->getTmMisalignmentFile();
+                    $tmFile = $file->getTmMisalignmentFile($fileFormat);
                     $fileName = $tmFile['fileName'];
 
                     if ($order->includeTmFiles && $file->hasTmMisalignments(true)) {
@@ -442,6 +442,7 @@ class FilesController extends Controller
      */
     public function actionCreateTmExportZip() {
         $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
+        $format = Craft::$app->getRequest()->getBodyParam('format');
         $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
 
         try {
@@ -467,7 +468,7 @@ class FilesController extends Controller
                 foreach ($order->getFiles() as $file) {
                     if (! in_array($file->id, $files) || !$file->hasTmMisalignments()) continue;
 
-                    $tmFile = $file->getTmMisalignmentFile();
+                    $tmFile = $file->getTmMisalignmentFile($format);
                     $fileName = $tmFile['fileName'];
                     $fileContent = $tmFile['fileContent'];
 
@@ -495,6 +496,7 @@ class FilesController extends Controller
      */
     public function actionSyncTmFiles() {
         $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
+        $format = Craft::$app->getRequest()->getBodyParam('format');
         $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
@@ -507,7 +509,7 @@ class FilesController extends Controller
                         $order->getTranslator()->getSettings()
                     );
 
-                    $translationService->sendOrderReferenceFile($order, $file);
+                    $translationService->sendOrderReferenceFile($order, $file, $format);
                 }
             }
         }
@@ -551,11 +553,11 @@ class FilesController extends Controller
 	 */
     private function showUserMessages($message, $isSuccess = false)
     {
-    	if ($isSuccess) {
-			Craft::$app->session->setNotice(Craft::t('app', $message));
-    	} else {
-    		Craft::$app->session->setError(Craft::t('app', $message));
-    	}
+        if ($isSuccess) {
+            Craft::$app->session->setNotice(Craft::t('app', $message));
+        } else {
+            Craft::$app->session->setError(Craft::t('app', $message));
+        }
     }
 
     /**
