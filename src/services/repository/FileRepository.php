@@ -21,6 +21,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
+use craft\commerce\elements\Product;
 
 class FileRepository
 {
@@ -511,7 +512,7 @@ class FileRepository
      *
      *@return array $settings
      */
-    public function getFilePreviewSettings(FileModel $file)
+    public function getFilePreviewSettings(FileModel $file, $trigger)
     {
         $settings = [];
         $element = $file->getElement(false);
@@ -519,30 +520,43 @@ class FileRepository
         if ($element) {
             $security = Craft::$app->getSecurity();
 
-            if ($previewTargets = $element->getPreviewTargets() ?? []) {
-                if ($file->hasDraft() && $file->isComplete()) {
-                    Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
-                } else {
-                    if ($element->getIsDraft()) {
-                        Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
+            if ($trigger) {
+                $settings = [
+                    'trigger' => $trigger,
+                    'previewUrl' => $element->getUrl(),
+                    'previewAction' => $security->hashData('commerce/products-preview/preview-product'),
+                    'previewParams' => [
+                        'typeId' => $element->typeId,
+                        'productId' => $element->id,
+                        'siteId' => $element->siteId,
+                    ]
+                ];
+            } else {
+                if ($previewTargets = $element->getPreviewTargets() ?? []) {
+                    if ($file->hasDraft() && $file->isComplete()) {
+                        Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
                     } else {
-                        Craft::$app->getSession()->authorize("previewElement:$element->id");
+                        if ($element->getIsDraft()) {
+                            Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
+                        } else {
+                            Craft::$app->getSession()->authorize("previewElement:$element->id");
+                        }
                     }
                 }
-            }
 
-            $settings = [
-                'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
-                'elementType' => get_class($element),
-                'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
-                'previewTargets' => $previewTargets,
-                'previewToken' => $security->generateRandomString() ?? null,
-                'siteId' => $file->targetSite,
-                'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
-            ];
+                $settings = [
+                    'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
+                    'elementType' => get_class($element),
+                    'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
+                    'previewTargets' => $previewTargets,
+                    'previewToken' => $security->generateRandomString() ?? null,
+                    'siteId' => $file->targetSite,
+                    'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
+                ];
 
-            if ($file->isComplete() || $element->getIsDraft()) {
-                $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
+                if ($file->isComplete() || $element->getIsDraft()) {
+                    $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
+                }
             }
         }
 
@@ -582,6 +596,9 @@ class FileRepository
                     break;
                 case Asset::class:
                     $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
+                    break;
+                case Product::class:
+                    $draft = Translations::$plugin->commerceRepository->getDraftById($file->draftId);
                     break;
                 default:
                     $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);

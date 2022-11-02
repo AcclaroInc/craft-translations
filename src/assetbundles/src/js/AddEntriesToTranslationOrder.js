@@ -175,7 +175,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         this.$btn.appendTo($btngroup);
 
-        ($('<div>').append(this.$menubtn)).appendTo($btngroup);
+        (this.$menubtn).appendTo($btngroup);
 
         this.$menubtn.on('click', function(e) {
             e.preventDefault();
@@ -286,8 +286,6 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         this.$createNewLink = $link;
 
         this.$menubtn.menubtn();
-
-        var self = this;
 
         $(document).on('click', '.elements .checkbox, .elements .selectallcontainer .btn', function() {
             setTimeout($.proxy(self.updateSelectedEntries, self), 100);

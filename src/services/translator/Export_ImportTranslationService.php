@@ -17,6 +17,7 @@ use craft\elements\GlobalSet;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
+use craft\commerce\elements\Product;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
@@ -89,6 +90,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             case $element instanceof GlobalSet:
                 $elementRepository = Translations::$plugin->globalSetDraftRepository;
                 break;
+            case $element instanceof Product:
+                $elementRepository = Translations::$plugin->commerceRepository;
+                break;
             default:
                 $elementRepository = Translations::$plugin->draftRepository;
         }
@@ -136,6 +140,37 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     $order->logActivity(
                         sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML for entry [%s]'), $element->title)
                     );
+
+                    return false;
+                }
+                break;
+            // Updated Craft Commerce Product Drafts
+            case $draft instanceof Product:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
+
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+                $variants = $post['variant'];
+                unset($post['variant']);
+                $draft->setFieldValues($post);
+                $post['variant'] = $variants;
+                $draft->siteId = $targetSite;
+
+                $res = Translations::$plugin->commerceRepository->saveDraft($draft, $post);
+                if ($res !== true) {
+                    if (is_array($res)) {
+                        $errorMessage = '';
+                        foreach ($res as $r) {
+                            $errorMessage .= implode('; ', $r);
+                        }
+                        $order->logActivity(
+                            Translations::$plugin->translator->translate('app', 'Error saving drafts content. Error: ' . $errorMessage)
+                        );
+                    } else {
+                        $order->logActivity(
+                            sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML for entry [%s]'), $element->title)
+                        );
+                    }
 
                     return false;
                 }

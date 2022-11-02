@@ -39,6 +39,7 @@ use acclaro\translations\base\PluginTrait;
 use acclaro\translations\assetbundles\EntryAssets;
 use acclaro\translations\assetbundles\CategoryAssets;
 use acclaro\translations\assetbundles\Assets;
+use acclaro\translations\assetbundles\CommerceAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\services\job\DeleteDrafts;
@@ -368,9 +369,10 @@ class Translations extends Plugin
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
 
-                    // Asset, Category, Global-set Controllers
+                    // Asset, Commerce, Global-set Controllers
                     'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/global-set/edit-draft',
+                    'translations/products/<productTypeHandle:{handle}>/<productId:\d+><slug:(?:-[^\/]*)?>' => 'translations/commerce/edit-draft',
                 ]);
             }
         );
@@ -383,6 +385,11 @@ class Translations extends Plugin
 
         if (preg_match('#^entries(/|$)#', $path)) {
             $this->_includeEntryResources();
+        }
+
+        // Only matches for commerce products
+        if (preg_match('#^commerce/products(/|$)#', $path)) {
+            $this->_includeCommerceResources();
         }
 
         if (preg_match('#^categories(/|$)#', $path, $match)) {
@@ -427,6 +434,42 @@ class Translations extends Plugin
         $numberOfCompleteOrders = count(self::$plugin->orderRepository->getCompleteOrders());
         self::$view->registerJs("$(function(){ Craft.Translations });");
         self::$view->registerJs("$(function(){ Craft.Translations.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
+    }
+
+    /**
+     * Register translations functionality into craft commerce
+     */
+    private function _includeCommerceResources()
+    {
+        $orders = array();
+        $openOrders = array();
+
+        foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
+            $orders[] = array(
+                'id' => $order->id,
+                'title' => $order->title,
+            );
+        }
+
+        foreach (self::$plugin->orderRepository->getOpenOrders() as $order) {
+            $openOrders[] = array(
+                'id' => $order->id,
+                'sourceSite' => $order->sourceSite,
+                'elements' => json_decode($order->elementIds, true),
+            );
+        }
+
+        $data = [
+            'orders' => $orders,
+            'openOrders' => $openOrders,
+            'sites' => Craft::$app->sites->getAllSiteIds(),
+            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus(Constants::PLUGIN_HANDLE)
+        ];
+        $data = json_encode($data);
+
+        self::$view->registerAssetBundle(CommerceAssets::class);
+
+        self::$view->registerJs("$(function(){ Craft.Translations.AddTranslationsToCommerce.init({$data}); });");
     }
 
     private function _includeEntryResources()

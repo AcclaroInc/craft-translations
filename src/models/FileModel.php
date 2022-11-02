@@ -231,9 +231,9 @@ class FileModel extends Model
 		return $element;
 	}
 
-    public function getFilePreviewSettings()
+    public function getFilePreviewSettings($trigger = null)
     {
-        return $this->_service->getFilePreviewSettings($this);
+        return $this->_service->getFilePreviewSettings($this, $trigger);
     }
 
     public function getEntryPreviewSettings()
