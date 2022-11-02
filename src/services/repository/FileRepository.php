@@ -12,6 +12,7 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
+use DOMDocument;
 use craft\elements\Asset;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
@@ -608,33 +609,120 @@ class FileRepository
         return $draft;
     }
 
-    public function createReferenceData(array $data, $ignoreCommon = true)
+    public function createReferenceData(array $data, $forDownload = true)
     {
         $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
         $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
 
-        $tmContent = [[$targetLanguage]];
-
-        if ($ignoreCommon)
-            $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
-
         $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($data['sourceContent']), true)['content'] ?? [];
-
+        
         $target = Translations::$plugin->elementTranslator->toTranslationSource(
             $data['targetElement'],
             $data['targetElementSite']
         );
+        $tmContent = '';
+
+        if ($forDownload) {
+            switch ($data['format']) {
+                case Constants::FILE_FORMAT_XML:
+                    $tmContent = $this->referenceAsXml($sourceLanguage, $targetLanguage, $source, $target);
+                    break;
+                case Constants::FILE_FORMAT_JSON:
+                    $tmContent = $this->referenceAsJson($sourceLanguage, $targetLanguage, $source, $target);
+                    break;
+                default:
+                    $tmContent = $this->referenceAsCsv($sourceLanguage, $targetLanguage, $source, $target);
+            }
+        } else {
+            $tmContent = json_encode($this->referenceAsCsv($sourceLanguage, $targetLanguage, $source, $target, $forDownload));
+        }
+
+        return $tmContent;
+    }
+    
+    private function referenceAsCsv($sourceLanguage, $targetLanguage, $source, $target, $forDownload = true)
+    {
+        $tmContent = [[$targetLanguage]];
+        
+        if ($forDownload) {
+            $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
+        }
 
         foreach ($source as $key => $value) {
             $targetValue = $target[$key] ?? '';
-            if ($ignoreCommon) {
-                if ($value !== $targetValue)
+            if ($forDownload) {
+                if ($value !== $targetValue) {
                     $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $targetValue);
+                }
             } else {
                 $tmContent[] = [$targetValue];
             }
         }
 
-        return $ignoreCommon ? $tmContent : json_encode($tmContent);
+        return $tmContent;
+    }
+    
+    private function referenceAsJson($sourceLanguage, $targetLanguage, $source, $target)
+    {
+        $tmContent = [
+            "source-language"   => $sourceLanguage,
+            "target-language"   => $targetLanguage,
+            "content"           => []
+        ];
+
+        foreach ($source as $key => $value) {
+            $targetValue = $target[$key] ?? '';
+            $tmContent['content'][$sourceLanguage][$key] = $value;
+            $tmContent['content'][$targetLanguage][$key] = $targetValue;
+        }
+
+        return json_encode($tmContent);
+    }
+    
+    private function referenceAsXml($sourceLanguage, $targetLanguage, $source, $target)
+    {
+        $dom = new DOMDocument('1.0', 'utf-8');
+
+        $dom->formatOutput = true;
+
+        $xml = $dom->appendChild($dom->createElement('xml'));
+
+        $head = $xml->appendChild($dom->createElement('head'));
+        $langs = $head->appendChild($dom->createElement('langs'));
+        $langs->setAttribute('source-language', $sourceLanguage);
+        $langs->setAttribute('target-language', $targetLanguage);
+
+        $body = $xml->appendChild($dom->createElement('body'));
+        $sourceLang = $body->appendChild($dom->createElement('lang'));
+        $sourceLang->setAttribute('source-language', $sourceLanguage);
+        $targetLang = $body->appendChild($dom->createElement('lang'));
+        $targetLang->setAttribute('target-language', $targetLanguage);
+
+        foreach ($source as $key => $value) {
+            $translation = $dom->createElement('content');
+
+            $translation->setAttribute('resname', $key);
+
+            // Does the value contain characters requiring a CDATA section?
+            $text = 1 === preg_match('/[&<>]/', $value) ? $dom->createCDATASection($value) : $dom->createTextNode($value);
+
+            $translation->appendChild($text);
+
+            $sourceLang->appendChild($translation);
+            
+            $targetTranslation = $dom->createElement('content');
+            $value = $target[$key] ?? '';
+
+            $targetTranslation->setAttribute('resname', $key);
+
+            // Does the value contain characters requiring a CDATA section?
+            $text = 1 === preg_match('/[&<>]/', $value) ? $dom->createCDATASection($value) : $dom->createTextNode($value);
+
+            $targetTranslation->appendChild($text);
+
+            $targetLang->appendChild($targetTranslation);
+        }
+
+        return $dom->saveXML();
     }
 }

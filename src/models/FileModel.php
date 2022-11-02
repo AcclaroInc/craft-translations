@@ -259,7 +259,7 @@ class FileModel extends Model
         return false;
     }
 
-    public function getTmMisalignmentFile()
+    public function getTmMisalignmentFile($format = Constants::FILE_FORMAT_CSV)
     {
         $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
 
@@ -285,13 +285,14 @@ class FileModel extends Model
 
         $targetLang = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($targetSite)->language);
 
-        $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), Constants::FILE_FORMAT_CSV);
+        $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), $format);
 
         $TmData = [
             'sourceContent' => $source,
             'sourceElementSite' => $this->sourceSite,
             'targetElement' => $targetElement,
-            'targetElementSite' => $targetSite
+            'targetElementSite' => $targetSite,
+            'format' => $format
         ];
 
         return [
