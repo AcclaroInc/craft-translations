@@ -183,6 +183,14 @@ class Order extends Element
 
         return $actions;
     }
+    
+    /**
+     * @inheritdoc
+     */
+    public static function sources(string $context): array
+    {
+        return static::defineSources($context);;
+    }
 
     protected static function defineSources(string $context): array
     {
