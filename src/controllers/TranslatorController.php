@@ -11,7 +11,6 @@
 namespace acclaro\translations\controllers;
 
 use Craft;
-use craft\web\Controller;
 use yii\web\HttpException;
 
 use acclaro\translations\Constants;
@@ -22,7 +21,7 @@ use acclaro\translations\Translations;
  * @package   Translations
  * @since     1.0.0
  */
-class TranslatorController extends Controller
+class TranslatorController extends BaseController
 {
     /**
      * @return mixed
@@ -33,7 +32,7 @@ class TranslatorController extends Controller
         $this->requirePostRequest();
 
         if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:delete')) {
-            return $this->asFailure('User does not have permission to perform this action.', []);
+            return $this->asFailure($this->getErrorMessage('Error User does not have permission to perform this action.'), []);
         }
 
         $translatorIds = Craft::$app->getRequest()->getBodyParam('translatorIds');
@@ -43,7 +42,7 @@ class TranslatorController extends Controller
             $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
 
             if (!$translator) {
-                return $this->asFailure('Invalid translator.', []);
+                return $this->asFailure($this->getErrorMessage('Invalid translator.'), []);
             }
 
             // check if translator has any pending orders
@@ -52,13 +51,13 @@ class TranslatorController extends Controller
             $pendingOrdersCount = count($pendingOrders);
     
             if ($pendingOrdersCount > 0) {
-                return $this->asFailure('The translator cannot be deleted as orders have been created already.', []);
+                return $this->asFailure($this->getErrorMessage('The translator cannot be deleted as orders have been created already.'), []);
             }
     
             Translations::$plugin->translatorRepository->deleteTranslator($translator);
         }
 
-        $this->setSuccessFlash('Translators deleted.');
+        $this->setSuccess('Translators deleted.');
 
         return $this->asSuccess(null, []);
     }
@@ -80,18 +79,18 @@ class TranslatorController extends Controller
         if ($translatorId) {
 
             if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:edit')) {
-                return $this->asFailure(Translations::$plugin->translator->translate('app', 'User is not permitted for this operation.'));
+                return $this->asFailure($this->getErrorMessage('User is not permitted for this operation.'));
             }
 
             $translator = Translations::$plugin->translatorRepository->getTranslatorById($translatorId);
 
             if (!$translator) {
                 // throw new HttpException(400, 'Invalid Translator');
-                return $this->asFailure(Translations::$plugin->translator->translate('app', 'Invalid Translator'));
+                return $this->asFailure($this->getErrorMessage('Invalid Translator.'));
             }
         } else {
             if (!Translations::$plugin->userRepository->userHasAccess('translations:translator:create')) {
-                return $this->asFailure(Translations::$plugin->translator->translate('app', 'User is not permitted to create new translator.'));
+                return $this->asFailure($this->getErrorMessage('User is not permitted to create new translator.'));
             }
             $translator = Translations::$plugin->translatorRepository->makeNewTranslator();
         }
@@ -112,7 +111,7 @@ class TranslatorController extends Controller
             if (! $auth) {
                 $translator->status = "";
                 $variables['translator'] = $translator;
-                $this->setFailFlash(Translations::$plugin->translator->translate('app', 'Api token could not be authenticated.'));
+                $this->setError('Api token could not be authenticated.');
                 return $this->renderTemplate('translations/translators/_detail', $variables);
             }
         }
@@ -121,7 +120,7 @@ class TranslatorController extends Controller
         Translations::$plugin->translatorRepository->saveTranslator($translator);
 
         $redirectTo = $isContinue ? 'translations/translators/new' : 'translations/translators';
-        return $this->asSuccess('Translator saved.', [], $redirectTo);
+        return $this->asSuccess($this->getSuccessMessage('Translator saved.'), [], $redirectTo);
     }
 
     /**

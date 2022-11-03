@@ -10,13 +10,13 @@
 
 namespace acclaro\translations\controllers;
 
-use acclaro\translations\Constants;
 use Craft;
 use craft\helpers\Path;
-use craft\web\Controller;
 use yii\web\UploadedFile;
 use craft\helpers\StringHelper;
 use yii\web\NotFoundHttpException;
+
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\StaticTranslations;
 
@@ -25,7 +25,7 @@ use acclaro\translations\elements\StaticTranslations;
  * @package   Translations
  * @since     1.0.0
  */
-class StaticTranslationsController extends Controller
+class StaticTranslationsController extends BaseController
 {
     /**
      * @return mixed
@@ -54,7 +54,7 @@ class StaticTranslationsController extends Controller
 
         Translations::$plugin->staticTranslationsRepository->set($lang, $translations);
 
-        return $this->asSuccess('Static Translations saved.', [
+        return $this->asSuccess($this->getSuccessMessage('Static Translations saved.'), [
             'success' => true,
             'errors' => []
         ]);
@@ -140,7 +140,7 @@ class StaticTranslationsController extends Controller
 
             // validate file
             if (!$this->validateFile($file)) {
-                Craft::$app->getSession()->setError(Craft::t('app', 'Invalid file type'));
+                $this->setError('Invalid file type.');
             } else {
 
                 $rows = [];
@@ -155,13 +155,13 @@ class StaticTranslationsController extends Controller
 
                 if ($rows) {
                     Translations::$plugin->staticTranslationsRepository->set($site->language, $rows);
-                    Craft::$app->getSession()->setNotice(Craft::t('app', 'Translations imported successfully'));
+                    $this->setSuccess('Translations imported successfully.');
                 } else {
-                    Craft::$app->getSession()->setError(Craft::t('app', 'No translation imported'));
+                    $this->setError('No translation imported.');
                 }
             }
         }  catch (\Exception $e) {
-            Craft::$app->getSession()->setError(Craft::t('app', 'Error: '.$e->getMessage()));
+            $this->setError($e->getMessage());
         }
 
     }

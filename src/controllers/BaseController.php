@@ -15,6 +15,7 @@ use craft\web\Controller;
 use craft\elements\Entry;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\Services;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
 
@@ -25,6 +26,8 @@ use acclaro\translations\services\job\RegeneratePreviewUrls;
  */
 class BaseController extends Controller
 {
+    use AlertsTrait;
+
     /**
      * @var    array|int|bool Allows anonymous access to this controller's actions.
      * @access protected
@@ -183,47 +186,12 @@ class BaseController extends Controller
         Craft::$app->end('OK');
     }
 
-    public function logIncomingRequest($endpoint)
-    {
-        $headers = Craft::$app->response->getHeaders();
-
-        $request = sprintf(
-            "%s %s %s\n",
-            $_SERVER['REQUEST_METHOD'],
-            $_SERVER['REQUEST_URI'],
-            $_SERVER['SERVER_PROTOCOL']
-        );
-
-        foreach ($headers as $key => $value) {
-            $request .= "{$key}: {$value[0]}\n";
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $request .= "\n".http_build_query($_POST);
-        }
-
-        $tempPath = Craft::$app->getPath()->getTempPath().'/translations';
-
-        if (!is_dir($tempPath)) {
-            mkdir($tempPath);
-        }
-
-        $filename = 'request-'.$endpoint.'-'.date('YmdHis').'.txt';
-
-        $filePath = $tempPath.'/'.$filename;
-
-        $handle = fopen($filePath, 'w+');
-
-        fwrite($handle, $request);
-
-        fclose($handle);
-    }
-
     public function actionAddElementsToOrder()
     {
         $this->requireLogin();
         $this->requirePostRequest();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:create')) {
+            $this->setNotice("User doesn't have permission to add elements to this order.");
             return;
         }
 
@@ -231,21 +199,20 @@ class BaseController extends Controller
 
         $sourceSite = Craft::$app->getRequest()->getParam('sourceSite');
 
-
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         if (!$order) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Invalid Order'));
+            $this->setError('Invalid Order.');
             return;
         }
 
         if (!Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Source site is not supported'));
+            $this->setError('Source site is not supported.');
             return;
         }
 
         if ((int) $order->sourceSite !== (int) $sourceSite) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'All entries within an order must have the same source site'));
+            $this->setError('All entries within an order must have the same source site.');
             return;
         }
 
@@ -276,12 +243,12 @@ class BaseController extends Controller
 
                         if (!$hasTargetSites) {
                             $message = sprintf(
-                                Translations::$plugin->translator->translate('app', "The target site(s) on this order are not available for the entry “%s”. Please check your settings in in Sections > %s."),
+                                "The target site(s) on this order are not available for the entry “%s”. Please check your settings in in Sections > %s.",
                                 $element->title,
                                 $element->section->name
                             );
 
-                            Craft::$app->getSession()->setError($message);
+                            $this->setError($message);
                             return;
                         }
                     }
@@ -308,7 +275,7 @@ class BaseController extends Controller
             Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t save the order', Constants::LOG_LEVEL_ERROR );
         }
 
-        Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Added to order.'));
+        $this->setSuccess('Added to order.');
 
         $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
     }
@@ -318,7 +285,7 @@ class BaseController extends Controller
         $this->requireLogin();
         $this->requirePostRequest();
         if (!Translations::$plugin->userRepository->userHasAccess('translations:orders:edit')) {
-            Craft::$app->getSession()->setNotice('User does have permission to regenerate preview urls.');
+            $this->setNotice('User does have permission to regenerate preview urls.');
             return;
         }
 
@@ -334,8 +301,7 @@ class BaseController extends Controller
         $authenticate = (new Services())->authenticateService($service, $settings);
 
         if (!$authenticate && $service === Constants::TRANSLATOR_ACCLARO) {
-            $message = Translations::$plugin->translator->translate('app', 'Invalid API key');
-            Craft::$app->getSession()->setError($message);
+            $this->setError('Invalid API key');
             return;
         }
 
@@ -353,7 +319,7 @@ class BaseController extends Controller
                 ]));
 
                 if ($job) {
-                    Craft::$app->getSession()->set('importQueued', "1");
+                    $this->set('importQueued', "1");
                     $params = [
                         'id' => (int) $job,
                         'notice' => 'Done building draft previews',
@@ -365,8 +331,45 @@ class BaseController extends Controller
                 }
             } else {
                 Translations::$plugin->fileRepository->regeneratePreviewUrls($order, $filePreviewUrls, $files);
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app',  'Done building draft previews'));
+                $this->setSuccess( 'Done building draft previews.');
             }
         }
+    }
+
+    // PRIVATE METHODS
+    private function logIncomingRequest($endpoint)
+    {
+        $headers = Craft::$app->response->getHeaders();
+
+        $request = sprintf(
+            "%s %s %s\n",
+            $_SERVER['REQUEST_METHOD'],
+            $_SERVER['REQUEST_URI'],
+            $_SERVER['SERVER_PROTOCOL']
+        );
+
+        foreach ($headers as $key => $value) {
+            $request .= "{$key}: {$value[0]}\n";
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $request .= "\n" . http_build_query($_POST);
+        }
+
+        $tempPath = Craft::$app->getPath()->getTempPath() . '/translations';
+
+        if (!is_dir($tempPath)) {
+            mkdir($tempPath);
+        }
+
+        $filename = 'request-' . $endpoint . '-' . date('YmdHis') . '.txt';
+
+        $filePath = $tempPath . '/' . $filename;
+
+        $handle = fopen($filePath, 'w+');
+
+        fwrite($handle, $request);
+
+        fclose($handle);
     }
 }

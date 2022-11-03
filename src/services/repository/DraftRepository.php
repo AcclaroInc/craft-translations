@@ -16,18 +16,21 @@ use craft\elements\Asset;
 use craft\elements\Entry;
 use craft\elements\GlobalSet;
 use yii\web\NotFoundHttpException;
+use craft\commerce\elements\Product;
 use craft\errors\InvalidElementException;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\CreateDrafts;
-use craft\commerce\elements\Product;
 
 class DraftRepository
 {
+    use AlertsTrait;
+
     public function getDraftById($draftId, $siteId)
     {
         $draft = Entry::find()
@@ -164,7 +167,7 @@ class DraftRepository
             // Apply the draft to the entry
             $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
         } catch (InvalidElementException $e) {
-            Craft::$app->getSession()->setError(Craft::t('app', 'Couldn’t publish draft.'));
+            $this->setError('Couldn’t publish draft.');
             // Send the draft back to the template
             Craft::$app->getUrlManager()->setRouteParams([
                 'entry' => $draft
