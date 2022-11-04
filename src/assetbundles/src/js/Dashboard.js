@@ -359,7 +359,7 @@
                             this.$settingsErrorList = null;
                         }
 
-                        Craft.cp.displaySuccess(Craft.t('app', 'Widget saved.'));
+                        Craft.cp.displaySuccess(Craft.t('app', 'Success: Widget saved.'));
 
                         // Make sure the widget is still allowed to be shown, just in case
                         if (!response.data.info) {
@@ -375,7 +375,7 @@
                             this.$settingsErrorList.remove();
                             this.$settingsErrorList = null;
                         }
-                        Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
+                        Craft.cp.displayError(Craft.t('app', 'Error: Couldn’t save widget.'));
 
                         if (response.data.errors) {
                             this.$settingsErrorList = Craft.ui.createErrorList(response.data.errors)
@@ -612,11 +612,11 @@
 
                 Craft.sendActionRequest('POST', 'translations/widget/change-widget-colspan', {data: params})
                     .then((response) => {
-                        Craft.cp.displaySuccess(Craft.t('app', 'Widget saved.'));
+                        Craft.cp.displaySuccess(Craft.t('app', 'Success: Widget saved.'));
                         location.reload();
                     })
                     .catch(() => {
-                        Craft.cp.displayError(Craft.t('app', 'Couldn’t save widget.'));
+                        Craft.cp.displayError(Craft.t('app', 'Error: Couldn’t save widget.'));
                     })
             }
         });

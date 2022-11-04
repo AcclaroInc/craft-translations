@@ -598,7 +598,7 @@ class WidgetController extends BaseController
         ];
 
         return $this->asSuccess(data: [
-            'info' => $this->getSuccessMessage($info),
+            'info' => $info,
             'additionalInfo' => $additionalInfo,
             'headHtml' => $view->getHeadHtml(),
             'footHtml' => $view->getBodyHtml(),
