@@ -1422,7 +1422,7 @@ class OrderController extends BaseController
 
                     if (!in_array($element->id, $changeLog)) {
                         array_push($changeLog, $element->id);
-                        $order->logActivity(Translations::$plugin->translator->translate('app', "Source content updated [$element->title]."));
+                        $order->logActivity(Translations::$plugin->translator->translate('app', "Source content updated {$element->title}."));
                     }
 
                     if ($isDefaultTranslator && !$order->isModified()) {
