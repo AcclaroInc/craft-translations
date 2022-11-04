@@ -244,7 +244,7 @@ class ImportFiles extends BaseJob
                 }
             }
         } catch(Exception $e) {
-            $this->orderLog($e->getMessage());
+            $this->orderLog('Error processing XML file. Error: ' . $e->getMessage());
             return false;
         }
 
@@ -269,7 +269,7 @@ class ImportFiles extends BaseJob
 
         if (in_array($elementId, $this->discardElements)) {
             $this->orderLog(sprintf(
-                "File {%s} has source entry changes, please update source..",
+                "File {%s} has source entry changes, please update source.",
                 $this->assetName($asset)
             ));
             return false;
@@ -488,7 +488,7 @@ class ImportFiles extends BaseJob
                 }
             }
         } catch(Exception $e) {
-            $this->orderLog(sprintf($e->getMessage()));
+            $this->orderLog('Invalid XML file. Error: ' . sprintf($e->getMessage()));
             return true;
         }
 

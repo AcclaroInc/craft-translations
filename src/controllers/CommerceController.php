@@ -11,17 +11,19 @@
 
 namespace acclaro\translations\controllers;
 
-use acclaro\translations\Constants;
 use Craft;
-use acclaro\translations\Translations;
+use craft\commerce\Plugin;
 use craft\commerce\elements\Product;
 use craft\commerce\helpers\DebugPanel;
-use craft\commerce\Plugin;
 use craft\commerce\web\assets\editproduct\EditProductAsset;
+
 use yii\web\ForbiddenHttpException;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+
+use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 
 /**
  * Class CommerceController will be used to process Craft Commerce Products/Variants
@@ -119,11 +121,11 @@ class CommerceController extends BaseController
         }
 
         if (Translations::$plugin->commerceRepository->saveDraft($draft, $fields)) {
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
+            $this->setSuccess('Draft saved.');
 
             $this->redirect($draft->getCpEditUrl(), 302, true);
         } else {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t save draft.'));
+            $this->setError('Couldn’t save draft.');
         }
     }
 
@@ -141,14 +143,14 @@ class CommerceController extends BaseController
         $draft = Translations::$plugin->commerceRepository->getDraftById($draftId);
 
         if (!$draft) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
         $product = Translations::$plugin->commerceRepository->getProductById($productId, $draft->site);
 
         if (!$product) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No product exists with the ID “{id}”.', array('id' => $draft->assetId)));
+            $this->setError("No product exists with the ID '{$draft->productId}'.");
             return;
         }
 
@@ -180,15 +182,16 @@ class CommerceController extends BaseController
             if (Translations::$plugin->commerceRepository->publishDraft($draft)) {
                 $this->redirect($product->getCpEditUrl(), 302, true);
 
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+                $this->setSuccess('Draft published.');
                 $transaction->commit();
 
                 return Translations::$plugin->commerceRepository->deleteDraft($draft);
             } else {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+                $this->setError('Couldn’t publish draft.');
                 $transaction->rollBack();
             }
         } catch (\Exception $e) {
+            $this->setError($e->getMessage());
             $transaction->rollBack();
         }
     }
@@ -206,7 +209,7 @@ class CommerceController extends BaseController
         $draft = Translations::$plugin->commerceRepository->getDraftById($draftId);
 
         if (!$draft) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
@@ -230,7 +233,7 @@ class CommerceController extends BaseController
             Translations::$plugin->orderRepository->saveOrder($order);
         }
 
-        Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
+        $this->setSuccess('Draft deleted.');
 
         return $this->redirect($url, 302, true);
     }

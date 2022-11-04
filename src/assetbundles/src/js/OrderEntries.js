@@ -312,7 +312,7 @@
 					diffHtml.show();
 				})
 				.catch(() => {
-					Craft.cp.displayNotice(Craft.t('app', response.error));
+					Craft.cp.displayError(Craft.t('app', response.error));
 				})
 				.finally(() => {
 					// Copy text to clipboard
@@ -598,7 +598,7 @@
 			Craft.sendActionRequest('POST', actions[action], {data: $data})
 				.then((response) => {
 					if (!isDefaultTranslator) {
-						Craft.cp.displayNotice('Translation memory files sent successfully.');
+						Craft.cp.displaySuccess('Translation memory files sent successfully.');
 						location.reload();
 					} else if (response.data.tmFiles) {
 						let $downloadForm = $('#regenerate-preview-urls');

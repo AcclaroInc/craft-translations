@@ -359,7 +359,7 @@
                             this.$settingsErrorList = null;
                         }
 
-                        Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
+                        Craft.cp.displaySuccess(Craft.t('app', 'Widget saved.'));
 
                         // Make sure the widget is still allowed to be shown, just in case
                         if (!response.data.info) {
@@ -612,7 +612,7 @@
 
                 Craft.sendActionRequest('POST', 'translations/widget/change-widget-colspan', {data: params})
                     .then((response) => {
-                        Craft.cp.displayNotice(Craft.t('app', 'Widget saved.'));
+                        Craft.cp.displaySuccess(Craft.t('app', 'Widget saved.'));
                         location.reload();
                     })
                     .catch(() => {

@@ -13,7 +13,6 @@ namespace acclaro\translations\controllers;
 use Craft;
 use yii\web\Response;
 use craft\helpers\Json;
-use craft\web\Controller;
 use craft\elements\Entry;
 use craft\helpers\UrlHelper;
 use craft\helpers\ArrayHelper;
@@ -33,7 +32,7 @@ use yii\web\BadRequestHttpException;
  * @package   Translations
  * @since     1.0.0
  */
-class WidgetController extends Controller
+class WidgetController extends BaseController
 {
     protected $service;
 
@@ -585,7 +584,7 @@ class WidgetController extends Controller
     {
         if (! $this->service->saveWidget($widget)) {
             return $this->asFailure(data: [
-                'errors' => $widget->getFirstErrors(),
+                'errors' => $this->getErrorMessage($widget->getFirstErrors()),
             ]);
         }
 
@@ -599,7 +598,7 @@ class WidgetController extends Controller
         ];
 
         return $this->asSuccess(data: [
-            'info' => $info,
+            'info' => $this->getSuccessMessage($info),
             'additionalInfo' => $additionalInfo,
             'headHtml' => $view->getHeadHtml(),
             'footHtml' => $view->getBodyHtml(),

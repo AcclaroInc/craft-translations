@@ -13,11 +13,10 @@
 namespace acclaro\translations\controllers;
 
 use Craft;
-use craft\web\Controller;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 
-class GlobalSetController extends Controller
+class GlobalSetController extends BaseController
 {
     /**
      * Edit Global Set Drafts
@@ -30,7 +29,7 @@ class GlobalSetController extends Controller
         $variables = $this->request->resolve()[1];
 
         if (empty($variables['globalSetHandle'])) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'globalSetHandle')));
+            $this->setError('Param “globalSetHandle” doesn’t exist.');
             return;
         }
 
@@ -45,7 +44,7 @@ class GlobalSetController extends Controller
         }
 
         if (!isset($variables['globalSets'][$variables['globalSetHandle']])) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Invalid global set handle'));
+            $this->setError('Invalid global set handle');
             return;
         }
 
@@ -89,7 +88,7 @@ class GlobalSetController extends Controller
         $globalSet = Translations::$plugin->globalSetRepository->getSetById($globalSetId, $site);
 
         if (!$globalSet) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No global set exists with the ID “{id}”.', array('id' => $globalSetId)));
+            $this->setError("No global set exists with the ID '{$globalSetId}'.");
             return;
         }
 
@@ -99,7 +98,7 @@ class GlobalSetController extends Controller
             $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
 
             if (!$draft) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+                $this->setError("No draft exists with the ID '{$draftId}'.");
                 return;
             }
         } else {
@@ -115,11 +114,11 @@ class GlobalSetController extends Controller
         }
 
         if (Translations::$plugin->globalSetDraftRepository->saveDraft($draft, $fields)) {
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
+            $this->setSuccess('Draft saved.');
 
             $this->redirect($draft->getCpEditUrl(), 302, true);
         } else {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t save draft.'));
+            $this->setError('Couldn’t save draft.');
 
             Craft::$app->urlManager->setRouteParams(array(
                 'globalSet' => $draft
@@ -142,14 +141,14 @@ class GlobalSetController extends Controller
         $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
         $globalSet = Translations::$plugin->globalSetRepository->getSetById($draft->globalSetId, $draft->site);
 
         if (!$globalSet) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No global set exists with the ID “{id}”.', array('id' => $draft->id)));
+            $this->setError("No global set exists with the ID '{$draft->id}'.");
             return;
         }
 
@@ -184,12 +183,12 @@ class GlobalSetController extends Controller
             if (Translations::$plugin->globalSetDraftRepository->publishDraft($draft)) {
                 $this->redirect($globalSet->getCpEditUrl(), 302, true);
 
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+                $this->setSuccess('Draft published.');
                 $transaction->commit();
 
                 return Translations::$plugin->globalSetDraftRepository->deleteDraft($draft);
             } else {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+                $this->setError('Couldn’t publish draft.');
                 $transaction->rollBack();
 
                 // Send the draft back to the template
@@ -217,7 +216,7 @@ class GlobalSetController extends Controller
         $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
@@ -240,7 +239,7 @@ class GlobalSetController extends Controller
             Translations::$plugin->orderRepository->saveOrder($order);
         }
 
-        Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
+        $this->setSuccess('Draft deleted.');
 
         return $this->redirect($globalSet->getCpEditUrl(), 302, true);
     }

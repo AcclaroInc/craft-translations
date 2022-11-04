@@ -12,6 +12,7 @@ use craft\commerce\elements\Product;
 use craft\elements\actions\Delete;
 use craft\elements\Asset;
 use acclaro\translations\Translations;
+use acclaro\translations\base\AlertsTrait;
 use craft\elements\db\ElementQueryInterface;
 use craft\elements\GlobalSet;
 
@@ -26,6 +27,8 @@ use craft\elements\GlobalSet;
  */
 class OrderDelete extends Delete
 {
+    use AlertsTrait;
+
     /**
      * @inheritdoc
      */
@@ -76,6 +79,8 @@ class OrderDelete extends Delete
      */
     public function performAction(ElementQueryInterface $query): bool
     {
+        $this->successMessage = $this->getSuccessMessage("Order Deleted.");
+
         if ($this->hard) {
             foreach ($query->all() as $order) {
                 /** @var \acclaro\translations\elements\Order $order */

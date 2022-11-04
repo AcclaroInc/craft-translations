@@ -75,7 +75,7 @@
                                 }
                             } else {
                                 // Job is either completed or no jobs running
-                                Craft.cp.displayNotice(Craft.t('app', `${params.notice}`));
+                                Craft.cp.displaySuccess(Craft.t('app', `${params.notice}`));
 
                                 if (params.url && window.location.pathname.includes('translations/orders')) {
                                     window.location.href=Craft.getUrl(params.url);

@@ -42,6 +42,7 @@ use acclaro\translations\assetbundles\Assets;
 use acclaro\translations\assetbundles\CommerceAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
+use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
 
 class Translations extends Plugin
@@ -49,7 +50,7 @@ class Translations extends Plugin
     // Traits
     // =========================================================================
 
-    use PluginTrait;
+    use PluginTrait, AlertsTrait;
 
     /**
      * Enable use of self::$plugin
@@ -598,7 +599,7 @@ class Translations extends Plugin
             ];
 
             if (!empty($response) && !in_array($action, $applyDraftActions)) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to publish translation draft.'));
+                $this->setError('Unable to publish translation draft.');
                 $path = $craft->request->getFullPath();
                 $params = $craft->request->getQueryParams();
                 $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
