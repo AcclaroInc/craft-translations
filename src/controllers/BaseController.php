@@ -319,7 +319,7 @@ class BaseController extends Controller
                 ]));
 
                 if ($job) {
-                    $this->set('importQueued', "1");
+                    Craft::$app->getSession()->set('importQueued', "1");
                     $params = [
                         'id' => (int) $job,
                         'notice' => 'Done building draft previews',
