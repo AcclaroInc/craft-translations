@@ -202,7 +202,7 @@ class BaseController extends Controller
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         if (!$order) {
-            $this->setError('Invalid Order.');
+            $this->setError("Order not found with ID '{$orderId}'.");
             return;
         }
 
@@ -331,7 +331,7 @@ class BaseController extends Controller
                 }
             } else {
                 Translations::$plugin->fileRepository->regeneratePreviewUrls($order, $filePreviewUrls, $files);
-                $this->setSuccess( 'Done building draft previews.');
+                $this->setSuccess('Done building draft previews.');
             }
         }
     }

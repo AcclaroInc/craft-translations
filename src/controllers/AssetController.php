@@ -90,7 +90,7 @@ class AssetController extends BaseController
         $asset = $this->service->getAssetById($assetId, $siteId);
 
         if (!$asset) {
-            $this->setError("No Asset exists with the ID {$assetId}.");
+            $this->setError("No Asset exists with the ID '{$assetId}'.");
             return;
         }
 
@@ -99,7 +99,7 @@ class AssetController extends BaseController
             $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
             if (!$draft) {
-                $this->setError("No draft exists with the ID {$draftId}.");
+                $this->setError("No draft exists with the ID '{$draftId}'.");
                 return;
             }
         } else {
@@ -145,14 +145,14 @@ class AssetController extends BaseController
         $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
-            $this->setError("No draft exists with the ID {$draftId}.");
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
         $asset = Craft::$app->assets->getAssetById($assetId, $draft->site);
 
         if (!$asset) {
-            $this->setError("No asset exists with the ID {$draft->assetId}.");
+            $this->setError("No asset exists with the ID '{$draft->assetId}'.");
             return;
         }
 
@@ -219,7 +219,7 @@ class AssetController extends BaseController
         $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
-            $this->setError("No draft exists with the ID {$draftId}.");
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 

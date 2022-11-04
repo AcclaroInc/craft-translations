@@ -143,14 +143,14 @@ class CommerceController extends BaseController
         $draft = Translations::$plugin->commerceRepository->getDraftById($draftId);
 
         if (!$draft) {
-            $this->setError("No draft exists with the ID {$draftId}.");
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
         $product = Translations::$plugin->commerceRepository->getProductById($productId, $draft->site);
 
         if (!$product) {
-            $this->setError("No product exists with the ID {$draft->productId}.");
+            $this->setError("No product exists with the ID '{$draft->productId}'.");
             return;
         }
 
@@ -209,7 +209,7 @@ class CommerceController extends BaseController
         $draft = Translations::$plugin->commerceRepository->getDraftById($draftId);
 
         if (!$draft) {
-            $this->setError("No draft exists with the ID {$draftId}.");
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 

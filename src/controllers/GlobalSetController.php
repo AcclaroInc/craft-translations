@@ -88,7 +88,7 @@ class GlobalSetController extends BaseController
         $globalSet = Translations::$plugin->globalSetRepository->getSetById($globalSetId, $site);
 
         if (!$globalSet) {
-            $this->setError("No global set exists with the ID {$globalSetId}.");
+            $this->setError("No global set exists with the ID '{$globalSetId}'.");
             return;
         }
 
@@ -98,7 +98,7 @@ class GlobalSetController extends BaseController
             $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
 
             if (!$draft) {
-                $this->setError("No draft exists with the ID {draftId}.");
+                $this->setError("No draft exists with the ID '{$draftId}'.");
                 return;
             }
         } else {
@@ -141,14 +141,14 @@ class GlobalSetController extends BaseController
         $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
-            $this->setError("No draft exists with the ID {$draftId}.");
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
         $globalSet = Translations::$plugin->globalSetRepository->getSetById($draft->globalSetId, $draft->site);
 
         if (!$globalSet) {
-            $this->setError("No global set exists with the ID {$draft->id}.");
+            $this->setError("No global set exists with the ID '{$draft->id}'.");
             return;
         }
 
@@ -216,7 +216,7 @@ class GlobalSetController extends BaseController
         $draft = Translations::$plugin->globalSetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
-            $this->setError("No draft exists with the ID {$draftId}.");
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 

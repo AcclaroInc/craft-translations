@@ -130,7 +130,7 @@ class OrderController extends BaseController
         $sourceSite = Craft::$app->getRequest()->getQueryParam('sourceSite') ?? Craft::$app->getRequest()->getBodyParam('sourceSite');
 
         if ($sourceSite && !Translations::$plugin->siteRepository->isSiteSupported($sourceSite)) {
-				$this->setError('Source site is not supported');
+				$this->setError('Source site is not supported.');
 				return;
 		}
 
@@ -641,7 +641,7 @@ class OrderController extends BaseController
             Craft::$app->getSession()->set('registerJs', json_encode($params));
             return $this->asSuccess(null, [], $redirectUrl . "&isProcessing=1");
         } else {
-            $this->setSuccess("New order created {$order->title}");
+            $this->setSuccess("New order created '{$order->title}'");
             return $this->asSuccess(null, [], $redirectUrl);
         }
     }
@@ -1053,7 +1053,7 @@ class OrderController extends BaseController
         $orderId = $variables['orderId'] ?? Craft::$app->getRequest()->getParam('id');
         $order = $this->service->getOrderById($orderId);
         if (!$order) {
-            $this->setError('Order not found.');
+            $this->setError("Order not found with ID '{$orderId}'.");
             return;
         }
 
@@ -1074,7 +1074,7 @@ class OrderController extends BaseController
             $res = $translatorService->cancelOrder($order);
 
             if (empty($res)) {
-                $this->setError("Unable to cancel order {$order->title}");
+                $this->setError("Unable to cancel order '{$order->title}'.");
                 return;
             }
         }
@@ -1090,7 +1090,7 @@ class OrderController extends BaseController
         ));
         Craft::$app->getElements()->saveElement($order);
 
-        $this->setSuccess("Order canceled {$order->title}");
+        $this->setSuccess("Order canceled '{$order->title}'");
 
         return $this->redirect(Constants::URL_ORDER_DETAIL.$order->id, 302, true);
     }
@@ -1115,7 +1115,7 @@ class OrderController extends BaseController
         $authenticate = Translations::$plugin->services->authenticateService($service, $settings);
 
         if (!$authenticate && $service == Constants::TRANSLATOR_ACCLARO) {
-            $this->setError('Invalid API key');
+            $this->setError('Invalid API key.');
             return;
         }
 
@@ -1136,12 +1136,12 @@ class OrderController extends BaseController
                     $this->setNotice("Order is being synced via queue. Refer queue for updates.");
                     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                 } else {
-                    $this->setError("Cannot sync order {$order->title}");
+                    $this->setError("Cannot sync order '{$order->title}'.");
                     return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
                 }
             } else {
                 $this->service->syncOrder($order);
-                $this->setSuccess("Done syncing order {$order->title}");
+                $this->setSuccess("Done syncing order '{$order->title}'");
                 return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
             }
         }

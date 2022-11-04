@@ -258,7 +258,7 @@ class FilesController extends BaseController
                                 if (! Craft::$app->getElements()->saveElement($asset)) {
                                     $errors = $asset->getFirstErrors();
 
-                                    Translations::$plugin->logHelper->log(implode(";\n", $errors), Constants::LOG_LEVEL_ERROR);
+                                    Translations::$plugin->logHelper->log('Error: ' . implode(";\n", $errors), Constants::LOG_LEVEL_ERROR);
                                     return $this->asFailure(sprintf(
                                         "%s %s",
                                         $this->getErrorMessage('Failed to save the asset. '),
@@ -374,7 +374,7 @@ class FilesController extends BaseController
                                 ];
                                 Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                             }
-                            $this->setNotice("File {$file->name} queued for import. Check activity log for any errors.");
+                            $this->setNotice("File '{$file->name}' queued for import. Check activity log for any errors.");
                         } else {
                             $fileSvc = new ImportFiles();
                             $a = Craft::$app->getAssets()->getAssetById($asset->id);
@@ -382,7 +382,7 @@ class FilesController extends BaseController
                             Craft::$app->getElements()->deleteElement($a);
 
                             if($res !== false){
-                                $this->setSuccess("File uploaded successfully: {$file->name}");
+                                $this->setSuccess("File uploaded successfully '{$file->name}'");
                             } else {
                                 Craft::$app->getSession()->set('fileImportError', 1);
                                 $this->setError("File import error. Please check the order activity log for details.");
