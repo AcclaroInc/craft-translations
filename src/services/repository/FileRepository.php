@@ -609,10 +609,15 @@ class FileRepository
         return $draft;
     }
 
-    public function createReferenceData(array $data, $forDownload = true)
+    public function createReferenceData(array $data, $meta, $forDownload = true)
     {
         $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
         $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
+        
+        $meta += [
+            'sourceLang' => $sourceLanguage,
+            'targetLang' => $targetLanguage,
+        ];
 
         $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($data['sourceContent']), true)['content'] ?? [];
         
@@ -625,27 +630,27 @@ class FileRepository
         if ($forDownload) {
             switch ($data['format']) {
                 case Constants::FILE_FORMAT_XML:
-                    $tmContent = $this->referenceAsXml($sourceLanguage, $targetLanguage, $source, $target);
+                    $tmContent = $this->referenceAsXml($source, $target, $meta);
                     break;
                 case Constants::FILE_FORMAT_JSON:
-                    $tmContent = $this->referenceAsJson($sourceLanguage, $targetLanguage, $source, $target);
+                    $tmContent = $this->referenceAsJson($source, $target, $meta);
                     break;
                 default:
-                    $tmContent = $this->referenceAsCsv($sourceLanguage, $targetLanguage, $source, $target);
+                    $tmContent = $this->referenceAsCsv($source, $target, $meta);
             }
         } else {
-            $tmContent = json_encode($this->referenceAsCsv($sourceLanguage, $targetLanguage, $source, $target, $forDownload));
+            $tmContent = json_encode($this->referenceAsCsv($source, $target, $meta, $forDownload));
         }
 
         return $tmContent;
     }
     
-    private function referenceAsCsv($sourceLanguage, $targetLanguage, $source, $target, $forDownload = true)
+    private function referenceAsCsv($source, $target, $meta, $forDownload = true)
     {
-        $tmContent = [[$targetLanguage]];
+        $tmContent = [[$meta['targetLang']]];
         
         if ($forDownload) {
-            $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
+            $tmContent = sprintf('"key","%s","%s"', $meta['sourceLang'], $meta['targetLang']);
         }
 
         foreach ($source as $key => $value) {
@@ -662,26 +667,39 @@ class FileRepository
         return $tmContent;
     }
     
-    private function referenceAsJson($sourceLanguage, $targetLanguage, $source, $target)
+    private function referenceAsJson($source, $target, $meta)
     {
         $tmContent = [
-            "source-language"   => $sourceLanguage,
-            "target-language"   => $targetLanguage,
+            'orderId'           => $meta['orderId'],
+            'elementId'         => $meta['elementId'],
+            'entryTitle'        => $meta['entryTitle'],
+            'entrySlug'         => $meta['entrySlug'],
+            'dateCreated'       => $meta['dateCreated'],
+            "source-language"   => $meta['sourceLang'],
+            "target-language"   => $meta['targetLang'],
             "content"           => []
         ];
 
         foreach ($source as $key => $value) {
             $targetValue = $target[$key] ?? '';
-            $tmContent['content'][$sourceLanguage][$key] = $value;
-            $tmContent['content'][$targetLanguage][$key] = $targetValue;
+            $tmContent['content'][$meta['sourceLang']][$key] = $value;
+            $tmContent['content'][$meta['targetLang']][$key] = $targetValue;
         }
 
         return json_encode($tmContent);
     }
     
-    private function referenceAsXml($sourceLanguage, $targetLanguage, $source, $target)
+    private function referenceAsXml($source, $target, $meta)
     {
         $dom = new DOMDocument('1.0', 'utf-8');
+        
+        $sourceLanguage = $meta['sourceLang'];
+        $targetLanguage = $meta['targetLang'];
+        $elementId      = $meta['elementId'];
+        $orderId        = $meta['orderId'];
+        $entryTitle     = $meta['entryTitle'];
+        $entrySlug      = $meta['entrySlug'];
+        $dateCreated    = $meta['dateCreated'];
 
         $dom->formatOutput = true;
 
@@ -691,6 +709,13 @@ class FileRepository
         $langs = $head->appendChild($dom->createElement('langs'));
         $langs->setAttribute('source-language', $sourceLanguage);
         $langs->setAttribute('target-language', $targetLanguage);
+
+        $meta = $head->appendChild($dom->createElement('meta'));
+        $meta->setAttribute('elementId', $elementId);
+        $meta->setAttribute('orderId', $orderId);
+        $meta->setAttribute('entryTitle', $entryTitle);
+        $meta->setAttribute('entrySlug', $entrySlug);
+        $meta->setAttribute('dateCreated', $dateCreated);
 
         $body = $xml->appendChild($dom->createElement('body'));
         $sourceLang = $body->appendChild($dom->createElement('lang'));
