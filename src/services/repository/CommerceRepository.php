@@ -70,6 +70,8 @@ class CommerceRepository
 
             $commerceDraft->setFieldValues($post);
         }
+        
+        $commerceDraft->slug = $commerceData['slug'] ?? $product->slug;
 
         $variants = $product->getVariants(true);
 
@@ -142,6 +144,7 @@ class CommerceRepository
 
         $data = array(
             'fields' => array(),
+            'slug'   => $draft->slug,
         );
 
         $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
@@ -262,6 +265,7 @@ class CommerceRepository
             $draft->site = $site;
             $draft->siteId = $site;
             $draft->title  = $product->title;
+            $draft->slug   = $product->slug;
             $draft->typeId = $product->getType()->id;
             $draft->setVariants($product->getVariants(true));
 

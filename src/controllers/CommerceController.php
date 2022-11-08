@@ -155,6 +155,7 @@ class CommerceController extends BaseController
         }
 
         $draft->title = $this->request->getParam('title') ?? $product->title;
+        $draft->slug = $this->request->getParam('slug') ?? $product->slug;
 
         $fields = $this->request->getParam('fields') ?? [];
 
@@ -323,8 +324,9 @@ class CommerceController extends BaseController
                 $variables['enabledSiteIds'][] = $site;
             }
         }
-        
+
         $variables['draft'] = Translations::$plugin->commerceRepository->getDraftById($variables['draftId']);
+        $variables['product']->slug = $variables['draft']->slug;
     }
 
     /**
