@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.1.0 - 2022-11-08
+
+### Added
+- Support for craft commerce products/variants. ([AcclaroInc#394](https://github.com/AcclaroInc/craft-translations/issues/394))
+- Tm alignment files can now also be downloaded in XML & JSON format. ([AcclaroInc#406](https://github.com/AcclaroInc/craft-translations/pull/406))
+
+### Updated
+- Plugins control panel message & logging format. ([AcclaroInc#407](https://github.com/AcclaroInc/craft-translations/pull/407))
+
 ## 3.0.3 - 2022-10-12
 
 ### Fixed
