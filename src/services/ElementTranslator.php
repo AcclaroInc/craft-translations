@@ -190,7 +190,7 @@ class ElementTranslator
             $variantPost = [];
             foreach ($variants as $variant) {
                 $variantPost[$variant->id] = $this->toPostArrayFromTranslationTarget($variant, $sourceSite, $targetSite, $targetData['variant'][$variant->id], $includeNonTranslatable);
-                $variantPost[$variant->id]['title'] = $targetData['title'] ?? $variant->title;
+                $variantPost[$variant->id]['title'] = $targetData['variant'][$variant->id]['title'] ?? $variant->title;
             }
             $post['variant'] = $variantPost;
         }
