@@ -3,8 +3,8 @@
 {% set bodyClass = (bodyClass is defined ? bodyClass~' ' : '') ~ "commerceproducts commerceproductsedit" %}
 
 {% set crumbs = [
-    { label: 'Translations'|t, url: url('translations') },
-    { label: 'Orders'|t, url: url('translations/orders') },
+    { label: "Products"|t('commerce'), url: url('commerce/products') },
+    { label: productType.name|t('commerce'), url: url('commerce/products/'~productType.handle) }
 ] %}
 
 {% set fullPageForm = true %}

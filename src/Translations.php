@@ -373,7 +373,7 @@ class Translations extends Plugin
                     // Asset, Commerce, Global-set Controllers
                     'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/global-set/edit-draft',
-                    'translations/products/<productTypeHandle:{handle}>/<productId:\d+><slug:(?:-[^\/]*)?>' => 'translations/commerce/edit-draft',
+                    'commerce/products/<productTypeHandle:{handle}>/<productId:\d+><slug:(?:-[^\/]*)?>' => 'translations/commerce/edit-draft',
                 ]);
             }
         );

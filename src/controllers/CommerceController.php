@@ -24,6 +24,8 @@ use yii\web\Response;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use craft\helpers\Json;
+use craft\helpers\UrlHelper;
 
 /**
  * Class CommerceController will be used to process Craft Commerce Products/Variants
@@ -43,7 +45,7 @@ class CommerceController extends BaseController
     public function actionEditDraft(array $variables = array()): Response
     {
         $variables = $this->request->resolve()[1];
-        $variables['selectedSubnavItem'] = 'orders';
+        $variables['selectedSubnavItem'] = 'products';
 
         if (empty($variables['productTypeHandle'])) {
             throw new NotFoundHttpException(Translations::$plugin->translator->translate('app', 'Invalid: “{name}”', array('name' => 'productTypeHandle')));
@@ -76,7 +78,7 @@ class CommerceController extends BaseController
         $variables['title'] = $variables['draft']->title ?? $product->title;
 
         // Can't just use the entry's getCpEditUrl() because that might include the site handle when we don't want it
-        $variables['baseCpEditUrl'] = 'translations/products/' . $variables['productTypeHandle'] . '/{id}-{slug}';
+        $variables['baseCpEditUrl'] = 'commerce/products/' . $variables['productTypeHandle'] . '/{id}-{slug}';
 
         // Set the "Continue Editing" URL
         $variables['continueEditingUrl'] = sprintf("%s?draftId=%s&site=%s", $variables['baseCpEditUrl'], $variables['draftId'], $site);
@@ -87,7 +89,37 @@ class CommerceController extends BaseController
             $this->getView()->registerJs('Craft.Commerce.initUnlimitedStockCheckbox($("#details"));');
         }
 
-        $variables['showPreviewBtn'] = false;
+        // Enable Live Preview?
+        if (!$this->request->isMobileBrowser(true) && Plugin::getInstance()->getProductTypes()->isProductTypeTemplateValid($variables['productType'], $variables['site']->id)) {
+            $this->getView()->registerJs('Craft.LivePreview.init(' . Json::encode([
+                'fields' => '#fields > .flex-fields > .field',
+                'extraFields' => '#details',
+                'previewUrl' => $product->getUrl(),
+                'previewAction' => Craft::$app->getSecurity()->hashData('commerce/products-preview/preview-product'),
+                'previewParams' => [
+                    'typeId' => $variables['productType']->id,
+                    'productId' => $product->id,
+                    'siteId' => $product->siteId,
+                ],
+            ]) . ');');
+
+            $variables['showPreviewBtn'] = true;
+
+            // Should we show the Share button too?
+            if ($product->id !== null) {
+                // If the product is enabled, use its main URL as its share URL.
+                if ($product->getStatus() == Product::STATUS_LIVE) {
+                    $variables['shareUrl'] = $product->getUrl();
+                } else {
+                    $variables['shareUrl'] = UrlHelper::actionUrl('commerce/products-preview/share-product', [
+                        'productId' => $product->id,
+                        'siteId' => $product->siteId,
+                    ]);
+                }
+            }
+        } else {
+            $variables['showPreviewBtn'] = false;
+        }
 
         $this->getView()->registerAssetBundle(EditProductAsset::class);
         return $this->renderTemplate('translations/products/_editDraft', $variables);

@@ -58,7 +58,7 @@ class AssetController extends BaseController
 
         $variables['dimensions'] = $asset->dimensions;
         $variables['assetUrl'] = $asset->url;
-        $variables['author'] = Craft::$app->getUsers()->getUserById($asset->uploaderId);
+        $variables['author'] = Craft::$app->getUsers()->getUserById((int) $asset->uploaderId);
         // $variables['canReplaceFile'] = $asset->isEditable;
         $variables['title'] = $asset->title;
         $variables['isRevision'] = $asset->getIsRevision();
