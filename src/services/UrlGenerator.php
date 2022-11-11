@@ -86,7 +86,7 @@ class UrlGenerator
 
         if ($element instanceof (Constants::CLASS_COMMERCE_PRODUCT) && $file->hasDraft() && $file->isComplete()) {
             $data['draftId'] = $file->draftId;
-            $url = sprintf('commerce/products/%s/%s-%s', $element->type, $element->id ,$element->slug);
+            $url = sprintf('commerce/product/%s/%s-%s', $element->type, $element->id ,$element->slug);
 
             return Translations::$plugin->urlHelper->cpUrl($url, $data);
         }

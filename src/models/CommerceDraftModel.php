@@ -98,7 +98,7 @@ class CommerceDraftModel extends Product
             'site' => Craft::$app->getSites()->getSiteById($this->site)->handle
         ];
 
-        $path = sprintf('commerce/products/%s/%s-%s', $product->type, $product->id, $product->slug);
+        $path = sprintf('commerce/product/%s/%s-%s', $product->type, $product->id, $product->slug);
 
         return Translations::$plugin->urlHelper->cpUrl($path, $data);
     }
