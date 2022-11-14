@@ -292,7 +292,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     /**
      * @param \acclaro\translations\models\FileModel $file
      */
-    public function sendOrderReferenceFile($order, $file) {
+    public function sendOrderReferenceFile($order, $file, $format = Constants::FILE_FORMAT_CSV) {
         $tempPath = Craft::$app->path->getTempPath();
         $acclaroApiClient = $this->acclaroApiClient;
 
@@ -300,7 +300,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
-            $tmFile = $file->getTmMisalignmentFile();
+            $tmFile = $file->getTmMisalignmentFile($format);
             $path = $tempPath .'-'. $tmFile['fileName'];
 
             $stream = fopen($path, 'w+');

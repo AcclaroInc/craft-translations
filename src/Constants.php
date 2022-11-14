@@ -4,7 +4,7 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.4.1';
+    const PLUGIN_SCHEMA_VERSION = '1.4.2';
     const CRAFT_MIN_VERSION = '4.0.0';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
@@ -44,6 +44,8 @@ class Constants
     const CLASS_CATEGORY    = 'craft\\elements\\Category';
     const CLASS_ASSET       = 'craft\\elements\\Asset';
     const CLASS_ENTRY       = 'craft\\elements\\Entry';
+
+    const CLASS_COMMERCE_PRODUCT    = 'craft\commerce\elements\Product';
 
     // Urls
     const URL_ORDER_DETAIL          = 'translations/orders/detail/';
@@ -153,6 +155,7 @@ class Constants
     const TABLE_TRANSLATIONS        = '{{%translations_translations}}';
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
+    const TABLE_COMMERCE_DRAFT      = '{{%translations_commercedrafts}}';
 
     // Job Descriptions
     const JOB_ACCLARO_UPDATING_REVIEW_URL   = 'Updating Acclaro review urls';
@@ -267,6 +270,7 @@ class Constants
         'typedlinkfield\fields\LinkField',
         'craft\redactor\Field',
         'fruitstudios\linkit\fields\LinkitField',
+        'presseddigital\linkit\fields\LinkitField',
         'luwes\codemirror\fields\CodeMirrorField',
         'verbb\supertable\fields\SuperTableField',
         'nystudio107\seomatic\fields\SeoSettings',
@@ -279,6 +283,8 @@ class Constants
         'newism\fields\fields\Gender',
         'ether\seo\fields\SeoField',
         'ether\notes\Field',
+        'craft\commerce\fields\Products',
+        'craft\commerce\fields\Variants',
         'amici\SuperDynamicFields\fields\SueprDynamicDropdownField',
         'amici\SuperDynamicFields\fields\SueprDynamicRadioField',
         'amici\SuperDynamicFields\fields\SueprDynamicCheckboxesField',

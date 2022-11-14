@@ -12,7 +12,6 @@ namespace acclaro\translations\controllers;
 
 use Craft;
 use craft\helpers\Path;
-use craft\web\Controller;
 use craft\helpers\Assets;
 use craft\elements\Asset;
 use craft\web\UploadedFile;
@@ -31,7 +30,7 @@ use acclaro\translations\services\job\ImportFiles;
  * @package   Translations
  * @since     1.0.0
  */
-class FilesController extends Controller
+class FilesController extends BaseController
 {
     protected array|int|bool $allowAnonymous = ['actionImportFile', 'actionExportFile', 'actionCreateExportZip'];
 
@@ -119,7 +118,7 @@ class FilesController extends Controller
 
                 /** Check if entry exists in target site for reference comparison */
                 if ($hasMisalignment && Translations::$plugin->elementRepository->getElementById($file->elementId, $file->targetSite)) {
-                    $tmFile = $file->getTmMisalignmentFile();
+                    $tmFile = $file->getTmMisalignmentFile($fileFormat);
                     $fileName = $tmFile['fileName'];
 
                     if ($order->includeTmFiles && $file->hasTmMisalignments(true)) {
@@ -151,7 +150,7 @@ class FilesController extends Controller
         if(count($errors) > 0)
         {
             $transaction->rollBack();
-            return $this->asFailure(implode('\n', $errors));
+            return $this->asFailure($this->getErrorMessage(implode('\n', $errors)));
         }
 
         Craft::$app->getElements()->saveElement($order, true, true, false);
@@ -204,7 +203,7 @@ class FilesController extends Controller
             if ($file && $file->size > 0) {
                 if (!in_array($file->extension, $this->_allowedTypes)) {
                     Craft::$app->getSession()->set('fileImportError', 1);
-                    $this->showUserMessages("'$file->name' is not a supported translation file type. Please submit a [ZIP, XML, JSON, CSV] file.");
+                    $this->setError("'$file->name' is not a supported translation file type. Please submit a [ZIP, XML, JSON, CSV] file.");
                 } else {
                     //If is a Zip File
                     if ($file->extension === Constants::FILE_FORMAT_ZIP) {
@@ -259,7 +258,12 @@ class FilesController extends Controller
                                 if (! Craft::$app->getElements()->saveElement($asset)) {
                                     $errors = $asset->getFirstErrors();
 
-                                    return $this->asFailure(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                                    Translations::$plugin->logHelper->log('Error: ' . implode(";\n", $errors), Constants::LOG_LEVEL_ERROR);
+                                    return $this->asFailure(sprintf(
+                                        "%s %s",
+                                        $this->getErrorMessage('Failed to save the asset. '),
+                                        implode(";\n", $errors)
+                                    ));
                                 }
 
                                 $assetIds[] = $asset->id;
@@ -294,7 +298,7 @@ class FilesController extends Controller
                                     ];
                                     Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                                 }
-                                $this->showUserMessages("File queued for import. Check activity log for any errors.", true);
+                                $this->setNotice("File queued for import. Check activity log for any errors.");
                             } else {
                                 $fileSvc = new ImportFiles();
                                 $success = true;
@@ -305,14 +309,14 @@ class FilesController extends Controller
                                     if ($res === false) $success = false;
                                 }
                                 if (! $success) {
-                                    $this->showUserMessages("Error importing file. Please check activity log for details.");
+                                    $this->setError("Error importing file. Please check activity log for details.");
                                 } else {
-                                    $this->showUserMessages("File uploaded successfully", true);
+                                    $this->setSuccess("File uploaded successfully");
                                 }
                             }
                         } else {
                             Craft::$app->getSession()->set('fileImportError', 1);
-                            $this->showUserMessages("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed ");
+                            $this->setError("Unable to unzip ". $file->name ." Operation not permitted or Decompression Failed.");
                         }
                     } else {
                         $filename = Assets::prepareAssetName($file->name);
@@ -337,7 +341,11 @@ class FilesController extends Controller
                         if (! Craft::$app->getElements()->saveElement($asset)) {
                             $errors = $asset->getFirstErrors();
 
-                            return $this->asFailure(Craft::t('app', 'Failed to save the asset:') . ' ' . implode(";\n", $errors));
+                            return $this->asFailure(sprintf(
+                                "%s %s",
+                                $this->getErrorMessage('Failed to save the asset. '),
+                                implode(";\n", $errors)
+                            ));
                         }
 
                         $totalWordCount = Translations::$plugin->fileRepository->getUploadedFilesWordCount($asset, $file->extension);
@@ -366,7 +374,7 @@ class FilesController extends Controller
                                 ];
                                 Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
                             }
-                            $this->showUserMessages("File: {$file->name} queued for import. Check activity log for any errors.", true);
+                            $this->setNotice("File '{$file->name}' queued for import. Check activity log for any errors.");
                         } else {
                             $fileSvc = new ImportFiles();
                             $a = Craft::$app->getAssets()->getAssetById($asset->id);
@@ -374,21 +382,21 @@ class FilesController extends Controller
                             Craft::$app->getElements()->deleteElement($a);
 
                             if($res !== false){
-                                $this->showUserMessages("File uploaded successfully: {$file->name}", true);
+                                $this->setSuccess("File uploaded successfully '{$file->name}'");
                             } else {
                                 Craft::$app->getSession()->set('fileImportError', 1);
-                                $this->showUserMessages("File import error. Please check the order activity log for details.");
+                                $this->setError("File import error. Please check the order activity log for details.");
                             }
                         }
                     }
                 }
             } else {
                 Craft::$app->getSession()->set('fileImportError', 1);
-                $this->showUserMessages("The file you are trying to import is empty.");
+                $this->setError("The file you are trying to import is empty.");
             }
         } catch (\Exception $exception) {
             Translations::$plugin->logHelper->log($exception, Constants::LOG_LEVEL_ERROR);
-            $this->showUserMessages($exception->getMessage());
+            $this->setError($exception->getMessage());
         }
     }
 
@@ -433,7 +441,7 @@ class FilesController extends Controller
         return $this->asJson([
             'success' => $success,
             'data' => $data,
-            'error' => $error
+            'error' => $this->getErrorMessage($error)
         ]);
     }
 
@@ -442,6 +450,7 @@ class FilesController extends Controller
      */
     public function actionCreateTmExportZip() {
         $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
+        $format = Craft::$app->getRequest()->getBodyParam('format');
         $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
 
         try {
@@ -459,7 +468,7 @@ class FilesController extends Controller
 
             // Open zip
             if ($zip->open($zipDest, $zip::CREATE) !== true) {
-                return $this->asFailure('Unable to create zip file: '.$zipDest);
+                return $this->asFailure(sprintf("%s. {%s}", $this->getErrorMessage("Unable to create zip file"), $zipDest));
             }
 
             //Iterate over each file on this order
@@ -467,12 +476,16 @@ class FilesController extends Controller
                 foreach ($order->getFiles() as $file) {
                     if (! in_array($file->id, $files) || !$file->hasTmMisalignments()) continue;
 
-                    $tmFile = $file->getTmMisalignmentFile();
+                    $tmFile = $file->getTmMisalignmentFile($format);
                     $fileName = $tmFile['fileName'];
                     $fileContent = $tmFile['fileContent'];
 
                     if (! $fileContent || ! $zip->addFromString($fileName, $fileContent)) {
-                        return $this->asFailure('There was an error adding the file '.$fileName.' to the zip: '.$zipName);
+                        return $this->asFailure(sprintf(
+                            $this->getErrorMessage('There was an error adding the file {%s} to the zip. {%s}'),
+                            $fileName,
+                            $zipName
+                        ));
                     }
 
                     $file->reference = $tmFile['reference'];
@@ -484,7 +497,7 @@ class FilesController extends Controller
             $zip->close();
         } catch(\Exception $e) {
             Translations::$plugin->logHelper->log('['. __METHOD__ .']' . $e->getMessage(), Constants::LOG_LEVEL_ERROR);
-            return $this->asJson(['success' => false, 'message' => $e->getMessage()]);
+            return $this->asJson(['success' => false, 'message' => $this->getErrorMessage($e->getMessage())]);
         }
 
         return $this->asSuccess(null, ['tmFiles' => $zipDest]);
@@ -495,6 +508,7 @@ class FilesController extends Controller
      */
     public function actionSyncTmFiles() {
         $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
+        $format = Craft::$app->getRequest()->getBodyParam('format');
         $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
@@ -507,7 +521,7 @@ class FilesController extends Controller
                         $order->getTranslator()->getSettings()
                     );
 
-                    $translationService->sendOrderReferenceFile($order, $file);
+                    $translationService->sendOrderReferenceFile($order, $file, $format);
                 }
             }
         }
@@ -538,26 +552,14 @@ class FilesController extends Controller
             $form = $element->getFieldLayout()->createForm($element, true);
             $html = $form->render();
         } catch(\Exception $e) {
-            Craft::error($e);
-            return $this->asFailure(null, ['message' => "Error loading preview html."]);
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
+            return $this->asFailure(null, ['message' => $this->getErrorMessage("Error loading preview html.")]);
         }
 
         return $this->asSuccess(null, ['html' => $html]);
     }
 
     // Private Methods
-	/**
-     * Show Flash Notifications and Errors to the translator
-	 */
-    private function showUserMessages($message, $isSuccess = false)
-    {
-    	if ($isSuccess) {
-			Craft::$app->session->setNotice(Craft::t('app', $message));
-    	} else {
-    		Craft::$app->session->setError(Craft::t('app', $message));
-    	}
-    }
-
     /**
      * @param $order
      * @return string

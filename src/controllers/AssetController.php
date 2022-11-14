@@ -37,7 +37,7 @@ class AssetController extends BaseController
         $site = $siteService->getSiteByHandle($data['site'] ?? $siteService->getCurrentSite()->handle);
 
         if (empty($data['elementId'])) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Param “{name}” doesn’t exist.', array('name' => 'elementId')));
+            $this->setError('Param “elementId” doesn’t exist.');
             return;
         }
 
@@ -58,7 +58,7 @@ class AssetController extends BaseController
 
         $variables['dimensions'] = $asset->dimensions;
         $variables['assetUrl'] = $asset->url;
-        $variables['author'] = Craft::$app->getUsers()->getUserById($asset->uploaderId);
+        $variables['author'] = Craft::$app->getUsers()->getUserById((int) $asset->uploaderId);
         // $variables['canReplaceFile'] = $asset->isEditable;
         $variables['title'] = $asset->title;
         $variables['isRevision'] = $asset->getIsRevision();
@@ -90,7 +90,7 @@ class AssetController extends BaseController
         $asset = $this->service->getAssetById($assetId, $siteId);
 
         if (!$asset) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No Asset exists with the ID “{id}”.', array('id' => $assetId)));
+            $this->setError("No Asset exists with the ID '{$assetId}'.");
             return;
         }
 
@@ -99,7 +99,7 @@ class AssetController extends BaseController
             $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
             if (!$draft) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+                $this->setError("No draft exists with the ID '{$draftId}'.");
                 return;
             }
         } else {
@@ -119,11 +119,11 @@ class AssetController extends BaseController
         $this->service->saveDraft($draft);
 
         if (Translations::$plugin->assetDraftRepository->saveDraft($draft, $fields)) {
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft saved.'));
+            $this->setSuccess('Draft saved.');
 
             $this->redirect($draft->getCpEditUrl(), 302, true);
         } else {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t save draft.'));
+            $this->setError('Couldn’t save draft.');
 
             Craft::$app->urlManager->setRouteParams(array(
                 'asset' => $draft
@@ -145,14 +145,14 @@ class AssetController extends BaseController
         $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
         $asset = Craft::$app->assets->getAssetById($assetId, $draft->site);
 
         if (!$asset) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No asset exists with the ID “{id}”.', array('id' => $draft->assetId)));
+            $this->setError("No asset exists with the ID '{$draft->assetId}'.");
             return;
         }
 
@@ -188,12 +188,12 @@ class AssetController extends BaseController
             if (Translations::$plugin->assetDraftRepository->publishDraft($draft)) {
                 $this->redirect($asset->getCpEditUrl(), 302, true);
 
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Draft published.'));
+                $this->setSuccess('Draft published.');
                 $transaction->commit();
 
                 return Translations::$plugin->assetDraftRepository->deleteDraft($draft);
             } else {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Couldn’t publish draft.'));
+                $this->setError('Couldn’t publish draft.');
                 $transaction->rollBack();
 
                 // Send the draft back to the template
@@ -219,7 +219,7 @@ class AssetController extends BaseController
         $draft = Translations::$plugin->assetDraftRepository->getDraftById($draftId);
 
         if (!$draft) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draftId)));
+            $this->setError("No draft exists with the ID '{$draftId}'.");
             return;
         }
 
@@ -243,7 +243,7 @@ class AssetController extends BaseController
             Translations::$plugin->orderRepository->saveOrder($order);
         }
 
-        Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Draft deleted.'));
+        $this->setSuccess('Draft deleted.');
 
         return $this->redirect($url, 302, true);
     }

@@ -16,10 +16,12 @@ use craft\elements\Asset;
 use craft\elements\Entry;
 use craft\elements\GlobalSet;
 use yii\web\NotFoundHttpException;
+use craft\commerce\elements\Product;
 use craft\errors\InvalidElementException;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ApplyDrafts;
@@ -27,6 +29,8 @@ use acclaro\translations\services\job\CreateDrafts;
 
 class DraftRepository
 {
+    use AlertsTrait;
+
     public function getDraftById($draftId, $siteId)
     {
         $draft = Entry::find()
@@ -76,6 +80,14 @@ class DraftRepository
 
                     if ($success) {
                         $globalSetDraftRepo->deleteDraft($draft);
+                    }
+                    break;
+                case Product::class:
+                    $commerceRepository = Translations::$plugin->commerceRepository;
+                    $success = $commerceRepository->publishDraft($draft);
+
+                    if ($success) {
+                        $commerceRepository->deleteDraft($draft);
                     }
                     break;
                 default:
@@ -155,7 +167,7 @@ class DraftRepository
             // Apply the draft to the entry
             $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
         } catch (InvalidElementException $e) {
-            Craft::$app->getSession()->setError(Craft::t('app', 'Couldn’t publish draft.'));
+            $this->setError('Couldn’t publish draft.');
             // Send the draft back to the template
             Craft::$app->getUrlManager()->setRouteParams([
                 'entry' => $draft
@@ -193,8 +205,7 @@ class DraftRepository
                 $file->status = Constants::FILE_STATUS_COMPLETE;
                 Translations::$plugin->fileRepository->saveFile($file);
             } else {
-                $isNewDraft = true;
-                $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+                $isNewDraft = $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
             }
 
             try {
@@ -242,6 +253,9 @@ class DraftRepository
 		$element = $element->getIsDraft() ? $element->getCanonical() : $element;
 
         switch (get_class($element)) {
+            case Product::class:
+                $draft = Translations::$plugin->commerceRepository->createDraft($element, $site, $order->title);
+                break;
             case GlobalSet::class:
                 $draft = Translations::$plugin->globalSetDraftRepository->createDraft($element, $site, $order->title);
                 break;
@@ -274,7 +288,7 @@ class DraftRepository
 
             Translations::$plugin->fileRepository->saveFile($file);
 
-            return $file;
+            return $draft;
         } catch (Exception $e) {
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not create draft Error: ' .$e->getMessage()));
             $file->orderId = $order->id;

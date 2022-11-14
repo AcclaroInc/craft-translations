@@ -312,7 +312,7 @@
 					diffHtml.show();
 				})
 				.catch(() => {
-					Craft.cp.displayNotice(Craft.t('app', response.error));
+					Craft.cp.displayError(Craft.t('app', response.error));
 				})
 				.finally(() => {
 					// Copy text to clipboard
@@ -475,7 +475,7 @@
             $label = (isDefaultTranslator ? 'Download ' : 'Sync ') + 'memory alignment files';
 
             $downloadTmAction = $('<a>', {
-                'href': '#',
+				'href': '#',
                 'class': isTmAligned ? 'link-disabled' : '',
                 'text': $label,
             });
@@ -536,47 +536,84 @@
 		},
 		_addDownloadTmFilesAction: function(that) {
 			var self = this;
-            var action = isDefaultTranslator ? 'download' : 'sync';
+			var action = isDefaultTranslator ? 'download' : 'sync';
             $(that).on('click', function(e) {
-                e.preventDefault();
-				self.toggleLoader(true);
+				e.preventDefault();
+				
+				var $form = $('<form/>', {
+					'class': 'export-form'
+				});
 
-                var files = [];
-                $rows = self.getFiles(true);
-                $rows.each(function() {
-                    files.push($(this).data('file-id'));
-                });
+				var $formatField = Craft.ui.createSelectField({
+					label: Craft.t('app', 'Format'),
+					options: [
+						{label: 'CSV', value: 'csv'}, {label: 'XML', value: 'xml'}, {label: 'JSON', value: 'json'},
+					],
+					'class': 'fullwidth',
+				}).appendTo($form);
 
-                $data = {
-                    files: JSON.stringify(files),
-                    orderId: $("input[type=hidden][name=id]").val()
-                }
+				let $typeSelect = $formatField.find('select');
+				$typeSelect.on('change', () => {
+					$('<input/>', {
+						'class': 'hidden',
+						'name': 'format',
+						'value': $typeSelect.val()
+					}).appendTo($form);
+				});
 
-                actions = {
-                    download: 'translations/files/create-tm-export-zip',
-                    sync: 'translations/files/sync-tm-files'
-                }
+				$download = $('<button/>', {
+					type: 'button',
+					'class': 'btn submit fullwidth',
+					text: Craft.t('app', action)
+				}).appendTo($form);
 
-                Craft.sendActionRequest('POST', actions[action], {data: $data})
-					.then((response) => {
-						if (!isDefaultTranslator) {
-							Craft.cp.displayNotice('Translation memory files sent successfully.');
-							location.reload();
-						} else if (response.data.tmFiles) {
-							let $downloadForm = $('#regenerate-preview-urls');
-							let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.tmFiles})}).hide();
-							$downloadForm.append($iframe);
-							setTimeout(function() {
-								location.reload();
-							}, 100);
-						}
-					})
-					.catch(() => {
-						Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
-						self.toggleLoader();
-					});
+				var hud = new Garnish.HUD($('#file-actions'), $form);
 
+				$download.on('click', () => {
+					self._downloadTmFiles($typeSelect.val(), action);
+					hud.hide();
+				});
             });
+		},
+		_downloadTmFiles: function($format, action) {
+			self.toggleLoader(true);
+
+			var files = [];
+			$rows = self.getFiles(true);
+			$rows.each(function() {
+				files.push($(this).data('file-id'));
+			});
+
+			$data = {
+				files: JSON.stringify(files),
+				orderId: $("input[type=hidden][name=id]").val(),
+				format: $format
+			}
+
+			actions = {
+				download: 'translations/files/create-tm-export-zip',
+				sync: 'translations/files/sync-tm-files'
+			}
+
+			Craft.sendActionRequest('POST', actions[action], {data: $data})
+				.then((response) => {
+					if (!isDefaultTranslator) {
+						Craft.cp.displaySuccess('Translation memory files sent successfully.');
+						location.reload();
+					} else if (response.data.tmFiles) {
+						let $downloadForm = $('#regenerate-preview-urls');
+						let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.tmFiles})}).hide();
+						$downloadForm.append($iframe);
+						setTimeout(function() {
+							location.reload();
+						}, 100);
+					}
+				})
+				.catch(() => {
+					Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
+					self.toggleLoader();
+				});
+
 		},
 		toggleLoader: function(show = false) {
 			if (show) {

@@ -12,6 +12,7 @@ namespace acclaro\translations\services\repository;
 
 use Craft;
 use Exception;
+use DOMDocument;
 use craft\elements\Asset;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
@@ -21,6 +22,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
+use craft\commerce\elements\Product;
 
 class FileRepository
 {
@@ -511,7 +513,7 @@ class FileRepository
      *
      *@return array $settings
      */
-    public function getFilePreviewSettings(FileModel $file)
+    public function getFilePreviewSettings(FileModel $file, $trigger)
     {
         $settings = [];
         $element = $file->getElement(false);
@@ -519,30 +521,43 @@ class FileRepository
         if ($element) {
             $security = Craft::$app->getSecurity();
 
-            if ($previewTargets = $element->getPreviewTargets() ?? []) {
-                if ($file->hasDraft() && $file->isComplete()) {
-                    Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
-                } else {
-                    if ($element->getIsDraft()) {
-                        Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
+            if ($trigger) {
+                $settings = [
+                    'trigger' => $trigger,
+                    'previewUrl' => $element->getUrl(),
+                    'previewAction' => $security->hashData('commerce/products-preview/preview-product'),
+                    'previewParams' => [
+                        'typeId' => $element->typeId,
+                        'productId' => $element->id,
+                        'siteId' => $element->siteId,
+                    ]
+                ];
+            } else {
+                if ($previewTargets = $element->getPreviewTargets() ?? []) {
+                    if ($file->hasDraft() && $file->isComplete()) {
+                        Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
                     } else {
-                        Craft::$app->getSession()->authorize("previewElement:$element->id");
+                        if ($element->getIsDraft()) {
+                            Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
+                        } else {
+                            Craft::$app->getSession()->authorize("previewElement:$element->id");
+                        }
                     }
                 }
-            }
 
-            $settings = [
-                'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
-                'elementType' => get_class($element),
-                'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
-                'previewTargets' => $previewTargets,
-                'previewToken' => $security->generateRandomString() ?? null,
-                'siteId' => $file->targetSite,
-                'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
-            ];
+                $settings = [
+                    'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
+                    'elementType' => get_class($element),
+                    'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
+                    'previewTargets' => $previewTargets,
+                    'previewToken' => $security->generateRandomString() ?? null,
+                    'siteId' => $file->targetSite,
+                    'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
+                ];
 
-            if ($file->isComplete() || $element->getIsDraft()) {
-                $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
+                if ($file->isComplete() || $element->getIsDraft()) {
+                    $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
+                }
             }
         }
 
@@ -583,6 +598,9 @@ class FileRepository
                 case Asset::class:
                     $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
                     break;
+                case Product::class:
+                    $draft = Translations::$plugin->commerceRepository->getDraftById($file->draftId);
+                    break;
                 default:
                     $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
@@ -591,33 +609,145 @@ class FileRepository
         return $draft;
     }
 
-    public function createReferenceData(array $data, $ignoreCommon = true)
+    public function createReferenceData(array $data, $meta, $forDownload = true)
     {
         $sourceLanguage = Craft::$app->sites->getSiteById($data['sourceElementSite'])->language;
         $targetLanguage = Craft::$app->sites->getSiteById($data['targetElementSite'])->language;
-
-        $tmContent = [[$targetLanguage]];
-
-        if ($ignoreCommon)
-            $tmContent = sprintf('"key","%s","%s"', $sourceLanguage, $targetLanguage);
+        
+        $meta += [
+            'sourceLang' => $sourceLanguage,
+            'targetLang' => $targetLanguage,
+        ];
 
         $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($data['sourceContent']), true)['content'] ?? [];
-
+        
         $target = Translations::$plugin->elementTranslator->toTranslationSource(
             $data['targetElement'],
             $data['targetElementSite']
         );
+        $tmContent = '';
+
+        if ($forDownload) {
+            switch ($data['format']) {
+                case Constants::FILE_FORMAT_XML:
+                    $tmContent = $this->referenceAsXml($source, $target, $meta);
+                    break;
+                case Constants::FILE_FORMAT_JSON:
+                    $tmContent = $this->referenceAsJson($source, $target, $meta);
+                    break;
+                default:
+                    $tmContent = $this->referenceAsCsv($source, $target, $meta);
+            }
+        } else {
+            $tmContent = json_encode($this->referenceAsCsv($source, $target, $meta, $forDownload));
+        }
+
+        return $tmContent;
+    }
+    
+    private function referenceAsCsv($source, $target, $meta, $forDownload = true)
+    {
+        $tmContent = [[$meta['targetLang']]];
+        
+        if ($forDownload) {
+            $tmContent = sprintf('"key","%s","%s"', $meta['sourceLang'], $meta['targetLang']);
+        }
 
         foreach ($source as $key => $value) {
             $targetValue = $target[$key] ?? '';
-            if ($ignoreCommon) {
-                if ($value !== $targetValue)
+            if ($forDownload) {
+                if ($value !== $targetValue) {
                     $tmContent .= "\n" . sprintf('"%s","%s","%s"', $key, $value, $targetValue);
+                }
             } else {
                 $tmContent[] = [$targetValue];
             }
         }
 
-        return $ignoreCommon ? $tmContent : json_encode($tmContent);
+        return $tmContent;
+    }
+    
+    private function referenceAsJson($source, $target, $meta)
+    {
+        $tmContent = [
+            'orderId'           => $meta['orderId'],
+            'elementId'         => $meta['elementId'],
+            'entryTitle'        => $meta['entryTitle'],
+            'entrySlug'         => $meta['entrySlug'],
+            'dateCreated'       => $meta['dateCreated'],
+            "source-language"   => $meta['sourceLang'],
+            "target-language"   => $meta['targetLang'],
+            "content"           => []
+        ];
+
+        foreach ($source as $key => $value) {
+            $targetValue = $target[$key] ?? '';
+            $tmContent['content'][$meta['sourceLang']][$key] = $value;
+            $tmContent['content'][$meta['targetLang']][$key] = $targetValue;
+        }
+
+        return json_encode($tmContent);
+    }
+    
+    private function referenceAsXml($source, $target, $meta)
+    {
+        $dom = new DOMDocument('1.0', 'utf-8');
+        
+        $sourceLanguage = $meta['sourceLang'];
+        $targetLanguage = $meta['targetLang'];
+        $elementId      = $meta['elementId'];
+        $orderId        = $meta['orderId'];
+        $entryTitle     = $meta['entryTitle'];
+        $entrySlug      = $meta['entrySlug'];
+        $dateCreated    = $meta['dateCreated'];
+
+        $dom->formatOutput = true;
+
+        $xml = $dom->appendChild($dom->createElement('xml'));
+
+        $head = $xml->appendChild($dom->createElement('head'));
+        $langs = $head->appendChild($dom->createElement('langs'));
+        $langs->setAttribute('source-language', $sourceLanguage);
+        $langs->setAttribute('target-language', $targetLanguage);
+
+        $meta = $head->appendChild($dom->createElement('meta'));
+        $meta->setAttribute('elementId', $elementId);
+        $meta->setAttribute('orderId', $orderId);
+        $meta->setAttribute('entryTitle', $entryTitle);
+        $meta->setAttribute('entrySlug', $entrySlug);
+        $meta->setAttribute('dateCreated', $dateCreated);
+
+        $body = $xml->appendChild($dom->createElement('body'));
+        $sourceLang = $body->appendChild($dom->createElement('lang'));
+        $sourceLang->setAttribute('source-language', $sourceLanguage);
+        $targetLang = $body->appendChild($dom->createElement('lang'));
+        $targetLang->setAttribute('target-language', $targetLanguage);
+
+        foreach ($source as $key => $value) {
+            $translation = $dom->createElement('content');
+
+            $translation->setAttribute('resname', $key);
+
+            // Does the value contain characters requiring a CDATA section?
+            $text = 1 === preg_match('/[&<>]/', $value) ? $dom->createCDATASection($value) : $dom->createTextNode($value);
+
+            $translation->appendChild($text);
+
+            $sourceLang->appendChild($translation);
+            
+            $targetTranslation = $dom->createElement('content');
+            $value = $target[$key] ?? '';
+
+            $targetTranslation->setAttribute('resname', $key);
+
+            // Does the value contain characters requiring a CDATA section?
+            $text = 1 === preg_match('/[&<>]/', $value) ? $dom->createCDATASection($value) : $dom->createTextNode($value);
+
+            $targetTranslation->appendChild($text);
+
+            $targetLang->appendChild($targetTranslation);
+        }
+
+        return $dom->saveXML();
     }
 }

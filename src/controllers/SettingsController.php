@@ -10,25 +10,24 @@
 
 namespace acclaro\translations\controllers;
 
-use acclaro\translations\Constants;
 use Craft;
-use craft\web\Controller;
 use craft\helpers\Path;
+use craft\models\Volume;
 use craft\helpers\FileHelper;
 use craft\helpers\App as CraftApp;
 use yii\web\NotFoundHttpException;
 
-use acclaro\translations\elements\Order;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\elements\Order;
 use acclaro\translations\services\job\DeleteDrafts;
-use craft\models\Volume;
 
 /**
  * @author    Acclaro
  * @package   Translations
  * @since     1.0.0
  */
-class SettingsController extends Controller
+class SettingsController extends BaseController
 {
     /**
      * @return mixed
@@ -139,9 +138,9 @@ class SettingsController extends Controller
                 }
             }
 
-            Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Orders cleared.'));
+            $this->setSuccess('Orders cleared.');
         } catch (\Throwable $th) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to clear orders.'));
+            $this->setError('Unable to clear orders.');
         }
     }
 
@@ -159,14 +158,14 @@ class SettingsController extends Controller
         $requestedDate = is_array($requestedDate) ? $requestedDate['date'] ?? null : $requestedDate;
 
         if (!$requestedDate) {
-            return $this->asFailure("Something went wrong with date");
+            return $this->asFailure($this->getErrorMessage("Something went wrong with date"));
         }
 
         $requestedDate = \DateTime::createFromFormat('n/j/Y', $requestedDate)->format('Y-m-d');
         $errors = \DateTime::getLastErrors();
 
         if (($errors['warning_count'] + $errors['error_count']) > 0) {
-            return $this->asFailure("Please select a valid date");
+            return $this->asFailure($this->getErrorMessage("Please select a valid date"));
         }
 
         $zipName = 'logs';
@@ -212,7 +211,7 @@ class SettingsController extends Controller
             return $errors;
         }
 
-        if (!$zipHasFiles) return $this->asSuccess("No logs found for selected date");
+        if (!$zipHasFiles) return $this->asSuccess($this->getSuccessMessage("No logs found for selected date"));
 
         if (!is_file($zipDest) || !Path::ensurePathIsContained($zipDest)) {
             throw new NotFoundHttpException(Craft::t('app', 'Invalid file name: {filename}', [
@@ -294,13 +293,13 @@ class SettingsController extends Controller
             ];
 
             if (!$pluginService->savePluginSettings($plugin, $settings)) {
-                Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
+                $this->setError('Unable to save settings.');
             } else {
-                Craft::$app->getSession()->setNotice(Translations::$plugin->translator->translate('app', 'Setting saved.'));
+                $this->setSuccess('Settings saved.');
             }
 
         } catch (\Throwable $th) {
-            Craft::$app->getSession()->setError(Translations::$plugin->translator->translate('app', 'Unable to save setting.'));
+            $this->setError($th->getMessage());
         }
     }
 }

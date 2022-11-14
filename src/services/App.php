@@ -82,6 +82,11 @@ class App extends Component
     public $fileRepository;
 
     /**
+     * @var repository\CommerceRepository
+     */
+    public $commerceRepository;
+
+    /**
      * @var repository\GlobalSetRepository
      */
     public $globalSetRepository;
@@ -186,6 +191,7 @@ class App extends Component
         $this->entryRepository = new repository\EntryRepository();
         $this->elementRepository = new repository\ElementRepository();
         $this->fileRepository = new repository\FileRepository();
+        $this->commerceRepository = new repository\CommerceRepository();
         $this->globalSetRepository = new repository\GlobalSetRepository();
         $this->globalSetDraftRepository = new repository\GlobalSetDraftRepository();
         $this->siteRepository = new repository\SiteRepository();

@@ -17,14 +17,15 @@ use yii\validators\NumberValidator;
 use craft\validators\DateTimeValidator;
 use craft\validators\SiteIdValidator;
 use craft\elements\db\ElementQueryInterface;
-use craft\elements\actions\Restore;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\records\OrderRecord;
 use acclaro\translations\elements\db\OrderQuery;
 use acclaro\translations\elements\actions\OrderDelete;
 use acclaro\translations\elements\actions\OrderEdit;
+use acclaro\translations\elements\actions\OrderRestore;
 use craft\elements\User;
 
 /**
@@ -34,6 +35,8 @@ use craft\elements\User;
  */
 class Order extends Element
 {
+    use AlertsTrait;
+
     public $actionButton = true;
 
     protected $elementType = 'Order';
@@ -171,17 +174,17 @@ class Order extends Element
 
     protected static function defineActions(string $source): array
     {
-        $actions = [OrderDelete::class, OrderEdit::class];
-
-        // Restore
-        $actions[] = Craft::$app->getElements()->createAction([
-            'type' => Restore::class,
-            'successMessage' => Craft::t('app', 'Orders restored.'),
-            'partialSuccessMessage' => Craft::t('app', 'Some orders restored.'),
-            'failMessage' => Craft::t('app', 'Orders not restored.'),
-        ]);
+        $actions = [OrderDelete::class, OrderEdit::class, OrderRestore::class];
 
         return $actions;
+    }
+    
+    /**
+     * @inheritdoc
+     */
+    public static function sources(string $context): array
+    {
+        return static::defineSources($context);;
     }
 
     protected static function defineSources(string $context): array

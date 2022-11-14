@@ -25,6 +25,14 @@ class Translator extends Element
     protected $elementType = 'Translator';
 
     /**
+     * @inheritdoc
+     */
+    public static function sources(string $context): array
+    {
+        return static::defineSources($context);;
+    }
+
+    /**
      * Properties
      */
     protected static function defineSources(string $context = null): array

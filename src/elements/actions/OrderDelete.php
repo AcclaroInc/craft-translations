@@ -7,11 +7,12 @@
 
 namespace acclaro\translations\elements\actions;
 
-use acclaro\translations\Translations;
 use Craft;
+use craft\commerce\elements\Product;
 use craft\elements\actions\Delete;
 use craft\elements\Asset;
-use craft\elements\Category;
+use acclaro\translations\Translations;
+use acclaro\translations\base\AlertsTrait;
 use craft\elements\db\ElementQueryInterface;
 use craft\elements\GlobalSet;
 
@@ -26,6 +27,8 @@ use craft\elements\GlobalSet;
  */
 class OrderDelete extends Delete
 {
+    use AlertsTrait;
+
     /**
      * @inheritdoc
      */
@@ -76,6 +79,8 @@ class OrderDelete extends Delete
      */
     public function performAction(ElementQueryInterface $query): bool
     {
+        $this->successMessage = $this->getSuccessMessage("Order Deleted.");
+
         if ($this->hard) {
             foreach ($query->all() as $order) {
                 /** @var \acclaro\translations\elements\Order $order */
@@ -94,6 +99,11 @@ class OrderDelete extends Delete
                                 break;
                             case ($element instanceof Asset):
                                 $elementRepository = Translations::$plugin->assetDraftRepository;
+                                $draft = $elementRepository->getDraftById($file->draftId);
+                                $elementRepository->deleteDraft($draft);
+                                break;
+                            case ($element instanceof Product):
+                                $elementRepository = Translations::$plugin->commerceRepository;
                                 $draft = $elementRepository->getDraftById($file->draftId);
                                 $elementRepository->deleteDraft($draft);
                                 break;

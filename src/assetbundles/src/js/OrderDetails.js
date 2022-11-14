@@ -884,10 +884,8 @@
                     params = Craft.expandPostArray(postData);
                     Craft.sendActionRequest('POST', 'translations/order/update-order', {data: params})
                         .then((response) => {
-                            Craft.cp.displayNotice(Craft.t('app', response.data.message));
-                            setTimeout(function() {
-                                window.location.href = removeParams(location.href);
-                            }, 200);
+                            Craft.cp.displaySuccess(Craft.t('app', response.data.message));
+                            window.location.href = removeParams(location.href);
                         })
                         .catch(({response}) => {
                             Craft.cp.displayError(Craft.t('app', response.data.message));

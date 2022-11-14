@@ -231,9 +231,9 @@ class FileModel extends Model
 		return $element;
 	}
 
-    public function getFilePreviewSettings()
+    public function getFilePreviewSettings($trigger = null)
     {
-        return $this->_service->getFilePreviewSettings($this);
+        return $this->_service->getFilePreviewSettings($this, $trigger);
     }
 
     public function getEntryPreviewSettings()
@@ -259,9 +259,15 @@ class FileModel extends Model
         return false;
     }
 
-    public function getTmMisalignmentFile()
+    public function getTmMisalignmentFile($format = Constants::FILE_FORMAT_CSV)
     {
         $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
+
+        $metaData = [
+            'orderId'       => $this->orderId,
+            'elementId'     => $this->elementId,
+            'dateCreated'   => $element->dateCreated->format('YmdTHi'),
+        ];
 
         $targetSite = $this->targetSite;
         $source = $this->source;
@@ -285,19 +291,25 @@ class FileModel extends Model
 
         $targetLang = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($targetSite)->language);
 
-        $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), Constants::FILE_FORMAT_CSV);
+        $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), $format);
+        
+        $metaData += [
+            'entrySlug'     => $entrySlug,
+            'entryTitle'    => $this->getUiLabel(),
+        ];
 
         $TmData = [
             'sourceContent' => $source,
             'sourceElementSite' => $this->sourceSite,
             'targetElement' => $targetElement,
-            'targetElementSite' => $targetSite
+            'targetElementSite' => $targetSite,
+            'format' => $format
         ];
 
         return [
             'fileName' => $filename,
-            'fileContent' => Translations::$plugin->fileRepository->createReferenceData($TmData),
-            'reference' => Translations::$plugin->fileRepository->createReferenceData($TmData, false),
+            'fileContent' => Translations::$plugin->fileRepository->createReferenceData($TmData, $metaData),
+            'reference' => Translations::$plugin->fileRepository->createReferenceData($TmData, $metaData, false),
         ];
     }
 }
