@@ -15,8 +15,27 @@ class Constants
     // Translators
     const TRANSLATOR_DEFAULT            = 'export_import';
     const TRANSLATOR_ACCLARO            = 'acclaro';
+    const TRANSLATOR_MACHINE            = 'machine';
     const TRANSLATOR_STATUS_ACTIVE      = 'active';
     const TRANSLATOR_STATUS_INACTIVE    = 'inactive';
+    const TRANSLATOR_SERVICES          = [
+        self::TRANSLATOR_ACCLARO => 'Acclaro',
+        self::TRANSLATOR_DEFAULT => 'Export_Import',
+        self::TRANSLATOR_MACHINE => 'Machine',
+    ];
+
+    // Machine Translation Providers
+    const TRANSLATOR_MACHINE_GOOGLE     = 'google';
+    const TRANSLATOR_MACHINE_YANDEX     = 'yandex';
+    const MACHINE_TRANSLATION_PROVIDERS = [
+        SELF::TRANSLATOR_MACHINE_GOOGLE => 'Google',
+        SELF::TRANSLATOR_MACHINE_YANDEX => 'Yandex'
+    ];
+    
+    const TRANSLATOR_LABELS = [
+        self::TRANSLATOR_ACCLARO => 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>',
+        self::TRANSLATOR_MACHINE_GOOGLE => 'Google API Token<p class="fs-12">Don\'t have an Google API key? <a href="https://cloud.google.com/translate/">Register here</a></p>',
+    ];
 
     // Logging
     const LOG_LEVEL_ERROR   = 'error';

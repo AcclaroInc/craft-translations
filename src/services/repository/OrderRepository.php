@@ -353,7 +353,7 @@ class OrderRepository
         $orderReferenceFiles = [];
 
         $sendOrderSvc = new SendOrder();
-        $translationService = new AcclaroTranslationService($settings, $acclaroApiClient);
+        $translationService = new Translations::$plugin->translatorFactory->makeTranslationService($order->translator->service, $order->translator->getSettings());
         foreach ($order->getFiles() as $file) {
             if ($queue) {
                 $sendOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);

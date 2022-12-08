@@ -6,18 +6,46 @@ if (typeof Craft.Translations === 'undefined') {
 
 Craft.Translations.TranslatorDetail = {
     updateService: function() {
-        var service = $('#service').val();
+        var service = this.getService();
+        var provider = $('#settings-provider');
+        var apiToken = $('#settings-apiToken');
+        var sandboxMode = $('#settings-sandboxMode');
 
-        if (service != 'acclaro') {
-            $('.translations-translator-settings').hide();
-            $('.translations-translator-settings-header').hide();
-        } else {
-            var $settings = $('#settings-'+service);
-            
-            $settings.show();
-            $('.translations-translator-settings').not($settings).hide();
-            $('.translations-translator-settings-header').show();
+        switch (service) {
+            case 'acclaro':
+                this.updateServiceTokenLabel(service);
+                provider.addClass('hidden');
+                apiToken.removeClass('hidden');
+                sandboxMode.removeClass('hidden');
+                break;
+            case 'machine':
+                this.updateServiceTokenLabel(this.getProvider());
+                provider.removeClass('hidden');
+                apiToken.removeClass('hidden');
+                sandboxMode.addClass('hidden');
+                break;
+            default:
+                provider.addClass('hidden');
+                apiToken.addClass('hidden');
+                sandboxMode.addClass('hidden');
         }
+    },
+
+    getToken: function () {
+        return $('input[name="settings[apiToken]"]').val();
+    },
+
+    getService: function () {
+        return $('#service').val();
+    },
+
+    getProvider: function () {
+        return $('select[name="settings[provider]"]').val();
+    },
+
+    updateServiceTokenLabel: function (service) {
+        let label = $('.translations-translator-form').data('settings')[service];
+        $('#settings-apiToken').find('div.heading label').html(label);
     },
 
     validate: function() {
@@ -30,10 +58,17 @@ Craft.Translations.TranslatorDetail = {
 
         switch (service) {
             case 'acclaro':
-                var $apiToken = $('input[name="settings[acclaro][apiToken]"]');
+                var $apiToken = $('input[name="settings[apiToken]"]');
                 var apiTokenValid = $apiToken.val() !== '';
                 this.toggleInputState($apiToken, apiTokenValid, Craft.t('app', 'Please enter your Acclaro API token.'));
                 valid = valid && apiTokenValid
+                break;
+            case 'machine':
+                $apiToken = $('input[name="settings[apiToken]"]');
+                let serviceProviderValid = this.getProvider() !== '';
+                apiTokenValid = $apiToken.val() !== '';
+                this.toggleInputState($apiToken, apiTokenValid, Craft.t('app', `Please enter your ${this.getProvider()} API token.`));
+                valid = valid && apiTokenValid && serviceProviderValid
                 break;
         }
 
@@ -41,20 +76,21 @@ Craft.Translations.TranslatorDetail = {
     },
 
     validateFormFilled: function() {
-        hasService = $("#service").val() != "";
         hasTitle = $('#label').val() != "";
-
-        if (! hasService || ! hasTitle) {
-            return false;
-        }
-
-        if (! this.isDefaultTranslator()) {
-            if (! this.hasApiToken()) {
+        hasService = this.getService() !== "";
+        hasToken = this.getToken() !== "";
+        hasProvider = this.getProvider() !== "";
+        
+        switch (this.getService()) {
+            case 'acclaro':
+                return hasToken && hasService && hasTitle;
+            case 'machine':
+                return hasToken && hasService && hasTitle && hasProvider;
+            case 'export_import':
+                return hasTitle;
+            default:
                 return false;
-            }
         }
-
-        return true;
     },
 
     toggleInputState: function(el, valid, message) {
@@ -74,31 +110,12 @@ Craft.Translations.TranslatorDetail = {
         }
     },
 
-    hasApiToken: function() {
-        return $('input[name="settings[acclaro][apiToken]"]').val() != "";
-    },
-
     isEditTranslatorScreen: function() {
         return $('form input[type=hidden][name=id]').length > 0;
     },
 
     isDefaultTranslator: function() {
         return $('form #service').val() == "export_import" || $('form #service').val() == "";
-    },
-
-    toggleGreenTick: function() {
-        // !NOTE: to be used with draft functionality
-        // if (this.validateFormFilled()) {
-        //     $pageTitle = $("#page-title");
-        //     if ($pageTitle.find("span").length == 0) {
-        //         $('<span>', {class: "checkmark-icon"}).appendTo($pageTitle);
-        //     } else {
-        //         $pageTitle.find("span").addClass("checkmark-icon");
-        //     }
-        // } else {
-        //     $pageTitle = $("#page-title");
-        //     $pageTitle.find("span").removeClass("checkmark-icon");
-        // }
     },
 
     toggleSaveButton: function() {
@@ -122,22 +139,19 @@ Craft.Translations.TranslatorDetail = {
         if (this.isEditTranslatorScreen()) {
             this._initSaveButtonContainer();
             this.toggleSaveButton();
-            // !NOTE: to be used with draft functionality
-            // if (this.validateFormFilled()) {
-            //     $pageTitle = $("#page-title");
-            //     $('<span>', {class: "checkmark-icon"}).appendTo($pageTitle);
-            // }
         }
 
-        $('#label, input[name="settings[acclaro][apiToken]"').on('keyup', function() {
-            self.toggleGreenTick();
+        $('#label, input.api-token-field').on('keyup', function() {
             self.toggleSaveButton();
         });
         
         $('#service').on('change', function() {
-            self.toggleGreenTick();
             self.toggleSaveButton();
             self.updateService();
+        });
+        
+        $('select[name="settings[provider]"]').on('change', function () {
+            self.updateServiceTokenLabel($(this).val());
         });
 
         this.updateService();
@@ -148,6 +162,7 @@ Craft.Translations.TranslatorDetail = {
             }
         });
     },
+
     _initSaveButtonContainer: function() {
         var $btngroup = $('<div>', {
             id: "save-button-container",

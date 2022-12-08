@@ -73,6 +73,8 @@ class TranslatorController extends BaseController
         $variables['selectedSubnavItem'] = 'translators';
         $variables['translatorId'] = $translatorId = Craft::$app->getRequest()->getBodyParam('id');
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
+        $variables['mtProviders'] = Translations::$plugin->translatorRepository->getMachineTranslationProvider();
+        $variables['labels'] = json_encode(Constants::TRANSLATOR_LABELS);
 
         $isContinue = Craft::$app->getRequest()->getBodyParam('flow') === "continue";
 
@@ -96,8 +98,7 @@ class TranslatorController extends BaseController
         }
 
         $service = Craft::$app->getRequest()->getBodyParam('service');
-        $allSettings = Craft::$app->getRequest()->getBodyParam('settings');
-        $settings = $allSettings[$service] ?? array();
+        $settings = Craft::$app->getRequest()->getBodyParam('settings', []);
 
         $translator->label = Craft::$app->getRequest()->getBodyParam('label');
         $translator->service = $service;
@@ -107,7 +108,8 @@ class TranslatorController extends BaseController
         //Make Export/Import Translator automatically active
         if ($translator->service !== Constants::TRANSLATOR_DEFAULT)
         {
-            $auth = Translations::$plugin->services->authenticateService($service, $settings);
+            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
+            $auth = $translationService->authenticate();
             if (! $auth) {
                 $translator->status = "";
                 $variables['translator'] = $translator;
@@ -145,6 +147,8 @@ class TranslatorController extends BaseController
         }
 
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
+        $variables['mtProviders'] = Translations::$plugin->translatorRepository->getMachineTranslationProvider();
+        $variables['labels'] = json_encode(Constants::TRANSLATOR_LABELS);
 
         $this->renderTemplate('translations/translators/_detail', $variables);
     }

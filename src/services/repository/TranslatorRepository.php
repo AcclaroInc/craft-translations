@@ -156,10 +156,12 @@ class TranslatorRepository
      */
     public function getTranslationServices()
     {
-        return array(
-            'acclaro' => 'Acclaro',
-            'export_import' =>'Export/Import',
-        );
+        return Constants::TRANSLATOR_SERVICES;
+    }
+    
+    public function getMachineTranslationProvider()
+    {
+        return Constants::MACHINE_TRANSLATION_PROVIDERS;
     }
 
     /**

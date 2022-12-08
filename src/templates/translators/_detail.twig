@@ -1,6 +1,5 @@
 {% extends '_layouts/cp' %}
 {% import '_includes/forms' as forms %}
-{% import 'translations/_components/_forms/button' as button %}
 
 {% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\TranslatorAssets") %}
 
@@ -13,16 +12,8 @@
 {% endif %}
 
 {% block actionButton %}
-    {# ! NOTE: hidden button we don't support draft as of now #}
-    <div class="btngroup hidden">
-        {{ button.button({
-            type: 'submit',
-            label: 'Save as draft',
-            class: 'link-disabled',
-            attributes: {
-                name: 'submit',
-            }
-        }) }}
+    <div class="btngroup">
+        {# Helps add action button from js #}
     </div>
 {% endblock %}
 
@@ -32,7 +23,7 @@
 ] %}
 
 {% block content %}
-    <form method="post" class="translations-translator-form" data-confirm-unload accept-charset="UTF-8">
+    <form method="post" class="translations-translator-form" data-settings='{{labels}}' data-confirm-unload accept-charset="UTF-8">
         {{ csrfInput() }}
 
         {{ forms.hidden({
@@ -65,29 +56,43 @@
             placeholder: 'Add translator name'|t,
         }) }}
 
-        {{ forms.selectField({
-            label: 'Translation Service'|t,
-            options: {'':'Choose'|t ~ '...'}|merge(translationServices),
-            value: translator.service,
-            name: 'service',
-            id: 'service',
-        }) }}
-
-        <div class="translations-translator-settings bg-none" id="settings-acclaro">
-            {{ forms.textField({
-                label: 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>'|t,
-                value: translator.setting('apiToken'),
-                name: 'settings[acclaro][apiToken]',
-                size: 20,
-                id: 'settings-acclaro-apiToken',
+        <div class="flex field">
+            {{ forms.selectField({
+                label: 'Translation Service'|t,
+                options: {'':'Choose'|t ~ '...'}|merge(translationServices),
+                value: translator.service,
+                name: 'service',
+                id: 'service'
             }) }}
 
-            {{ forms.lightswitchField({
-                label: 'Sandbox Mode'|t,
-                on: translator.setting('sandboxMode'),
-                name: 'settings[acclaro][sandboxMode]',
-                id: 'settings-acclaro-sandboxMode',
-            }) }}
+            <div id="settings-provider" class="hidden pl-100">
+                {{ forms.selectField({
+                    label: 'Machine Translation Provider'|t,
+                    options: mtProviders,
+                    value: translator.setting('provider'),
+                    name: 'settings[provider]'
+                }) }}
+            </div>
+        </div>
+
+        <div class="translations-translator-settings bg-none">
+            <div id="settings-apiToken" class="hidden mb-1">
+                {{ forms.textField({
+                    label: translator.setting('keyInfo')|default('API Key'),
+                    value: translator.setting('apiToken'),
+                    name: 'settings[apiToken]',
+                    size: 20,
+                    class: 'api-token-field'
+                }) }}
+            </div>
+
+            <div id="settings-sandboxMode" class="hidden">
+                {{ forms.lightswitchField({
+                    label: 'Sandbox Mode'|t,
+                    on: translator.setting('sandboxMode'),
+                    name: 'settings[sandboxMode]'
+                }) }}
+            </div>
         </div>
     </form>
 {% endblock %}

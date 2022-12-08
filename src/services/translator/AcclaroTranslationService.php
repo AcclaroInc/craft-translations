@@ -41,12 +41,10 @@ class AcclaroTranslationService implements TranslationServiceInterface
     protected $settings;
 
     /**
-     * @param array                                                         $settings
-     * @param \acclaro\translations\services\api\AcclaroApiClient    $acclaroApiClient
+     * @param array $settings
      */
     public function __construct(
-        array $settings,
-        AcclaroApiClient $acclaroApiClient
+        array $settings
     ) {
         if (!isset($settings['apiToken'])) {
             throw new \Exception('Missing apiToken');
@@ -56,7 +54,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         $this->sandboxMode = !empty($settings['sandboxMode']);
 
-        $this->acclaroApiClient = $acclaroApiClient ?: new AcclaroApiClient(
+        $this->acclaroApiClient = new AcclaroApiClient(
             $settings['apiToken'],
             !empty($settings['sandboxMode'])
         );
