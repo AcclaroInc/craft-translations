@@ -514,13 +514,10 @@ class FilesController extends BaseController
 
         //Iterate over each file on this order and only process if trackTargetChanges is enabled
         if ($order->files && $order->trackTargetChanges) {
+            $translationService = $order->getTranslationService();
+
             foreach ($order->getFiles() as $file) {
                 if (in_array($file->id, $files) && $file->hasTmMisalignments()) {
-                    $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
-                        $order->getTranslator()->service,
-                        $order->getTranslator()->getSettings()
-                    );
-
                     $translationService->sendOrderReferenceFile($order, $file, $format);
                 }
             }

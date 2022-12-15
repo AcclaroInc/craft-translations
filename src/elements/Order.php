@@ -376,22 +376,9 @@ class Order extends Element
                     return '';
                 }
 
-                $translator = $this->getTranslator();
+                $translationService = $this->getTranslationService();
 
-                if (!$translator)
-                {
-                    return $value ? $value : sprintf('#%s', $this->id);
-                }
-
-                if ($this->getTranslator()->service === Constants::TRANSLATOR_DEFAULT)
-                {
-                    return  sprintf('#%s', $this->id);
-                }
-
-                $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, json_decode($translator->settings, true));
-
-                return sprintf('<a href="%s" target="_blank">#%s</a>', $translationService->getOrderUrl($this), $value);
-
+                return $translationService->getOrderUrl($this);
             case 'status':
                 $html = sprintf(
                     "<span class='status %s'></span>%s",

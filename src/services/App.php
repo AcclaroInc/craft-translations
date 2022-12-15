@@ -152,11 +152,6 @@ class App extends Component
     public $elementToFileConverter;
 
     /**
-     * @var Services
-     */
-    public $services;
-
-    /**
      * @var OrderSearchParams
      */
     public $orderSearchParams;
@@ -178,7 +173,6 @@ class App extends Component
 
     public function init(): void
     {
-        $this->services = new Services();
         $this->urlHelper = new UrlHelper();
         $this->urlGenerator = new UrlGenerator();
         $this->translator = new Translator();

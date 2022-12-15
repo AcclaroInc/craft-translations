@@ -94,9 +94,7 @@ class BaseController extends Controller
             Craft::$app->end('Can not update canceled order');
         }
 
-        $translator = $order->getTranslator();
-
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+        $translationService = $order->getTranslationService();
 
         if (!$translationService) {
             Craft::$app->end('Couldn’t find the translation service');
@@ -161,9 +159,7 @@ class BaseController extends Controller
             echo 'Found order'.PHP_EOL;
         }
 
-        $translator = $order->getTranslator();
-
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+        $translationService = $order->getTranslationService();
 
         if (!$translationService) {
             Craft::$app->end('Couldn’t find the translation service');

@@ -104,17 +104,13 @@ class TranslatorController extends BaseController
         $translator->settings = json_encode($settings);
         $translator->status = Craft::$app->getRequest()->getBodyParam('status');
 
-        //Make Export/Import Translator automatically active
-        if ($translator->service !== Constants::TRANSLATOR_DEFAULT)
-        {
-            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
-            $auth = $translationService->authenticate();
-            if (! $auth) {
-                $translator->status = "";
-                $variables['translator'] = $translator;
-                $this->setError('Api token could not be authenticated.');
-                return $this->renderTemplate('translations/translators/_detail', $variables);
-            }
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
+
+        if (! $translationService->authenticate()) {
+            $translator->status = "";
+            $variables['translator'] = $translator;
+            $this->setError('Api token could not be authenticated.');
+            return $this->renderTemplate('translations/translators/_detail', $variables);
         }
 
         $translator->status = Constants::TRANSLATOR_STATUS_ACTIVE;

@@ -211,8 +211,7 @@ class DraftRepository
             try {
                 if ($isFileReady) {
                     // Translation Service Always Local
-                    $translationService = Translations::$plugin->translatorFactory
-                        ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, $order->translator->getSettings());
+                    $translationService = $order->getTranslationService();
 
                     $translationService->updateIOFile($order, $file);
 

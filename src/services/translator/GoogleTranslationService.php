@@ -112,4 +112,17 @@ class GoogleTranslationService implements TranslationServiceInterface
     {
         return [];
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getOrderUrl(Order $order): string
+    {
+        return  sprintf('#%s', $order->id);
+    }
+
+    public function updateIOFile(Order $order, FileModel $file)
+    {
+        return (new Export_ImportTranslationService([]))->updateIOFile($order, $file);
+    }
 }

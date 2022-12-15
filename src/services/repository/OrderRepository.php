@@ -26,7 +26,6 @@ use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
-use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
 
 class OrderRepository
@@ -240,15 +239,17 @@ class OrderRepository
         return $orderCount;
     }
 
+    /**
+     * @param \acclaro\translations\elements\Order $order
+     * @param array $settings
+     * @param array $tagIds
+     */
     public function deleteOrderTags($order, $settings, $tagIds) {
-        $acclaroApiClient = new AcclaroApiClient(
-            $settings['apiToken'],
-            !empty($settings['sandboxMode'])
-        );
+        $translationService = $order->getTranslationService();
         foreach ($tagIds as $tagId) {
             $tag = Craft::$app->getTags()->getTagById($tagId);
             if ($tag) {
-                $acclaroApiClient->removeOrderTags($order->id, $tag->title);
+                $translationService->removeOrderTags($order->id, $tag->title);
             }
         }
     }
@@ -263,10 +264,7 @@ class OrderRepository
      */
     public function sendAcclaroOrder($order, $settings, $queue=null) {
 
-        $acclaroApiClient = new AcclaroApiClient(
-            $settings['apiToken'],
-            !empty($settings['sandboxMode'])
-        );
+        $translationService = $order->getTranslationService();
 
         $totalElements = count($order->files);
         $currentElement = 0;
@@ -279,7 +277,7 @@ class OrderRepository
             $dueDate = $dueDate->format('Y-m-d');
         }
 
-        $orderResponse = $acclaroApiClient->createOrder(
+        $orderResponse = $translationService->createOrder(
             $order->title,
             $comments,
             $dueDate,
@@ -293,7 +291,7 @@ class OrderRepository
 
         $order->serviceOrderId = $orderData['acclaroOrderId'];
 
-        $acclaroApiClient->requestOrderCallback(
+        $translationService->requestOrderCallback(
             $order->serviceOrderId,
             Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
         );
@@ -307,7 +305,7 @@ class OrderRepository
                 }
             }
             if (! empty($tags)) {
-                $acclaroApiClient->addOrderTags($orderResponse->orderid, implode(",", $tags));
+                $translationService->addOrderTags($orderResponse->orderid, implode(",", $tags));
             }
         }
 
@@ -328,9 +326,9 @@ class OrderRepository
         }
 
         if ($order->requestQuote()) {
-            $acclaroApiClient->requestOrderQuote($order->serviceOrderId);
+            $translationService->requestOrderQuote($order->serviceOrderId);
         } else {
-            $acclaroApiClient->submitOrder($order->serviceOrderId);
+            $translationService->submitOrder($order->serviceOrderId);
         }
 
         foreach ($orderReferenceFiles as $file) {

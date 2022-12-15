@@ -63,6 +63,14 @@ class Export_ImportTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
+    public function getOrderUrl(Order $order): string
+    {
+        return  sprintf('#%s', $order->id);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function sendOrder(Order $order)
     {
         return;
