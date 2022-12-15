@@ -22,6 +22,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
 use acclaro\translations\services\job\acclaro\UpdateReviewFileUrls;
+use acclaro\translations\services\job\SyncOrderJob;
 
 class AcclaroTranslationService implements TranslationServiceInterface
 {
@@ -204,6 +205,33 @@ class AcclaroTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
+    public function syncOrder(Order $order, $queue = null)
+    {
+        $totalElements = count($order->files);
+        $currentElement = 0;
+
+        if (!($order->isGettingQuote() || $order->isAwaitingApproval())) {
+            $syncOrderSvc = new SyncOrderJob();
+            foreach ($order->getFiles() as $file) {
+                if ($queue) {
+                    $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
+                }
+                // Let's make sure we're not updating canceled/complete/published files
+                if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
+
+                $this->updateFile($order, $file);
+
+                Translations::$plugin->fileRepository->saveFile($file);
+            }
+        }
+
+        $this->updateOrder($order);
+        return Translations::$plugin->orderRepository->saveOrder($order);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function updateReviewFileUrls(Order $order)
     {
         Craft::$app->queue->push(new UpdateReviewFileUrls([
@@ -213,7 +241,10 @@ class AcclaroTranslationService implements TranslationServiceInterface
         ]));
     }
 
-    public function getOrderUrl(Order $order)
+    /**
+     * {@inheritdoc}
+     */
+    public function getOrderUrl(Order $order): string
     {
         $subdomain = $this->sandboxMode ? 'apisandbox' : 'my';
 

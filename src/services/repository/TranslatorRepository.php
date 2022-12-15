@@ -158,11 +158,6 @@ class TranslatorRepository
     {
         return Constants::TRANSLATOR_SERVICES;
     }
-    
-    public function getMachineTranslationProvider()
-    {
-        return Constants::MACHINE_TRANSLATION_PROVIDERS;
-    }
 
     /**
      * @return \acclaro\translations\models\TranslatorModel

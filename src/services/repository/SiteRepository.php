@@ -32,6 +32,17 @@ class SiteRepository
 
         return $language;
     }
+    
+    public function getSiteCode($siteId): string
+    {
+        $site = Craft::$app->sites->getSiteById($siteId);
+
+        if (!in_array($siteId, $this->supportedSites)) {
+            return '';
+        }
+
+        return $this->normalizeLanguage($site->language);
+    }
 
     public function isSiteSupported($id)
     {

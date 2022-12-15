@@ -194,6 +194,32 @@ class FileModel extends Model
 
         return $element instanceof (Constants::CLASS_ENTRY) || $element instanceof (Constants::CLASS_CATEGORY);
     }
+    
+    public function getOrder()
+    {
+        return Translations::$plugin->orderRepository->getOrderById($this->orderId);
+    }
+    
+    public function getTranslator()
+    {
+        return $this->getOrder()->getTranslator();
+    }
+    
+    public function canEnableFilesCheckboxes()
+    {
+        return $this->isInProgress() || $this->isComplete() || $this->isReviewReady() || $this->isPublished() ||
+            ($this->isNew() && $this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE);
+    }
+
+    public function getSourceLangCode()
+    {
+        return Translations::$plugin->siteRepository->getSiteCode($this->sourceSite);
+    }
+
+    public function getTargetLangCode()
+    {
+        return Translations::$plugin->siteRepository->getSiteCode($this->targetSite);
+    }
 
 	public function getPreviewUrl()
 	{

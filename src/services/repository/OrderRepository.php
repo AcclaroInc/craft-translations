@@ -21,15 +21,13 @@ use craft\elements\Asset;
 use craft\elements\Category;
 use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
+use craft\commerce\elements\Product;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
-use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
-use acclaro\translations\services\translator\AcclaroTranslationService;
-use craft\commerce\elements\Product;
 
 class OrderRepository
 {
@@ -95,9 +93,9 @@ class OrderRepository
     }
 
     /**
-     * @return array
+     * @return \acclaro\translations\elements\Order[]
      */
-    public function getInProgressOrders()
+    public function getInProgressOrders(): array
     {
         $inProgressOrders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.status', array(
@@ -242,43 +240,6 @@ class OrderRepository
         return $orderCount;
     }
 
-    /**
-     * @param \acclaro\translations\elements\Order $order
-     * @param $queue
-     * @throws Exception
-     */
-    public function syncOrder($order, $queue=null) {
-
-        $totalElements = count($order->files);
-        $currentElement = 0;
-
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($order->translator->service, $order->translator->getSettings());
-
-        // Don't update manual orders
-        if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
-            return;
-        }
-
-        if (!($order->isGettingQuote() || $order->isAwaitingApproval())) {
-            $syncOrderSvc = new SyncOrder();
-            foreach ($order->getFiles() as $file) {
-                if ($queue) {
-                    $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
-                }
-                // Let's make sure we're not updating canceled/complete/published files
-                if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
-
-                $translationService->updateFile($order, $file);
-
-                Translations::$plugin->fileRepository->saveFile($file);
-            }
-        }
-
-        $translationService->updateOrder($order);
-
-        Translations::$plugin->orderRepository->saveOrder($order);
-    }
-
     public function deleteOrderTags($order, $settings, $tagIds) {
         $acclaroApiClient = new AcclaroApiClient(
             $settings['apiToken'],
@@ -353,7 +314,7 @@ class OrderRepository
         $orderReferenceFiles = [];
 
         $sendOrderSvc = new SendOrder();
-        $translationService = new Translations::$plugin->translatorFactory->makeTranslationService($order->translator->service, $order->translator->getSettings());
+        $translationService = $order->getTranslationService();
         foreach ($order->getFiles() as $file) {
             if ($queue) {
                 $sendOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);

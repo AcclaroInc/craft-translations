@@ -415,7 +415,7 @@ class Order extends Element
                 if (!$this->getTranslator()) {
                     return 'N/A';
                 }
-                return $this->getTranslator() ? ($this->getTranslator()->label ? $this->getTranslator()->label : $this->getTranslator()->service) : $this->getTranslator()->service;
+                return $this->getTranslator()->label ? $this->getTranslator()->label : $this->getTranslator()->service;
         }
 
         return parent::getTableAttributeHtml($attribute);
@@ -575,7 +575,7 @@ class Order extends Element
     public function canEnableFilesCheckboxes()
     {
         foreach ($this->getFiles() as $file) {
-			if ($file->isInProgress() || $file->isComplete() || $file->isReviewReady() || $file->isPublished()) return true;
+			if ($file->canEnableFilesCheckboxes()) return true;
 		}
 
 		return false;
@@ -751,6 +751,17 @@ class Order extends Element
 		return $response;
 	}
 
+	public function hasTranslator($service)
+	{
+		$response = false;
+
+		if ($translator = $this->getTranslator()) {
+			$response = $translator->service === $service;
+		}
+
+		return $response;
+	}
+
     public function shouldTrackSourceContent()
     {
         if (!$this->id) {
@@ -765,6 +776,22 @@ class Order extends Element
         if (! $this->id) return Translations::getInstance()->settings->trackTargetChanges;
 
         return $this->trackTargetChanges;
+    }
+
+    /**
+     * Check if the order should be processed using queue
+     */
+    public function shouldProcessByQueue(): bool
+    {
+        return ($this->wordCount * count($this->getTargetSitesArray())) > Constants::WORD_COUNT_LIMIT || $this->hasTranslator(Constants::TRANSLATOR_GOOGLE);
+    }
+
+    /**
+     * Create translation service calss based on translator
+     */
+    public function getTranslationService()
+    {
+        return Translations::$plugin->translatorFactory->makeTranslationService($this->getTranslator()?->service, $this->getTranslator()?->getSettings());
     }
 
 	public function isExportImportAllowed()

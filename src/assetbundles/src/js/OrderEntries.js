@@ -5,8 +5,10 @@
 	}
 
 	var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
+	var isAcclaroTranslator = $("#order-attr").data("translator") === "acclaro";
 	var hasOrderId = $("input[type=hidden][name=id]").val() != '';
 	var isInProgress = $("#order-attr").data("status") === "in progress";
+	var isNew = $("#order-attr").data("status") === "new";
 	var hasCompleteFiles = $("#order-attr").data("has-completed-file");
 	var isTmAligned = $("#order-attr").data("is-tm-aligned");
 
@@ -106,13 +108,23 @@
 		},
 		togglePublishButton: function() {
 			if (this.hasSelections()) {
-				if (! isInProgress)
+				if (!isInProgress && !isNew) {
 					this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
-				this.$fileActions.removeClass('noClick disabled');
+					this.$fileActions.removeClass('noClick disabled');
+				}
+				if (isNew && !(isDefaultTranslator && isAcclaroTranslator)) {
+					let translateBtn = $('#settings').find('div.field button[form="sync-order"]');
+					translateBtn.removeClass('link-disabled');
+				}
 			} else {
-				if (! isInProgress)
+				if (!isInProgress && !isNew) {
 					this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
-				this.$fileActions.addClass('noClick disabled');
+					this.$fileActions.addClass('noClick disabled');
+				}
+				if (isNew && !(isDefaultTranslator && isAcclaroTranslator)) {
+					let translateBtn = $('#settings').find('div.field button[form="sync-order"]');
+					translateBtn.addClass('link-disabled');
+				}
 			}
 		},
 		toggleApprovePublishButton: function(state) {

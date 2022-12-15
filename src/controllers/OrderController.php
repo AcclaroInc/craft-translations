@@ -22,8 +22,8 @@ use yii\web\HttpException;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
-use acclaro\translations\services\job\SyncOrder;
 use acclaro\translations\services\job\CreateDrafts;
+use acclaro\translations\services\job\SyncOrderJob;
 use acclaro\translations\services\repository\OrderRepository;
 
 /**
@@ -108,6 +108,7 @@ class OrderController extends BaseController
 		$variables['elementWordCounts'] = array();
         $variables['orderWordCount'] = 0;
         $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
+        $variables['translatorServices'] = [];
 
         if ($variables['isProcessing']) {
             $submitAction = Craft::$app->getRequest()->getParam('submit');
@@ -287,6 +288,8 @@ class OrderController extends BaseController
                 if ($translator->service === Constants::TRANSLATOR_DEFAULT) {
                     $variables['defaultTranslatorId'] = $translatorId;
                 }
+                
+                $variables['translatorServices'][$translatorId] = $translator->service;
             }
         }
 
@@ -320,16 +323,13 @@ class OrderController extends BaseController
 		// Set lastest Order status if api order
         if (
             !is_null($variables['translator']) &&
-            $variables['translator']->service !== Constants::TRANSLATOR_DEFAULT
+            $variables['translator']->service === Constants::TRANSLATOR_ACCLARO
         ) {
 			$variables['isDefaultTranslator'] = false;
 
 			if (!$order->isPending()) {
 				/** @var \acclaro\translations\services\translator\AcclaroTranslationService */
-				$translationService = Translations::$plugin->translatorFactory->makeTranslationService(
-					$variables['translator']->service,
-					json_decode($variables['translator']->settings, true)
-				);
+				$translationService = $order->getTranslationService();
 
 				$translatorUrl = $translationService->getOrderUrl($order);
 				$variables['translator_url'] = $translatorUrl;
@@ -468,13 +468,11 @@ class OrderController extends BaseController
 
             // Authenticate service
             $translator = $order->getTranslator();
-            $service = $translator->service;
-            $settings = $translator->getSettings();
-            $authenticate = Translations::$plugin->services->authenticateService($service, $settings);
+            $translationService = $order->getTranslationService();
 
-            if (!$authenticate && $service == Constants::TRANSLATOR_ACCLARO) {
+            if (!$translationService->authenticate()) {
                 $transaction->rollBack();
-                return $this->asFailure($this->getErrorMessage('Invalid API key.'));
+                return $this->asFailure($this->getErrorMessage('Failed to authenticate API key.'));
             }
 
             // Calculating total Entries and their WordCount
@@ -516,111 +514,102 @@ class OrderController extends BaseController
                 Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
                 $transaction->rollBack();
                 return $this->asFailure($this->getErrorMessage("Error saving Order."));
-            } else {
-                // Check supported languages for order service
-                if ($order->getTranslator()->service !== Constants::TRANSLATOR_DEFAULT) {
-                    $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
-                        $order->getTranslator()->service,
-                        $order->getTranslator()->getSettings()
-                    );
-
-                    if ($translationService->getLanguages()) {
-                        $sourceSite = Craft::$app->getSites()->getSiteById($order->sourceSite);
-                        $sourceLanguage = Translations::$plugin->siteRepository
-                            ->normalizeLanguage($sourceSite->language);
-                        $unsupported = false;
-                        $unsupportedLangs = [];
-                        $supportedLanguagePairs = [];
-                        $sourceSlug = "$sourceSite->name ($sourceSite->language)";
-
-                        foreach ($translationService->getLanguagePairs($sourceLanguage) as $key => $languagePair) {
-                            $supportedLanguagePairs[] = strtolower($languagePair->target['code']);
-                        }
-
-                        foreach (json_decode($order->targetSites) as $key => $siteId) {
-                            $site = Craft::$app->getSites()->getSiteById($siteId);
-                            $language = Translations::$plugin->siteRepository->normalizeLanguage($site->language);
-                            $targetSlug = "$site->name ($site->language)";
-
-                            if (!in_array($language, array_map('strtolower', array_column($translationService->getLanguages(), 'code')))) {
-                                $unsupported = true;
-                                $unsupportedLangs[] = array(
-                                    'language' => "$sourceSlug to $targetSlug"
-                                );
-                                continue;
-                            }
-
-                            if (!in_array($language, $supportedLanguagePairs)) {
-                                $unsupported = true;
-                                $unsupportedLangs[] = array(
-                                    'language' => "$sourceSlug to $targetSlug"
-                                );
-                            }
-                        }
-
-                        if ($unsupported || !empty($unsupportedLangs)) {
-                            $transaction->rollBack();
-                            return $this->asFailure(sprintf(
-                                $this->getErrorMessage("The following language pair(s) are not supported by %s {%s}"),
-                                ucfirst($order->getTranslator()->service),
-                                implode("}, {", array_column($unsupportedLangs, "language"))
-                            ));
-                        }
-                    }
-                }
-                // Create Order Files
-                $success = Translations::$plugin->fileRepository->createOrderFiles($order, $wordCounts);
-
-                if (! $success) {
-                    Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t create the order file', Constants::LOG_LEVEL_ERROR);
-                    $transaction->rollBack();
-
-                    return $this->asFailure($this->getErrorMessage("Saving order files."));
-                } else {
-                    $order->status = Constants::ORDER_STATUS_NEW;
-                    $order->dateOrdered = new DateTime();
-
-                    $success = Craft::$app->getElements()->saveElement($order, true, true, false);
-
-                    if (! $success) {
-                        Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
-                        $transaction->rollBack();
-                        return $this->asFailure($this->getErrorMessage("Couldn’t save the order."));
-                    }
-                }
-
-                // Sending Order To Acclaro
-                if ($order->getTranslator()->service !== Constants::TRANSLATOR_DEFAULT) {
-                    $translationService = Translations::$plugin->translatorFactory->makeTranslationService(
-                        $order->getTranslator()->service,
-                        $order->getTranslator()->getSettings()
-                    );
-
-                    $totalWordCount = ($order->wordCount * count($order->getTargetSitesArray()));
-
-                    if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
-                        $job = $translationService->SendOrder($order);
-
-                        $queueOrders = Craft::$app->getSession()->get('queueOrders');
-                        $queueOrders[$job] = $order->id;
-                        Craft::$app->getSession()->set('importQueued', 1);
-                        Craft::$app->getSession()->set('queueOrders', $queueOrders);
-                    } else {
-                        $job =  null;
-                        $this->service->sendAcclaroOrder(
-                            $order,
-                            $translator->getSettings()
-                        );
-                    }
-                }
-
-                $orderAction = sprintf('Order submitted to %s', $order->translator->getName());
-
-                if ($order->requestQuote())
-                    $orderAction = sprintf('Order quote requested from %s', $order->translator->getName());
-
-                $order->logActivity(Translations::$plugin->translator->translate('app', $orderAction));
             }
+
+            // Check supported languages for order service
+            if ($order->getTranslator()->service === Constants::TRANSLATOR_ACCLARO) {
+                if ($translationService->getLanguages()) {
+                    $sourceSite = Craft::$app->getSites()->getSiteById($order->sourceSite);
+                    $sourceLanguage = Translations::$plugin->siteRepository->normalizeLanguage($sourceSite->language);
+                    $unsupported = false;
+                    $unsupportedLangs = [];
+                    $supportedLanguagePairs = [];
+                    $sourceSlug = "$sourceSite->name ($sourceSite->language)";
+
+                    foreach ($translationService->getLanguagePairs($sourceLanguage) as $key => $languagePair) {
+                        $supportedLanguagePairs[] = strtolower($languagePair->target['code']);
+                    }
+
+                    foreach (json_decode($order->targetSites) as $key => $siteId) {
+                        $site = Craft::$app->getSites()->getSiteById($siteId);
+                        $language = Translations::$plugin->siteRepository->normalizeLanguage($site->language);
+                        $targetSlug = "$site->name ($site->language)";
+
+                        if (!in_array($language, array_map('strtolower', array_column($translationService->getLanguages(), 'code')))) {
+                            $unsupported = true;
+                            $unsupportedLangs[] = array(
+                                'language' => "$sourceSlug to $targetSlug"
+                            );
+                            continue;
+                        }
+
+                        if (!in_array($language, $supportedLanguagePairs)) {
+                            $unsupported = true;
+                            $unsupportedLangs[] = array(
+                                'language' => "$sourceSlug to $targetSlug"
+                            );
+                        }
+                    }
+
+                    if ($unsupported || !empty($unsupportedLangs)) {
+                        $transaction->rollBack();
+                        return $this->asFailure(sprintf(
+                            $this->getErrorMessage("The following language pair(s) are not supported by %s {%s}"),
+                            ucfirst($order->getTranslator()->service),
+                            implode("}, {", array_column($unsupportedLangs, "language"))
+                        ));
+                    }
+                }
+            }
+
+            // Create Order Files
+            $success = Translations::$plugin->fileRepository->createOrderFiles($order, $wordCounts);
+
+            if (! $success) {
+                Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t create the order file', Constants::LOG_LEVEL_ERROR);
+                $transaction->rollBack();
+
+                return $this->asFailure($this->getErrorMessage("Saving order files."));
+            }
+
+            $order->status = Constants::ORDER_STATUS_NEW;
+            $order->dateOrdered = new DateTime();
+
+            $success = Craft::$app->getElements()->saveElement($order, true, true, false);
+
+            if (! $success) {
+                Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
+                $transaction->rollBack();
+                return $this->asFailure($this->getErrorMessage("Couldn’t save the order."));
+            }
+
+            // Sending Order To Acclaro
+            if ($order->getTranslator()->service === Constants::TRANSLATOR_ACCLARO) {
+                $totalWordCount = ($order->wordCount * count($order->getTargetSitesArray()));
+
+                if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
+                    $job = $translationService->SendOrder($order);
+
+                    $queueOrders = Craft::$app->getSession()->get('queueOrders');
+                    $queueOrders[$job] = $order->id;
+                    Craft::$app->getSession()->set('importQueued', 1);
+                    Craft::$app->getSession()->set('queueOrders', $queueOrders);
+                } else {
+                    $job =  null;
+                    $this->service->sendAcclaroOrder(
+                        $order,
+                        $translator->getSettings()
+                    );
+                }
+            }
+
+            $orderAction = sprintf('Order submitted to %s', $order->translator->getName());
+
+            if ($order->requestQuote())
+                $orderAction = sprintf('Order quote requested from %s', $order->translator->getName());
+
+            $order->logActivity(Translations::$plugin->translator->translate('app', $orderAction));
+
             $transaction->commit();
         } catch (Exception $e) {
             Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), Constants::LOG_LEVEL_ERROR);
@@ -818,15 +807,12 @@ class OrderController extends BaseController
         // Authenticate service
         $translator = $order->getTranslator();
 
-        $authenticate = Translations::$plugin->services->authenticateService(
-            $translator->service,
-            $translator->getSettings()
-        );
+        $translatorService = $order->getTranslationService();
 
-        $isDefaultTranslator = $translator->service === Constants::TRANSLATOR_DEFAULT;
+        $isAcclaroTranslator = $translator->service === Constants::TRANSLATOR_ACCLARO;
 
-        if (!$authenticate && !$isDefaultTranslator) {
-            return $this->asFailure($this->getErrorMessage('Invalid API key.'));
+        if (!$translatorService->authenticate()) {
+            return $this->asFailure($this->getErrorMessage('Failed to authenticate API key.'));
         }
 
         $queueOrders = Craft::$app->getSession()->get('queueOrders');
@@ -843,13 +829,8 @@ class OrderController extends BaseController
         }
 
         try {
-			$translatorService = Translations::$plugin->translatorFactory->makeTranslationService(
-				$translator->service,
-				json_decode($translator->settings, true)
-			);
-
 			// Set Tags to order
-			if (! $isDefaultTranslator) {
+			if ($isAcclaroTranslator) {
 				if ($newTags = Craft::$app->getRequest()->getParam('tags')) {
 					$updatedTags = [];
 					foreach ($newTags as $tagId) {
@@ -870,7 +851,7 @@ class OrderController extends BaseController
 			if ($order->title != $newTitle = trim(Craft::$app->getRequest()->getBodyParam('title'))) {
 				$order->title = $newTitle;
 
-				if (! $isDefaultTranslator) {
+				if ($isAcclaroTranslator) {
 					$translatorService->editOrderName($order->serviceOrderId, trim($newTitle));
 				}
 			}
@@ -893,7 +874,7 @@ class OrderController extends BaseController
 
             if ($removedSites) {
 				foreach ($removedSites as $site) {
-					if (! $isDefaultTranslator) {
+					if ($isAcclaroTranslator) {
 						$files = Translations::$plugin->fileRepository->getFiles($order->id, null, $site);
 						foreach ($files as $file) {
 							$translatorService->addFileComment($order, $file, "CANCEL FILE");
@@ -905,7 +886,7 @@ class OrderController extends BaseController
 
 			if ($removedEntries) {
 				foreach ($removedEntries as $entryId) {
-					if (! $isDefaultTranslator) {
+					if ($isAcclaroTranslator) {
 						$files = Translations::$plugin->fileRepository->getFiles($order->id, $entryId);
 						foreach ($files as $file) {
 							$translatorService->addFileComment($order, $file, "CANCEL FILE");
@@ -921,7 +902,7 @@ class OrderController extends BaseController
 						if (in_array($entry->id, $removedEntries)) continue;
 						$file = Translations::$plugin->fileRepository->createOrderFile($order, $entry->id, $site);
 						Translations::$plugin->fileRepository->saveFile($file);
-						if (! $isDefaultTranslator) {
+						if ($isAcclaroTranslator) {
 							$files = Translations::$plugin->fileRepository->getFiles($order->id, $entry->id, $site);
 							foreach ($files as $file) {
 								$translatorService->sendOrderFile($order, $file);
@@ -937,7 +918,7 @@ class OrderController extends BaseController
 					foreach ($targetSites as $site) {
 						$file = Translations::$plugin->fileRepository->createOrderFile($order, $entryId, $site);
 						Translations::$plugin->fileRepository->saveFile($file);
-						if (! $isDefaultTranslator) {
+						if ($isAcclaroTranslator) {
 							$files = Translations::$plugin->fileRepository->getFiles($order->id, $entryId, $site);
 							foreach ($files as $file) {
 								$translatorService->sendOrderFile($order, $file);
@@ -1064,12 +1045,8 @@ class OrderController extends BaseController
             return;
         }
 
-        if ($translator->service == Constants::TRANSLATOR_ACCLARO) {
-            $translatorService = Translations::$plugin->translatorFactory
-                ->makeTranslationService(
-                    $order->getTranslator()->service,
-                    json_decode($order->getTranslator()->settings, true)
-                );
+        if ($translator->service === Constants::TRANSLATOR_ACCLARO) {
+            $translatorService = $order->getTranslationService();
 
             $res = $translatorService->cancelOrder($order);
 
@@ -1109,20 +1086,16 @@ class OrderController extends BaseController
         $order = $this->service->getOrderById((int) $orderId);
 
         // Authenticate service
-        $translator = $order->getTranslator();
-        $service = $translator->service;
-        $settings = $translator->getSettings();
-        $authenticate = Translations::$plugin->services->authenticateService($service, $settings);
+        $translationService = $order->getTranslationService();
 
-        if (!$authenticate && $service == Constants::TRANSLATOR_ACCLARO) {
-            $this->setError('Invalid API key.');
+        if (!$translationService->authenticate()) {
+            $this->setError('Failed to authenticate API key.');
             return;
         }
 
         if ($order) {
-            $totalWordCount = ($order->wordCount * count($order->getTargetSitesArray()));
-            if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
-                $job = Craft::$app->queue->push(new SyncOrder([
+            if ($order->shouldProcessByQueue()) {
+                $job = Craft::$app->queue->push(new SyncOrderJob([
                     'description' => 'Syncing order '. $order->title,
                     'orderId' => $order->id
                 ]));
@@ -1140,7 +1113,7 @@ class OrderController extends BaseController
                     return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
                 }
             } else {
-                $this->service->syncOrder($order);
+                $translationService->syncOrder($order);
                 $this->setSuccess("Done syncing order '{$order->title}'");
                 return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
             }
@@ -1165,7 +1138,7 @@ class OrderController extends BaseController
         $orders = $this->service->getInProgressOrders();
         $allFileCounts = $totalWordCount = 0;
         foreach ($orders as $order) {
-            if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
+            if ($order->translator->service !== Constants::TRANSLATOR_ACCLARO) {
                 continue;
             }
             $totalWordCount += ($order->wordCount * count($order->getTargetSitesArray()));
@@ -1174,21 +1147,26 @@ class OrderController extends BaseController
 
         $job = '';
         $url = Craft::$app->getRequest()->absoluteUrl;
+        $translationService = null;
 
         try {
             foreach ($orders as $order) {
-                // Don't update manual orders
-                if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
+                if (!$translationService) {
+                    $translationService = $order->getTranslationService();
+                }
+
+                // Only update acclaro orders
+                if ($order->translator->service !== Constants::TRANSLATOR_ACCLARO) {
                     continue;
                 }
 
                 if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
-                    $job = Craft::$app->queue->push(new SyncOrder([
+                    $job = Craft::$app->queue->push(new SyncOrderJob([
                         'description' => 'Syncing order '. $order->title,
                         'orderId' => $order->id
                     ]));
                 } else {
-                    $this->service->syncOrder($order);
+                    $translationService->syncOrder($order);
                 }
             }
         } catch (Exception $e) {
@@ -1367,32 +1345,16 @@ class OrderController extends BaseController
         if ($elements) $elements = json_decode($elements, true);
 
         $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
-        // Authenticate service
-        if (! $isDefaultTranslator) {
-            $translator = $order->getTranslator();
-            $authenticate = Translations::$plugin->services->authenticateService(
-                $translator->service,
-                $translator->getSettings()
-            );
 
-            if (!$authenticate && $translator->service !== Constants::TRANSLATOR_DEFAULT) {
-                return $this->asFailure($this->getErrorMessage('Invalid API key.'));
-            }
+        // Authenticate service
+        $translationService = $order->getTranslationService();
+        if (! $translationService->authenticate()) {
+            return $this->asFailure($this->getErrorMessage('Failed to authenticate API key.'));
         }
 
         $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {
-
-            if (! $isDefaultTranslator) {
-                /** @var \acclaro\translations\services\translator\AcclaroTranslationService */
-                $translatorService = Translations::$plugin->translatorFactory
-                    ->makeTranslationService(
-                        $translator->service,
-                        $translator->getSettings()
-                    );
-            }
-
             $changeLog = [];
             foreach ($order->getFiles() as $file) {
                 if (in_array($file->elementId, $elements)) {
@@ -1435,9 +1397,9 @@ class OrderController extends BaseController
 
                     // Cancel old file and send new files to translator
                     if (! $isDefaultTranslator) {
-                        $translatorService->addFileComment($order, $file, "CANCEL FILE");
-                        $translatorService->sendOrderFile($order, $file);
-                        $translatorService->addFileComment($order, $file, "NEW FILE");
+                        $translationService->addFileComment($order, $file, "CANCEL FILE");
+                        $translationService->sendOrderFile($order, $file);
+                        $translationService->addFileComment($order, $file, "NEW FILE");
                     }
                 }
             }
@@ -1491,11 +1453,7 @@ class OrderController extends BaseController
         try {
             $translator = $order->getTranslator();
             if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
-                $translatorService = Translations::$plugin->translatorFactory
-                    ->makeTranslationService(
-                        $translator->service,
-                        json_decode($translator->settings, true)
-                    );
+                $translatorService = $order->getTranslationService();
 
                 $response = $translatorService->acceptOrderQuote($order->serviceOrderId, $comment);
 
@@ -1532,11 +1490,7 @@ class OrderController extends BaseController
         try {
             $translator = $order->getTranslator();
             if ($translator->service != Constants::TRANSLATOR_DEFAULT) {
-                $translatorService = Translations::$plugin->translatorFactory
-                    ->makeTranslationService(
-                        $translator->service,
-                        json_decode($translator->settings, true)
-                    );
+                $translatorService = $order->getTranslationService();
 
                 $response = $translatorService->declineOrderQuote($order->serviceOrderId, $comment);
 

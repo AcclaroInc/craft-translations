@@ -73,7 +73,6 @@ class TranslatorController extends BaseController
         $variables['selectedSubnavItem'] = 'translators';
         $variables['translatorId'] = $translatorId = Craft::$app->getRequest()->getBodyParam('id');
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
-        $variables['mtProviders'] = Translations::$plugin->translatorRepository->getMachineTranslationProvider();
         $variables['labels'] = json_encode(Constants::TRANSLATOR_LABELS);
 
         $isContinue = Craft::$app->getRequest()->getBodyParam('flow') === "continue";
@@ -147,7 +146,6 @@ class TranslatorController extends BaseController
         }
 
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
-        $variables['mtProviders'] = Translations::$plugin->translatorRepository->getMachineTranslationProvider();
         $variables['labels'] = json_encode(Constants::TRANSLATOR_LABELS);
 
         $this->renderTemplate('translations/translators/_detail', $variables);

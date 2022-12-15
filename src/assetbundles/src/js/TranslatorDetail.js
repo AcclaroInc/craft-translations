@@ -7,25 +7,21 @@ if (typeof Craft.Translations === 'undefined') {
 Craft.Translations.TranslatorDetail = {
     updateService: function() {
         var service = this.getService();
-        var provider = $('#settings-provider');
         var apiToken = $('#settings-apiToken');
         var sandboxMode = $('#settings-sandboxMode');
 
         switch (service) {
             case 'acclaro':
                 this.updateServiceTokenLabel(service);
-                provider.addClass('hidden');
                 apiToken.removeClass('hidden');
                 sandboxMode.removeClass('hidden');
                 break;
-            case 'machine':
-                this.updateServiceTokenLabel(this.getProvider());
-                provider.removeClass('hidden');
+            case 'google':
+                this.updateServiceTokenLabel(service);
                 apiToken.removeClass('hidden');
                 sandboxMode.addClass('hidden');
                 break;
             default:
-                provider.addClass('hidden');
                 apiToken.addClass('hidden');
                 sandboxMode.addClass('hidden');
         }
@@ -37,10 +33,6 @@ Craft.Translations.TranslatorDetail = {
 
     getService: function () {
         return $('#service').val();
-    },
-
-    getProvider: function () {
-        return $('select[name="settings[provider]"]').val();
     },
 
     updateServiceTokenLabel: function (service) {
@@ -57,18 +49,13 @@ Craft.Translations.TranslatorDetail = {
         this.toggleInputState($service, serviceValid, Craft.t('app', 'Please choose a translation service.'));
 
         switch (service) {
-            case 'acclaro':
+            case 'export_import':
+                break;
+            default:
                 var $apiToken = $('input[name="settings[apiToken]"]');
                 var apiTokenValid = $apiToken.val() !== '';
-                this.toggleInputState($apiToken, apiTokenValid, Craft.t('app', 'Please enter your Acclaro API token.'));
+                this.toggleInputState($apiToken, apiTokenValid, Craft.t('app', `Please enter your ${$service.find('option:selected').text()} API token.`));
                 valid = valid && apiTokenValid
-                break;
-            case 'machine':
-                $apiToken = $('input[name="settings[apiToken]"]');
-                let serviceProviderValid = this.getProvider() !== '';
-                apiTokenValid = $apiToken.val() !== '';
-                this.toggleInputState($apiToken, apiTokenValid, Craft.t('app', `Please enter your ${this.getProvider()} API token.`));
-                valid = valid && apiTokenValid && serviceProviderValid
                 break;
         }
 
@@ -79,13 +66,11 @@ Craft.Translations.TranslatorDetail = {
         hasTitle = $('#label').val() != "";
         hasService = this.getService() !== "";
         hasToken = this.getToken() !== "";
-        hasProvider = this.getProvider() !== "";
         
         switch (this.getService()) {
             case 'acclaro':
+            case 'google':
                 return hasToken && hasService && hasTitle;
-            case 'machine':
-                return hasToken && hasService && hasTitle && hasProvider;
             case 'export_import':
                 return hasTitle;
             default:
@@ -106,7 +91,7 @@ Craft.Translations.TranslatorDetail = {
         } else if ($errors.length === 0) {
             $('<ul>', {'class': 'errors'})
                 .appendTo($input)
-                .append($('<li>', {'text': message}));
+                .append($('<li>', {'html': message}));
         }
     },
 
@@ -148,10 +133,6 @@ Craft.Translations.TranslatorDetail = {
         $('#service').on('change', function() {
             self.toggleSaveButton();
             self.updateService();
-        });
-        
-        $('select[name="settings[provider]"]').on('change', function () {
-            self.updateServiceTokenLabel($(this).val());
         });
 
         this.updateService();

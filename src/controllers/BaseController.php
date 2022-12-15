@@ -295,13 +295,10 @@ class BaseController extends Controller
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         // Authenticate service
-        $translator = $order->getTranslator();
-        $service = $translator->service;
-        $settings = $translator->getSettings();
-        $authenticate = (new Services())->authenticateService($service, $settings);
+        $translationService = $order->getTranslationService();
 
-        if (!$authenticate && $service === Constants::TRANSLATOR_ACCLARO) {
-            $this->setError('Invalid API key');
+        if (!$translationService->authenticate()) {
+            $this->setError('Failed to authenticate API key.');
             return;
         }
 

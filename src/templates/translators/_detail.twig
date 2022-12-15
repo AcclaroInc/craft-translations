@@ -64,21 +64,12 @@
                 name: 'service',
                 id: 'service'
             }) }}
-
-            <div id="settings-provider" class="hidden pl-100">
-                {{ forms.selectField({
-                    label: 'Machine Translation Provider'|t,
-                    options: mtProviders,
-                    value: translator.setting('provider'),
-                    name: 'settings[provider]'
-                }) }}
-            </div>
         </div>
 
         <div class="translations-translator-settings bg-none">
             <div id="settings-apiToken" class="hidden mb-1">
                 {{ forms.textField({
-                    label: translator.setting('keyInfo')|default('API Key'),
+                    label: 'API Key',
                     value: translator.setting('apiToken'),
                     name: 'settings[apiToken]',
                     size: 20,

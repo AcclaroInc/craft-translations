@@ -2,7 +2,6 @@
 
 namespace acclaro\translations\services\api;
 
-use Craft;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
@@ -13,15 +12,16 @@ use Spatie\GuzzleRateLimiterMiddleware\RateLimiterMiddleware;
 
 class AcclaroApiClient
 {
+    private $client;
+
     public function __construct(
         $apiToken,
-        $sandboxMode = false,
-        Client $client = null
+        $sandboxMode = false
     ) {
 		$stack = HandlerStack::create();
 		$stack->push(RateLimiterMiddleware::perSecond(3));
 
-        $this->client = $client ?: new Client([
+        $this->client = new Client([
             'base_uri' => $sandboxMode ? Constants::SANDBOX_URL : Constants::PRODUCTION_URL,
             'headers' => array(
                 'Authorization' => sprintf('Bearer %s', $apiToken),
