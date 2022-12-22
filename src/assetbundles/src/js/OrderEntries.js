@@ -27,6 +27,7 @@
 		init: function() {
 			self = this;
 			this.$publishSelectedBtn = $('#review');
+			this.$translateSelectedBtn = $('#settings').find('button[form=sync-order]');
 			this.$fileActions = $('#file-actions');
 			this.$selectAllCheckbox = $('.select-all-checkbox :checkbox');
 			this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
