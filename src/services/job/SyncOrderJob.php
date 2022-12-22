@@ -17,13 +17,14 @@ class SyncOrderJob extends BaseJob
 {
     public $orderId;
     public $title;
+    public $files;
 
     public function execute($queue): void
     {
         $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
         $translationService = $order->getTranslationService();
         $this->title = $order->title;
-        $translationService->syncOrder($order, $queue);
+        $translationService->syncOrder($order, $this->files, $queue);
     }
 
     public function updateProgress($queue, $progress) {

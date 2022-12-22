@@ -11,7 +11,6 @@
 
 namespace acclaro\translations\services\translator;
 
-use Craft;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
@@ -61,9 +60,14 @@ class GoogleTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function syncOrder(Order $order, $queue = null)
+    public function syncOrder(Order $order, $selectedFiles, $queue = null)
     {
         foreach ($order->getFiles() as $file) {
+            // Only process files that are selected and is new or modified
+            if (!in_array($file->id, $selectedFiles) || !($file->isNew() || $file->isModified())) {
+                continue;
+            }
+
             $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($file->source), true);
             $data = array_values($source['content']);
             $sourceLanguage = $file->getSourceLangCode();
@@ -86,7 +90,7 @@ class GoogleTranslationService implements TranslationServiceInterface
         }
         
         $this->updateOrder($order);
-        Craft::$app->getElements()->saveElement($order, true, true, false);
+        Translations::$plugin->orderRepository->saveOrder($order);
     }
 
     /**

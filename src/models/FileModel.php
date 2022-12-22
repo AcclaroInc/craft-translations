@@ -208,7 +208,7 @@ class FileModel extends Model
     public function canEnableFilesCheckboxes()
     {
         return $this->isInProgress() || $this->isComplete() || $this->isReviewReady() || $this->isPublished() ||
-            ($this->isNew() && $this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE);
+            (($this->isNew() || $this->isModified()) && $this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE);
     }
 
     public function getSourceLangCode()

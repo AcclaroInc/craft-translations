@@ -9,6 +9,7 @@
 	var hasOrderId = $("input[type=hidden][name=id]").val() != '';
 	var isInProgress = $("#order-attr").data("status") === "in progress";
 	var isNew = $("#order-attr").data("status") === "new";
+	var isModified = $("#order-attr").data("status") === "modified";
 	var hasCompleteFiles = $("#order-attr").data("has-completed-file");
 	var isTmAligned = $("#order-attr").data("is-tm-aligned");
 
@@ -19,6 +20,7 @@
 		$checkboxes: null,
 		$selectAllCheckbox: null,
 		$publishSelectedBtn: null,
+		$translateSelectedBtn: null,
 		$selectedFileIds: null,
 		$buildFileActions: true,
 
@@ -45,6 +47,7 @@
 				}
 
 				self.togglePublishButton();
+				self.toggleTranslateButton();
 				self.toggleSelectAllCheckbox();
 			});
 
@@ -60,6 +63,10 @@
 				$modal.on('hide', function() {
 					$('.modal.elementselectormodal, .modal-shade').remove();
 				});
+			});
+			
+			self.$translateSelectedBtn.on('click', function() {
+				self.processGoogleMT();
 			});
 
 			// Modal checkboxes behaviour script
@@ -99,6 +106,7 @@
 			this.$checkboxes.prop('checked', toggle);
 
 			this.togglePublishButton();
+			this.toggleTranslateButton();
 		},
 		toggleSelectAllCheckbox: function() {
 			this.$selectAllCheckbox.prop(
@@ -108,23 +116,33 @@
 		},
 		togglePublishButton: function() {
 			if (this.hasSelections()) {
-				if (!isInProgress && !isNew) {
+				if (!isInProgress && !isNew && !isModified) {
 					this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
 					this.$fileActions.removeClass('noClick disabled');
 				}
-				if (isNew && !(isDefaultTranslator && isAcclaroTranslator)) {
-					let translateBtn = $('#settings').find('div.field button[form="sync-order"]');
-					translateBtn.removeClass('link-disabled');
-				}
 			} else {
-				if (!isInProgress && !isNew) {
-					this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
-					this.$fileActions.addClass('noClick disabled');
+				this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
+				this.$fileActions.addClass('noClick disabled');
+			}
+		},
+		canBeTranslated: function () {
+			var response = false;
+			let files = self.getFiles(true);
+			var statuses = ['New', 'Modified'];
+			files.each(function () {
+				let status = $(this).find('span.status').parent().text();
+				if (statuses.includes(status.trim(" "))) {
+					response = true;
 				}
-				if (isNew && !(isDefaultTranslator && isAcclaroTranslator)) {
-					let translateBtn = $('#settings').find('div.field button[form="sync-order"]');
-					translateBtn.addClass('link-disabled');
-				}
+			});
+			return response;
+		},
+		toggleTranslateButton: function () {
+			let canBeTranslated = self.canBeTranslated() && !(isDefaultTranslator && isAcclaroTranslator);
+			if (canBeTranslated) {
+				self.$translateSelectedBtn.removeClass('link-disabled');
+			} else {
+				self.$translateSelectedBtn.addClass('link-disabled');
 			}
 		},
 		toggleApprovePublishButton: function(state) {
@@ -448,6 +466,24 @@
 			});
 
 			return $mainContent;
+		},
+		processGoogleMT: function (that) {
+			let $form = $('#sync-order');
+
+			var files = [];
+			$rows = self.getFiles(true);
+			$rows.each(function () {
+				files.push($(this).data('file-id'));
+			});
+
+			$hiddenFlow = $('<input>', {
+				'type': 'hidden',
+				'name': 'files',
+				'value': JSON.stringify(files)
+			});
+			$hiddenFlow.appendTo($form);
+
+			$form.submit();
 		},
 		_buildFileActions: function() {
 			$draftButtonClass = 'disabled noClick';

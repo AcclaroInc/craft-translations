@@ -39,9 +39,10 @@ interface TranslationServiceInterface
     /**
      * Sync order to service and update order model accordingly
      * @param  \acclaro\translations\elements\Order $order
+     * @param  array $fileIds
      * @return void
      */
-    public function syncOrder(Order $order);
+    public function syncOrder(Order $order, array $fileIds);
 
     /**
      * Send order to service and update order model accordingly

@@ -1082,6 +1082,11 @@ class OrderController extends BaseController
         }
 
         $orderId = Craft::$app->getRequest()->getParam('orderId');
+        $files = [];
+        
+        if ($selected = Craft::$app->getRequest()->getParam('files')) {
+            $files = json_decode($selected, true);
+        }
 
         $order = $this->service->getOrderById((int) $orderId);
 
@@ -1097,6 +1102,7 @@ class OrderController extends BaseController
             if ($order->shouldProcessByQueue()) {
                 $job = Craft::$app->queue->push(new SyncOrderJob([
                     'description' => 'Syncing order '. $order->title,
+                    'files' => $files,
                     'orderId' => $order->id
                 ]));
 
@@ -1113,7 +1119,7 @@ class OrderController extends BaseController
                     return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
                 }
             } else {
-                $translationService->syncOrder($order);
+                $translationService->syncOrder($order, $files);
                 $this->setSuccess("Done syncing order '{$order->title}'");
                 return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
             }
@@ -1166,7 +1172,7 @@ class OrderController extends BaseController
                         'orderId' => $order->id
                     ]));
                 } else {
-                    $translationService->syncOrder($order);
+                    $translationService->syncOrder($order, []);
                 }
             }
         } catch (Exception $e) {
@@ -1396,7 +1402,7 @@ class OrderController extends BaseController
                     }
 
                     // Cancel old file and send new files to translator
-                    if (! $isDefaultTranslator) {
+                    if ($order->hasTranslator(Constants::TRANSLATOR_ACCLARO)) {
                         $translationService->addFileComment($order, $file, "CANCEL FILE");
                         $translationService->sendOrderFile($order, $file);
                         $translationService->addFileComment($order, $file, "NEW FILE");

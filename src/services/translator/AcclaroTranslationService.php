@@ -215,7 +215,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function syncOrder(Order $order, $queue = null)
+    public function syncOrder(Order $order, $files, $queue = null)
     {
         $totalElements = count($order->files);
         $currentElement = 0;
