@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ## 3.1.1 - 2022-12-29
 
 ### Added
-- Dedicated `Add product` button on order detail page if commerce is installed. ([AcclaroInc#411](https://github.com/AcclaroInc/craft-translations/pull/411))
+- Dedicated `Add product` button on order detail page if commerce is installed. ([AcclaroInc#394](https://github.com/AcclaroInc/craft-translations/issues/394#issuecomment-1333708317))
 
 ### Fixed
 - An issue where delivered translated content from api was not reflecting in draft. ([AcclaroInc#412](https://github.com/AcclaroInc/craft-translations/pull/412))
