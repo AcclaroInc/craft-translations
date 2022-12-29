@@ -588,7 +588,12 @@
 
             $("input[id^=requestedDueDate]").datepicker('option', 'minDate', +1);
 
-            $(".addEntries").on('click', function (e) {
+            $(".addElement").on('click', function (e) {
+                let elementType = 'craft\\elements\\Entry';
+
+                if ($(this).hasClass('product')) {
+                    elementType = 'craft\\commerce\\elements\\Product';
+                }
 
                 elementIds = [];
 
@@ -600,7 +605,7 @@
                 var $url = removeParams(window.location.href);
                 setUnloadEvent(false);
 
-                this.assetSelectionModal = Craft.createElementSelectorModal('craft\\elements\\Entry', {
+                this.assetSelectionModal = Craft.createElementSelectorModal(elementType, {
                     storageKey: null,
                     sources: null,
                     elementIndex: null,
