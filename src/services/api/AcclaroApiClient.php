@@ -531,9 +531,7 @@ class AcclaroApiClient
             return null;
         }
 
-        $body = $response->getBody();
-
-        return $body->getContents();
+        return (string) $response->getBody();
     }
 
     /**
