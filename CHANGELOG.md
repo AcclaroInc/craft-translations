@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.1.1 - 2022-12-29
+
+### Added
+- Dedicated `Add product` button on order detail page if commerce is installed. ([AcclaroInc#411](https://github.com/AcclaroInc/craft-translations/pull/411))
+
+### Fixed
+- An issue where delivered translated content from api was not reflecting in draft. ([AcclaroInc#412](https://github.com/AcclaroInc/craft-translations/pull/412))
+
 ## 3.1.0 - 2022-11-14
 
 ### Added
