@@ -126,7 +126,10 @@
     <div class="buttons flex">
         <div class="submit">
             <input type="hidden" id="originalElementIds" value="{{ order.elementsId|join(',') }}">
-            <button type="button" class="btn add icon dashed addEntries">{{ 'Add an entry'|t }}</button>
+            <button type="button" class="btn add icon dashed addElement">{{ 'Add an entry'|t }}</button>
+            {% if craft.app.plugins.isPluginInstalled('commerce') and craft.app.plugins.isPluginEnabled('commerce')%}
+                <button type="button" class="btn add icon dashed addElement product">{{ 'Add a product'|t }}</button>
+            {% endif %}
         </div>
     </div>
 </div>
