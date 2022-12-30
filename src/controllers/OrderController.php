@@ -664,6 +664,7 @@ class OrderController extends BaseController
         $variables['sourceSite'] = $data['sourceSite'];
 		$variables['canUpdateFiles'] = false;
 		$variables['isCancelable'] = false;
+        $variables['translatorServices'] = [];
 
         $requestedDueDate = null;
         if ($data['requestedDueDate']['date'] ?? null) {
@@ -764,6 +765,7 @@ class OrderController extends BaseController
 					if ($translatorId == $variables['translatorId'])
 						$variables['isDefaultTranslator'] = true;
                 }
+                $variables['translatorServices'][$translatorId] = $translator->service;
             }
         }
 
@@ -1350,8 +1352,6 @@ class OrderController extends BaseController
         $elements = Craft::$app->getRequest()->getRequiredBodyParam('selected');
         if ($elements) $elements = json_decode($elements, true);
 
-        $isDefaultTranslator = $order->translator->service === Constants::TRANSLATOR_DEFAULT;
-
         // Authenticate service
         $translationService = $order->getTranslationService();
         if (! $translationService->authenticate()) {
@@ -1393,14 +1393,6 @@ class OrderController extends BaseController
                         $order->logActivity(Translations::$plugin->translator->translate('app', "Source content updated {$element->title}."));
                     }
 
-                    if ($isDefaultTranslator && !$order->isModified()) {
-                        $order->status = Constants::ORDER_STATUS_MODIFIED;
-                        $order->logActivity(sprintf(
-                            Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''),
-                            $order->getStatusLabel()
-                        ));
-                    }
-
                     // Cancel old file and send new files to translator
                     if ($order->hasTranslator(Constants::TRANSLATOR_ACCLARO)) {
                         $translationService->addFileComment($order, $file, "CANCEL FILE");
@@ -1410,14 +1402,17 @@ class OrderController extends BaseController
                 }
             }
 
-            if (! $isDefaultTranslator) {
-                $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
+            $oldStatus = $order->status;
+            $order->status = Translations::$plugin->orderRepository->getNewStatus($order);
 
+            if ($oldStatus != $order->status) {
                 $order->logActivity(sprintf(
                     Translations::$plugin->translator->translate('app', 'Order status changed to \'%s\''),
                     $order->getStatusLabel()
                 ));
+            }
 
+            if ($order->hasTranslator(Constants::TRANSLATOR_ACCLARO)) {
                 if (! $order->isNew()) {
                     foreach ($order->getFiles() as $file) {
                         if ($file->isNew()) {
@@ -1430,8 +1425,6 @@ class OrderController extends BaseController
 
             Craft::$app->getElements()->saveElement($order, true, true, false);
             $transaction->commit();
-
-            // $this->setSuccess('Entries Updated.');
         } catch (\Exception $e) {
             $transaction->rollBack();
             Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);

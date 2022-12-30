@@ -7,9 +7,6 @@
 	var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
 	var isAcclaroTranslator = $("#order-attr").data("translator") === "acclaro";
 	var hasOrderId = $("input[type=hidden][name=id]").val() != '';
-	var isInProgress = $("#order-attr").data("status") === "in progress";
-	var isNew = $("#order-attr").data("status") === "new";
-	var isModified = $("#order-attr").data("status") === "modified";
 	var hasCompleteFiles = $("#order-attr").data("has-completed-file");
 	var isTmAligned = $("#order-attr").data("is-tm-aligned");
 
@@ -21,13 +18,13 @@
 		$selectAllCheckbox: null,
 		$publishSelectedBtn: null,
 		$translateSelectedBtn: null,
-		$selectedFileIds: null,
+		$selectedFileIds: {},
 		$buildFileActions: true,
 
 		init: function() {
 			self = this;
 			this.$publishSelectedBtn = $('#review');
-			this.$translateSelectedBtn = $('#settings').find('button[form=sync-order]');
+			this.$translateSelectedBtn = $('#settings').find('button[form=sync-order-google]');
 			this.$fileActions = $('#file-actions');
 			this.$selectAllCheckbox = $('.select-all-checkbox :checkbox');
 			this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
@@ -38,6 +35,7 @@
 					self.$buildFileActions = false;
 				}
 
+				self.setSelectedFileIds($(this).is(':checked'));
 				self.toggleSelected($(this).is(':checked'));
 			});
 
@@ -47,6 +45,7 @@
 					self.$buildFileActions = false;
 				}
 
+				self.setSelectedFileIds($(this).is(':checked'), $(this).val());
 				self.togglePublishButton();
 				self.toggleTranslateButton();
 				self.toggleSelectAllCheckbox();
@@ -97,8 +96,29 @@
 				}
 			});
 		},
-		hasSelections: function() {
-			return this.$checkboxes.filter(':checked').length > 0;
+		setSelectedFileIds: function (action, fileId = null) {
+			if (action) {
+				if (fileId) {
+					let status = $('#file-' + fileId).closest('tr').find("span.status").parent().text();
+					self.$selectedFileIds[fileId] = status.trim(' ');
+				} else {
+					let files = $('#files tbody .file :checkbox').closest('tr');
+					files.each(function () {
+						let status = $(this).find('span.status').parent().text();
+						fileId = $(this).data('file-id');
+						self.$selectedFileIds[fileId] = status.trim(' ');
+					});
+				}
+			} else {
+				if (fileId) {
+					delete self.$selectedFileIds[fileId];
+				} else {
+					self.$selectedFileIds = {};
+				}
+			}
+		},
+		hasSelections: function () {
+			return !$.isEmptyObject(self.$selectedFileIds);
 		},
 		getSelections: function() {
 			return this.$checkboxes.filter(':checked');
@@ -115,26 +135,28 @@
 				this.$checkboxes.filter(':checked').length === this.$checkboxes.length
 			);
 		},
-		togglePublishButton: function() {
-			if (this.hasSelections()) {
-				if (!isInProgress && !isNew && !isModified) {
-					this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
-					this.$fileActions.removeClass('noClick disabled');
-				}
+		togglePublishButton: function () {
+			if (this.hasSelections() && this.canBePublished()) {
+				this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
+				this.$fileActions.removeClass('noClick disabled');
 			} else {
 				this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
 				this.$fileActions.addClass('noClick disabled');
 			}
 		},
+		canBePublished: function () {
+			let response = false;
+			$.each(self.$selectedFileIds, function (fileId, status) {
+				response = ['Ready to apply', 'Applied', 'Ready for review'].includes(status);
+				return !response;
+			});
+			return response;
+		},
 		canBeTranslated: function () {
 			var response = false;
-			let files = self.getFiles(true);
-			var statuses = ['New', 'Modified'];
-			files.each(function () {
-				let status = $(this).find('span.status').parent().text();
-				if (statuses.includes(status.trim(" "))) {
-					response = true;
-				}
+			$.each(self.$selectedFileIds, function (fileId, status) {
+				response = ['New', 'Modified'].includes(status);
+				return !response;
 			});
 			return response;
 		},
@@ -178,23 +200,15 @@
 			$clone.find("input[type=checkbox]").addClass("clone");
 			$clone.addClass("clone-modal-tr");
 
-			$status = $clone.find("td span.status").data("status") == 1;
-			$isReady = $.trim($clone.find("td span.status").parent("td").text()) == "Ready for review";
-			$isComplete = $.trim($clone.find("td span.status").parent("td").text()) == "Ready to apply";
-			$isApplied = $.trim($clone.find("td span.status").parent("td").text()) == "Applied";
+			$hasDiff = $clone.find("td span.status").data("status") == 1;
+			$status = ($clone.find("td span.status").parent("td").text()).trim(' ');
 
-			if ($status) {
+			if ($hasDiff) {
 				$icon = $clone.find("td .icon");
 				$icon.removeClass("hidden");
 			}
 
-			if (this.$selectedFileIds) {
-				this.$selectedFileIds = this.$selectedFileIds +","+ $fileId;
-			} else {
-				this.$selectedFileIds = $fileId;
-			}
-
-			if (!($isReady || $isComplete)) {
+			if (!['Ready to apply', 'Ready for review'].includes($status)) {
 				$checkbox.attr("disabled", "disabled");
 			}
 			$checkbox.appendTo($checkBoxCell);
@@ -230,7 +244,7 @@
 			});
 		},
 		_buildPublishModal: function() {
-			var $selections = self.getSelections();
+			var $selections = this.getSelections();
 
 			var $modal = $('<div/>', {
 				'class' : 'modal elementselectormodal',
@@ -281,12 +295,15 @@
 
 			var $tableContent = $('<tbody></tbody>');
 
-			$selections.each(function() {
-				$clone = self.createRowClone(this);
-				$clone.appendTo($tableContent);
-				$('<tr>', {
-					id: "data-"+$($clone).data("file-id")
-				}).appendTo( $clone.find(".clone-modal-tbody") );
+			$selections.each(function () {
+				let fileId = $(this).val();
+				if (['Ready for review', 'Ready to apply', 'Applied'].includes(self.$selectedFileIds[fileId])) {
+					$clone = self.createRowClone(this);
+					$clone.appendTo($tableContent);
+					$('<tr>', {
+						id: "data-"+fileId
+					}).appendTo($clone.find(".clone-modal-tbody") );
+				}
 			});
 
 			$($tableContent).on('click', '.diff-clone-row', function(e) {
@@ -468,14 +485,10 @@
 
 			return $mainContent;
 		},
-		processGoogleMT: function (that) {
+		processGoogleMT: function () {
 			let $form = $('#sync-order');
 
-			var files = [];
-			$rows = self.getFiles(true);
-			$rows.each(function () {
-				files.push($(this).data('file-id'));
-			});
+			var files = Object.keys(self.$selectedFileIds);
 
 			$hiddenFlow = $('<input>', {
 				'type': 'hidden',
@@ -537,11 +550,7 @@
 				e.preventDefault();
 				self.toggleLoader(true);
 
-				var files = [];
-				$rows = self.getFiles(true);
-				$rows.each(function() {
-					files.push($(this).data('file-id'));
-				});
+				var files = Object.keys(self.$selectedFileIds);
 
 				$hiddenFlow = $('<input>', {
                     'type': 'hidden',
@@ -558,11 +567,7 @@
 				e.preventDefault();
 				self.toggleLoader(true);
 				if (hasOrderId) {
-					var files = [];
-					$rows = self.getFiles(true);
-					$rows.each(function() {
-						files.push($(this).data('file-id'));
-					});
+					var files = Object.keys(self.$selectedFileIds);
 					$data = {
 						'id': $("input[type=hidden][name=id]").val(),
 						'files': JSON.stringify(files)
@@ -585,7 +590,7 @@
 		},
 		_addDownloadTmFilesAction: function(that) {
 			var self = this;
-			var action = isDefaultTranslator ? 'download' : 'sync';
+			var action = !isAcclaroTranslator ? 'download' : 'sync';
             $(that).on('click', function(e) {
 				e.preventDefault();
 				
@@ -627,11 +632,7 @@
 		_downloadTmFiles: function($format, action) {
 			self.toggleLoader(true);
 
-			var files = [];
-			$rows = self.getFiles(true);
-			$rows.each(function() {
-				files.push($(this).data('file-id'));
-			});
+			let files = Object.keys(self.$selectedFileIds);
 
 			$data = {
 				files: JSON.stringify(files),
@@ -646,7 +647,7 @@
 
 			Craft.sendActionRequest('POST', actions[action], {data: $data})
 				.then((response) => {
-					if (!isDefaultTranslator) {
+					if (isAcclaroTranslator) {
 						Craft.cp.displaySuccess('Translation memory files sent successfully.');
 						location.reload();
 					} else if (response.data.tmFiles) {
@@ -671,14 +672,7 @@
 				$('#file-actions').removeClass('disabled noClick');
 			}
 			$('#files').find('.translations-loader').toggleClass('spinner hidden');
-        },
-		getFiles: function($selected = false) {
-			$elementCheckboxes = $('#files tbody .file :checkbox');
-			if ($selected) {
-				return $elementCheckboxes.filter(':checked').closest('tr');
-			}
-			return $elementCheckboxes.closest('tr');
-		}
+        }
 	};
 
 	$(function() {
