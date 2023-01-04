@@ -155,7 +155,7 @@
 		canBeTranslated: function () {
 			var response = false;
 			$.each(self.$selectedFileIds, function (fileId, status) {
-				response = ['New', 'Modified'].includes(status);
+				response = ['New', 'Modified', 'In progress'].includes(status);
 				return !response;
 			});
 			return response;

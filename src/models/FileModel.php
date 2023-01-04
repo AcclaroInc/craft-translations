@@ -209,7 +209,8 @@ class FileModel extends Model
     {
         switch ($this->getTranslator()?->service) {
             case Constants::TRANSLATOR_GOOGLE:
-                return $this->isNew() || $this->isModified() || $this->isReviewReady() || $this->isComplete() || $this->isPublished();
+                return $this->isNew() || $this->isInProgress() || $this->isModified() || $this->isReviewReady() ||
+                    $this->isComplete() || $this->isPublished();
             default:
                 return $this->isReviewReady() || $this->isComplete() || $this->isPublished();
         }

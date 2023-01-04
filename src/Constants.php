@@ -25,8 +25,8 @@ class Constants
     ];
     
     const TRANSLATOR_LABELS = [
-        self::TRANSLATOR_ACCLARO => 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>',
-        self::TRANSLATOR_GOOGLE => 'Google API Token<p class="fs-12">Don\'t have a Google API key? <a href="https://cloud.google.com/translate/">Register here</a></p>',
+        self::TRANSLATOR_ACCLARO => 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a target="_blank" href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>',
+        self::TRANSLATOR_GOOGLE => 'Google API Token<p class="fs-12">Don\'t have a Google API key? <a target="_blank" href="https://cloud.google.com/translate/">Register here</a></p>',
     ];
 
     // Logging

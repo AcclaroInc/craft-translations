@@ -64,7 +64,7 @@ class GoogleTranslationService implements TranslationServiceInterface
     {
         foreach ($order->getFiles() as $file) {
             // Only process files that are selected and is new or modified
-            if (!in_array($file->id, $selectedFiles) || !($file->isNew() || $file->isModified())) {
+            if (!in_array($file->id, $selectedFiles) || !($file->isNew() || $file->isInProgress() || $file->isModified())) {
                 continue;
             }
 

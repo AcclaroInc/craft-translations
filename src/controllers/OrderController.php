@@ -1115,7 +1115,7 @@ class OrderController extends BaseController
                         'url' => Constants::URL_ORDER_DETAIL . $order->id
                     ];
                     $this->setNotice("Order is being synced via queue. Refer queue for updates.");
-                    Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(true, false, '. json_encode($params) .'); });');
+                    Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(false, false, '. json_encode($params) .'); });');
                 } else {
                     $this->setError("Cannot sync order '{$order->title}'.");
                     return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
