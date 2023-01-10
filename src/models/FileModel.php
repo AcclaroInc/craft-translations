@@ -215,6 +215,13 @@ class FileModel extends Model
                 return $this->isReviewReady() || $this->isComplete() || $this->isPublished();
         }
     }
+    
+    public function canBeCheckedForTargetChanges()
+    {
+        return ! ($this->isPublished() || $this->isNew() || $this->isModified() || 
+            ($this->isInProgress() && $this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE)
+        );
+    }
 
     public function getSourceLangCode()
     {

@@ -533,7 +533,7 @@ class OrderRepository
 		$originalIds = [];
 
 		foreach ($order->getFiles() as $file) {
-            if ($file->isPublished() || $file->isNew() || $file->isModified()) continue;
+            if (! $file->canBeCheckedForTargetChanges()) continue;
 
 			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
 		}
