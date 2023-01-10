@@ -11,8 +11,8 @@
     var isCompleted = $("#order-attr").data("status") === "complete";
     var isCanceled = $("#order-attr").data("status") === "canceled";
     var isPublished = $("#order-attr").data("status") === "published";
-    var isDefaultTranslator = $("#order-attr").data("translator") === "export_import";
-    var defaultTranslatorId = $("#originalTranslatorId").data("id");
+    var translatorHandle = $("#order-attr").data("translator");
+    var translatorServices = $("#order-attr").data("translator-services");
 
     function validateForm() {
         var buttonStatus = true;
@@ -150,7 +150,7 @@
 
 		if (haveDifferences($originalTranslatorId, currentTranslatorId)) return true;
 
-		if (! isDefaultTranslator) {
+		if (translatorHandle === 'acclaro') {
 			// Validate Due Date
 			$originalDueDate = $('#originalRequestedDueDate').val();
 			var currentDueDate = $('#requestedDueDate-date').val();
@@ -274,14 +274,22 @@
         if (haveDifferences($originalTranslatorId, currentTranslatorId)) return true;
 
         // Order Modification on completed order
-        if (isDefaultTranslator && isPublished && isOrderChanged()) return true;
-        if (!isDefaultTranslator && (isCompleted || isPublished) && isOrderChanged()) return true;
+        if (translatorHandle === 'export_import' && isPublished && isOrderChanged()) return true;
+        if (translatorHandle === 'acclaro' && (isCompleted || isPublished) && isOrderChanged()) return true;
 
         return false;
     }
 
-    function toggleTranslatorBasedFields(status = false) {
-        if (status) {
+    function getSelectedTranslator() {
+        return $('#translatorId').find('option:selected');
+    }
+    
+    function isSelectedTranslator(translator) {
+        return translatorServices[getSelectedTranslator().val()] == translator;
+    }
+
+    function toggleTranslatorBasedFields() {
+        if (isSelectedTranslator('acclaro')) {
             $('#extra-fields').removeClass('hidden non-editable disabled');
 
             if (!isPending) {
@@ -444,11 +452,7 @@
                 self.toggleElementAction();
             });
 
-            if (isDefaultTranslator) {
-                toggleTranslatorBasedFields();
-            } else {
-                toggleTranslatorBasedFields(true);
-            }
+            toggleTranslatorBasedFields(translatorHandle);
 
             syncSites(true);
 
@@ -483,7 +487,7 @@
 
                 if (isSubmitted) {
                     if (shouldCreateNewOrder()) {
-                        if (! isDefaultTranslator) {
+                        if (translatorHandle === 'acclaro') {
                             setButtonText('.translations-submit-order.submit', 'Create new order');
                         }
                     } else {
@@ -539,11 +543,8 @@
             });
 
             $('#translatorId').on('change', function() {
-                if ($(this).find(':selected').val() == defaultTranslatorId) {
-                    toggleTranslatorBasedFields();
-                } else {
-                    toggleTranslatorBasedFields(true);
-                }
+                toggleTranslatorBasedFields(getSelectedTranslator().val());
+
                 if (shouldCreateNewOrder()) {
                     setButtonText('.translations-submit-order.submit', 'Create new order');
                 } else {
@@ -851,7 +852,7 @@
             $saveDraftLink.appendTo($item1);
             this._addSaveDraftAction($saveDraftLink);
 
-            if (! isDefaultTranslator && isSubmitted && !(isCompleted || isPublished || isCanceled)) {
+            if (translatorHandle === 'acclaro' && isSubmitted && !(isCompleted || isPublished || isCanceled)) {
                 var $cancelOrderDiv = $('<div>', {
                     class: "field hidden bg-white",
                     id: "cancel-order-tab"
@@ -951,7 +952,7 @@
         },
         _disableOrderSettingsTab: function() {
             var $proceed = false;
-            if (!isDefaultTranslator && (isCompleted || isPublished || isCanceled)) {
+            if (translatorHandle === 'acclaro' && (isCompleted || isPublished || isCanceled)) {
                 $proceed = true;
             }
             if ($proceed) {
@@ -1015,7 +1016,7 @@
                 e.preventDefault();
                 $form = $('#order-form');
 
-                if (! isDefaultTranslator && ! isUpdateable) {
+                if (translatorHandle === 'acclaro' && ! isUpdateable) {
                     Craft.cp.displayNotice(Craft.t('app', 'Please place a new order for updated source.'));
                     return;
                 }

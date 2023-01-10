@@ -25,7 +25,7 @@
                 <tr data-word-count="{{ elementWordCounts[file.elementId] }}" data-element-id="{{ file.elementId }}" class="diff-clone" data-file-id="{{ file.id }}">
 
                     <td class="thin checkbox-cell translations-checkbox-cell file">
-                        {% if file.isInProgress or file.isComplete or file.isReviewReady or file.isPublished %}
+                        {% if file.canEnableFilesCheckboxes %}
                             <input class="checkbox hidden" data-element="{{ file.elementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}"/>
                         {% else %}
                             <input class="checkbox hidden" data-element="{{ file.elementId }}" id="file-{{ file.id }}" type="checkbox" name="files[]" value="{{ file.id }}" disabled="disabled"/>

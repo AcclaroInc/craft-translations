@@ -73,6 +73,7 @@ class TranslatorController extends BaseController
         $variables['selectedSubnavItem'] = 'translators';
         $variables['translatorId'] = $translatorId = Craft::$app->getRequest()->getBodyParam('id');
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
+        $variables['labels'] = json_encode(Constants::TRANSLATOR_LABELS);
 
         $isContinue = Craft::$app->getRequest()->getBodyParam('flow') === "continue";
 
@@ -96,24 +97,20 @@ class TranslatorController extends BaseController
         }
 
         $service = Craft::$app->getRequest()->getBodyParam('service');
-        $allSettings = Craft::$app->getRequest()->getBodyParam('settings');
-        $settings = $allSettings[$service] ?? array();
+        $settings = Craft::$app->getRequest()->getBodyParam('settings', []);
 
         $translator->label = Craft::$app->getRequest()->getBodyParam('label');
         $translator->service = $service;
         $translator->settings = json_encode($settings);
         $translator->status = Craft::$app->getRequest()->getBodyParam('status');
 
-        //Make Export/Import Translator automatically active
-        if ($translator->service !== Constants::TRANSLATOR_DEFAULT)
-        {
-            $auth = Translations::$plugin->services->authenticateService($service, $settings);
-            if (! $auth) {
-                $translator->status = "";
-                $variables['translator'] = $translator;
-                $this->setError('Api token could not be authenticated.');
-                return $this->renderTemplate('translations/translators/_detail', $variables);
-            }
+        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($service, $settings);
+
+        if (! $translationService->authenticate()) {
+            $translator->status = "";
+            $variables['translator'] = $translator;
+            $this->setError('Api token could not be authenticated.');
+            return $this->renderTemplate('translations/translators/_detail', $variables);
         }
 
         $translator->status = Constants::TRANSLATOR_STATUS_ACTIVE;
@@ -145,6 +142,7 @@ class TranslatorController extends BaseController
         }
 
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
+        $variables['labels'] = json_encode(Constants::TRANSLATOR_LABELS);
 
         $this->renderTemplate('translations/translators/_detail', $variables);
     }

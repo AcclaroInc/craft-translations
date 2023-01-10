@@ -37,9 +37,30 @@ interface TranslationServiceInterface
     public function authenticate();
 
     /**
+     * Sync order to service and update order model accordingly
+     * @param  \acclaro\translations\elements\Order $order
+     * @param  array $fileIds
+     * @return void
+     */
+    public function syncOrder(Order $order, array $fileIds);
+
+    /**
      * Send order to service and update order model accordingly
      * @param  \acclaro\translations\elements\Order $order
      * @return void
      */
     public function sendOrder(Order $order);
+
+    /**
+     * Get supported languages by translation service
+     * 
+     * @return array
+     */
+    public function getLanguages();
+
+    /**
+     * Get supported language pairs for a source language
+     * @return array
+     */
+    public function getLanguagePairs(string $sourceLanguage);
 }

@@ -21,15 +21,12 @@ use craft\elements\Asset;
 use craft\elements\Category;
 use craft\helpers\UrlHelper;
 use craft\elements\GlobalSet;
+use craft\commerce\elements\Product;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\records\OrderRecord;
-use acclaro\translations\services\job\SyncOrder;
-use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
-use acclaro\translations\services\translator\AcclaroTranslationService;
-use craft\commerce\elements\Product;
 
 class OrderRepository
 {
@@ -95,9 +92,9 @@ class OrderRepository
     }
 
     /**
-     * @return array
+     * @return \acclaro\translations\elements\Order[]
      */
-    public function getInProgressOrders()
+    public function getInProgressOrders(): array
     {
         $inProgressOrders = Order::find()
             ->andWhere(Db::parseParam('translations_orders.status', array(
@@ -244,50 +241,15 @@ class OrderRepository
 
     /**
      * @param \acclaro\translations\elements\Order $order
-     * @param $queue
-     * @throws Exception
+     * @param array $settings
+     * @param array $tagIds
      */
-    public function syncOrder($order, $queue=null) {
-
-        $totalElements = count($order->files);
-        $currentElement = 0;
-
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($order->translator->service, $order->translator->getSettings());
-
-        // Don't update manual orders
-        if ($order->translator->service === Constants::TRANSLATOR_DEFAULT) {
-            return;
-        }
-
-        if (!($order->isGettingQuote() || $order->isAwaitingApproval())) {
-            $syncOrderSvc = new SyncOrder();
-            foreach ($order->getFiles() as $file) {
-                if ($queue) {
-                    $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
-                }
-                // Let's make sure we're not updating canceled/complete/published files
-                if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
-
-                $translationService->updateFile($order, $file);
-
-                Translations::$plugin->fileRepository->saveFile($file);
-            }
-        }
-
-        $translationService->updateOrder($order);
-
-        Translations::$plugin->orderRepository->saveOrder($order);
-    }
-
     public function deleteOrderTags($order, $settings, $tagIds) {
-        $acclaroApiClient = new AcclaroApiClient(
-            $settings['apiToken'],
-            !empty($settings['sandboxMode'])
-        );
+        $translationService = $order->getTranslationService();
         foreach ($tagIds as $tagId) {
             $tag = Craft::$app->getTags()->getTagById($tagId);
             if ($tag) {
-                $acclaroApiClient->removeOrderTags($order->id, $tag->title);
+                $translationService->removeOrderTags($order->id, $tag->title);
             }
         }
     }
@@ -302,10 +264,7 @@ class OrderRepository
      */
     public function sendAcclaroOrder($order, $settings, $queue=null) {
 
-        $acclaroApiClient = new AcclaroApiClient(
-            $settings['apiToken'],
-            !empty($settings['sandboxMode'])
-        );
+        $translationService = $order->getTranslationService();
 
         $totalElements = count($order->files);
         $currentElement = 0;
@@ -314,11 +273,14 @@ class OrderRepository
         $comments = $order->comments ? $order->comments .' | '.$orderUrl : $orderUrl;
         $dueDate = $order->requestedDueDate;
 
-        if($dueDate = $order->requestedDueDate){
+        if($dueDate) {
+            if (is_string($dueDate)) {
+                $dueDate = new \DateTime($dueDate);
+            }
             $dueDate = $dueDate->format('Y-m-d');
         }
 
-        $orderResponse = $acclaroApiClient->createOrder(
+        $orderResponse = $translationService->createOrder(
             $order->title,
             $comments,
             $dueDate,
@@ -332,7 +294,7 @@ class OrderRepository
 
         $order->serviceOrderId = $orderData['acclaroOrderId'];
 
-        $acclaroApiClient->requestOrderCallback(
+        $translationService->requestOrderCallback(
             $order->serviceOrderId,
             Translations::$plugin->urlGenerator->generateOrderCallbackUrl($order)
         );
@@ -346,14 +308,14 @@ class OrderRepository
                 }
             }
             if (! empty($tags)) {
-                $acclaroApiClient->addOrderTags($orderResponse->orderid, implode(",", $tags));
+                $translationService->addOrderTags($orderResponse->orderid, implode(",", $tags));
             }
         }
 
         $orderReferenceFiles = [];
 
         $sendOrderSvc = new SendOrder();
-        $translationService = new AcclaroTranslationService($settings, $acclaroApiClient);
+        $translationService = $order->getTranslationService();
         foreach ($order->getFiles() as $file) {
             if ($queue) {
                 $sendOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
@@ -367,9 +329,9 @@ class OrderRepository
         }
 
         if ($order->requestQuote()) {
-            $acclaroApiClient->requestOrderQuote($order->serviceOrderId);
+            $translationService->requestOrderQuote($order->serviceOrderId);
         } else {
-            $acclaroApiClient->submitOrder($order->serviceOrderId);
+            $translationService->submitOrder($order->serviceOrderId);
         }
 
         foreach ($orderReferenceFiles as $file) {
@@ -571,7 +533,7 @@ class OrderRepository
 		$originalIds = [];
 
 		foreach ($order->getFiles() as $file) {
-            if ($file->isPublished() || $file->isNew() || $file->isModified()) continue;
+            if (! $file->canBeCheckedForTargetChanges()) continue;
 
 			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
 		}

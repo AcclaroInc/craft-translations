@@ -22,30 +22,11 @@ use craft\commerce\elements\Product;
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
     /**
-     * @var \acclaro\translations\services\api\AcclaroApiClient
-     */
-    protected $apiClient;
-
-    /**
-     * @var boolean
-     */
-    protected $sandboxMode = false;
-
-    /**
-     * @param array $settings
-     */
-    public function __construct(
-        array $settings
-    ) {
-        $this->sandboxMode = !empty($settings['sandboxMode']);
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function authenticate()
     {
-        return;
+        return true;
     }
 
     /**
@@ -69,6 +50,46 @@ class Export_ImportTranslationService implements TranslationServiceInterface
      */
     public function updateFile(Order $order, FileModel $file){
         return;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function syncOrder(Order $order, $files, $queue = null)
+    {
+        return;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getOrderUrl(Order $order): string
+    {
+        return  sprintf('#%s', $order->id);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function sendOrder(Order $order)
+    {
+        return;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLanguages()
+    {
+        return [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLanguagePairs(string $sourceLanguage)
+    {
+        return [];
     }
 
     public function updateIOFile(Order $order, FileModel $file)
@@ -203,22 +224,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     return false;
                 }
         }
-
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function sendOrder(Order $order)
-    {
-        return;
-    }
-
-    public function editOrderName(Order $order, $name)
-    {
-
-        $order->title = $name;
 
         return true;
     }

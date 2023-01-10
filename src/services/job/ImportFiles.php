@@ -189,14 +189,9 @@ class ImportFiles extends BaseJob
             $file->reference = null;
         }
 
-        $translation_service = $this->order->translator->service;
-        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
-            $translation_service = Constants::TRANSLATOR_DEFAULT;
-        }
-
         //Translation Service
         $translationService = Translations::$plugin->translatorFactory
-            ->makeTranslationService($translation_service, $this->order->translator->getSettings());
+            ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, []);
 
         $file->target = Translations::$plugin->elementToFileConverter->jsonToXml($file_content);
         $file->status = Constants::FILE_STATUS_REVIEW_READY;
@@ -325,14 +320,9 @@ class ImportFiles extends BaseJob
             $file->reference = null;
         }
 
-        $translation_service = $this->order->translator->service;
-        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
-            $translation_service = Constants::TRANSLATOR_DEFAULT;
-        }
-
         //Translation Service
         $translationService = Translations::$plugin->translatorFactory
-            ->makeTranslationService($translation_service, $this->order->translator->getSettings());
+            ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, []);
 
 
         $file->status = Constants::FILE_STATUS_REVIEW_READY;
@@ -432,14 +422,9 @@ class ImportFiles extends BaseJob
             $file->reference = null;
         }
 
-        $translation_service = $this->order->translator->service;
-        if ($translation_service !== Constants::TRANSLATOR_DEFAULT) {
-            $translation_service = Constants::TRANSLATOR_DEFAULT;
-        }
-
         //Translation Service
         $translationService = Translations::$plugin->translatorFactory
-            ->makeTranslationService($translation_service, $this->order->translator->getSettings());
+            ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, []);
 
         $file->target = Translations::$plugin->elementToFileConverter->jsonToXml($file_content);
         $file->status = Constants::FILE_STATUS_REVIEW_READY;

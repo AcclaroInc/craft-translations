@@ -22,6 +22,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
 use acclaro\translations\services\job\acclaro\UpdateReviewFileUrls;
+use acclaro\translations\services\job\SyncOrderJob;
 
 class AcclaroTranslationService implements TranslationServiceInterface
 {
@@ -33,7 +34,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     /**
      * @var \acclaro\translations\services\api\AcclaroApiClient
      */
-    protected $acclaroApiClient;
+    protected $apiClient;
 
     /**
      * @var array
@@ -41,12 +42,10 @@ class AcclaroTranslationService implements TranslationServiceInterface
     protected $settings;
 
     /**
-     * @param array                                                         $settings
-     * @param \acclaro\translations\services\api\AcclaroApiClient    $acclaroApiClient
+     * @param array $settings
      */
     public function __construct(
-        array $settings,
-        AcclaroApiClient $acclaroApiClient
+        array $settings
     ) {
         if (!isset($settings['apiToken'])) {
             throw new \Exception('Missing apiToken');
@@ -56,7 +55,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         $this->sandboxMode = !empty($settings['sandboxMode']);
 
-        $this->acclaroApiClient = $acclaroApiClient ?: new AcclaroApiClient(
+        $this->apiClient = new AcclaroApiClient(
             $settings['apiToken'],
             !empty($settings['sandboxMode'])
         );
@@ -67,7 +66,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function authenticate()
     {
-        $response = $this->acclaroApiClient->getAccount();
+        $response = $this->apiClient->getAccount();
 
         return !empty($response);
     }
@@ -83,7 +82,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             return;
         }
 
-        $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
+        $orderResponse = $this->apiClient->getOrder($order->serviceOrderId);
 
         if (empty($orderResponse->status)) {
             $error = sprintf('Empty order response from acclaro. OrderId: %s', $order->id);
@@ -137,7 +136,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 return;
             }
 
-            $fileInfoResponse = $this->acclaroApiClient->getFileInfo($order->serviceOrderId);
+            $fileInfoResponse = $this->apiClient->getFileInfo($order->serviceOrderId);
 
             if (!is_array($fileInfoResponse)) {
                 $error = sprintf('Invalid file Info from acclaro. FileId: %s', $file->id);
@@ -161,14 +160,14 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             $targetFileId = $fileInfo->targetfile;
 
-            $fileStatusResponse = $this->acclaroApiClient->getFileStatus($order->serviceOrderId, $targetFileId);
+            $fileStatusResponse = $this->apiClient->getFileStatus($order->serviceOrderId, $targetFileId);
 
             $file->status = $fileStatusResponse->status === Constants::FILE_STATUS_COMPLETE ?
                 Constants::FILE_STATUS_REVIEW_READY : $fileStatusResponse->status;
             $file->dateDelivered = new \DateTime();
 
             // download the file
-            $target = $this->acclaroApiClient->getFile($order->serviceOrderId, $targetFileId);
+            $target = $this->apiClient->getFile($order->serviceOrderId, $targetFileId);
 
             if ($target) $file->target = $target;
 
@@ -185,7 +184,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function getOrderStatus($order)
     {
-        $orderResponse = $this->acclaroApiClient->getOrder($order->serviceOrderId);
+        $orderResponse = $this->apiClient->getOrder($order->serviceOrderId);
         return empty($orderResponse) || is_array($orderResponse) ? null : $orderResponse->status;
     }
 
@@ -203,6 +202,43 @@ class AcclaroTranslationService implements TranslationServiceInterface
         return $job;
     }
 
+    public function createOrder($name, $comments, $dueDate, $wordCount)
+    {
+        return $this->apiClient->createOrder($name, $comments, $dueDate, $wordCount);
+    }
+    
+    public function requestOrderCallback($orderId, $url)
+    {
+        return $this->apiClient->requestOrderCallback($orderId, $url);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function syncOrder(Order $order, $files, $queue = null)
+    {
+        $totalElements = count($order->files);
+        $currentElement = 0;
+
+        if (!($order->isGettingQuote() || $order->isAwaitingApproval())) {
+            $syncOrderSvc = new SyncOrderJob();
+            foreach ($order->getFiles() as $file) {
+                if ($queue) {
+                    $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
+                }
+                // Let's make sure we're not updating canceled/complete/published files
+                if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
+
+                $this->updateFile($order, $file);
+
+                Translations::$plugin->fileRepository->saveFile($file);
+            }
+        }
+
+        $this->updateOrder($order);
+        return Translations::$plugin->orderRepository->saveOrder($order);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -214,33 +250,46 @@ class AcclaroTranslationService implements TranslationServiceInterface
             'settings' => $this->settings
         ]));
     }
+    
+    public function removeOrderTags($orderId, $tag)
+    {
+        return $this->apiClient->removeOrderTags($orderId, $tag);
+    }
 
-    public function getOrderUrl(Order $order)
+    /**
+     * {@inheritdoc}
+     */
+    public function getOrderUrl(Order $order): string
     {
         $subdomain = $this->sandboxMode ? 'apisandbox' : 'my';
 
         return sprintf('https://%s.acclaro.com/orders/details/%s', $subdomain, $order->serviceOrderId);
     }
 
+    public function addReviewUrl($orderId, $fileId, $url)
+    {
+        return $this->apiClient->addReviewUrl($orderId, $fileId, $url);
+    }
+
     public function getLanguages()
     {
-        return $this->acclaroApiClient->getLanguages();
+        return $this->apiClient->getLanguages();
     }
 
     public function getLanguagePairs($source)
     {
-        return $this->acclaroApiClient->getLanguagePairs($source);
+        return $this->apiClient->getLanguagePairs($source);
     }
 
     public function editOrderName($orderId, $name)
     {
-        return $this->acclaroApiClient->editOrderName($orderId, $name);
+        return $this->apiClient->editOrderName($orderId, $name);
     }
 
     public function sendOrderFile($order, $file) {
 
         $tempPath = Craft::$app->path->getTempPath();
-        $acclaroApiClient = $this->acclaroApiClient;
+        $client = $this->apiClient;
 
         if ($file) {
 
@@ -265,7 +314,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             fwrite($stream, $file->source);
 
-            $fileResponse = $acclaroApiClient->sendSourceFile(
+            $fileResponse = $client->sendSourceFile(
                 $order->serviceOrderId,
                 $sourceSite,
                 $targetSite,
@@ -275,7 +324,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $file->serviceFileId = $fileResponse->fileid ? $fileResponse->fileid : $file->id;
             $file->status = Constants::FILE_STATUS_NEW;
 
-            $acclaroApiClient->requestFileCallback(
+            $client->requestFileCallback(
                 $order->serviceOrderId,
                 $file->serviceFileId,
                 Translations::$plugin->urlGenerator->generateFileCallbackUrl($file)
@@ -294,7 +343,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function sendOrderReferenceFile($order, $file, $format = Constants::FILE_FORMAT_CSV) {
         $tempPath = Craft::$app->path->getTempPath();
-        $acclaroApiClient = $this->acclaroApiClient;
+        $client = $this->apiClient;
 
         if ($file) {
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
@@ -307,7 +356,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             fwrite($stream, $tmFile['fileContent']);
 
-            $acclaroApiClient->sendReferenceFile(
+            $client->sendReferenceFile(
                 $order->serviceOrderId,
                 $sourceSite,
                 $targetSite,
@@ -329,7 +378,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function cancelOrder($order)
     {
-        return $this->acclaroApiClient->addOrderComment($order->serviceOrderId, Constants::ACCLARO_ORDER_CANCEL);
+        return $this->apiClient->addOrderComment($order->serviceOrderId, Constants::ACCLARO_ORDER_CANCEL);
     }
 
     /**
@@ -339,7 +388,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function addFileComment($order, $file, $comment)
     {
-        $this->acclaroApiClient->addFileComment($order->serviceOrderId, $file->serviceFileId, $comment);
+        $this->apiClient->addFileComment($order->serviceOrderId, $file->serviceFileId, $comment);
     }
 
     /**
@@ -363,36 +412,56 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         if (! empty($remove)) {
             foreach ($remove as $title) {
-                $this->acclaroApiClient->removeOrderTags($order->serviceOrderId, $title);
+                $this->apiClient->removeOrderTags($order->serviceOrderId, $title);
             }
         }
 
         if (! empty($add)) {
             foreach ($add as $title) {
-                $this->acclaroApiClient->addOrderTags($order->serviceOrderId, $title);
+                $this->addOrderTags($order->serviceOrderId, $title);
             }
         }
     }
 
+    public function requestOrderQuote($orderId)
+    {
+        return $this->apiClient->requestOrderQuote($orderId);
+    }
+
+    public function submitOrder($orderId)
+    {
+        return $this->apiClient->submitOrder($orderId);
+    }
+
+    public function addOrderTags($orderId, $tags)
+    {
+        return $this->apiClient->addOrderTags($orderId, $tags);
+    }
+
     public function getOrderQuote($orderId)
     {
-        $res = $this->acclaroApiClient->getQuoteDetails($orderId);
+        $res = $this->apiClient->getQuoteDetails($orderId);
 
         return is_object($res) ? json_decode(json_encode($res), true): null;
     }
 
     public function acceptOrderQuote($orderId, $comment = '')
     {
-        return $this->acclaroApiClient->approveQuote($orderId, $comment);
+        return $this->apiClient->approveQuote($orderId, $comment);
     }
 
     public function getOrderQuoteDocument($orderId)
     {
-        return $this->acclaroApiClient->getQuoteDocument($orderId);
+        return $this->apiClient->getQuoteDocument($orderId);
     }
 
     public function declineOrderQuote($orderId, $comment = '')
     {
-        return $this->acclaroApiClient->declineQuote($orderId, $comment);
+        return $this->apiClient->declineQuote($orderId, $comment);
+    }
+
+    public function updateIOFile(Order $order, FileModel $file)
+    {
+        return (new Export_ImportTranslationService([]))->updateIOFile($order, $file);
     }
 }
