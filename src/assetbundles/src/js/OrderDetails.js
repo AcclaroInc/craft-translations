@@ -930,10 +930,15 @@
                 var $hiddenAction = $('<input>', {
                     'type': 'hidden',
                     'name': 'action',
-                    'value': 'translations/order/save-order-draft'
+                    'value': 'translations/order/save-order'
                 });
 
                 $hiddenAction.appendTo($form);
+                $('<input>', {
+                    'type': 'hidden',
+                    'name': 'createDraft',
+                    'value': '1',
+                }).appendTo($form);
 
                 $form.submit();
             });

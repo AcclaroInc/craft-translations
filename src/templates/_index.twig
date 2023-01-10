@@ -6,7 +6,6 @@
 {% set pluginHandle = constant('acclaro\\translations\\Constants::PLUGIN_HANDLE') %}
 {% set licenseStatus = craft.app.plugins.getPluginLicenseKeyStatus(pluginHandle) %}
 {% set edition = (licenseStatus == 'valid') ? 'Paid' : 'Free trial' %}
-{% set updates = craft.app.getApi().getUpdates().plugins.translations %}
 
 {% block toolbar %}
     <div id="edition-logo" title="Translations ({{ edition }})" aria-label="Translations ({{ edition }})" style="margin: 7px 0px 10px 15px;">
