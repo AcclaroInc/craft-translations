@@ -72,10 +72,15 @@ class GoogleTranslationService implements TranslationServiceInterface
             $data = array_values($source['content']);
             $sourceLanguage = $file->getSourceLangCode();
             $targetLanguage = $file->getTargetLangCode();
-            $response = $this->apiClient->translate($data, $targetLanguage, $sourceLanguage);
+
+            $response = $this->getTranslatedData($data, $sourceLanguage, $targetLanguage);
 
             if (!$response['success']) {
-                $order->logActivity("Error translating file: " . $source['content']['title']);
+                $order->logActivity(sprintf(
+                    'Error translating file "%s" Error: %s',
+                    $source['content']['title'],
+                    $response['message']
+                ));
                 continue;
             }
 
@@ -91,6 +96,49 @@ class GoogleTranslationService implements TranslationServiceInterface
         
         $this->updateOrder($order);
         Translations::$plugin->orderRepository->saveOrder($order);
+    }
+
+    /**
+     * Translates $data array in case the length of array is more than 100 then chunks it down to make request
+     * 
+     * @return array
+     */
+    private function getTranslatedData($data, $sourceLanguage, $targetLanguage)
+    {
+        $response = ['success' => true, 'message' => ''];
+        try {
+            if (count($data) > 100) {
+                $dataChunk = array_chunk($data, 99, true);
+                $tempResponse = null;
+
+                foreach ($dataChunk as $chunk) {
+                    if (! $tempResponse) {
+                        $tempResponse = $this->apiClient->translate($chunk, $targetLanguage, $sourceLanguage);
+                        
+                        if (! $tempResponse['success']) {
+                            throw new \Exception($tempResponse['message']);
+                        }
+                    } else {
+                        $temp = $this->apiClient->translate($chunk, $targetLanguage, $sourceLanguage);
+
+                        if (!$temp['success']) {
+                            throw new \Exception($temp['message']);
+                        } else {
+                            $tempResponse['data'] = array_merge($tempResponse['data'], $temp['data']);
+                        }
+                    }
+                }
+
+                $response['data'] = $tempResponse['data'];
+            } else {
+                $response = $this->apiClient->translate($data, $targetLanguage, $sourceLanguage);
+            }
+        } catch (\Exception $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+        }
+
+        return $response;
     }
 
     /**
