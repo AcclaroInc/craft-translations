@@ -12,7 +12,6 @@ namespace acclaro\translations\services\job\acclaro;
 
 use acclaro\translations\Constants;
 use craft\queue\BaseJob;
-use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\Translations;
 
 class UpdateReviewFileUrls extends BaseJob
@@ -22,12 +21,8 @@ class UpdateReviewFileUrls extends BaseJob
 
     public function execute($queue): void
     {
-        $acclaroApiClient = new AcclaroApiClient(
-            $this->settings['apiToken'],
-            !empty($this->settings['sandboxMode'])
-        );
-
         $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
+        $translationService = $order->getTranslationService();
 
         $totalElements = count($order->files);
         $currentElement = 0;
@@ -37,7 +32,7 @@ class UpdateReviewFileUrls extends BaseJob
 			if (! $file->isComplete()) continue;
 
             try {
-                $acclaroApiClient->addReviewUrl(
+                $translationService->addReviewUrl(
                     $order->serviceOrderId,
                     $file->serviceFileId,
                     $file->previewUrl

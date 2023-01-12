@@ -94,9 +94,7 @@ class BaseController extends Controller
             Craft::$app->end('Can not update canceled order');
         }
 
-        $translator = $order->getTranslator();
-
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+        $translationService = $order->getTranslationService();
 
         if (!$translationService) {
             Craft::$app->end('Couldn’t find the translation service');
@@ -161,9 +159,7 @@ class BaseController extends Controller
             echo 'Found order'.PHP_EOL;
         }
 
-        $translator = $order->getTranslator();
-
-        $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+        $translationService = $order->getTranslationService();
 
         if (!$translationService) {
             Craft::$app->end('Couldn’t find the translation service');
@@ -295,13 +291,10 @@ class BaseController extends Controller
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         // Authenticate service
-        $translator = $order->getTranslator();
-        $service = $translator->service;
-        $settings = $translator->getSettings();
-        $authenticate = (new Services())->authenticateService($service, $settings);
+        $translationService = $order->getTranslationService();
 
-        if (!$authenticate && $service === Constants::TRANSLATOR_ACCLARO) {
-            $this->setError('Invalid API key');
+        if (!$translationService->authenticate()) {
+            $this->setError('Failed to authenticate API key.');
             return;
         }
 

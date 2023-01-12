@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.0 - 2023-01-12
+
+### Added
+- Support for `Google machine translations`. ([AcclaroInc#409](https://github.com/AcclaroInc/craft-translations/pull/409))
+
+### Chore
+- Code refactoring and cleanup.
+
 ## 3.1.1 - 2022-12-29
 
 ### Added

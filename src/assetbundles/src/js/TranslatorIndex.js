@@ -79,38 +79,40 @@
                 window.location.href = $(selected).data("url");
             });
 
-            $("body").on('click', '.delete-translator', function() {
+            $("body").on('click', '.delete-translator', function () {
                 if ($(this).hasClass("disabled")) {
                     return;
                 }
+                
+                if (confirm("Are you sure you want to delete selected translators?")) {
+                    $data = {
+                        translatorIds: null
+                    };
 
-                $data = {
-                    translatorIds: null
-                };
-
-                $("#content input[type=checkbox]").filter("tbody :checked").each(function() {
-                    if ($data.translatorIds) {
-                        $data.translatorIds += "," + $(this).data("id");
-                    } else {
-                        $data.translatorIds = $(this).data("id");
-                    }
-                });
-
-                params = {
-                    data: $data
-                }
-
-                Craft.sendActionRequest('POST', 'translations/translator/delete', params)
-                    .then(() => {
-                        location.reload();
-                    })
-                    .catch(({response}) => {
-                        $message = 'An unknown error occurred.';
-                        if (response.data.message != null) {
-                            $message = response.data.message;
+                    $("#content input[type=checkbox]").filter("tbody :checked").each(function () {
+                        if ($data.translatorIds) {
+                            $data.translatorIds += "," + $(this).data("id");
+                        } else {
+                            $data.translatorIds = $(this).data("id");
                         }
-                        Craft.cp.displayError(Craft.t('app', $message));
                     });
+
+                    params = {
+                        data: $data
+                    }
+
+                    Craft.sendActionRequest('POST', 'translations/translator/delete', params)
+                        .then(() => {
+                            location.reload();
+                        })
+                        .catch(({ response }) => {
+                            $message = 'An unknown error occurred.';
+                            if (response.data.message != null) {
+                                $message = response.data.message;
+                            }
+                            Craft.cp.displayError(Craft.t('app', $message));
+                        });
+                }
             });
         },
 

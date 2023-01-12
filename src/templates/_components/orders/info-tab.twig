@@ -7,7 +7,7 @@
 		</div>
 
 		<div class="input ltr">
-			{% if not isDefaultTranslator and not order.isPending %}
+			{% if order.hasTranslator('acclaro') and not order.isPending %}
 				{% if order.serviceOrderId %}
 					{% if isCancelable %}
 						<table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc orderable"><button></button></th></thead></table>
@@ -156,10 +156,10 @@
 		</button>
 	</div>
 	{% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
-	{% if not isDefaultTranslator %}
+	{% if order.hasTranslator('acclaro') %}
 		<div class="field" style="justify-content: space-between;">
 			<div class="heading">
-				<label id="acclaro-sync">My Acclaro</label>
+				<label>My Acclaro</label>
 				<form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
 					{{ csrfInput() }}
 					{{ forms.hidden({
@@ -179,6 +179,25 @@
 			{% else %}
 				<button type="submit" form="sync-order" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
 			{% endif %}
+		</div>
+	{% elseif order.hasTranslator('google') %}
+		<div class="field" style="justify-content: space-between;">
+			<div class="heading">
+				<label>Google</label>
+				<form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
+					{{ csrfInput() }}
+					{{ forms.hidden({
+						name: 'action',
+						value: 'translations/order/sync-order',
+					}) }}
+
+					{{ forms.hidden({
+						name: 'orderId',
+						value: order.id
+					}) }}
+				</form>
+			</div>
+			<button type="button" form="sync-order-google" class="btn icon right link-disabled" data-icon="refresh" value="submit" style="width: 125px;">{{ "Translate"|t('app') }}</button>
 		</div>
 	{% endif %}
 </div>

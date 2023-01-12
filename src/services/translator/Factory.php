@@ -10,54 +10,27 @@
 
 namespace acclaro\translations\services\translator;
 
-use acclaro\translations\services\api\AcclaroApiClient;
-use acclaro\translations\services\translator\AcclaroTranslationService;
-use acclaro\translations\services\translator\Export_ImportTranslationService;
+use acclaro\translations\Constants;
 
 class Factory
 {
-    private $translationServices = array(
-        'acclaro' => 'Acclaro',
-        'export_import' => 'Export_Import'
-    );
+    private $supportedServices = [
+        Constants::TRANSLATOR_ACCLARO => AcclaroTranslationService::class,
+        Constants::TRANSLATOR_DEFAULT => Export_ImportTranslationService::class,
+        Constants::TRANSLATOR_GOOGLE  => GoogleTranslationService::class
+    ];
 
-    public function getTranslationServiceNames()
-    {
-        return $this->translationServices;
-    }
-
+    /**
+     * @return AcclaroTranslationService|Export_ImportTranslationService|GoogleTranslationService
+     */
     public function makeTranslationService($serviceHandle, $settings)
     {
-        if (!array_key_exists($serviceHandle, $this->translationServices)) {
+        if (!array_key_exists($serviceHandle, $this->supportedServices)) {
             throw new \Exception('Invalid translation service.');
         }
-
-        $service = $serviceHandle != 'export_import' ? ucfirst($serviceHandle) : 'Export_Import';
-
-        $class = sprintf(
-            '%s\\%sTranslationService',
-            __NAMESPACE__,
-            $service
-        );
-
-        switch ($class) {
-            case AcclaroTranslationService::class:
-                return new AcclaroTranslationService(
-                    $settings,
-                    new AcclaroApiClient(
-                        $settings['apiToken'],
-                        !empty($settings['sandboxMode'])
-                    )
-                );
-                break;
-            case Export_ImportTranslationService::class:
-                return new Export_ImportTranslationService(
-                    $settings
-                );
-        }
-
-        $class = '\\'.$class;
-
-        return new $class($settings, \Craft::$app);
+        
+        $class = $this->supportedServices[$serviceHandle];
+        
+        return (new $class($settings));
     }
 }

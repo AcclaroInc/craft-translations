@@ -114,7 +114,6 @@
 
 .translations-translator-settings {
     background-image: linear-gradient(#f7f7f8, #f4f5f6);
-    display: none;
 }
 
 .translations-translator-logo-acclaro {
@@ -738,6 +737,10 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 
 .pl-10 {
     padding-left: 10px;
+}
+
+.pl-100 {
+    padding-left: 100px;
 }
 
 .pr-10px {

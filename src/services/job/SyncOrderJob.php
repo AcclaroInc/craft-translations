@@ -13,16 +13,18 @@ namespace acclaro\translations\services\job;
 use craft\queue\BaseJob;
 use acclaro\translations\Translations;
 
-class SyncOrder extends BaseJob
+class SyncOrderJob extends BaseJob
 {
     public $orderId;
     public $title;
+    public $files;
 
     public function execute($queue): void
     {
         $order = Translations::$plugin->orderRepository->getOrderById($this->orderId);
+        $translationService = $order->getTranslationService();
         $this->title = $order->title;
-        Translations::$plugin->orderRepository->syncOrder($order, $queue);
+        $translationService->syncOrder($order, $this->files, $queue);
     }
 
     public function updateProgress($queue, $progress) {

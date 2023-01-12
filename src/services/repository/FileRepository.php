@@ -252,7 +252,7 @@ class FileRepository
     }
 
     /**
-     * @param $order
+     * @param \acclaro\translations\elements\Order $order
      * @param null $queue
      * @return bool
      * @throws \Throwable
@@ -262,7 +262,7 @@ class FileRepository
         $currentElement = 0;
 
         $service = new RegeneratePreviewUrls();
-        foreach ($order->files as $file) {
+        foreach ($order->getFiles() as $file) {
 
             if (!($file->isComplete() || in_array($file->id, $files))) continue;
 
@@ -286,10 +286,8 @@ class FileRepository
             }
         }
 
-        if ($order->translator->service !== Constants::TRANSLATOR_DEFAULT) {
-            $translator = $order->getTranslator();
-
-            $translationService = Translations::$plugin->translatorFactory->makeTranslationService($translator->service, $translator->getSettings());
+        if ($order->translator->service === Constants::TRANSLATOR_ACCLARO) {
+            $translationService = $order->getTranslationService();
 
             $translationService->updateReviewFileUrls($order);
         }

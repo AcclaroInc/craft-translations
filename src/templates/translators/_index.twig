@@ -90,10 +90,10 @@
                     </td>
                     <td>
                         {% switch translator.service %}
-                        {% case "export_import" %}
-                            {{ 'Export/Import' }}
-                        {% case "acclaro" %}
-                            {{ 'Acclaro' }}
+                            {% case "export_import" %}
+                                {{ 'Export/Import' }}
+                            {% default %}
+                                {{ translator.service|title }}
                         {% endswitch %}
                     </td>
                 </tr>
