@@ -214,12 +214,12 @@ class DraftRepository
                 if ($publish) {
                     $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
                 }
-                $transaction->commit();
             } catch(Exception $e) {
                 $transaction->rollback();
                 throw new \Exception($e->getMessage());
             }
         }
+        $transaction->commit();
 
         if ($isNewDraft)
 			$order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
