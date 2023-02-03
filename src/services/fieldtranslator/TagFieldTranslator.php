@@ -20,15 +20,12 @@ class TagFieldTranslator extends TaxonomyFieldTranslator
 {
     public function translateRelated(ElementTranslator $elementTranslator, Element $element, Tag $existingTag, $sourceSite, $targetSite, $fieldData)
     {
-        $translatedTag = Translations::$plugin->tagRepository->find(array(
-            'id' => $existingTag->id,
-            'groupId' => $existingTag->groupId,
-            'siteId' => $existingTag->siteId
-        ));
+        $translatedTag = Translations::$plugin->tagRepository->getTagById($existingTag->id, $targetSite);
         
         if ($translatedTag) {
             $tag = $translatedTag;
         } else {
+            // Doesn't feels this part runs as tags are propagated to all target locales if localised
             $tag = Translations::$plugin->elementCloner->cloneElement($existingTag);
         }
 

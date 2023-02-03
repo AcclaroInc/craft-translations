@@ -187,6 +187,7 @@ class DraftRepository
         $currentElement = 0;
 
         $createDrafts = new CreateDrafts();
+        $transaction = Craft::$app->db->beginTransaction();
 
         foreach ($order->getFiles() as $file) {
             if (! in_array($file->id, $fileIds)) {
@@ -229,11 +230,12 @@ class DraftRepository
                 if ($publish) {
                     $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
                 }
-
             } catch(Exception $e) {
-                $order->logActivity(Translations::$plugin->translator->translate('app', 'Could not update draft Error: ' .$e->getMessage()));
+                $transaction->rollback();
+                throw $e;
             }
         }
+        $transaction->commit();
 
         if ($isNewDraft)
 			$order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
