@@ -879,10 +879,11 @@ class OrderController extends BaseController
         } catch (Exception $e) {
             $actionName = $action == "publish" ? "publish" : "merge";
             $order->logActivity(Translations::$plugin->translator->translate('app', "Could not $actionName draft Error: " . $e->getMessage()));
-            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t save the draft. Error: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR );
-            $order->status = 'failed';
+            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] Couldn’t save the draft. Error: '.$e, Constants::LOG_LEVEL_ERROR );
+
             Craft::$app->getElements()->saveElement($order);
             $this->setError($e->getMessage());
+            return;
         }
 
         if ($job) {
