@@ -28,6 +28,19 @@ class TagRepository
                 ->one();
     }
 
+	/**
+	 * Returns a tag by its ID.
+	 *
+	 * @param int $tagId
+	 * @param int|null $siteId
+	 * @return Tag|null
+	 */
+	public function getTagById(int $tagId, int $siteId = null)
+	{
+		/** @noinspection PhpIncompatibleReturnTypeInspection */
+		return Craft::$app->getElements()->getElementById($tagId, Tag::class, $siteId);
+	}
+
     public function saveTag(Tag $tag)
     {
         $success = Craft::$app->elements->saveElement($tag, true, false);
