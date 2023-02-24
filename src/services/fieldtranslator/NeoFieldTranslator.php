@@ -60,7 +60,7 @@ class NeoFieldTranslator extends GenericFieldTranslator
         $newToParse = array();
 
         foreach ($blockData as $key => $value) {
-            if (is_numeric($key) || strpos($key, "_") !== false || strpos($key, "new", 0) !== false) {
+            if (is_numeric($key) || strpos($key, "new", 0) !== false) {
                 $newToParse[$key] = $value;
             } else {
                 $newBlockData[$key] = $value;
@@ -101,11 +101,8 @@ class NeoFieldTranslator extends GenericFieldTranslator
         foreach ($blocks as $i => $block) {
             $i = 'new' . ++$new;
 
-            // Check for old key in case an order was created before plugin update
-            $oldKey = sprintf('%s_%s', $block->fieldId, $block->canonicalId);
-
             $blockId = $field->getIsTranslatable() ? $i : $block->id;
-            $blockData = $allBlockData[$i] ?? $allBlockData[$oldKey] ?? array();
+            $blockData = $allBlockData[$i] ?? array();
 
             $post[$fieldHandle][$blockId] = array(
                 'modified' => '1',
