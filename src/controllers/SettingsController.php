@@ -161,7 +161,7 @@ class SettingsController extends BaseController
             return $this->asFailure($this->getErrorMessage("Something went wrong with date"));
         }
 
-        $requestedDate = \DateTime::createFromFormat('n/j/Y', $requestedDate)->format('Y-m-d');
+        $requestedDate = \DateTime::createFromFormat('d/m/Y', $requestedDate)->format('Y-m-d');
         $errors = \DateTime::getLastErrors();
 
         if (($errors['warning_count'] + $errors['error_count']) > 0) {
