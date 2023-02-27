@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.2 - 2023-02-27
+
+### Fixed
+- An issue where delivered files failed to merge into draft ([AcclaroInc#421](https://github.com/AcclaroInc/craft-translations/issues/421))
+- An issue where log files failed to download with invalid date error.
+
 ## 3.2.1 - 2023-02-06
 
 ### Fixed
