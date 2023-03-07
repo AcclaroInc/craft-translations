@@ -783,7 +783,7 @@
             var $saveDraftLink = $('<a>', {
                 'class': 'translations-submit-order',
                 'href': '#',
-                'text': 'Save draft',
+                'text': 'Save',
             });
 
             $saveDraftLink.appendTo($item1);
