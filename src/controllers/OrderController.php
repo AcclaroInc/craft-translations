@@ -425,10 +425,14 @@ class OrderController extends BaseController
             $order = $this->service->getOrderById($orderId);
 
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order created'));
+        } elseif ($orderId && $createDraft && $this->service->getOrderById($orderId)?->isPending()) {
+            // This is for user saving changes made in existing draft 
+            $order = $this->service->getOrderById($orderId);
         } else {
             $order = $this->service->makeNewOrder($sourceSite);
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order created'));
+            $logInfo = $createDraft ? 'Order draft created' : 'Order created';
+            $order->logActivity(Translations::$plugin->translator->translate('app', $logInfo));
         }
 
         $job = '';

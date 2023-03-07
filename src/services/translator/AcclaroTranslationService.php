@@ -143,9 +143,14 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 Translations::$plugin->logHelper->log($error, Constants::LOG_LEVEL_ERROR);
                 return;
             }
+
+            // Response can have multiple arrays of same source file id so check based on target locale
+            $targetSite = Craft::$app->getSites()->getSiteById($file->targetSite);
+            $targetLangCode = Translations::$plugin->siteRepository->normalizeLanguage($targetSite->language);
+
             // find the matching file
             foreach ($fileInfoResponse as $fileInfo) {
-                if ($fileInfo->fileid == $file->serviceFileId) break;
+                if ($fileInfo->fileid == $file->serviceFileId && $targetLangCode == $fileInfo->targetlang->code) break;
 
                 $fileInfo = null;
             }
