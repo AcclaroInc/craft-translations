@@ -161,11 +161,11 @@ class SettingsController extends BaseController
             return $this->asFailure($this->getErrorMessage("Something went wrong with date"));
         }
 
-        $requestedDate = \DateTime::createFromFormat('d/m/Y', $requestedDate)->format('Y-m-d');
-        $errors = \DateTime::getLastErrors();
+        // Date format varies depending on time zones so converting tio unix time stamp to bring in required format
+        $requestedDate = date('Y-m-d', strtotime($requestedDate));
 
-        if (($errors['warning_count'] + $errors['error_count']) > 0) {
-            return $this->asFailure($this->getErrorMessage("Please select a valid date"));
+        if (strtotime($requestedDate) > time()) {
+            return $this->asFailure($this->getErrorMessage("Invalid date " . date("M, d/Y", strtotime($requestedDate))));
         }
 
         $zipName = 'logs';
@@ -211,7 +211,7 @@ class SettingsController extends BaseController
             return $errors;
         }
 
-        if (!$zipHasFiles) return $this->asSuccess($this->getSuccessMessage("No logs found for selected date"));
+        if (!$zipHasFiles) return $this->asSuccess($this->getSuccessMessage("No logs found for " . date("M, d/Y", strtotime($requestedDate))));
 
         if (!is_file($zipDest) || !Path::ensurePathIsContained($zipDest)) {
             throw new NotFoundHttpException(Craft::t('app', 'Invalid file name: {filename}', [

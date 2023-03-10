@@ -1222,9 +1222,14 @@ class OrderController extends BaseController
             throw new HttpException(400, Translations::$plugin->translator
                 ->translate('app', 'Source site is not supported'));
         }
+        
+        $orderId = Craft::$app->getRequest()->getBodyParam('id');
+        $order = $this->service->getOrderById($orderId);
 
-        $order = $this->service->makeNewOrder($sourceSite);
-        $order->logActivity(Translations::$plugin->translator->translate('app', 'Order draft created'));
+        if (! $order->isPending()) {
+            $order = $this->service->makeNewOrder($sourceSite);
+            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order draft created'));
+        }
 
         try {
             $targetSites = Craft::$app->getRequest()->getParam('targetSites');
@@ -1327,7 +1332,7 @@ class OrderController extends BaseController
                 $this->setError('Error saving Order.');
             } else {
                 $this->setSuccess('Order Saved.');
-                return $this->redirect(Constants::URL_ORDERS, 302, true);
+                return $this->redirect($order->getCpEditUrl(), 302, true);
             }
         } catch (Exception $e) {
             Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order. Error: ' . $e->getMessage(), Constants::LOG_LEVEL_ERROR);

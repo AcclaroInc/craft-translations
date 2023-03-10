@@ -14,9 +14,20 @@ Craft.Translations.CategoryTranslations = {
 
     categories: [],
     $btn: null,
+    $sidebar: null,
 
-    init: function(orders, categoryId) {
+    init: function (orders, categoryId) {
+        var self = this;
+        this.$sidebar = $('#sidebar');
+
         this.initAddToTranslationOrderButton(orders, categoryId);
+
+        // This prevent the new translation button from remaining enabled when user selects an entry and changes entry group from side bar
+        this.$sidebar.on('click', 'li', function () {
+            $(self.$btn[0]).toggleClass('link-disabled', true);
+            $(self.$menubtn[0]).toggleClass('link-disabled', true);
+            self.$btn.find(".btn-text").addClass('display-none');
+        });
     },
 
     isEditCategoryScreen: function() {
@@ -41,8 +52,8 @@ Craft.Translations.CategoryTranslations = {
 
         this.categories = unique(entries);
 
-        $(this.$btn[0]).toggleClass('disabled', this.categories.length === 0);
-        $(this.$menubtn[0]).toggleClass('disabled', this.categories.length === 0);
+        $(this.$btn[0]).toggleClass('link-disabled', this.categories.length === 0);
+        $(this.$menubtn[0]).toggleClass('link-disabled', this.categories.length === 0);
         $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.categories.length === 0);
 
         this.updateCreateNewLink();
@@ -117,8 +128,8 @@ Craft.Translations.CategoryTranslations = {
         });
 
         if (!this.isEditCategoryScreen()) {
-            this.$btn.addClass('disabled');
-            this.$menubtn.addClass('disabled');
+            this.$btn.addClass('link-disabled');
+            this.$menubtn.addClass('link-disabled');
             this.$btn.find(".btn-text").addClass('display-none');
         }
 
