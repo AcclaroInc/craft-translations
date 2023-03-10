@@ -15,11 +15,13 @@
         $btngroup: null,
         $btn: null,
         $menubtn: null,
+        $sidebar: null,
         $selectedEntries: [],
 
         init: function($data) {
             var self = this;
             this.$data = $data;
+            this.$sidebar = $('#sidebar');
             this.$btngroup = $('<div>', {'class': 'btngroup translations-dropdown'});
 
             if (this.isEditScreen()) {
@@ -47,7 +49,7 @@
                 'data-icon': "language",
             });
 
-            this.$btn.html("<span>" + Craft.t('app', 'New translation') + "</span>");
+            this.$btn.html("<span class='btn-text'>" + Craft.t('app', 'New translation') + "</span>");
 
             this.$menubtn = $('<div>', {
                 'class': 'btn menubtn'
@@ -56,6 +58,7 @@
             if (!this.isEditScreen()) {
                 this.$btn.addClass('link-disabled');
                 this.$menubtn.addClass('link-disabled');
+                this.$btn.find(".btn-text").addClass('display-none');
             }
 
             this.$btn.appendTo(this.$btngroup);
@@ -141,11 +144,11 @@
 
                     $hiddenSourceSite.appendTo($form);
 
-                    for (var j = 0; j < self.entries.length; j++) {
+                    for (var j = 0; j < self.$selectedEntries.length; j++) {
                         $('<input>', {
                             'type': 'hidden',
                             'name': 'elements[]',
-                            'value': self.entries[j]
+                            'value': self.$selectedEntries[j]
                         }).appendTo($form);
                     }
 
@@ -209,6 +212,13 @@
                 this.$selectedEntries.push(this.getEditProductId());
                 this.updateCreateNewLink();
             }
+            
+            // This prevent the new translation button from remaining enabled when user selects an entry and changes entry group from side bar
+            this.$sidebar.on('click', 'li', function () {
+                $(self.$btn[0]).toggleClass('link-disabled', true);
+                $(self.$menubtn[0]).toggleClass('link-disabled', true);
+                self.$btn.find(".btn-text").addClass('display-none');
+            });
         },
         isEditScreen: function() {
             return $('form#main-form input[type=hidden][name=productId]').length > 0;
@@ -227,6 +237,7 @@
 
             $(this.$btn[0]).toggleClass('link-disabled', this.$selectedEntries.length === 0);
             $(this.$menubtn[0]).toggleClass('link-disabled', this.$selectedEntries.length === 0);
+            $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.$selectedEntries.length === 0);
 
             this.updateCreateNewLink();
         },

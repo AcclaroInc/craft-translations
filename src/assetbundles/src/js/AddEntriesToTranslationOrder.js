@@ -51,8 +51,8 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         this.entries = unique(entries);
 
-        $(this.$btn[0]).toggleClass('disabled', this.entries.length === 0);
-        $(this.$menubtn[0]).toggleClass('disabled', this.entries.length === 0);
+        $(this.$btn[0]).toggleClass('link-disabled', this.entries.length === 0);
+        $(this.$menubtn[0]).toggleClass('link-disabled', this.entries.length === 0);
 
         this.updateCreateNewLink();
     },
@@ -169,8 +169,8 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         });
 
         if (!this.isEditEntryScreen()) {
-            this.$btn.addClass('disabled');
-            this.$menubtn.addClass('disabled');
+            this.$btn.addClass('link-disabled');
+            this.$menubtn.addClass('link-disabled');
         }
 
         this.$btn.appendTo($btngroup);
@@ -338,8 +338,8 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         // This prevent the new translation button from remaining enabled when user selects an entry and changes entry group from side bar
         this.$sidebar.on('click', 'li', function () {
-            $(self.$btn[0]).toggleClass('disabled', true);
-            $(self.$menubtn[0]).toggleClass('disabled', true);
+            $(self.$btn[0]).toggleClass('link-disabled', true);
+            $(self.$menubtn[0]).toggleClass('link-disabled', true);
         });
     }
 };
