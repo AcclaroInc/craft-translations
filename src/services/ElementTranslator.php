@@ -20,6 +20,7 @@ use craft\elements\Category;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\commerce\elements\Product;
+use craft\fields\Color;
 
 class ElementTranslator
 {
@@ -164,7 +165,18 @@ class ElementTranslator
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             if (!$translator) {
-                if ($includeNonTranslatable) {
+                // @TODO: Might need to move these check to seprate class to fetch nested content of variants
+                if ($field instanceof Color) {
+                    $post[$fieldHandle] = $element->getFieldValue($fieldHandle)?->getHex() ?? '';
+                } elseif (in_array(get_class($field), ['craft\commerce\fields\Variants', 'craft\commerce\fields\Products'])) {
+                    if (! isset($post[$fieldHandle])) {
+                        $post[$fieldHandle] = [];
+                    }
+
+                    foreach ($element->getFieldValue($fieldHandle)->all() as $variant) {
+                        array_push($post[$fieldHandle], $variant->id);
+                    }
+                } elseif ($includeNonTranslatable) {
                     $post[$fieldHandle] = $element->$fieldHandle;
                 }
 
