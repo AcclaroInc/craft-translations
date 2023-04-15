@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.5 - 2023-04-15
+
+### Fixed
+- An issue where merging changes to draft throwing error when commerce product/variant are referenced inside another commerce product/variant.
+
 ## 3.2.4 - 2023-04-05
 
 ### Fixed
