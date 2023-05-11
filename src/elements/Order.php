@@ -83,6 +83,8 @@ class Order extends Element
 
     public $includeTmFiles;
 
+    public $preventSlugTranslation;
+
     public $asynchronousPublishing;
 
     public $requestQuote;

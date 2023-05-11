@@ -21,10 +21,11 @@ use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\commerce\elements\Product;
 use craft\fields\Color;
+use acclaro\translations\elements\Order;
 
 class ElementTranslator
 {
-    public function toTranslationSource(Element $element, $sourceSite=null)
+    public function toTranslationSource(Element $element, $sourceSite=null, $orderId=null)
     {
         $source = array();
 
@@ -33,9 +34,12 @@ class ElementTranslator
                 $source['title'] = $element->title;
             }
             if ($element->slug) {
-                $source['slug'] = $element->slug;
+                $order = Order::find()->id($orderId)->one();
+                if (!$order || !$order->preventSlugTranslation) {
+                    $source['slug'] = $element->slug;
+                }
             }
-
+        
         }
 
         foreach ($element->getFieldLayout()->getCustomFields() as $layoutField) {

@@ -443,6 +443,7 @@ class OrderController extends BaseController
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
+            $order->preventSlugTranslation = Craft::$app->getRequest()->getBodyParam('preventSlugTranslation');
 			$order->requestQuote = Craft::$app->getRequest()->getBodyParam('requestQuote');
 			$order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;

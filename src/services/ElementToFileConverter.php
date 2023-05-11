@@ -42,11 +42,12 @@ class ElementToFileConverter
         $elementIdMeta = $head->appendChild($dom->createElement('meta'));
         $elementIdMeta->setAttribute('elementId', $element->id);
         $elementIdMeta->setAttribute('orderId', $orderId);
+        $orderId = $elementIdMeta->getAttribute('orderId');
         $elementIdMeta->setAttribute('wordCount', $wordCount);
 
         $body = $xml->appendChild($dom->createElement('body'));
 
-        foreach (Translations::$plugin->elementTranslator->toTranslationSource($element, $sourceSite) as $key => $value) {
+        foreach (Translations::$plugin->elementTranslator->toTranslationSource($element, $sourceSite, $orderId) as $key => $value) {
             $translation = $dom->createElement('content');
 
             $translation->setAttribute('resname', $key);
