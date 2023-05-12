@@ -42,7 +42,6 @@ class ElementToFileConverter
         $elementIdMeta = $head->appendChild($dom->createElement('meta'));
         $elementIdMeta->setAttribute('elementId', $element->id);
         $elementIdMeta->setAttribute('orderId', $orderId);
-        $orderId = $elementIdMeta->getAttribute('orderId');
         $elementIdMeta->setAttribute('wordCount', $wordCount);
 
         $body = $xml->appendChild($dom->createElement('body'));

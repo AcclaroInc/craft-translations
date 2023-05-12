@@ -34,10 +34,13 @@ class ElementTranslator
                 $source['title'] = $element->title;
             }
             if ($element->slug) {
-                $order = Order::find()->id($orderId)->one();
-                if (!$order || !$order->preventSlugTranslation) {
-                    $source['slug'] = $element->slug;
+                if ($orderId) {
+                    $order =  Order::findOne($orderId)->get();
+                    if (!$order || !$order->preventSlugTranslation) {
+                        $source['slug'] = $element->slug;
+                    }
                 }
+                
             }
         
         }
