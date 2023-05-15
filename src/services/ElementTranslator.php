@@ -25,7 +25,7 @@ use acclaro\translations\elements\Order;
 
 class ElementTranslator
 {
-    public function toTranslationSource(Element $element, $sourceSite=null, $orderId=null)
+    public function toTranslationSource(Element $element, $sourceSite = null, $orderId = null)
     {
         $source = array();
 
@@ -33,14 +33,13 @@ class ElementTranslator
             if ($element->title && $element->getIsTitleTranslatable()) {
                 $source['title'] = $element->title;
             }
-            if ($element->slug) {
-                if ($orderId) {
-                    $order =  Order::findOne($orderId)->get();
-                    if (!$order || !$order->preventSlugTranslation) {
-                        $source['slug'] = $element->slug;
-                    }
+            if ($element->slug && $orderId) {
+                $order = Order::findOne($orderId);
+                if ($order && $order->preventSlugTranslation) {
+                    // Skip translation of the slug
+                } else {
+                    $source['slug'] = $element->slug;
                 }
-                
             }
         
         }

@@ -121,6 +121,27 @@
 			</div>
 
 			<input type="hidden" id="originalTrackTargetChanges" value="{{ order.trackTargetChanges }}">
+			
+			{% set preventSlugTranslationClass = "" %}
+			{% set preventSlugTranslationTitle = "" %}
+			{% if not order.isPending %}
+				{% set preventSlugTranslationClass = "non-editable disabled" %}
+				{% set preventSlugTranslationTitle = "This field cannot be edited." %}
+			{% endif %}
+			<span class="{{ preventSlugTranslationClass }}">
+				<div style="margin-bottom: 10px" class="{% if preventSlugTranslationClass %} noClick {% endif %}" title="{{ preventSlugTranslationTitle }}">
+					{{ forms.lightswitchField({
+						label: 'Prevent Slug Translation<p class="fw-400">\
+						Prevent\'s the translation of slug fields for the entries in this order.</p>'|t('app'),
+						id: "preventSlugTranslation",
+						name: "preventSlugTranslation",
+						class: "noClick",
+						on: order.preventSlugTranslation
+				}) }}
+				</div>
+			</span>
+
+			<input type="hidden" id="originalPreventSlugTranslation" value="{{ order.preventSlugTranslation }}">
 
 			{% set includeTmFilesClass = "" %}
 			{% set includeTmFilesTitle = "" %}
@@ -129,7 +150,7 @@
 				{% set includeTmFilesTitle = "This field cannot be edited." %}
 			{% endif %}
 			<span class="{{ includeTmFilesClass }}">
-				<div style="margin-bottom: 10px" class="{% if includeTmFilesClass %} noClick {% endif %}" title="{{ includeTmFilesTitle }}">
+				<div style="margin-bottom: 0px" class="{% if includeTmFilesClass %} noClick {% endif %}" title="{{ includeTmFilesTitle }}">
 					{{ forms.lightswitchField({
 						label: 'Include translation memory alignment files<p class="fw-400">\
 							Include translation memory alignment files with order submission to prevent overwriting existing content edits.</p>'|t('app'),
@@ -140,28 +161,6 @@
 					}) }}
 				</div>
 			</span>
-
-			{% set preventSlugTranslation = false %}
-			<input type="hidden" id="originalPreventSlugTranslation" value="{{ order.preventSlugTranslation }}">
-			{% set preventSlugTranslationClass = "" %}
-			{% set preventSlugTranslationTitle = "" %}
-			{% if not order.isPending %}
-				{% set preventSlugTranslationClass = "non-editable disabled" %}
-				{% set preventSlugTranslationTitle = "This field cannot be edited." %}
-			{% endif %}
-			<span class="{{ preventSlugTranslationClass }}">
-				<div style="margin-bottom: 0" class="{% if preventSlugTranslationClass %} noClick {% endif %}" title="{{ preventSlugTranslationTitle }}">
-					{{ forms.lightswitchField({
-      				label: 'Prevent Slug Translation<p class="fw-400">\
-      				Prevent the translation of slugs for this entry.</p>'|t('app'),
-      				id: "preventSlugTranslation",
-      				name: "preventSlugTranslation",
-      				class: "noClick",
-     				 on: preventSlugTranslation
-    			}) }}
-				</div>
-			</span>
-
 
 			<input type="hidden" id="originalIncludeTmFiles" value="{{ order.includeTmFiles }}">
 
@@ -239,21 +238,5 @@
 				<input type="hidden" id="tagGroupId" value="{{ tagGroup.id|default('') }}">
 			</div>
 		</div>
-
-		{# {{ forms.lightswitchField({
-					label: 'Asynchronous publishing<p class="fw-400">Creates a seprate translation draft \
-						for each target language that can be published independently.</p>'|t
-						(tag('button', {
-							type: 'button',
-							id: 'expand-status-btn',
-							class: ['btn'],
-							data: {
-								icon: 'ellipsis',
-							},
-						})),
-					id: "asynchronousPublishing",
-					name: "asynchronousPublishing",
-					on: order.asynchronousPublishing
-				}) }} #}
 	</form>
 </div>

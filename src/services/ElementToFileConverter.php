@@ -81,7 +81,8 @@ class ElementToFileConverter
         foreach (
             Translations::$plugin->elementTranslator->toTranslationSource(
                 $element,
-                $sourceSite
+                $sourceSite,
+                $orderId
             ) as $key => $value
         ) {
             $file['content'][$key] = $value;
@@ -110,7 +111,8 @@ class ElementToFileConverter
         foreach (
             Translations::$plugin->elementTranslator->toTranslationSource(
                 $element,
-                $sourceSite
+                $sourceSite,
+                $orderId
             ) as $key => $value
         ) {
             $headers .= ",\"$key\"";
@@ -244,15 +246,15 @@ class ElementToFileConverter
      * @return string
      */
     private function reportXmlErrors() {
-    	$errors = array();
-    	$libErros = libxml_get_errors();
+        $errors = array();
+        $libErros = libxml_get_errors();
 
-    	$msg = false;
-    	if ($libErros && isset($libErros[0]))
-    	{
-    		$msg = $libErros[0]->code . ": " .$libErros[0]->message;
-    	}
-    	return $msg;
+        $msg = false;
+        if ($libErros && isset($libErros[0]))
+        {
+            $msg = $libErros[0]->code . ": " .$libErros[0]->message;
+        }
+        return $msg;
     }
 
     public function csvToJson($file_content)
