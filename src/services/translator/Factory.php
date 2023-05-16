@@ -17,11 +17,12 @@ class Factory
     private $supportedServices = [
         Constants::TRANSLATOR_ACCLARO => AcclaroTranslationService::class,
         Constants::TRANSLATOR_DEFAULT => Export_ImportTranslationService::class,
-        Constants::TRANSLATOR_GOOGLE  => GoogleTranslationService::class
+        Constants::TRANSLATOR_GOOGLE  => GoogleTranslationService::class,
+        Constants::TRANSLATOR_CHATGPT  => ChatGPTTranslationService::class
     ];
 
     /**
-     * @return AcclaroTranslationService|Export_ImportTranslationService|GoogleTranslationService
+     * @return AcclaroTranslationService|Export_ImportTranslationService|GoogleTranslationService|ChatGPTTranslationService
      */
     public function makeTranslationService($serviceHandle, $settings)
     {

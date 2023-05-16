@@ -77,6 +77,29 @@
                 }) }}
             </div>
 
+            <div id="settings-orgId" class="hidden mb-1">
+                {{ forms.textField({
+                    label: 'Organization ID',
+                    value: translator.setting('orgId'),
+                    name: 'settings[orgId]',
+                    size: 20,
+                    class: 'org-id-field'
+                }) }}
+            </div>
+
+
+            <div id="settings-prompt" class="hidden mb-1">
+                {{ forms.textareaField({
+                    label: 'Prompt',
+                    instructions: "Define the prompt submitted to ChatGPT. Use {sourceLanguage} and {targetLanguage} as variables."|t('app'),
+                    value: translator.setting('prompt') ?: "You are a native speaker of {targetLanguage}. When I give you an array of strings, please reply with the array of strings in {targetLanguage}.",
+                    name: 'settings[prompt]',
+                    size: 20,
+                    rows: 2,
+                    class: 'prompt-field'
+                }) }}
+            </div>
+
             <div id="settings-sandboxMode" class="hidden">
                 {{ forms.lightswitchField({
                     label: 'Sandbox Mode'|t,

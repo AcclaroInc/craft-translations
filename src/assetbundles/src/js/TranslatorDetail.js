@@ -8,6 +8,8 @@ Craft.Translations.TranslatorDetail = {
     updateService: function() {
         var service = this.getService();
         var apiToken = $('#settings-apiToken');
+        var orgId = $('#settings-orgId');
+        var prompt = $('#settings-prompt');
         var sandboxMode = $('#settings-sandboxMode');
 
         switch (service) {
@@ -15,20 +17,41 @@ Craft.Translations.TranslatorDetail = {
                 this.updateServiceTokenLabel(service);
                 apiToken.removeClass('hidden');
                 sandboxMode.removeClass('hidden');
+                orgId.addClass('hidden');
+                prompt.addClass('hidden');
                 break;
             case 'google':
                 this.updateServiceTokenLabel(service);
                 apiToken.removeClass('hidden');
                 sandboxMode.addClass('hidden');
+                orgId.addClass('hidden');
+                prompt.addClass('hidden');
+                break;
+            case 'chatgpt':
+                this.updateServiceTokenLabel(service);
+                apiToken.removeClass('hidden');
+                orgId.removeClass('hidden');
+                prompt.removeClass('hidden');
+                sandboxMode.addClass('hidden');
                 break;
             default:
                 apiToken.addClass('hidden');
+                orgId.addClass('hidden');
+                prompt.addClass('hidden');
                 sandboxMode.addClass('hidden');
         }
     },
 
     getToken: function () {
         return $('input[name="settings[apiToken]"]').val();
+    },
+
+    getOrg: function () {
+        return $('input[name="settings[orgId]"]').val();
+    },
+
+    getPrompt: function () {
+        return $('textarea[name="settings[prompt]"]').val();
     },
 
     getService: function () {
@@ -49,7 +72,17 @@ Craft.Translations.TranslatorDetail = {
         this.toggleInputState($service, serviceValid, Craft.t('app', 'Please choose a translation service.'));
 
         switch (service) {
+            
             case 'export_import':
+                break;
+            case 'chatgpt':
+                var $apiToken = $('input[name="settings[apiToken]"]');
+                var apiTokenValid = $apiToken.val() !== '';
+                this.toggleInputState($apiToken, apiTokenValid, Craft.t('app', `Please enter your ${$service.find('option:selected').text()} API token.`));
+                var $prompt = $('input[name="settings[[prompt]]"]');
+                var promptValid = $prompt.val() !== '';
+                this.toggleInputState($prompt, promptValid, Craft.t('app', `Please enter a valid prompt.`));
+                valid = valid && apiTokenValid & promptValid
                 break;
             default:
                 var $apiToken = $('input[name="settings[apiToken]"]');
@@ -66,11 +99,15 @@ Craft.Translations.TranslatorDetail = {
         hasTitle = $('#label').val() != "";
         hasService = this.getService() !== "";
         hasToken = this.getToken() !== "";
+        hasOrg = this.getOrg() !== "";
+        hasPrompt = this.getPrompt() !== "";
         
         switch (this.getService()) {
             case 'acclaro':
             case 'google':
                 return hasToken && hasService && hasTitle;
+            case 'chatgpt':
+                return hasToken && hasService && hasTitle & hasPrompt;
             case 'export_import':
                 return hasTitle;
             default:
@@ -127,6 +164,10 @@ Craft.Translations.TranslatorDetail = {
         }
 
         $('#label, input.api-token-field').on('keyup', function() {
+            self.toggleSaveButton();
+        });
+
+        $('#label, textarea.prompt-field').on('keyup', function() {
             self.toggleSaveButton();
         });
         

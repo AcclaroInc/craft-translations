@@ -211,6 +211,9 @@ class FileModel extends Model
             case Constants::TRANSLATOR_GOOGLE:
                 return $this->isNew() || $this->isInProgress() || $this->isModified() || $this->isReviewReady() ||
                     $this->isComplete() || $this->isPublished();
+            case Constants::TRANSLATOR_CHATGPT:
+                return $this->isNew() || $this->isInProgress() || $this->isModified() || $this->isReviewReady() ||
+                    $this->isComplete() || $this->isPublished();
             default:
                 return $this->isReviewReady() || $this->isComplete() || $this->isPublished();
         }
@@ -219,7 +222,7 @@ class FileModel extends Model
     public function canBeCheckedForTargetChanges()
     {
         return ! ($this->isPublished() || $this->isNew() || $this->isModified() || 
-            ($this->isInProgress() && $this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE)
+            ($this->isInProgress() && ($this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE || $this->getTranslator()?->service === Constants::TRANSLATOR_CHATGPT))
         );
     }
 

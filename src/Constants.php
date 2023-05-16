@@ -16,17 +16,20 @@ class Constants
     const TRANSLATOR_DEFAULT            = 'export_import';
     const TRANSLATOR_ACCLARO            = 'acclaro';
     const TRANSLATOR_GOOGLE             = 'google';
+    const TRANSLATOR_CHATGPT            = 'chatgpt';
     const TRANSLATOR_STATUS_ACTIVE      = 'active';
     const TRANSLATOR_STATUS_INACTIVE    = 'inactive';
     const TRANSLATOR_SERVICES          = [
         self::TRANSLATOR_ACCLARO => 'Acclaro',
         self::TRANSLATOR_DEFAULT => 'Export_Import',
         self::TRANSLATOR_GOOGLE  => 'Google',
+        self::TRANSLATOR_CHATGPT => 'Chat-GPT3.0'
     ];
     
     const TRANSLATOR_LABELS = [
         self::TRANSLATOR_ACCLARO => 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a target="_blank" href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>',
         self::TRANSLATOR_GOOGLE => 'Google API Token<p class="fs-12">Don\'t have a Google API key? <a target="_blank" href="https://cloud.google.com/translate/">Register here</a></p>',
+        self::TRANSLATOR_CHATGPT => 'Chat GPT API Token<p class="fs-12">Don\'t have a ChatGPT API key? <a target="_blank" href="https://www.openai.com/">Register here</a></p>',
     ];
 
     // Logging
@@ -98,7 +101,8 @@ class Constants
     const PRODUCTION_URL    = 'https://my.acclaro.com/api/v2/';
     const SANDBOX_URL       = 'https://apisandbox.acclaro.com/api/v2/';
     
-    const GOOGLE_TRANSLATE_API_URL= 'https://translation.googleapis.com/language/translate/v2';
+    const GOOGLE_TRANSLATE_API_URL  = 'https://translation.googleapis.com/language/translate/v2';
+    const CHATGPT_TRANSLATE_API_URL = 'https://api.openai.com/v1/chat';
 
     const DELIVERY      = 'craftcms';
     const DEFAULT_TAG   = 'CraftCMS';

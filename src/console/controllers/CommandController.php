@@ -11,6 +11,8 @@
 namespace acclaro\translations\console\controllers;
 
 use acclaro\translations\Translations;
+use acclaro\translations\services\api\ChatGPTApiClient as Client;
+use acclaro\translations\services\translator\ChatGPTTranslationService as Service;
 
 use yii\console\Controller;
 
@@ -33,11 +35,28 @@ class CommandController extends Controller
      */
     public function actionIndex()
     {
-        $result = 'something';
+        /*$client = new Client('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', 'org-54kqPkGBJkyln7Mt6jog6w3c');
 
-        echo "Welcome to the console CommandController actionIndex() method\n";
+        $response = $client->translate(["Yes we have no bananas", "We have no bananas today", "If we did have bananas", "We would use the bananas well"], "French");
+        echo json_encode($response) . "\n";
+        
 
-        return $result;
+        $translator = Translations::$plugin->translatorRepository->getTranslatorById(2);
+
+        $settings = $translator->getSettings();
+
+        $service = new Service($settings);
+        
+        $response = $service->getTranslatedData(["Yes we have no bananas", "We have no bananas today", "If we did have bananas", "We would use the bananas well"], "English", "French");
+        echo json_encode($response) . "\n";*/
+
+        $order = Translations::$plugin->orderRepository->getOrderById(3097092);
+        echo json_encode($order) . "\n";
+        $translationService = $order->getTranslationService();
+        $files = $order->getFiles();
+        $translationService->syncOrder($order, [137]); 
+
+        return true;
     }
 
     /**
@@ -49,7 +68,7 @@ class CommandController extends Controller
     {
         $result = 'something';
 
-        echo "Welcome to the console CommandController actionDoSomething() method\n";
+        echo "Welcome to the console CommandController actionDoSomething() method!!!!!\n";
 
         return $result;
     }

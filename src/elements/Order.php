@@ -770,11 +770,12 @@ class Order extends Element
      */
     public function shouldProcessByQueue(): bool
     {
-        return ($this->wordCount * count($this->getTargetSitesArray())) > Constants::WORD_COUNT_LIMIT || $this->hasTranslator(Constants::TRANSLATOR_GOOGLE);
+        //return false;
+        return ($this->wordCount * count($this->getTargetSitesArray())) > Constants::WORD_COUNT_LIMIT || $this->hasTranslator(Constants::TRANSLATOR_GOOGLE) || $this->hasTranslator(Constants::TRANSLATOR_CHATGPT);
     }
 
     /**
-     * Create translation service calss based on translator
+     * Create translation service class based on translator
      */
     public function getTranslationService()
     {

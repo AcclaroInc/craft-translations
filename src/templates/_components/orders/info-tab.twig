@@ -199,5 +199,24 @@
 			</div>
 			<button type="button" form="sync-order-google" class="btn icon right link-disabled" data-icon="refresh" value="submit" style="width: 125px;">{{ "Translate"|t('app') }}</button>
 		</div>
+	{% elseif order.hasTranslator('chatgpt') %}
+		<div class="field" style="justify-content: space-between;">
+			<div class="heading">
+				<label>Chat-GPT3.0</label>
+				<form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
+					{{ csrfInput() }}
+					{{ forms.hidden({
+						name: 'action',
+						value: 'translations/order/sync-order',
+					}) }}
+
+					{{ forms.hidden({
+						name: 'orderId',
+						value: order.id
+					}) }}
+				</form>
+			</div>
+			<button type="button" form="sync-order-chatgpt" class="btn icon right link-disabled" data-icon="refresh" value="submit" style="width: 125px;">{{ "Translate"|t('app') }}</button>
+		</div>
 	{% endif %}
 </div>
