@@ -21,7 +21,7 @@ use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\commerce\elements\Product;
 use craft\fields\Color;
-use acclaro\translations\elements\Order;
+use acclaro\translations\services\repository\OrderRepository;
 
 class ElementTranslator
 {
@@ -33,12 +33,15 @@ class ElementTranslator
             if ($element->title && $element->getIsTitleTranslatable()) {
                 $source['title'] = $element->title;
             }
-            if ($element->slug && $orderId) {
-                $order = Order::findOne($orderId);
-                if ($order && $order->preventSlugTranslation) {
-                    // Skip translation of the slug
-                } else {
-                    $source['slug'] = $element->slug;
+            if ($element->slug) {
+                switch (true) {
+                    case ($orderId):
+                        $order = (new OrderRepository())->getOrderById($orderId);
+                        if ($order && !$order->isSlugTranslatable()) {
+                            break;
+                        }
+                    default:
+                        $source['slug'] = $element->slug;
                 }
             }
         

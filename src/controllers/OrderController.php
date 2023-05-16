@@ -1223,11 +1223,12 @@ class OrderController extends BaseController
             throw new HttpException(400, Translations::$plugin->translator
                 ->translate('app', 'Source site is not supported'));
         }
-        
-        $orderId = Craft::$app->getRequest()->getBodyParam('id');
-        $order = $this->service->getOrderById($orderId);
 
-        if (! $order->isPending()) {
+        $orderId = Craft::$app->getRequest()->getBodyParam('id');
+
+        if ($orderId && $this->service->getOrderById($orderId)->isPending()) {
+            $order = $this->service->getOrderById($orderId);
+        } else {
             $order = $this->service->makeNewOrder($sourceSite);
             $order->logActivity(Translations::$plugin->translator->translate('app', 'Order draft created'));
         }
@@ -1272,6 +1273,7 @@ class OrderController extends BaseController
             $order->title = $title;
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
+            $order->preventSlugTranslation = Craft::$app->getRequest()->getBodyParam('preventSlugTranslation');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
 			$order->requestQuote = Craft::$app->getRequest()->getBodyParam('requestQuote');
             $order->sourceSite = $sourceSite;
