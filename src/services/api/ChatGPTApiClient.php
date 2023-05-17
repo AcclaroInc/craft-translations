@@ -123,7 +123,7 @@ class ChatGPTApiClient
     public function translate(string|array $text, string $targetLanguage, string $sourceLanguage = "English")
     {
         // validate if required fields has being filled.
-        if (empty($text)) {
+        if (empty($text) || $text == "" || $text == [""]) {
             return ['success' => true, 'data' => [""]];
         }
 
@@ -178,7 +178,7 @@ class ChatGPTApiClient
                 
                 $parsedResponse = $this->parseResponse($response, $cleanResponse);
                 //echo "parsedResponse = " . json_encode($parsedResponse) . "\n\n";
-                $returnResponse = ['success' => true, 'data' => $parsedResponse];
+                $returnResponse = ['success' => true, 'data' => $parsedResponse ?: [""]];
                 return $returnResponse;
                 
             } catch (\Exception $e) {
@@ -192,6 +192,7 @@ class ChatGPTApiClient
     
     private function parseResponse(Response $res)
     {
+        //echo "res->getBody() = " . $res->getBody() . "\n\n";
         $resultJson = json_decode($res->getBody(), true);
         
         if (
@@ -199,19 +200,41 @@ class ChatGPTApiClient
             !array_key_exists('choices', $resultJson) ||
             !count($resultJson["choices"])
         ) {
+            //echo "Parsed Response error no choices \n\n";
+            //echo "resultJson = " . json_encode($resultJson) . "\n\n";
             throw new \Exception('Invalid response');
         } else {
             $choice = $resultJson["choices"][0];
             if (!array_key_exists('message', $choice) ||
                 !array_key_exists('content', $choice["message"])) {
+                //echo "Parsed Response error no message \n\n";
+                //echo "resultJson = " . json_encode($resultJson) . "\n\n";
                     throw new \Exception('Invalid response');
             } else {       
-                
-                return json_decode($choice["message"]["content"]);
+                $parsedResponse = json_decode($choice["message"]["content"]);
+                if ($parsedResponse == null) {
+                    //echo "Parsed Response json decode is null \n\n";
+                    $parsedResponse = json_decode(json_encode($choice["message"]["content"]));
+                    //echo "is_array(partsedResponse) = " . is_array($parsedResponse) . "\n\n";
+                    if (!is_array($parsedResponse) && is_string($parsedResponse) && strpos($parsedResponse, '[') !== false) {
+                        if (substr_count($parsedResponse, ']') > 1) {
+                            //echo "decoding multiple array elements \n\n";
+                            $parsedResponse = explode(']', $parsedResponse);
+                            $parsedResponse = [str_replace(['[', ']'], '', $parsedResponse)];
+                        } else {
+                            //echo "decoding again -- one array element \n\n";
+                            $parsedResponse = substr($parsedResponse, strpos($parsedResponse, '[') + 1, strpos($parsedResponse, ']', -1) - strpos($parsedResponse, '['));
+                            //echo "Parsed substring = " . $parsedResponse . "\n\n";
+                            $parsedResponse = [$parsedResponse];
+                            ////echo "parsedResponse is null? = " . ($parsedResponse == null) . "\n\n";
+                        }
+                    }
+                }
+                return $parsedResponse;
 
             }
         }
 
         return $resultJson;
     }
-}
+}   
