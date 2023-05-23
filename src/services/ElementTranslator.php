@@ -21,11 +21,10 @@ use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\commerce\elements\Product;
 use craft\fields\Color;
-use acclaro\translations\services\repository\OrderRepository;
 
 class ElementTranslator
 {
-    public function toTranslationSource(Element $element, $sourceSite = null, $orderId = null)
+    public function toTranslationSource(Element $element, $sourceSite=null)
     {
         $source = array();
 
@@ -34,17 +33,9 @@ class ElementTranslator
                 $source['title'] = $element->title;
             }
             if ($element->slug) {
-                switch (true) {
-                    case ($orderId):
-                        $order = (new OrderRepository())->getOrderById($orderId);
-                        if ($order && !$order->isSlugTranslatable()) {
-                            break;
-                        }
-                    default:
-                        $source['slug'] = $element->slug;
-                }
+                $source['slug'] = $element->slug;
             }
-        
+
         }
 
         foreach ($element->getFieldLayout()->getCustomFields() as $layoutField) {
