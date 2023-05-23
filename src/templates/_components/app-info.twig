@@ -1,4 +1,5 @@
-{% set licenseStatus = craft.app.plugins.getPluginLicenseKeyStatus('translations') %}
+{% set pluginHandle = constant('acclaro\\translations\\Constants::PLUGIN_HANDLE') %}
+{% set licenseStatus = craft.app.plugins.getPluginInfo(pluginHandle)['licenseKeyStatus']|default(null) %}
 {% set edition = (licenseStatus == 'valid') ? 'Paid' : 'Free trial' %}
 {% set emailSubject = 'Hello Acclaro' %}
 {% set emailBody = 'I’m interested in learning more about your professional translation services and how you can help with the launch of global Craft sites.%0D%0A%0D%0AThank you,%0D%0AYour Name%0D%0AYour Company%0D%0AYour Phone Number' %}
