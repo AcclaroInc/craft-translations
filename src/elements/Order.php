@@ -83,6 +83,8 @@ class Order extends Element
 
     public $includeTmFiles;
 
+    public $preventSlugTranslation;
+
     public $asynchronousPublishing;
 
     public $requestQuote;
@@ -842,6 +844,11 @@ class Order extends Element
     {
         return $this->status === Constants::ORDER_STATUS_PUBLISHED;
     }
+    
+    public function isSlugTranslatable()
+    {
+        return !$this->preventSlugTranslation;
+    }
 
     public function requestQuote()
     {
@@ -890,6 +897,7 @@ class Order extends Element
         $record->tags =  $this->tags;
         $record->trackChanges =  $this->trackChanges;
 		$record->trackTargetChanges =  $this->trackTargetChanges;
+		$record->preventSlugTranslation =  $this->preventSlugTranslation;
 		$record->includeTmFiles =  $this->includeTmFiles;
 		$record->requestQuote =  $this->requestQuote;
 
