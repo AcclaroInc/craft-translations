@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.5 - 2023-05-23
+
+### Fixed
+- An issue where plugin license was always showing `free trial` despite of `Paid` even after license is purchased. ([AcclaroInc#437](https://github.com/AcclaroInc/craft-translations/issues/437))
+
 ## 2.2.4 - 2023-02-06
 
 ### Fixed
