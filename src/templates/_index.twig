@@ -4,7 +4,7 @@
 {% set title = "Translation Dashboard"|t %}
 {% set elementType = 'acclaro\\translations\\elements\\Order' %}
 {% set pluginHandle = constant('acclaro\\translations\\Constants::PLUGIN_HANDLE') %}
-{% set licenseStatus = craft.app.plugins.getPluginLicenseKeyStatus(pluginHandle) %}
+{% set licenseStatus = craft.app.plugins.getPluginInfo(pluginHandle)['licenseKeyStatus']|default(null) %}
 {% set edition = (licenseStatus == 'valid') ? 'Paid' : 'Free trial' %}
 {% set updates = craft.app.getApi().getUpdates().plugins.translations %}
 
