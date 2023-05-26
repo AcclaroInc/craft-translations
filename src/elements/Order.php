@@ -767,6 +767,13 @@ class Order extends Element
         return $this->trackTargetChanges;
     }
 
+    public function shouldPreventSlugTranslation()
+    {
+        if (! $this->id) return Translations::getInstance()->settings->preventSlugTranslation;
+
+        return $this->preventSlugTranslation;
+    }
+
     /**
      * Check if the order should be processed using queue
      */
