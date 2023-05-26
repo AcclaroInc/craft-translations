@@ -136,7 +136,7 @@
 						id: "preventSlugTranslation",
 						name: "preventSlugTranslation",
 						class: "noClick",
-						on: order.preventSlugTranslation
+						on: shouldPreventSlugTranslation is defined ? shouldPreventSlugTranslation : order.shouldPreventSlugTranslation
 				}) }}
 				</div>
 			</span>
