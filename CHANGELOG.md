@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 - An issue where plugin license was always showing `free trial` despite of `Paid` even after license is purchased. ([AcclaroInc#437](https://github.com/AcclaroInc/craft-translations/issues/437))
-- An issue where asset's title was incuded in source files regardless of translation enabled or not. ([AcclaroInc#439](https://github.com/AcclaroInc/craft-translations/issues/439)]
+- An issue where asset's title was incuded in source files regardless of translation enabled or not. ([AcclaroInc#439](https://github.com/AcclaroInc/craft-translations/issues/439))
 
 ## 2.2.4 - 2023-02-06
 
