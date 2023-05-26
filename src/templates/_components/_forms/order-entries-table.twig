@@ -48,7 +48,7 @@
                                 {% set entryPreviewSettings = order.entryPreviewSettings(element) %}
                                 <div id="{{ entryPreviewSettings['id'] }}">
                                     <div class="elements">
-                                        <div class="element small" title="{{ element.uiLabel ~" - " ~siteObjects[order.sourceSite].name }}">
+                                        <div class="element flex" title="{{ element.uiLabel ~" - " ~siteObjects[order.sourceSite].name }}">
                                             <div class="label" data-id="{{ element.id }}" data-editable="" data-site-id={{ order.sourceSite }} {% if entryPreviewSettings["draftId"] is defined %} data-draft-id="{{ entryPreviewSettings["draftId"] }}" {% endif %}>
                                                 <span class="title text-link">{{ element.uiLabel }}</span>
                                             </div>

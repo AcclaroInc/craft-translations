@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.6 - 2023-05-29
+
+### Added
+- Dedicated `prevent slug translation` button if user does not want slug translation. ([AcclaroInc#436](https://github.com/AcclaroInc/craft-translations/issues/436))
+
+### Fixed
+- An issue where plugin license was always showing `free trial` despite of `Paid` even after license is purchased. ([AcclaroInc#437](https://github.com/AcclaroInc/craft-translations/issues/437))
+- An issue where asset's title was incuded in source files regardless of translation enabled or not. ([AcclaroInc#439](https://github.com/AcclaroInc/craft-translations/issues/439))
+
 ## 3.2.5 - 2023-04-15
 
 ### Fixed
