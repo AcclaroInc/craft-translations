@@ -83,6 +83,8 @@ class Order extends Element
 
     public $includeTmFiles;
 
+    public $preventSlugTranslation;
+
     public $asynchronousPublishing;
 
     public $requestQuote;
@@ -446,7 +448,7 @@ class Order extends Element
 
     public function getTargetAlertHtml() {
         $html = '';
-        if (!($this->isPublished() || $this->isCanceled()) && $this->isTmMisaligned() && $this->trackTargetChanges) {
+        if (!($this->isPublished() || $this->isCanceled()) && $this->trackTargetChanges && $this->isTmMisaligned()) {
             $html .= '<span class="nowrap pl-5"><span class="warning order-warning font-size-15" data-icon="alert"> This order contains misaligned content that might affect translation memory accuracy. </span></span>';
         }
 
@@ -765,6 +767,13 @@ class Order extends Element
         return $this->trackTargetChanges;
     }
 
+    public function shouldPreventSlugTranslation()
+    {
+        if (! $this->id) return Translations::getInstance()->settings->preventSlugTranslation;
+
+        return $this->preventSlugTranslation;
+    }
+
     /**
      * Check if the order should be processed using queue
      */
@@ -842,6 +851,11 @@ class Order extends Element
     {
         return $this->status === Constants::ORDER_STATUS_PUBLISHED;
     }
+    
+    public function isSlugTranslatable()
+    {
+        return !$this->preventSlugTranslation;
+    }
 
     public function requestQuote()
     {
@@ -890,6 +904,7 @@ class Order extends Element
         $record->tags =  $this->tags;
         $record->trackChanges =  $this->trackChanges;
 		$record->trackTargetChanges =  $this->trackTargetChanges;
+		$record->preventSlugTranslation =  $this->preventSlugTranslation;
 		$record->includeTmFiles =  $this->includeTmFiles;
 		$record->requestQuote =  $this->requestQuote;
 

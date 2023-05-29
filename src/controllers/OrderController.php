@@ -195,6 +195,10 @@ class OrderController extends BaseController
 				$order->trackTargetChanges = $orderTrackTargetChanges;
 			}
 
+			if ($orderPreventSlugTranslation = Craft::$app->getRequest()->getQueryParam('preventSlugTranslation')) {
+				$order->preventSlugTranslation = $orderPreventSlugTranslation;
+			}
+
 			if ($orderIncludeTmFiles = Craft::$app->getRequest()->getQueryParam('includeTmFiles')) {
 				$order->includeTmFiles = $orderIncludeTmFiles;
 			}
@@ -464,6 +468,7 @@ class OrderController extends BaseController
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
+            $order->preventSlugTranslation = Craft::$app->getRequest()->getBodyParam('preventSlugTranslation');
 			$order->requestQuote = Craft::$app->getRequest()->getBodyParam('requestQuote');
 			$order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
@@ -816,6 +821,7 @@ class OrderController extends BaseController
 			$order->targetSites = json_encode($targetSites);
 			$order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
+			$order->preventSlugTranslation = Craft::$app->getRequest()->getBodyParam('preventSlugTranslation');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
 			$translatorService->updateOrder($order);
 

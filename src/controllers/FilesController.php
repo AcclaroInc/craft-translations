@@ -207,19 +207,13 @@ class FilesController extends BaseController
                 } else {
                     //If is a Zip File
                     if ($file->extension === Constants::FILE_FORMAT_ZIP) {
-                        //Unzip File ZipArchive
-                        $zip = new \ZipArchive();
 
-                        $assetPath = $file->saveAsTempFile();
+                        $extractedPath = $this->_extractFiles($file);
 
-                        if ($zip->open($assetPath)) {
-                            $xmlPath = $assetPath.$orderId;
-
-                            $zip->extractTo($xmlPath);
-
+                        if ($extractedPath) {
                             $fileName = preg_replace('/\\.[^.\\s]{3,4}$/', '', Assets::prepareAssetName($file->name));
 
-                            $files = FileHelper::findFiles($assetPath.$orderId);
+                            $files = FileHelper::findFiles($extractedPath);
 
                             $assetIds = [];
                             $fileNames = [];
@@ -270,9 +264,7 @@ class FilesController extends BaseController
                                 $fileInfo['basename'] ? $fileNames[$asset->id] = $fileInfo['basename'] : '';
                             }
 
-                            FileHelper::removeDirectory($assetPath.$orderId.'/'.$fileName);
-
-                            $zip->close();
+                            FileHelper::removeDirectory($extractedPath.'/'.$fileName);
 
                             // Process files via job or directly based on order "size"
                             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
@@ -398,6 +390,23 @@ class FilesController extends BaseController
             Translations::$plugin->logHelper->log($exception, Constants::LOG_LEVEL_ERROR);
             $this->setError($exception->getMessage());
         }
+    }
+    
+    private function _extractFiles($uploadedFile) {
+        $zip = new \ZipArchive();
+        $assetPath = $uploadedFile->saveAsTempFile();
+        $extractPath = Craft::$app->getPath()->getTempPath() . '/extracted/' . uniqid(pathinfo($uploadedFile->name, PATHINFO_FILENAME), true);
+        FileHelper::createDirectory($extractPath);
+        $zip->open($assetPath);
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            if (str_contains($zip->getNameIndex($i), '..') || str_contains($zip->getNameIndex($i), '__MACOSX') || str_contains($zip->getNameIndex($i), '/references/')) {
+                continue;
+            }
+            $zip->extractTo($extractPath, array($zip->getNameIndex($i)));
+        }
+        $zip->close();
+
+        return $extractPath;
     }
 
     /**

@@ -20,10 +20,12 @@ use craft\elements\Category;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\commerce\elements\Product;
+use craft\fields\Color;
+use acclaro\translations\services\repository\OrderRepository;
 
 class ElementTranslator
 {
-    public function toTranslationSource(Element $element, $sourceSite=null)
+    public function toTranslationSource(Element $element, $sourceSite = null, $orderId = null)
     {
         $source = array();
 
@@ -32,9 +34,17 @@ class ElementTranslator
                 $source['title'] = $element->title;
             }
             if ($element->slug) {
-                $source['slug'] = $element->slug;
+                switch (true) {
+                    case ($orderId):
+                        $order = (new OrderRepository())->getOrderById($orderId);
+                        if ($order && !$order->isSlugTranslatable()) {
+                            break;
+                        }
+                    default:
+                        $source['slug'] = $element->slug;
+                }
             }
-
+        
         }
 
         foreach ($element->getFieldLayout()->getCustomFields() as $layoutField) {
@@ -164,7 +174,18 @@ class ElementTranslator
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             if (!$translator) {
-                if ($includeNonTranslatable) {
+                // @TODO: Might need to move these check to seprate class to fetch nested content of variants
+                if ($field instanceof Color) {
+                    $post[$fieldHandle] = $element->getFieldValue($fieldHandle)?->getHex() ?? '';
+                } elseif (in_array(get_class($field), ['craft\commerce\fields\Variants', 'craft\commerce\fields\Products'])) {
+                    if (! isset($post[$fieldHandle])) {
+                        $post[$fieldHandle] = [];
+                    }
+
+                    foreach ($element->getFieldValue($fieldHandle)->all() as $variant) {
+                        array_push($post[$fieldHandle], $variant->id);
+                    }
+                } elseif ($includeNonTranslatable) {
                     $post[$fieldHandle] = $element->$fieldHandle;
                 }
 

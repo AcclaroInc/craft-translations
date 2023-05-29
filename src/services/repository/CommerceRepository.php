@@ -219,7 +219,7 @@ class CommerceRepository
         $product->setFieldValues($post);
         $product->setVariants($draft->getVariants(true));
 
-        $success = Craft::$app->elements->saveElement($product);
+        $success = Craft::$app->elements->saveElement($product, false);
 
         if (!$success) {
             Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t publish draft "' . $draft->title . '"', Constants::LOG_LEVEL_ERROR);

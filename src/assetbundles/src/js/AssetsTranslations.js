@@ -22,8 +22,9 @@ Craft.Translations.AssetsTranslations = {
         $(document).on('click', '#sidebar nav ul li a .label',function() {
             endpoint = (window.location.href).split('/');
             if ($(this).closest("a").data("volume-handle") !== endpoint[endpoint.length-1]) {
-                self.$btn.addClass('disabled');
-                self.$menubtn.addClass('disabled');
+                self.$btn.addClass('link-disabled');
+                self.$menubtn.addClass('link-disabled');
+                self.$btn.find(".btn-text").addClass('display-none');
             }
         });
     },
@@ -45,9 +46,9 @@ Craft.Translations.AssetsTranslations = {
 
         this.assets = unique(entries);
 
-        $(this.$btn[0]).toggleClass('disabled', this.assets.length === 0);
+        $(this.$btn[0]).toggleClass('link-disabled', this.assets.length === 0);
         $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.assets.length === 0);
-        $(this.$menubtn[0]).toggleClass('disabled', this.assets.length === 0);
+        $(this.$menubtn[0]).toggleClass('link-disabled', this.assets.length === 0);
 
         this.updateCreateNewLink();
     },
@@ -121,8 +122,8 @@ Craft.Translations.AssetsTranslations = {
         });
 
         if (!this.isEditAssetScreen()) {
-            this.$btn.addClass('disabled');
-            this.$menubtn.addClass('disabled');
+            this.$btn.addClass('link-disabled');
+            this.$menubtn.addClass('link-disabled');
             this.$btn.find(".btn-text").addClass('display-none');
         }
 
