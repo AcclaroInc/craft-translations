@@ -20,9 +20,6 @@
 
         <h4 style="margin-top: 0px;">{{ 'by Acclaro Inc.'|t }}</h4>
 
-        {% set licenseStatus = craft.app.plugins.getPluginLicenseKeyStatus('translations') %}
-        {% set baseAssetsUrl = craft.app.assetManager.getPublishedUrl('@acclaro/translations/assetbundles/src', true ) %}
-
         <div>
             <h3>{{ 'General Information'|t }}</h3>
             <p>This plugin is made available by <a href="https://www.acclaro.com/">Acclaro</a>. Any usage of it on a public site requires that the site owners have purchased the plugin either from Acclaro or the Craft plugin store.</p>

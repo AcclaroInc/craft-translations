@@ -481,7 +481,7 @@ class FileRepository
 
             $converter = Translations::$plugin->elementToFileConverter;
 
-            $currentContent = Translations::$plugin->elementTranslator->toTranslationSource($element, $sourceSite);
+            $currentContent = Translations::$plugin->elementTranslator->toTranslationSource($element, $sourceSite, $file->orderId);
             $currentContent = json_encode(array_map("strval", array_values($currentContent)));
 
             $sourceContent = json_decode($converter->xmlToJson($source), true);
@@ -621,7 +621,8 @@ class FileRepository
         
         $target = Translations::$plugin->elementTranslator->toTranslationSource(
             $data['targetElement'],
-            $data['targetElementSite']
+            $data['targetElementSite'],
+            $meta['orderId']
         );
         $tmContent = '';
 
