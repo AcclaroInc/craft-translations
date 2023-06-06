@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.7 - 2023-06-06
+
+### Fixed
+- An issue where deliveries failed to sync back. ([AcclaroInc#451](https://github.com/AcclaroInc/craft-translations/pull/451))
+
 ## 3.2.6 - 2023-05-29
 
 ### Added
