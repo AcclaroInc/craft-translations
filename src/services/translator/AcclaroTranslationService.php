@@ -150,7 +150,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
             // find the matching file
             foreach ($fileInfoResponse as $fileInfo) {
-                if ($fileInfo->fileid == $file->serviceFileId && $targetLangCode == $fileInfo->targetlang->code) break;
+                // Below encode decode will make sure we get data as object instead of array
+                $targetLangData = json_decode(json_encode($fileInfo->targetlang));
+                if ($fileInfo->fileid == $file->serviceFileId && $targetLangCode == $targetLangData->code) break;
 
                 $fileInfo = null;
             }
