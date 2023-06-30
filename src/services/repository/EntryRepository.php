@@ -34,21 +34,16 @@ class EntryRepository extends Component
                 ->admin()
                 ->orderBy(['elements.id' => SORT_ASC])
                 ->one();
-            // $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
+            $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
 
             // Commented to fix supertable field duplication issue
             $newAttributes = [
-                // 'siteId' => $site,
-                // 'uri' => $elementURI,
+                'siteId' => $site,
+                'uri' => $elementURI,
             ];
 
             $draft = $this->makeNewDraft($entry, $creator->id, $name, $notes, $newAttributes);
-            
-            $draft->siteId = $site;
-            if (!Craft::$app->getElements()->saveElement($draft)) {
-                throw new \Exception("Failed to save draft in target site");
-            }
-            $draft = Craft::$app->getElements()->propagateElement($draft, $site);
+
 
             return $draft;
         } catch (\Exception $e) {
@@ -76,7 +71,8 @@ class EntryRepository extends Component
         try {
             // Create the draft row
             $draftId = (new Drafts())->insertDraftRow($name, $notes, $creatorId, $canonical->id, $canonical::trackChanges(), $provisional);
-
+            $targetSiteId = $newAttributes['siteId'];
+            unset($newAttributes['siteId']);
             // Duplicate the element
             $newAttributes['isProvisionalDraft'] = $provisional;
             $newAttributes['canonicalId'] = $canonical->id;
@@ -90,6 +86,12 @@ class EntryRepository extends Component
             ];
 
             $draft = Craft::$app->getElements()->duplicateElement($canonical, $newAttributes);
+
+            $draft->siteId = $targetSiteId;
+            if (!Craft::$app->getElements()->saveElement($draft)) {
+                throw new \Exception("Failed to save draft in target site");
+            }
+            $draft = Craft::$app->getElements()->propagateElement($draft, $targetSiteId);
 
             $transaction->commit();
         } catch (\Throwable $e) {
