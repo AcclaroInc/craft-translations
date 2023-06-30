@@ -34,14 +34,21 @@ class EntryRepository extends Component
                 ->admin()
                 ->orderBy(['elements.id' => SORT_ASC])
                 ->one();
-            $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
+            // $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
 
+            // Commented to fix supertable field duplication issue
             $newAttributes = [
-                'siteId' => $site,
-                'uri' => $elementURI,
+                // 'siteId' => $site,
+                // 'uri' => $elementURI,
             ];
 
             $draft = $this->makeNewDraft($entry, $creator->id, $name, $notes, $newAttributes);
+            
+            $draft->siteId = $site;
+            if (!Craft::$app->getElements()->saveElement($draft)) {
+                throw new \Exception("Failed to save draft in target site");
+            }
+            $draft = Craft::$app->getElements()->propagateElement($draft, $site);
 
             return $draft;
         } catch (\Exception $e) {
