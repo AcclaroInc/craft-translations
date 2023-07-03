@@ -73,6 +73,7 @@ class EntryRepository extends Component
 
             // Create the draft row
             $draftId = (new Drafts())->insertDraftRow($name, $notes, $creatorId, $canonical->id, $canonical::trackChanges(), $provisional);
+
             // Duplicate the element
             $newAttributes['isProvisionalDraft'] = $provisional;
             $newAttributes['canonicalId'] = $canonical->id;
