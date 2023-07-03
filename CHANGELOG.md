@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.8 - 2023-07-03
+
+### Fixed
+- An issue where supertable field blocks were getting duplicated. ([AcclaroInc#453](https://github.com/AcclaroInc/craft-translations/issues/453))
+
+### Updated
+- Required Craft version to `4.4.2` to resolve Server side template injection vulnerabilities.
+
 ## 3.2.7 - 2023-06-06
 
 ### Fixed
