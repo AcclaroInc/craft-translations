@@ -36,14 +36,12 @@ class EntryRepository extends Component
                 ->one();
             $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
 
-            // Commented to fix supertable field duplication issue
             $newAttributes = [
                 'siteId' => $site,
                 'uri' => $elementURI,
             ];
 
             $draft = $this->makeNewDraft($entry, $creator->id, $name, $notes, $newAttributes);
-
 
             return $draft;
         } catch (\Exception $e) {
