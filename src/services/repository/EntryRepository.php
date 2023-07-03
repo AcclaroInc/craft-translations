@@ -67,6 +67,10 @@ class EntryRepository extends Component
 
 		$transaction = Craft::$app->getDb()->beginTransaction();
         try {
+            $targetSiteId = $newAttributes['siteId'];
+            $enabledForSites = Craft::$app->getElements()->getEnabledSiteIdsForElement($canonical->id);
+            $isNewForSite = !in_array($targetSiteId, $enabledForSites);
+
             // Create the draft row
             $draftId = (new Drafts())->insertDraftRow($name, $notes, $creatorId, $canonical->id, $canonical::trackChanges(), $provisional);
 
@@ -82,7 +86,19 @@ class EntryRepository extends Component
                 'trackChanges' => $canonical::trackChanges(),
             ];
 
+            if ($isNewForSite) {
+                unset($newAttributes['siteId']);
+            }
             $draft = Craft::$app->getElements()->duplicateElement($canonical, $newAttributes);
+
+            if ($isNewForSite) {
+                // We can only set the target site it it does not exist else craft erros out.
+                $draft->siteId = $targetSiteId;
+                if (!Craft::$app->getElements()->saveElement($draft)) {
+                    throw new \Exception("Failed to save draft in target site");
+                }
+                $draft = Craft::$app->getElements()->propagateElement($draft, $targetSiteId);
+            }
 
             $transaction->commit();
         } catch (\Throwable $e) {
