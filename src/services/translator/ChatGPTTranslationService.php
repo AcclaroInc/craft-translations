@@ -123,7 +123,7 @@ class ChatGPTTranslationService implements TranslationServiceInterface
         $tempResponse = null;
 
         foreach ($chunkArray as $chunk) {
-            if (array_is_list($chunk)) {
+            if (is_array($chunk) && array_is_list($chunk)) {
                 $processChunk = $chunk;
             } else {
                 $processChunk = [];
