@@ -36,11 +36,11 @@ class CommandController extends Controller
     public function actionIndex()
     {
 
-        $order = Translations::$plugin->orderRepository->getOrderById(3097095);
+        $order = Translations::$plugin->orderRepository->getOrderById(3257715);
         echo json_encode($order) . "\n";
         $translationService = $order->getTranslationService();
         $files = $order->getFiles();
-        $translationService->syncOrder($order, [145]); 
+        $translationService->syncOrder($order, [157]); 
 
         return true;
     }

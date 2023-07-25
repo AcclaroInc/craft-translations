@@ -69,13 +69,15 @@ class ChatGPTTranslationService implements TranslationServiceInterface
                 continue;
                 
             }
-
+            //echo "unprocessed source = " . $file->source . "\n\n";
             $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($file->source), true);
             $data = array_values($source['content']);
             $sourceLanguage = $file->getSourceLangCode();
             $targetLanguage = $file->getTargetLangCode();
 
             $response = $this->getTranslatedData($data, $sourceLanguage, $targetLanguage);
+
+            //echo "response = " . json_encode($response) . "\n\n";
 
             if (!$response['success'] || !array_key_exists('data', $response) || !is_array($response['data'])) {
                 $order->logActivity(sprintf(
@@ -92,8 +94,18 @@ class ChatGPTTranslationService implements TranslationServiceInterface
                 if ($index >= count($response['data'])) {
                     break;
                 }
-                $source['content'][$key] = $response['data'][$index];
-                $index++;
+                if (trim($source['content'][$key]) == '') {
+                    if (trim($response['data'][$index]) != '') {
+                        $source['content'][$key] = '';
+                    } else {
+                        $source['content'][$key] = $response['data'][$index];
+                        $index++;
+                    }
+                } else {
+                    $source['content'][$key] = $response['data'][$index];
+                    $index++;
+                }
+
             }
 
             //echo "source = " . json_encode($source) . "\n\n";
@@ -141,7 +153,9 @@ class ChatGPTTranslationService implements TranslationServiceInterface
                 }
             } 
             if (! $tempResponse) {
+                //echo "processChunk = " . json_encode($processChunk) . "\n\n";
                 $tempResponse = $this->apiClient->translate($processChunk, $targetLanguage, $sourceLanguage);
+                //echo "tempResponse = " . json_encode($tempResponse) . "\n\n";
                 if (! $tempResponse['success']) {
                     throw new \Exception($tempResponse['message']);
                 }
@@ -185,6 +199,7 @@ class ChatGPTTranslationService implements TranslationServiceInterface
      */ 
     public function getTranslatedData($data, $sourceLanguage, $targetLanguage) 
     {
+        //echo "data = " . json_encode($data) . "\n\n";
         $response = ['success' => true, 'message' => ''];
         try {
             if (str_word_count(implode($data)) > 1000) { // too many words for ChatGPT

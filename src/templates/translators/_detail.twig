@@ -92,8 +92,8 @@
                 {{ forms.textareaField({
                     label: 'Prompt',
                     instructions: "Define the prompt submitted to ChatGPT. Use {sourceLanguage} and {targetLanguage} as variables. Changing the prompt can cause the translator to fail, so please be careful."|t('app'),
-                    value: translator.setting('prompt') ?: "You are a native speaker of {targetLanguage}. When I give you an array of strings, please reply with the array of strings and only the array of strings in {targetLanguage}. Keep html formatting intact.",
-                    tip: "DEFAULT: You are a native speaker of {targetLanguage}. When I give you an array of strings, please reply with the array of strings and only the array of strings in {targetLanguage}. Keep html formatting intact.",
+                    value: translator.setting('prompt') ?: "You are a native speaker of {targetLanguage}. When I give you an array of text, please translate the array into {targetLanguage}. Keep html formatting intact.",
+                    tip: "DEFAULT: You are a native speaker of {targetLanguage}. When I give you an array of text, please translate the array into {targetLanguage}. Keep html formatting intact.",
                     name: 'settings[prompt]',
                     size: 20,
                     rows: 2,
