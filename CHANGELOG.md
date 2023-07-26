@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.9 - 2023-07-26
+
+### Fixed
+- An issue where log files were flooded with warning. ([AcclaroInc#456](https://github.com/AcclaroInc/craft-translations/issues/456))
+
+### Chore
+- Code refactoring and cleanup.
+
+## 3.2.8 - 2023-07-03
+
+### Fixed
+- An issue where supertable field blocks were getting duplicated. ([AcclaroInc#453](https://github.com/AcclaroInc/craft-translations/issues/453))
+
+### Updated
+- Required Craft version to `4.4.2` to resolve Server side template injection vulnerabilities.
+
+## 3.2.7 - 2023-06-06
+
+### Fixed
+- An issue where deliveries failed to sync back. ([AcclaroInc#451](https://github.com/AcclaroInc/craft-translations/pull/451))
+
+## 3.2.6 - 2023-05-29
+
+### Added
+- Dedicated `prevent slug translation` button if user does not want slug translation. ([AcclaroInc#436](https://github.com/AcclaroInc/craft-translations/issues/436))
+
+### Fixed
+- An issue where plugin license was always showing `free trial` despite of `Paid` even after license is purchased. ([AcclaroInc#437](https://github.com/AcclaroInc/craft-translations/issues/437))
+- An issue where asset's title was incuded in source files regardless of translation enabled or not. ([AcclaroInc#439](https://github.com/AcclaroInc/craft-translations/issues/439))
+
 ## 3.2.5 - 2023-04-15
 
 ### Fixed

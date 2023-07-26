@@ -25,7 +25,6 @@ use yii\web\Response;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\helpers\Json;
-use craft\helpers\UrlHelper;
 
 /**
  * Class CommerceController will be used to process Craft Commerce Products/Variants
