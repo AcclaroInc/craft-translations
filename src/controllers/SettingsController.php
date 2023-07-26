@@ -232,10 +232,11 @@ class SettingsController extends BaseController
         }
 
         $settings = Translations::getInstance()->settings;
-        $variables['chkDuplicateEntries'] = $settings->chkDuplicateEntries;
-        $variables['trackSourceChanges'] = $settings->trackSourceChanges;
-        $variables['trackTargetChanges'] = $settings->trackTargetChanges;
-        $variables['apiLogging'] = $settings->apiLogging;
+        $variables['chkDuplicateEntries'] = $settings->chkDuplicateEntries ?? '';
+        $variables['trackSourceChanges'] = $settings->trackSourceChanges ?? '';
+        $variables['trackTargetChanges'] = $settings->trackTargetChanges ?? '';
+        $variables['preventSlugTranslation'] = $settings->preventSlugTranslation ?? '';
+        $variables['apiLogging'] = $settings->apiLogging ?? '';
         $variables['uploadVolume'] = $settings->uploadVolume;
         $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
         $variables['twigSearchFilterDoubleQuote'] = !empty($settings->twigSearchFilterDoubleQuote) ? $settings->twigSearchFilterDoubleQuote : "";
@@ -244,10 +245,10 @@ class SettingsController extends BaseController
         $allVolumes = Craft::$app->getVolumes()->getAllVolumes();
 
         $variables['volumeOptions'] = array_map(function (Volume $volume) {
-        	return [
-        		'label' => $volume->name,
-        		'value' => $volume->id,
-        	];
+            return [
+                'label' => $volume->name,
+                'value' => $volume->id,
+            ];
         }, $allVolumes);
 
         // Add default temp uploads option
@@ -270,6 +271,7 @@ class SettingsController extends BaseController
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
         $trackSourceChanges = $request->getParam('trackSourceChanges');
         $trackTargetChanges = $request->getParam('trackTargetChanges');
+        $preventSlugTranslation = $request->getParam('preventSlugTranslation');
         $apiLogging = $request->getParam('apiLogging');
         $selectedVolume = $request->getParam('uploadVolume');
         $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
@@ -285,6 +287,7 @@ class SettingsController extends BaseController
                 'chkDuplicateEntries'           => $duplicateEntries,
                 'trackSourceChanges'            => $trackSourceChanges,
                 'trackTargetChanges'            => $trackTargetChanges,
+                'preventSlugTranslation'        => $preventSlugTranslation,
                 'apiLogging'		            => $apiLogging,
                 'uploadVolume'                  => $selectedVolume,
                 'twigSearchFilterSingleQuote'   => $twigSearchFilterSingleQuote,

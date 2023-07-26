@@ -86,25 +86,8 @@ class Translations extends Plugin
         Event::on(
             Plugins::class,
             Plugins::EVENT_AFTER_LOAD_PLUGINS,
-            function () {
-                if (self::getInstance()->settings->apiLogging) {
-                    Craft::debug(
-                        '['. __METHOD__ .'] Plugins::EVENT_AFTER_LOAD_PLUGINS',
-                        'translations'
-                    );
-                }
-                $this->setComponents([
-                    'app' => App::class
-                ]);
-
-                self::$plugin = $this->get('app');
-                self::$view = Craft::$app->getView();
-
-                $this->installEventListeners();
-
-                if (Craft::$app instanceof ConsoleApplication) {
-                    $this->controllerNamespace = 'acclaro\translations\console\controllers';
-                }
+            function() { 
+                $this->registerAfterLoadEvents();
             }
         );
 
@@ -337,6 +320,33 @@ class Translations extends Plugin
                 $this->installCpEventListeners();
             }
         }
+    }
+
+    // Wait for craft to complete init after which load plugin
+    private function registerAfterLoadEvents(): void {
+        $actions = function () {
+            if (self::getInstance()->settings->apiLogging) {
+                Craft::debug(
+                    '[' . __METHOD__ . '] Plugins::EVENT_AFTER_LOAD_PLUGINS',
+                    'translations'
+                );
+            }
+            $this->setComponents([
+                'app' => App::class
+            ]);
+
+            self::$plugin = $this->get('app');
+            self::$view = Craft::$app->getView();
+
+            $this->installEventListeners();
+
+            if (Craft::$app instanceof ConsoleApplication) {
+                $this->controllerNamespace = 'acclaro\translations\console\controllers';
+            }
+        };
+
+        // Start initialisation after craft has been initialized
+        Craft::$app->onInit($actions);
     }
 
     private function _registerCpRoutes()
