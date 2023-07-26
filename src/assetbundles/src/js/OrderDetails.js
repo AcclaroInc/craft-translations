@@ -884,8 +884,13 @@
                 setUnloadEvent(false);
                 if ($(that).text() == "Create new order") {
                     var url = window.location.origin+"/admin/translations/orders/create";
-                    $form.find("input[type=hidden][name=action]").val('translations/order/clone-order');
+                    $form.find("input[type=hidden][name=action]").val('translations/order/order-detail');
                     window.history.pushState("", "", url);
+                    $('<input>', {
+                        'type': 'hidden',
+                        'name': 'clone',
+                        'value': 1
+                    }).appendTo($form);
                     $form.submit();
                 }else if ($(that).text() == "Update order") {
                     var postData = Garnish.getPostData($form),
@@ -932,10 +937,15 @@
                 var $hiddenAction = $('<input>', {
                     'type': 'hidden',
                     'name': 'action',
-                    'value': 'translations/order/save-order-draft'
+                    'value': 'translations/order/save-order'
                 });
 
                 $hiddenAction.appendTo($form);
+                $('<input>', {
+                    'type': 'hidden',
+                    'name': 'createDraft',
+                    'value': '1',
+                }).appendTo($form);
 
                 $form.submit();
             });
