@@ -24,7 +24,7 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^3.7.36",
+        "craftcms/cms": "^3.9.0",
         "guzzlehttp/guzzle": "^6.5.8|^7.0",
         "php": ">=7.2.0",
         "sebastian/diff": "^3.0",
@@ -33,7 +33,7 @@
     },
     "autoload": {
         "psr-4": {
-          "acclaro\\translations\\": "src/"
+            "acclaro\\translations\\": "src/"
         }
     },
     "extra": {
