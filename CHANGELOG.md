@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.10 - 2023-09-04
+
+### Updated
+- Required Craft version to `4.4.15` to resolve sql injection issue.
+
 ## 3.2.9 - 2023-07-26
 
 ### Fixed
