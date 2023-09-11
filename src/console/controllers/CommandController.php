@@ -16,6 +16,8 @@ use acclaro\translations\services\translator\ChatGPTTranslationService as Servic
 
 use yii\console\Controller;
 
+use Craft;
+
 /**
  * Command Command
  *
@@ -36,11 +38,11 @@ class CommandController extends Controller
     public function actionIndex()
     {
 
-        $order = Translations::$plugin->orderRepository->getOrderById(3257715);
+        $order = Translations::$plugin->orderRepository->getOrderById(3273455);
         echo json_encode($order) . "\n";
         $translationService = $order->getTranslationService();
         $files = $order->getFiles();
-        $translationService->syncOrder($order, [157]); 
+        $translationService->syncOrder($order, [166]); 
 
         return true;
     }
@@ -55,6 +57,10 @@ class CommandController extends Controller
         $result = 'something';
 
         echo "Welcome to the console CommandController actionDoSomething() method!!!!!\n";
+
+        $element = Craft::$app->assets->getAssetById(252789, 2);
+
+        echo json_encode($element) . "\n";
 
         return $result;
     }

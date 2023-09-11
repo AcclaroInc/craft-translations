@@ -69,7 +69,7 @@ class ChatGPTTranslationService implements TranslationServiceInterface
                 continue;
                 
             }
-            //echo "unprocessed source = " . $file->source . "\n\n";
+            Craft::info("unprocessed source = " . $file->source . "\n\n");
             $source = json_decode(Translations::$plugin->elementToFileConverter->xmlToJson($file->source), true);
             $data = array_values($source['content']);
             $sourceLanguage = $file->getSourceLangCode();
@@ -77,7 +77,7 @@ class ChatGPTTranslationService implements TranslationServiceInterface
 
             $response = $this->getTranslatedData($data, $sourceLanguage, $targetLanguage);
 
-            //echo "response = " . json_encode($response) . "\n\n";
+            Craft::info("response = " . json_encode($response) . "\n\n");
 
             if (!$response['success'] || !array_key_exists('data', $response) || !is_array($response['data'])) {
                 $order->logActivity(sprintf(
@@ -108,9 +108,9 @@ class ChatGPTTranslationService implements TranslationServiceInterface
 
             }
 
-            //echo "source = " . json_encode($source) . "\n\n";
+            Craft::info("source = " . json_encode($source) . "\n\n");
             $file->target = Translations::$plugin->elementToFileConverter->jsonToXml($source);
-            //echo "target = " . $file->target . "\n\n";
+            Craft::info("target = " . $file->target . "\n\n");
             $this->updateFile($order, $file);
         }
         
