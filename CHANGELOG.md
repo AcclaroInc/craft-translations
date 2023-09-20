@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.7 - 2023-09-20
+
+### Fixed
+- Fixed an issue where an error is shown while loading plugin dashbaord when craft's update api is down.
+
 ## 2.2.6 - 2023-09-04
 
 ### Updated
