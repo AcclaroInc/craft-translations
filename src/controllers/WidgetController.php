@@ -203,16 +203,20 @@ class WidgetController extends Controller
     public function checkForUpdate($pluginHandle): bool
     {
         $hasUpdate = false;
-
-        $updateData = Craft::$app->getApi()->getUpdates([]);
-
-        $updates = new UpdatesModel($updateData);
-
-        foreach ($updates->plugins as $key => $pluginUpdate) {
-            if ($key === $pluginHandle && $pluginUpdate->getHasReleases()) {
-                $hasUpdate = true;
+        
+        try {
+            $updateData = Craft::$app->getApi()->getUpdates([]);    
+            $updates = new UpdatesModel($updateData);
+    
+            foreach ($updates->plugins as $key => $pluginUpdate) {
+                if ($key === $pluginHandle && $pluginUpdate->getHasReleases()) {
+                    $hasUpdate = true;
+                }
             }
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log($e->getMessage(), Constants::LOG_LEVEL_ERROR);
         }
+
 
         return $hasUpdate;
     }
