@@ -253,18 +253,22 @@ class DraftRepository
     {
 		$element = $element->getIsDraft() ? $element->getCanonical() : $element;
 
-        switch (get_class($element)) {
-            case Product::class:
-                $draft = Translations::$plugin->commerceRepository->createDraft($element, $site, $order->title);
-                break;
-            case GlobalSet::class:
-                $draft = Translations::$plugin->globalSetDraftRepository->createDraft($element, $site, $order->title);
-                break;
-            case Asset::class:
-                $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
-                break;
-            default:
-                $draft = Translations::$plugin->entryRepository->createDraft($element, $site, $order->title);
+        try {
+            switch (get_class($element)) {
+                case Product::class:
+                    $draft = Translations::$plugin->commerceRepository->createDraft($element, $site, $order->title);
+                    break;
+                case GlobalSet::class:
+                    $draft = Translations::$plugin->globalSetDraftRepository->createDraft($element, $site, $order->title);
+                    break;
+                case Asset::class:
+                    $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
+                    break;
+                default:
+                    $draft = Translations::$plugin->entryRepository->createDraft($element, $site, $order->title);
+            }
+        } catch(Exception $e) {
+            throw $e;
         }
 
         if (!($file instanceof FileModel)) {
@@ -273,7 +277,7 @@ class DraftRepository
 
         if (empty($draft)) {
             Translations::$plugin->logHelper->log(  '['. __METHOD__ .'] Empty draft found: Order'.json_decode($order), Constants::LOG_LEVEL_ERROR );
-            return false;
+            throw new \Exception("Unable to create draft.");
         }
 
         if (!$file->hasPreview()) {
@@ -302,7 +306,7 @@ class DraftRepository
 
             Translations::$plugin->fileRepository->saveFile($file);
 
-            return false;
+            throw $e;
         }
     }
 
