@@ -230,9 +230,7 @@ class FilesController extends BaseController
 
                                 $fileInfo = pathinfo($filename);
 
-                                $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
-
-                                $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
+                                $folder = Craft::$app->getAssets()->getUserTemporaryUploadFolder();
 
                                 $pathInfo = pathinfo($file);
 
@@ -313,9 +311,7 @@ class FilesController extends BaseController
                     } else {
                         $filename = Assets::prepareAssetName($file->name);
 
-                        $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
-
-                        $folder = Craft::$app->getAssets()->getRootFolderByVolumeId($uploadVolumeId);
+                        $folder = Craft::$app->getAssets()->getUserTemporaryUploadFolder();
 
                         $compatibleFilename = $file->tempName . '.' . Constants::FILE_FORMAT_TXT;
 
