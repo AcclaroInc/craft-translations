@@ -81,6 +81,8 @@ class BaseController extends Controller
             Craft::$app->end('Invalid orderId');
         } else {
             echo 'Order found'.PHP_EOL;
+            $order->logActivity('Order callback received.');
+            Craft::$app->getElements()->saveElement($order);
         }
 
         // don't process published orders
@@ -163,6 +165,8 @@ class BaseController extends Controller
             Craft::$app->end('Couldn’t find the order');
         } else {
             echo 'Found order'.PHP_EOL;
+            $order->logActivity('File callback received.');
+            Craft::$app->getElements()->saveElement($order);
         }
 
         $translationService = $order->getTranslationService();
