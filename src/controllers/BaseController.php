@@ -110,7 +110,14 @@ class BaseController extends Controller
         if (!$success) {
             Craft::$app->end('Couldn’t save the order');
         } else {
-            echo 'Saving order'.PHP_EOL;
+            echo 'Order changes saved'.PHP_EOL;
+            echo 'Starting file sync' . PHP_EOL;
+
+            foreach($order->getFiles() as $file) {
+                $translationService->updateFile($order, $file);
+            }
+
+            echo 'File sync successful' . PHP_EOL;
         }
 
         Craft::$app->end('OK');
