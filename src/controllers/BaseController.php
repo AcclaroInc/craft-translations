@@ -117,6 +117,7 @@ class BaseController extends Controller
 
             foreach($order->getFiles() as $file) {
                 $translationService->updateFile($order, $file);
+                Translations::$plugin->fileRepository->saveFile($file);
             }
 
             echo 'File sync successful' . PHP_EOL;
