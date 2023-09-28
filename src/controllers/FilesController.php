@@ -230,7 +230,8 @@ class FilesController extends BaseController
 
                                 $fileInfo = pathinfo($filename);
 
-                                $folder = Craft::$app->getAssets()->getUserTemporaryUploadFolder();
+                                $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
+                                $folder = $this->getFolderByVolumeId($uploadVolumeId);
 
                                 $pathInfo = pathinfo($file);
 
@@ -311,7 +312,8 @@ class FilesController extends BaseController
                     } else {
                         $filename = Assets::prepareAssetName($file->name);
 
-                        $folder = Craft::$app->getAssets()->getUserTemporaryUploadFolder();
+                        $uploadVolumeId = ArrayHelper::getValue(Translations::getInstance()->getSettings(), 'uploadVolume');
+                        $folder = $this->getFolderByVolumeId($uploadVolumeId);
 
                         $compatibleFilename = $file->tempName . '.' . Constants::FILE_FORMAT_TXT;
 
@@ -575,5 +577,13 @@ class FilesController extends BaseController
         $zip_name =  $title.'_'.$order['id'];
 
         return $zip_name;
+    }
+    
+    private function getFolderByVolumeId($volumeId) {
+        if ($volumeId == 0) {
+            return Craft::$app->getAssets()->getUserTemporaryUploadFolder();
+        } else {
+            return Craft::$app->getAssets()->getRootFolderByVolumeId($volumeId);
+        }
     }
 }
