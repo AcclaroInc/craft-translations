@@ -99,7 +99,7 @@ class OrderController extends BaseController
 		$variables['chkDuplicateEntries'] = Translations::getInstance()->settings->chkDuplicateEntries;
         $variables['tagGroup'] = Craft::$app->getTags()->getTagGroupByHandle(Constants::ORDER_TAG_GROUP_HANDLE);
 
-        // In case for some reason tag group is not present we will create one.
+        // In case for some reason tag group is not present or deleted by user we will create one.
         if (!$variables['tagGroup']) {
             $tagGroup = new \craft\models\TagGroup();
             $tagGroup->name = 'Craft Translations';
