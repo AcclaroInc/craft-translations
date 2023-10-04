@@ -72,7 +72,7 @@ class GoogleTranslationService implements TranslationServiceInterface
             $sourceLanguage = $file->getSourceLangCode();
             $targetLanguage = $file->getTargetLangCode();
 
-            $response = $this->apiClient->translate($data, $sourceLanguage, $targetLanguage);
+            $response = $this->apiClient->translate($data, $targetLanguage, $sourceLanguage);
 
             if (!$response['success']) {
                 $order->logActivity(sprintf(
