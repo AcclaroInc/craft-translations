@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.3.1 - 2023-10-05
+
+### Added
+- Logic to create `craftTranslation` tag in case its deleted by user. ([AcclaroInc#475](https://github.com/AcclaroInc/craft-translations/issues/475))
+- File sync when order callback is recieved. ([AcclaroInc#476](https://github.com/AcclaroInc/craft-translations/pull/476))
+
+### Updated
+- Google translator guzzle request to use now google-cloud/translation library. ([AcclaroInc#466](https://github.com/AcclaroInc/craft-translations/issues/466))
+
+### Fixed
+- An issue where plugin's upload location was fixed to temp upload and not updated with change in location from plugin settings. ([AcclaroInc#477](https://github.com/AcclaroInc/craft-translations/pull/477))
+
 ## 3.3.0 - 2023-09-26
 
 ### Fixed
