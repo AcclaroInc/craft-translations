@@ -444,6 +444,11 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         return $this->apiClient->addOrderTags($orderId, $tags);
     }
+    
+    public function addOrderComments($orderId, $comment)
+    {
+        return $this->apiClient->addOrderComment($orderId, $comment);
+    }
 
     public function getOrderQuote($orderId)
     {
