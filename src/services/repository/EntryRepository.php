@@ -30,10 +30,7 @@ class EntryRepository extends Component
             $handle = isset($allSitesHandle[$site]) ? $allSitesHandle[$site] : "";
             $name = sprintf('%s [%s]', $orderName, $handle);
             $notes = '';
-            $creator = User::find()
-                ->admin()
-                ->orderBy(['elements.id' => SORT_ASC])
-                ->one();
+            $creatorId = Craft::$app->getUser()->getId();
             $elementURI = Craft::$app->getElements()->getElementUriForSite($entry->id, $site);
 
             $newAttributes = [
@@ -41,12 +38,12 @@ class EntryRepository extends Component
                 'uri' => $elementURI,
             ];
 
-            $draft = $this->makeNewDraft($entry, $creator->id, $name, $notes, $newAttributes);
+            $draft = $this->makeNewDraft($entry, $creatorId, $name, $notes, $newAttributes);
 
             return $draft;
         } catch (\Exception $e) {
             Translations::$plugin->logHelper->log( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR );
-            throw new \Exception("Creating draft.");
+            throw new \Exception($e->getMessage());
         }
     }
 
@@ -68,6 +65,8 @@ class EntryRepository extends Component
 		$transaction = Craft::$app->getDb()->beginTransaction();
         try {
             $targetSiteId = $newAttributes['siteId'];
+            $enabledForSites = Craft::$app->getElements()->getEnabledSiteIdsForElement($canonical->id);
+            $isNewForSite = !in_array($targetSiteId, $enabledForSites);
             $entryInTargetSite = Translations::$plugin->elementRepository->getElementById($canonical->id, $targetSiteId);
 
             // Create the draft row
@@ -85,12 +84,12 @@ class EntryRepository extends Component
                 'trackChanges' => $canonical::trackChanges(),
             ];
 
-            if (!$entryInTargetSite) {
+            if ($isNewForSite || !$entryInTargetSite) {
                 unset($newAttributes['siteId']);
             }
             $draft = Craft::$app->getElements()->duplicateElement($canonical, $newAttributes);
 
-            if (!$entryInTargetSite) {
+            if ($isNewForSite || !$entryInTargetSite) {
                 // We can only set the target site it it does not exist else craft erros out.
                 $draft->siteId = $targetSiteId;
                 if (!Craft::$app->getElements()->saveElement($draft)) {

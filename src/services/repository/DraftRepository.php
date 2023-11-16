@@ -251,7 +251,8 @@ class DraftRepository
 
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
     {
-		$element = $element->getIsDraft() ? $element->getCanonical() : $element;
+        $isDraft = $element->getIsDraft();
+		$element = $isDraft ? $element->getCanonical() : $element;
 
         try {
             switch (get_class($element)) {
@@ -265,7 +266,20 @@ class DraftRepository
                     $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
                     break;
                 default:
-                    $draft = Translations::$plugin->entryRepository->createDraft($element, $site, $order->title);
+                    if ($isDraft) {
+                        $draft = Translations::$plugin->entryRepository->createDraft($element, $site, $order->title);
+                    } else {
+                        $creatorId = Craft::$app->getUser()->getId();
+                        $allSitesHandle = Translations::$plugin->siteRepository->getAllSitesHandle();
+                        $handle = isset($allSitesHandle[$site]) ? $allSitesHandle[$site] : "";
+                        $name = sprintf('%s [%s]', $order->title, $handle);
+                        $elementURI = Craft::$app->getElements()->getElementUriForSite($element->id, $site);
+                        $attributes = [
+                            'siteId' => $site,
+                            'uri' => $elementURI
+                        ];
+                        $draft = Craft::$app->getDrafts()->createDraft($element, $creatorId, $name, null, $attributes);
+                    }
             }
         } catch(Exception $e) {
             throw $e;
