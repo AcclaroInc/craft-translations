@@ -311,6 +311,10 @@ class OrderRepository
                 $translationService->addOrderTags($orderResponse->orderid, implode(",", $tags));
             }
         }
+        
+        if ($comments) {
+            $translationService->addOrderComments($orderResponse->orderid, $comments);
+        }
 
         $orderReferenceFiles = [];
 

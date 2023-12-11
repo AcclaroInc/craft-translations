@@ -46,13 +46,13 @@ class EntryRepository extends Component
             return $draft;
         } catch (\Exception $e) {
             Translations::$plugin->logHelper->log( '['. __METHOD__ .'] CreateDraft exception:: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR );
-            return [];
+            throw new \Exception("Creating draft.");
         }
     }
 
 	private function makeNewDraft($canonical, $creatorId, $name, $notes, $newAttributes, $provisional = false)
 	{
-		$canonical = $canonical->getIsDraft() ? $canonical->getCanonical() : $canonical;
+        $canonical = $canonical->getIsDraft() ? $canonical->getCanonical() : $canonical;
 		// Fire a 'beforeCreateDraft' event
         $event = new DraftEvent([
             'canonical' => $canonical,
@@ -64,12 +64,11 @@ class EntryRepository extends Component
         $this->trigger('beforeCreateDraft', $event);
         $name = $event->draftName;
         $notes = $event->draftNotes;
-
+        
 		$transaction = Craft::$app->getDb()->beginTransaction();
         try {
             $targetSiteId = $newAttributes['siteId'];
-            $enabledForSites = Craft::$app->getElements()->getEnabledSiteIdsForElement($canonical->id);
-            $isNewForSite = !in_array($targetSiteId, $enabledForSites);
+            $entryInTargetSite = Translations::$plugin->elementRepository->getElementById($canonical->id, $targetSiteId);
 
             // Create the draft row
             $draftId = (new Drafts())->insertDraftRow($name, $notes, $creatorId, $canonical->id, $canonical::trackChanges(), $provisional);
@@ -86,12 +85,12 @@ class EntryRepository extends Component
                 'trackChanges' => $canonical::trackChanges(),
             ];
 
-            if ($isNewForSite) {
+            if (!$entryInTargetSite) {
                 unset($newAttributes['siteId']);
             }
             $draft = Craft::$app->getElements()->duplicateElement($canonical, $newAttributes);
 
-            if ($isNewForSite) {
+            if (!$entryInTargetSite) {
                 // We can only set the target site it it does not exist else craft erros out.
                 $draft->siteId = $targetSiteId;
                 if (!Craft::$app->getElements()->saveElement($draft)) {
