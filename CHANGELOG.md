@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.3.2 - 2023-11-06
+
+### Fixed
+- An issue where order comments were not sent to acclaro.([AcclaroInc#482](https://github.com/AcclaroInc/craft-translations/pull/482))
+
+
+## 3.3.1 - 2023-10-05
+
+### Added
+- Logic to create `craftTranslation` tag in case its deleted by user. ([AcclaroInc#475](https://github.com/AcclaroInc/craft-translations/issues/475))
+- File sync when order callback is recieved. ([AcclaroInc#476](https://github.com/AcclaroInc/craft-translations/pull/476))
+
+### Updated
+- Google translator guzzle request to use now google-cloud/translation library. ([AcclaroInc#466](https://github.com/AcclaroInc/craft-translations/issues/466))
+
+### Fixed
+- An issue where plugin's upload location was fixed to temp upload and not updated with change in location from plugin settings. ([AcclaroInc#477](https://github.com/AcclaroInc/craft-translations/pull/477))
+
+## 3.3.0 - 2023-09-26
+
+### Fixed
+- An issue uploading files after craft 4.5.0 update.
+- An issue where create draft was failing and showing success message to user. ([AcclaroInc#463](https://github.com/AcclaroInc/craft-translations/issues/463))
+- An issue where static translation page was showing error after craft 4.5.0 update. ([AcclaroInc#468](https://github.com/AcclaroInc/craft-translations/issues/468))
+- An issue where error was thrown in craft dev mode when a plugin update is available. ([AcclaroInc#461](https://github.com/AcclaroInc/craft-translations/issues/461))
+
 ## 3.2.10 - 2023-09-04
 
 ### Updated

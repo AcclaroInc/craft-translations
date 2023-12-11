@@ -34,8 +34,7 @@ class GoogleTranslationService implements TranslationServiceInterface
      */
     public function authenticate()
     {
-        $response = $this->apiClient->getSupportedLanguages();
-        return $response['success'];
+        return $this->apiClient->authenticate();
     }
 
     /**
@@ -73,7 +72,7 @@ class GoogleTranslationService implements TranslationServiceInterface
             $sourceLanguage = $file->getSourceLangCode();
             $targetLanguage = $file->getTargetLangCode();
 
-            $response = $this->getTranslatedData($data, $sourceLanguage, $targetLanguage);
+            $response = $this->apiClient->translate($data, $targetLanguage, $sourceLanguage);
 
             if (!$response['success']) {
                 $order->logActivity(sprintf(
@@ -96,49 +95,6 @@ class GoogleTranslationService implements TranslationServiceInterface
         
         $this->updateOrder($order);
         Translations::$plugin->orderRepository->saveOrder($order);
-    }
-
-    /**
-     * Translates $data array in case the length of array is more than 100 then chunks it down to make request
-     * 
-     * @return array
-     */
-    private function getTranslatedData($data, $sourceLanguage, $targetLanguage)
-    {
-        $response = ['success' => true, 'message' => ''];
-        try {
-            if (count($data) > 100) {
-                $dataChunk = array_chunk($data, 99, true);
-                $tempResponse = null;
-
-                foreach ($dataChunk as $chunk) {
-                    if (! $tempResponse) {
-                        $tempResponse = $this->apiClient->translate($chunk, $targetLanguage, $sourceLanguage);
-                        
-                        if (! $tempResponse['success']) {
-                            throw new \Exception($tempResponse['message']);
-                        }
-                    } else {
-                        $temp = $this->apiClient->translate($chunk, $targetLanguage, $sourceLanguage);
-
-                        if (!$temp['success']) {
-                            throw new \Exception($temp['message']);
-                        } else {
-                            $tempResponse['data'] = array_merge($tempResponse['data'], $temp['data']);
-                        }
-                    }
-                }
-
-                $response['data'] = $tempResponse['data'];
-            } else {
-                $response = $this->apiClient->translate($data, $targetLanguage, $sourceLanguage);
-            }
-        } catch (\Exception $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-        }
-
-        return $response;
     }
 
     /**
