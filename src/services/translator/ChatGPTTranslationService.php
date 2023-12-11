@@ -11,6 +11,7 @@
 
 namespace acclaro\translations\services\translator;
 
+use Craft;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
