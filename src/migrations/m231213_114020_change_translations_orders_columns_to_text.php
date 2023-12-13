@@ -6,9 +6,9 @@ use craft\db\Migration;
 use acclaro\translations\Constants;
 
 /**
- * m231213_114020_change_translations_orders_columns_to_textphp migration.
+ * m231213_114020_change_translations_orders_columns_to_text migration.
  */
-class m231213_114020_change_translations_orders_columns_to_textphp extends Migration
+class m231213_114020_change_translations_orders_columns_to_text extends Migration
 {
     /**
      * @inheritdoc
@@ -29,7 +29,7 @@ class m231213_114020_change_translations_orders_columns_to_textphp extends Migra
      */
     public function safeDown()
     {
-        echo "m220705_040234_change_preview_url_column_to_text cannot be reverted.\n";
+        echo "m231213_114020_change_translations_orders_columns_to_text cannot be reverted.\n";
         return false;
     }
 }
