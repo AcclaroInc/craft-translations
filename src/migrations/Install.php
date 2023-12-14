@@ -155,7 +155,7 @@ class Install extends Migration
                     'entriesCount'              => $this->integer()->notNull(),
                     'wordCount'                 => $this->integer()->notNull(),
                     'elementIds'                => $this->string(8160)->notNull()->defaultValue(''),
-                    'tags'                      => $this->string(8160)->notNull()->defaultValue(''),
+                    'tags'                      => $this->string(1020)->notNull()->defaultValue(''),
                     'trackChanges'              => $this->integer()->defaultValue(0),
 					'includeTmFiles'            => $this->integer()->defaultValue(0),
 					'trackTargetChanges'        => $this->integer()->defaultValue(0),
