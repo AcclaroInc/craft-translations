@@ -61,7 +61,7 @@ class GlobalSetDraftModel extends GlobalSet
         return $rules;
     }
 
-    public function getFieldLayout(): ?\craft\models\FieldLayout
+    public function getFieldLayout(): \craft\models\FieldLayout
     {
         $globalSet = $this->getGlobalSet();
 
