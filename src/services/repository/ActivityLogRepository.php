@@ -130,4 +130,17 @@ class ActivityLogRepository
 
         return $activityLogs;
     }
+
+    public function getActivityLogs()
+    {
+        $logs = ActivityLogRecord::find()->all();
+
+        $activityLogs = [];
+
+        foreach ($logs as $log) {
+            $activityLogs[] = new ActivityLogModel($log->toArray($this->defaultColumns));
+        }
+
+        return $activityLogs;
+    }
 }

@@ -21,6 +21,7 @@ use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\services\job\DeleteDrafts;
+use craft\web\Response;
 
 /**
  * @author    Acclaro
@@ -304,5 +305,36 @@ class SettingsController extends BaseController
         } catch (\Throwable $th) {
             $this->setError($th->getMessage());
         }
+    }
+
+    public function actionDownloadActivityLogs()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
+            return $this->redirect(Constants::URL_TRANSLATIONS, 302, true);
+        }
+
+        $activityLogs = Translations::$plugin->activityLogRepository->getActivityLogs();
+
+        $output = fopen('php://output', 'w');
+
+        $header = array_keys($activityLogs[0]->attributes);
+        fputcsv($output, $header);
+
+        foreach ($activityLogs as $model) {
+            fputcsv($output, $model->attributes);
+        }
+
+        fclose($output);
+
+        $response = Craft::$app->getResponse();
+        $response->format = Response::FORMAT_RAW;
+        $response->headers->add('Content-Type', 'text/csv');
+        $response->headers->add('Content-Disposition', 'attachment; filename="activity-logs.csv"');
+        $response->content = ob_get_clean();
+    
+        return $response;
     }
 }
