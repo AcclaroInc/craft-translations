@@ -21,7 +21,7 @@ class m240117_112821_create_activity_logs_table extends Migration
             'targetId' => $this->integer()->notNull(),
             'targetClass' => $this->string()->notNull(),
             'created' => $this->dateTime()->notNull(),
-            'message' => $this->string()->notNull(),
+            'message' => $this->text(),
             'actions' => $this->text()
         ]);
 

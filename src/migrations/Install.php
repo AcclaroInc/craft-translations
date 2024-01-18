@@ -251,11 +251,11 @@ class Install extends Migration
                 Constants::TABLE_ACTIVITY_LOG,
                 [
                     'id'            => $this->primaryKey(),
-                    'message'       => $this->string()->notNull(),
+                    'message'       => $this->text(),
                     'targetclass'   => $this->string()->notNull(),
                     'targetId'      => $this->integer()->notNull(),
                     'created'       => $this->dateTime()->notNull(),
-                    'actions'       => $this->string()->notNull()
+                    'actions'       => $this->text()
                 ]
             );
         }
