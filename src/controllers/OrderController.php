@@ -444,6 +444,7 @@ class OrderController extends BaseController
         } elseif ($orderId && $createDraft && $this->service->getOrderById($orderId)?->isPending()) {
             // This is for user saving changes made in existing draft 
             $order = $this->service->getOrderById($orderId);
+            $logInfo = "Order draft Updated";
         } else {
             $order = $this->service->makeNewOrder($sourceSite);
 
@@ -642,12 +643,12 @@ class OrderController extends BaseController
                         );
                     }
                 }
-    
+
                 $orderAction = sprintf('Order submitted to %s', $order->translator->getName());
     
                 if ($order->requestQuote())
                     $orderAction = sprintf('Order quote requested from %s', $order->translator->getName());
-    
+
                 $order->logActivity(Translations::$plugin->translator->translate('app', $orderAction));
             }
 

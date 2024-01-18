@@ -37,9 +37,9 @@ class m240117_112821_create_activity_logs_table extends Migration
             foreach ($messages as $message) {
                 // Insert data into activity_log table
                 $this->insert(Constants::TABLE_ACTIVITY_LOG, [
-                    'created' => \DateTime::createFromFormat('Y-m-d H:i:s', $message['date']),
+                    'created' => \DateTime::createFromFormat('d/m/Y', $message['date'])->format('Y-m-d H:i:s'),
                     'targetId' => $row['id'],
-                    'targetClass' => '',
+                    'targetClass' => 'acclaro\\translations\\elements\\Order',
                     'message' => $message['message'],
                     'actions' => ''
                 ]);

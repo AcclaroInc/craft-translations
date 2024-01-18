@@ -65,7 +65,6 @@ class Order extends Element
 
     public $comments;
 
-
     public $dateOrdered;
 
     public $serviceOrderId;
@@ -611,7 +610,7 @@ class Order extends Element
 
     public function logActivity($message)
     {
-        return Translations::$plugin->activityLogRepository->createActivityLog($message, $this->id, Constants::CLASS_ORDER);
+        return Translations::$plugin->activityLogRepository->createActivityLog($message, $this);
     }
 
     public function getActivityLogs()

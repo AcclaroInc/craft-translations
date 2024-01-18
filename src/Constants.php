@@ -55,8 +55,6 @@ class Constants
     const CLASS_CATEGORY    = 'craft\\elements\\Category';
     const CLASS_ASSET       = 'craft\\elements\\Asset';
     const CLASS_ENTRY       = 'craft\\elements\\Entry';
-    const CLASS_ORDER       = 'acclaro\\translations\\elements\\Order';
-    const CLASS_TRANSLATOR  = 'acclaro\\translations\\elements\\Translator';
 
     const CLASS_COMMERCE_PRODUCT    = 'craft\commerce\elements\Product';
 
