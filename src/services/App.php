@@ -171,6 +171,11 @@ class App extends Component
      */
     public $logHelper;
 
+    /**
+     * @var repository\ActivityLogRepository
+     */
+    public $activityLogRepository;
+
     public function init(): void
     {
         $this->urlHelper = new UrlHelper();
@@ -203,5 +208,6 @@ class App extends Component
         $this->orderDelete = new OrderDelete();
         $this->orderEdit = new OrderEdit();
         $this->logHelper = new LogHelper();
+        $this->activityLogRepository = new repository\ActivityLogRepository();
     }
 }

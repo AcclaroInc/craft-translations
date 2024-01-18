@@ -22,7 +22,7 @@ class Exporter extends ElementExporter
 
     protected $keyMap = [
         'id', 'title', 'translator', 'owner', 'sourceSite', 'targetSites', 'status',
-        'requestedDueDate', 'comments', 'activityLog', 'dateOrdered',
+        'requestedDueDate', 'comments', 'dateOrdered',
         'entriesCount', 'wordCount', 'elements','previewUrls',
     ];
 

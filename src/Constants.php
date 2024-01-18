@@ -55,6 +55,8 @@ class Constants
     const CLASS_CATEGORY    = 'craft\\elements\\Category';
     const CLASS_ASSET       = 'craft\\elements\\Asset';
     const CLASS_ENTRY       = 'craft\\elements\\Entry';
+    const CLASS_ORDER       = 'acclaro\\translations\\elements\\Order';
+    const CLASS_TRANSLATOR  = 'acclaro\\translations\\elements\\Translator';
 
     const CLASS_COMMERCE_PRODUCT    = 'craft\commerce\elements\Product';
 
@@ -169,6 +171,7 @@ class Constants
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
     const TABLE_COMMERCE_DRAFT      = '{{%translations_commercedrafts}}';
+    const TABLE_ACTIVITY_LOG        = '{{%translations_activitylogs}}';
 
     // Job Descriptions
     const JOB_ACCLARO_UPDATING_REVIEW_URL   = 'Updating Acclaro review urls';

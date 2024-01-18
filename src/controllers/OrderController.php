@@ -435,11 +435,12 @@ class OrderController extends BaseController
             return $this->asFailure($this->getErrorMessage("Source site is not supported."));
         }
 
+        $logInfo = "";
         if ($orderId && ! $createDraft) {
             // This is for draft converting to order.
             $order = $this->service->getOrderById($orderId);
 
-            $order->logActivity(Translations::$plugin->translator->translate('app', 'Order created'));
+            $logInfo = "Order Created";
         } elseif ($orderId && $createDraft && $this->service->getOrderById($orderId)?->isPending()) {
             // This is for user saving changes made in existing draft 
             $order = $this->service->getOrderById($orderId);
@@ -447,7 +448,6 @@ class OrderController extends BaseController
             $order = $this->service->makeNewOrder($sourceSite);
 
             $logInfo = $createDraft ? 'Order draft created' : 'Order created';
-            $order->logActivity(Translations::$plugin->translator->translate('app', $logInfo));
         }
 
         $job = '';
@@ -552,6 +552,8 @@ class OrderController extends BaseController
                 $transaction->rollBack();
                 return $this->asFailure($this->getErrorMessage("Error saving Order."));
             }
+
+            $order->logActivity(Translations::$plugin->translator->translate('app', $logInfo));
 
             if (! $createDraft) {
                 // Check supported languages for order service
