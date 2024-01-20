@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.3.4 - 2024-01-22
+
+### Fixed
+- An issue where applied files status reverting back to `ready for review` when a callback is received. ([AcclaroInc#520](https://github.com/AcclaroInc/craft-translations/pull/487))
+
+### Added
+- New activity logs table for better log management. ([AcclaroInc#521](https://github.com/AcclaroInc/craft-translations/pull/488))
+
 ## 3.3.3 - 2023-12-14
 
 ### Fixed
