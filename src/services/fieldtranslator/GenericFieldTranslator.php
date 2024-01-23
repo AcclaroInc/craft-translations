@@ -16,6 +16,7 @@ use craft\base\Element;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 use craft\redactor\Field as RedactorField;
+use craft\ckeditor\Field as CKEditorField;
 
 class GenericFieldTranslator implements TranslatableFieldInterface
 {
@@ -28,7 +29,7 @@ class GenericFieldTranslator implements TranslatableFieldInterface
     {
         $fieldValue = $this->getFieldValue($elementTranslator, $element, $field);
 
-        return $field instanceof RedactorField ? $field->serializeValue($fieldValue) : $fieldValue;
+        return $field instanceof RedactorField || $field instanceof CKEditorField ? $field->serializeValue($fieldValue) : $fieldValue;
     }
 
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)

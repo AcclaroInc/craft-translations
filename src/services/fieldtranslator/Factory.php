@@ -45,6 +45,8 @@ use nystudio107\seomatic\fields\SeoSettings;
 use verbb\supertable\fields\SuperTableField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
 
+use craft\ckeditor\Field as CKEditorField;
+
 class Factory
 {
     private $nativeFieldTypes = array(
@@ -75,7 +77,8 @@ class Factory
         Telephone::class        => NsmFieldsTranslator::class,
         Gender::class           => NsmFieldsTranslator::class,
         Embed::class            => NsmFieldsTranslator::class,
-        VizyField::class  		=> VizyFieldTranslator::class
+        VizyField::class  	    => VizyFieldTranslator::class,
+        CKEditor::class         => GenericFieldTranslator::class
     );
 
     public function makeTranslator(Field $field)
