@@ -65,8 +65,6 @@ class Order extends Element
 
     public $comments;
 
-    public $activityLog;
-
     public $dateOrdered;
 
     public $serviceOrderId;
@@ -458,7 +456,7 @@ class Order extends Element
     public function rules(): array
     {
         $rules = parent::rules();
-        $rules[] = [['translatorId', 'ownerId', 'sourceSite', 'targetSites', 'activityLog', 'entriesCount', 'wordCount', 'elementIds',],'required'];
+        $rules[] = [['translatorId', 'ownerId', 'sourceSite', 'targetSites', 'entriesCount', 'wordCount', 'elementIds',],'required'];
         $rules[] = [['sourceSite'], SiteIdValidator::class];
         $rules[] = [['wordCount', 'entriesCount'], NumberValidator::class];
         $rules[] = ['status', 'default', 'value' => 'pending'];
@@ -610,23 +608,14 @@ class Order extends Element
         return $this->targetSites ? json_decode($this->targetSites, true) : array();
     }
 
-    public function getActivityLogArray()
-    {
-        $str = $this->activityLog;
-
-        return $str ? json_decode($str, true) : array();
-    }
-
     public function logActivity($message)
     {
-        $activityLog = $this->getActivityLogArray();
+        return Translations::$plugin->activityLogRepository->createActivityLog($message, $this);
+    }
 
-        $activityLog[] = array(
-            'date' => date('n/j/Y'),
-            'message' => $message,
-        );
-
-        $this->activityLog = json_encode($activityLog);
+    public function getActivityLogs()
+    {
+        return Translations::$plugin->activityLogRepository->getActivityLogsByTargetId($this);
     }
 
     public function getCpEditUrl(): ?string
@@ -895,7 +884,6 @@ class Order extends Element
         $record->requestedDueDate =  $this->requestedDueDate;
         $record->orderDueDate =  $this->orderDueDate;
         $record->comments =  $this->comments;
-        $record->activityLog =  $this->activityLog;
         $record->dateOrdered =  $this->dateOrdered;
         $record->serviceOrderId =  $this->serviceOrderId;
         $record->entriesCount =  $this->entriesCount;

@@ -38,7 +38,22 @@
         placeholder: 'Optional',
     }) }}
     <div class="buttons">
-        <button type="submit" class="btn submit icon" data-icon="download" value="submit">{{ "Download logs"|t('app') }}</button>
+        <button type="submit" class="btn submit icon" data-icon="download">{{ "Download logs"|t('app') }}</button>
+    </div>
+</form>
+<hr>
+<form id="download-activity-logs" class="utility" method="post" accept-charset="UTF-8">
+    {{ csrfInput() }}
+    {{ forms.hidden({
+        name: 'action',
+        value: 'translations/settings/download-activity-logs',
+    }) }}
+
+    <div class="readable">
+        <h4>{{ 'Download activity logs'|t('app') }}</h4>
+    </div>
+    <div class="buttons">
+        <button type="submit" class="btn submit icon" data-icon="download">{{ "Download activity logs"|t('app') }}</button>
     </div>
 </form>
 {% endblock %}
