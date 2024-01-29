@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.3.5 - 2024-01-29
+
+### Fixed
+- An issue where linkit fields were not added to source files for translation. ([AcclaroInc#523](https://github.com/AcclaroInc/craft-translations/pull/492))
+
 ## 3.3.4 - 2024-01-24
 
 ### Fixed
