@@ -35,11 +35,11 @@ use verbb\vizy\fields\VizyField;
 use newism\fields\fields\Address;
 use newism\fields\fields\Telephone;
 use newism\fields\fields\PersonName;
-use typedlinkfield\fields\LinkField;
+use lenz\linkfield\fields\LinkField;
 use acclaro\translations\Translations;
 use craft\redactor\Field as RedactorField;
 use craft\ckeditor\Field as CkEditorField;
-use fruitstudios\linkit\fields\LinkitField;
+use presseddigital\linkit\fields\LinkitField;
 use luwes\codemirror\fields\CodeMirrorField;
 use nystudio107\seomatic\fields\SeoSettings;
 
