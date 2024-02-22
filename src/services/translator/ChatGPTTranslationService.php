@@ -95,7 +95,12 @@ class ChatGPTTranslationService implements TranslationServiceInterface
                 if ($index >= count($response['data'])) {
                     break;
                 }
-                if (trim($source['content'][$key]) == '') {
+                if (is_countable($response['data'][$index])) {
+                    foreach($response['data'][$index] as $k => $v) {
+                        $source['content'][$key] .= $v;
+                    }
+                    $index++;
+                } elseif (trim($source['content'][$key]) == '') {
                     if (trim($response['data'][$index]) != '') {
                         $source['content'][$key] = '';
                     } else {
