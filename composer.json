@@ -26,7 +26,7 @@
     "require": {
         "craftcms/cms": "^4.4.15",
         "guzzlehttp/guzzle": "^7.0",
-        "composer/composer": "^2.1.9",
+        "composer/composer": "^2.7.0",
         "google/cloud-translate": "^1.15",
 		"spatie/guzzle-rate-limiter-middleware": "^2.0"
     },
@@ -45,5 +45,11 @@
             "translationPluginForCraftService": "acclaro\\translations\\services\\TranslationsService"
         },
         "class": "acclaro\\translations\\Translations"
+    },
+    "config": {
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "craftcms/plugin-installer": true
+        }
     }
 }
