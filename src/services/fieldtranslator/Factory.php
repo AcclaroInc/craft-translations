@@ -56,7 +56,6 @@ class Factory
         Entries::class          => EntriesFieldTranslator::class,
         Matrix::class           => MatrixFieldTranslator::class,
         MultiSelect::class      => MultiSelectFieldTranslator::class,
-        LinkField::class        => LinkFieldTranslator::class,
         TypedLinkField::class   => TypedLinkFieldTranslator::class,
         LinkitField::class      => LinkitFieldTranslator::class,
         NeoField::class         => NeoFieldTranslator::class,

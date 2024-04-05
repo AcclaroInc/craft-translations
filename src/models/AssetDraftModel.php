@@ -10,14 +10,12 @@
 
 namespace acclaro\translations\models;
 
-use Craft;
 use craft\elements\Asset;
 use craft\behaviors\DraftBehavior;
 use craft\validators\SiteIdValidator;
 use acclaro\translations\Translations;
 use craft\behaviors\FieldLayoutBehavior;
 use craft\behaviors\CustomFieldBehavior;
-use acclaro\translations\records\AssetDraftRecord;
 
 
 /**
@@ -63,40 +61,6 @@ class AssetDraftModel extends Asset
     public function getHandle()
     {
         return $this->getAsset()->handle;
-    }
-
-    public static function populateModel($attributes)
-    {
-        if ($attributes instanceof AssetDraftRecord) {
-            $attributes = $attributes->getAttributes();
-        }
-
-        $assetData = json_decode($attributes['data'], true);
-        $fieldContent = isset($assetData['fields']) ? $assetData['fields'] : null;
-        // $attributes['draftId'] = $attributes['id'];
-        $attributes['id'] = $attributes['assetId'];
-
-        $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'assetId')));
-
-        $attributes = array_merge($attributes, $assetData);
-
-        $draft = parent::setAttributes($attributes);
-
-        if ($fieldContent) {
-            $post = array();
-
-            foreach ($fieldContent as $fieldId => $fieldValue) {
-                $field = Craft::$app->fields->getFieldById($fieldId);
-
-                if ($field) {
-                    $post[$field->handle] = $fieldValue;
-                }
-            }
-
-            $draft->setFieldValues($post);
-        }
-
-        return $draft;
     }
 
     public function getAsset()
