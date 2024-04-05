@@ -11,13 +11,12 @@
 namespace acclaro\translations\services\fieldtranslator;
 
 use craft\base\Element;
-use craft\elements\Tag;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
 class TagFieldTranslator extends TaxonomyFieldTranslator
 {
-    public function translateRelated(ElementTranslator $elementTranslator, Element $element, Tag $existingTag, $sourceSite, $targetSite, $fieldData)
+    public function translateRelated(ElementTranslator $elementTranslator, Element $element, $existingTag, $sourceSite, $targetSite, $fieldData)
     {
         $tag = Translations::$plugin->tagRepository->getTagById($existingTag->id, $targetSite);
 
