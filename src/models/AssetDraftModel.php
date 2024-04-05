@@ -15,7 +15,6 @@ use craft\behaviors\DraftBehavior;
 use craft\validators\SiteIdValidator;
 use acclaro\translations\Translations;
 use craft\behaviors\FieldLayoutBehavior;
-use craft\behaviors\CustomFieldBehavior;
 
 
 /**
@@ -97,10 +96,6 @@ class AssetDraftModel extends Asset
     public function behaviors(): array
     {
         $behaviors = parent::behaviors();
-        $behaviors['customFields'] = [
-            'class' => CustomFieldBehavior::class,
-            'hasMethods' => false,
-        ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
             'elementType' => Asset::class,

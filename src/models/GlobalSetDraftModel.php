@@ -14,7 +14,6 @@ use craft\elements\GlobalSet;
 use craft\behaviors\DraftBehavior;
 use craft\validators\SiteIdValidator;
 use craft\validators\DateTimeValidator;
-use craft\behaviors\CustomFieldBehavior;
 use craft\behaviors\FieldLayoutBehavior;
 
 use acclaro\translations\Translations;
@@ -105,10 +104,6 @@ class GlobalSetDraftModel extends GlobalSet
     public function behaviors(): array
     {
         $behaviors = parent::behaviors();
-        $behaviors['customFields'] = [
-            'class' => CustomFieldBehavior::class,
-            'hasMethods' => false,
-        ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
             'elementType' => GlobalSet::class,

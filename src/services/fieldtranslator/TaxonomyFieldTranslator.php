@@ -105,9 +105,4 @@ class TaxonomyFieldTranslator extends GenericFieldTranslator
 
         return $wordCount;
     }
-
-    private function translateRelated($elementTranslator, $element, $related, $sourceSite, $targetSite, $fieldData)
-    {
-        return;
-    }
 }
