@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.4.0 - 2024-04-15
+
+### Updated
+- The plugin code to satisfy craft 5 upgrade.
+
+### Chore
+- Code refactoring and cleanup.
+
 ## 3.3.6 - 2024-02-23
 
 ### Updated
