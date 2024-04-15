@@ -56,7 +56,6 @@ class Factory
         Entries::class          => EntriesFieldTranslator::class,
         Matrix::class           => MatrixFieldTranslator::class,
         MultiSelect::class      => MultiSelectFieldTranslator::class,
-        LinkField::class        => LinkFieldTranslator::class,
         TypedLinkField::class   => TypedLinkFieldTranslator::class,
         LinkitField::class      => LinkitFieldTranslator::class,
         NeoField::class         => NeoFieldTranslator::class,
@@ -91,17 +90,7 @@ class Factory
         if (array_key_exists($class, $this->nativeFieldTypes)) {
             $translatorClass = $this->nativeFieldTypes[$class];
 
-            switch ($translatorClass) {
-                case MultiSelectFieldTranslator::class:
-                    return new MultiSelectFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
-                case SingleOptionFieldTranslator::class:
-                    return new SingleOptionFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
-                case TagFieldTranslator::class:
-                    return new TagFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->tagRepository, Translations::$plugin->elementCloner);
-                case CategoryFieldTranslator::class:
-                    return new CategoryFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->categoryRepository);
-            }
-            return new $translatorClass(Craft::$app, Translations::$plugin->wordCounter);
+            return new $translatorClass();
         }
 
         return null;

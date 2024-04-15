@@ -13,6 +13,8 @@ namespace acclaro\translations\services\fieldtranslator;
 use craft\base\Field;
 use craft\base\Element;
 use acclaro\translations\services\ElementTranslator;
+use craft\elements\Category;
+use craft\elements\Tag;
 
 class TaxonomyFieldTranslator extends GenericFieldTranslator
 {
@@ -104,5 +106,12 @@ class TaxonomyFieldTranslator extends GenericFieldTranslator
         }
 
         return $wordCount;
+    }
+
+    /**
+     * To be overridden by child class
+     */
+    protected function translateRelated(ElementTranslator $elementTranslator, Element $element, Tag|Category $category, $sourceSite, $targetSite, $fieldData) {
+        // 
     }
 }

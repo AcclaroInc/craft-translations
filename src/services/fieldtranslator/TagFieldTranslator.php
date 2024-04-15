@@ -10,24 +10,15 @@
 
 namespace acclaro\translations\services\fieldtranslator;
 
-use craft\base\Field;
 use craft\base\Element;
-use craft\elements\Tag;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
 class TagFieldTranslator extends TaxonomyFieldTranslator
 {
-    public function translateRelated(ElementTranslator $elementTranslator, Element $element, Tag $existingTag, $sourceSite, $targetSite, $fieldData)
+    public function translateRelated(ElementTranslator $elementTranslator, Element $element, $existingTag, $sourceSite, $targetSite, $fieldData)
     {
-        $translatedTag = Translations::$plugin->tagRepository->getTagById($existingTag->id, $targetSite);
-        
-        if ($translatedTag) {
-            $tag = $translatedTag;
-        } else {
-            // Doesn't feels this part runs as tags are propagated to all target locales if localised
-            $tag = Translations::$plugin->elementCloner->cloneElement($existingTag);
-        }
+        $tag = Translations::$plugin->tagRepository->getTagById($existingTag->id, $targetSite);
 
         $tag->siteId = $targetSite;
 

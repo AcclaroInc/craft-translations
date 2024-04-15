@@ -43,10 +43,11 @@ class ActivityLogRepository
             $activityLog->created = date('Y-m-d H:i:s');
             $activityLog->targetClass = get_class($target);
 
-            $this->saveActivityLog($activityLog);
+            return $this->saveActivityLog($activityLog);
         } catch (Exception $e) {
             // Handle the exception (log or rethrow)
             Craft::error('Error creating ActivityLog: ' . $e->getMessage(), __METHOD__);
+            return false;
         }
     }
 
