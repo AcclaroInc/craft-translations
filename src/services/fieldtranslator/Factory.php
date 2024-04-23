@@ -35,10 +35,11 @@ use verbb\vizy\fields\VizyField;
 use newism\fields\fields\Address;
 use newism\fields\fields\Telephone;
 use newism\fields\fields\PersonName;
-use typedlinkfield\fields\LinkField;
+use lenz\linkfield\fields\LinkField;
 use acclaro\translations\Translations;
 use craft\redactor\Field as RedactorField;
-use fruitstudios\linkit\fields\LinkitField;
+use craft\ckeditor\Field as CkEditorField;
+use presseddigital\linkit\fields\LinkitField;
 use luwes\codemirror\fields\CodeMirrorField;
 use nystudio107\seomatic\fields\SeoSettings;
 
@@ -75,7 +76,8 @@ class Factory
         Telephone::class        => NsmFieldsTranslator::class,
         Gender::class           => NsmFieldsTranslator::class,
         Embed::class            => NsmFieldsTranslator::class,
-        VizyField::class  		=> VizyFieldTranslator::class
+        VizyField::class  	    => VizyFieldTranslator::class,
+        CkEditorField::class    => GenericFieldTranslator::class
     );
 
     public function makeTranslator(Field $field)

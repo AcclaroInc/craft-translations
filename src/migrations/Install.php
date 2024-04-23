@@ -149,13 +149,12 @@ class Install extends Migration
                     'requestedDueDate'          => $this->dateTime(),
                     'orderDueDate'              => $this->dateTime(),
                     'comments'                  => $this->text(),
-                    'activityLog'               => $this->longText(),
                     'dateOrdered'               => $this->dateTime(),
                     'serviceOrderId'            => $this->string()->defaultValue(''),
                     'entriesCount'              => $this->integer()->notNull(),
                     'wordCount'                 => $this->integer()->notNull(),
                     'elementIds'                => $this->string(8160)->notNull()->defaultValue(''),
-                    'tags'                      => $this->string(8160)->notNull()->defaultValue(''),
+                    'tags'                      => $this->string(1020)->notNull()->defaultValue(''),
                     'trackChanges'              => $this->integer()->defaultValue(0),
 					'includeTmFiles'            => $this->integer()->defaultValue(0),
 					'trackTargetChanges'        => $this->integer()->defaultValue(0),
@@ -241,6 +240,22 @@ class Install extends Migration
                     'dateCreated'   => $this->dateTime()->notNull(),
                     'dateUpdated'   => $this->dateTime()->notNull(),
                     'uid'           => $this->uid()
+                ]
+            );
+        }
+
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_ACTIVITY_LOG);
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                Constants::TABLE_ACTIVITY_LOG,
+                [
+                    'id'            => $this->primaryKey(),
+                    'message'       => $this->text(),
+                    'targetclass'   => $this->string()->notNull(),
+                    'targetId'      => $this->integer()->notNull(),
+                    'created'       => $this->dateTime()->notNull(),
+                    'actions'       => $this->text()
                 ]
             );
         }

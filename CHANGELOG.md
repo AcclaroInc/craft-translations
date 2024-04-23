@@ -4,11 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.3.6 - 2024-02-23
+
+### Updated
+- Required minimum composer version to `2.7.0` for preventing vulnerablities.
+
+## 3.3.5 - 2024-01-29
+
+### Fixed
+- An issue where linkit fields were not added to source files for translation. ([AcclaroInc#523](https://github.com/AcclaroInc/craft-translations/pull/492))
+
+## 3.3.4 - 2024-01-24
+
+### Fixed
+- An issue where applied files status reverting back to `ready for review` when a callback is received. ([AcclaroInc#520](https://github.com/AcclaroInc/craft-translations/pull/487))
+
+### Added
+- New activity logs table for better log management. ([AcclaroInc#521](https://github.com/AcclaroInc/craft-translations/pull/488))
+- Support for CKEditor field. ([AcclaroInc#490](https://github.com/AcclaroInc/craft-translations/pull/491))
+
+## 3.3.3 - 2023-12-14
+
+### Fixed
+- An issue where plugin installation fails due to max row size database error.([AcclaroInc#432](https://github.com/AcclaroInc/craft-translations/issues/432))
+
 ## 3.3.2 - 2023-11-06
 
 ### Fixed
 - An issue where order comments were not sent to acclaro.([AcclaroInc#482](https://github.com/AcclaroInc/craft-translations/pull/482))
-
 
 ## 3.3.1 - 2023-10-05
 

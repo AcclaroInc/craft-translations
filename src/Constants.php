@@ -25,7 +25,7 @@ class Constants
         self::TRANSLATOR_GOOGLE  => 'Google',
         self::TRANSLATOR_CHATGPT => 'Chat-GPT3.0'
     ];
-    
+
     const TRANSLATOR_LABELS = [
         self::TRANSLATOR_ACCLARO => 'Acclaro API Token<p class="fs-12">Don\'t have an Acclaro API key? <a target="_blank" href="https://info.acclaro.com/my-acclaro-registration">Register here</a></p>',
         self::TRANSLATOR_GOOGLE => 'Google API Token<p class="fs-12">Don\'t have a Google API key? <a target="_blank" href="https://cloud.google.com/translate/">Register here</a></p>',
@@ -173,6 +173,7 @@ class Constants
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
     const TABLE_COMMERCE_DRAFT      = '{{%translations_commercedrafts}}';
+    const TABLE_ACTIVITY_LOG        = '{{%translations_activitylogs}}';
 
     // Job Descriptions
     const JOB_ACCLARO_UPDATING_REVIEW_URL   = 'Updating Acclaro review urls';
@@ -283,10 +284,8 @@ class Constants
         'craft\fields\MultiSelect',
         'craft\fields\RadioButtons',
         'benf\neo\Field',
-		'verbb\vizy\fields\VizyField',
-        'typedlinkfield\fields\LinkField',
+        'verbb\vizy\fields\VizyField',
         'craft\redactor\Field',
-        'fruitstudios\linkit\fields\LinkitField',
         'presseddigital\linkit\fields\LinkitField',
         'luwes\codemirror\fields\CodeMirrorField',
         'verbb\supertable\fields\SuperTableField',
@@ -306,6 +305,7 @@ class Constants
         'amici\SuperDynamicFields\fields\SueprDynamicRadioField',
         'amici\SuperDynamicFields\fields\SueprDynamicCheckboxesField',
         'amici\SuperDynamicFields\fields\SueprDynamicMultiSelectField',
+        'craft\ckeditor\Field',
     ];
 
     const UNRELATED_FIELD_TYPES = [

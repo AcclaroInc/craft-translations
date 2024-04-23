@@ -116,8 +116,11 @@ class BaseController extends Controller
             echo 'Starting file sync' . PHP_EOL;
 
             foreach($order->getFiles() as $file) {
-                $translationService->updateFile($order, $file);
-                Translations::$plugin->fileRepository->saveFile($file);
+                // Only process the file is not already done
+                if ($file->isNew() || $file->isInProgress()) {
+                    $translationService->updateFile($order, $file);
+                    Translations::$plugin->fileRepository->saveFile($file);
+                }
             }
 
             echo 'File sync successful' . PHP_EOL;
@@ -178,16 +181,20 @@ class BaseController extends Controller
             echo 'Translation service found'.PHP_EOL;
         }
 
-        $translationService->updateFile($order, $file);
-
         echo 'Updating file'.PHP_EOL;
+        // Skip if file already has target content
+        if ($file->isNew() || $file->isInProgress()) {
+            $translationService->updateFile($order, $file);
 
-        $success = Translations::$plugin->fileRepository->saveFile($file);
+            $success = Translations::$plugin->fileRepository->saveFile($file);
 
-        if (!$success) {
-            Craft::$app->end('Couldn’t save the file');
+            if (!$success) {
+                Craft::$app->end('Couldn’t save the file');
+            } else {
+                echo 'File saved'.PHP_EOL;
+            }
         } else {
-            echo 'Saving file'.PHP_EOL;
+            echo 'File skipped'.PHP_EOL;
         }
 
         Craft::$app->end('OK');

@@ -135,8 +135,8 @@
 			{% if order.isPending() and not orderId %}
                 <li> {{ 'Pending submission'|t }} </li>
 			{% else %}
-				{% for log in order.activityLogArray %}
-                    <li>{{ log.date }} &ndash; {{ log.message }}</li>
+				{% for log in order.activityLogs %}
+                    <li>{{ log.created }} &ndash; {{ log.message }}</li>
 				{% endfor %}
 			{% endif %}
 		</ul>

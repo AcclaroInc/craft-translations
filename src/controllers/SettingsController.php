@@ -21,6 +21,7 @@ use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\services\job\DeleteDrafts;
+use craft\web\Response;
 
 /**
  * @author    Acclaro
@@ -304,5 +305,52 @@ class SettingsController extends BaseController
         } catch (\Throwable $th) {
             $this->setError($th->getMessage());
         }
+    }
+
+    public function actionDownloadActivityLogs()
+    {
+        $this->requireLogin();
+        $this->requirePostRequest();
+
+        if (!Translations::$plugin->userRepository->userHasAccess('translations:settings')) {
+            return $this->asFailure($this->getErrorMessage("User not allowed to perform this action."));
+        }
+
+        $activityLogs = Translations::$plugin->activityLogRepository->getActivityLogs();
+
+        // Check if there are any activity logs
+        if (empty($activityLogs)) {
+            // Handle the case when there are no activity logs, show a message
+            return $this->asFailure($this->getErrorMessage('No activity logs available.'));
+        }
+
+        // Start output buffering
+        ob_start();
+
+        $output = fopen('php://output', 'w');
+
+        // Write CSV header
+        $header = array_keys($activityLogs[0]->attributes);
+        fputcsv($output, $header);
+
+        // Write CSV data
+        foreach ($activityLogs as $activityLog) {
+            fputcsv($output, $activityLog->attributes);
+        }
+
+        fclose($output);
+
+        // Get the buffer contents and clean the buffer
+        $content = ob_get_clean();
+
+        // Set up the response
+        $response = Craft::$app->getResponse();
+        $response->format = Response::FORMAT_RAW;
+        $response->headers->add('Content-Type', 'text/csv');
+        $response->headers->add('Content-Disposition', 'attachment; filename="activity-logs'.time().'.csv"');
+        $response->content = $content;
+
+        // Return the response
+        return $response;
     }
 }
