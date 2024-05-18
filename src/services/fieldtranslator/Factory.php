@@ -35,8 +35,6 @@ use verbb\vizy\fields\VizyField;
 use newism\fields\fields\Address;
 use newism\fields\fields\Telephone;
 use newism\fields\fields\PersonName;
-use lenz\linkfield\fields\LinkField;
-use acclaro\translations\Translations;
 use craft\redactor\Field as RedactorField;
 use craft\ckeditor\Field as CkEditorField;
 use presseddigital\linkit\fields\LinkitField;
@@ -45,6 +43,7 @@ use nystudio107\seomatic\fields\SeoSettings;
 
 use verbb\supertable\fields\SuperTableField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
+use verbb\hyper\fields\HyperField as HyperLinkField;
 
 class Factory
 {
@@ -57,6 +56,7 @@ class Factory
         Matrix::class           => MatrixFieldTranslator::class,
         MultiSelect::class      => MultiSelectFieldTranslator::class,
         TypedLinkField::class   => TypedLinkFieldTranslator::class,
+        HyperLinkField::class   => HyperLinkFieldTranslator::class,
         LinkitField::class      => LinkitFieldTranslator::class,
         NeoField::class         => NeoFieldTranslator::class,
         Number::class           => GenericFieldTranslator::class,

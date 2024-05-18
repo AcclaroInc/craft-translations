@@ -283,6 +283,7 @@ class Constants
         'verbb\vizy\fields\VizyField',
         'craft\redactor\Field',
         'presseddigital\linkit\fields\LinkitField',
+        'verbb\hyper\fields\HyperField',
         'luwes\codemirror\fields\CodeMirrorField',
         'verbb\supertable\fields\SuperTableField',
         'nystudio107\seomatic\fields\SeoSettings',
