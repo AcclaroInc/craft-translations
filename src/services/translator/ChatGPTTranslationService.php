@@ -96,19 +96,21 @@ class ChatGPTTranslationService implements TranslationServiceInterface
                     break;
                 }
                 if (is_countable($response['data'][$index])) {
+                    $tempValue = "";
                     foreach($response['data'][$index] as $k => $v) {
-                        $source['content'][$key] .= $v;
+                        $tempValue .= $v;
                     }
+                    $source['content'][$key] = $this->fixResponse($tempValue);
                     $index++;
                 } elseif (trim($source['content'][$key]) == '') {
                     if (trim($response['data'][$index]) != '') {
                         $source['content'][$key] = '';
                     } else {
-                        $source['content'][$key] = $response['data'][$index];
+                        $source['content'][$key] = $this->fixResponse($response['data'][$index]);
                         $index++;
                     }
                 } else {
-                    $source['content'][$key] = $response['data'][$index];
+                    $source['content'][$key] = $this->fixResponse($response['data'][$index]);
                     $index++;
                 }
 
@@ -197,6 +199,27 @@ class ChatGPTTranslationService implements TranslationServiceInterface
     private function fixArray($data) {
         return is_array($data) ? $data : [$data];
     }
+
+
+    function fixResponse($resp) {
+        $tempStr = $resp . "";
+        $tempStr = str_replace( PHP_EOL, "", $tempStr);
+        $tempStr = str_replace( "\n", "", $tempStr);
+        if (str_contains($tempStr, "=>") || str_contains($tempStr, "->") || str_contains($tempStr, "Translation:") || str_contains($tempStr, "Translate to:")) {
+            if (str_contains($tempStr, "=>")) {
+                $tempStrings = explode("=>", $tempStr);
+            } elseif (str_contains($tempStr, "->")) {
+                $tempStrings = explode("->", $tempStr);
+            } elseif (str_contains($tempStr, "Translation:")) {
+                $tempStrings = explode("Translation:", $tempStr);
+            } else {
+                $tempStrings = explode("Translate to:", $tempStr);
+            }
+            $tempStr = trim(str_replace('"', '', array_pop($tempStrings)));
+        } 
+        return $tempStr;
+    }
+
 
     /**
      * Translates $data array in case the length of array is more than 100 then chunks it down to make request
