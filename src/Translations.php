@@ -42,6 +42,7 @@ use acclaro\translations\assetbundles\Assets;
 use acclaro\translations\assetbundles\CommerceAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
+use acclaro\translations\assetbundles\NavigationAssets;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
 
@@ -403,6 +404,10 @@ class Translations extends Plugin
             $this->_includeCommerceResources();
         }
 
+        if (preg_match('#^navigation/navs/build/([^/]+)$#', $path, $match)) {
+            $this->_includeNavigationResources($match[1]);
+        }
+
         if (preg_match('#^categories(/|$)#', $path, $match)) {
             $this->_includeCategoryResources();
         }
@@ -481,6 +486,27 @@ class Translations extends Plugin
         self::$view->registerAssetBundle(CommerceAssets::class);
 
         self::$view->registerJs("$(function(){ Craft.Translations.AddTranslationsToCommerce.init({$data}); });");
+    }
+
+    /**
+     * Register translations functionality into verbb navigation
+     */
+    private function _includeNavigationResources($navId)
+    {
+        $orders = array();
+
+        foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
+            $orders[] = array(
+                'id' => $order->id,
+                'title' => $order->title,
+            );
+        }
+
+        $data = json_encode($orders);
+
+        self::$view->registerAssetBundle(NavigationAssets::class);
+
+        self::$view->registerJs("$(function(){ Craft.Translations.AddTranslationsToNavigation.init({$data}, {$navId}); });");
     }
 
     private function _includeEntryResources()

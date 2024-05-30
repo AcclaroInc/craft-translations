@@ -57,6 +57,7 @@ class Constants
     const CLASS_ENTRY       = 'craft\\elements\\Entry';
 
     const CLASS_COMMERCE_PRODUCT    = 'craft\commerce\elements\Product';
+    const CLASS_NAVIGATION          = 'verbb\navigation\elements\Node';
 
     // Urls
     const URL_ORDER_DETAIL          = 'translations/orders/detail/';
@@ -170,6 +171,7 @@ class Constants
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
     const TABLE_COMMERCE_DRAFT      = '{{%translations_commercedrafts}}';
     const TABLE_ACTIVITY_LOG        = '{{%translations_activitylogs}}';
+    const TABLE_NAVIGATION_DRAFT    = '{{%translations_navigationdrafts}}';
 
     // Job Descriptions
     const JOB_ACCLARO_UPDATING_REVIEW_URL   = 'Updating Acclaro review urls';
@@ -185,6 +187,7 @@ class Constants
         'craft\fields\Matrix',
         'craft\fields\Assets',
 		'verbb\vizy\fields\VizyField',
+        'verbb\navigation\fields\NavigationField',
         'verbb\supertable\fields\SuperTableField',
         'benf\neo\Field'
     ];
@@ -285,6 +288,7 @@ class Constants
         'presseddigital\linkit\fields\LinkitField',
         'luwes\codemirror\fields\CodeMirrorField',
         'verbb\supertable\fields\SuperTableField',
+        'verbb\navigation\fields\NavigationField',
         'nystudio107\seomatic\fields\SeoSettings',
         'lenz\linkfield\fields\LinkField',
         'newism\fields\fields\Telephone',

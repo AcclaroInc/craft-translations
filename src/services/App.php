@@ -92,6 +92,11 @@ class App extends Component
     public $globalSetDraftRepository;
 
     /**
+     * @var repository\NavigationDraftRepository
+     */
+    public $navigationDraftRepository;
+
+    /**
      * @var repository\SiteRepository
      */
     public $siteRepository;
@@ -203,5 +208,6 @@ class App extends Component
         $this->orderEdit = new OrderEdit();
         $this->logHelper = new LogHelper();
         $this->activityLogRepository = new repository\ActivityLogRepository();
+        $this->navigationDraftRepository = new repository\NavigationDraftRepository();
     }
 }

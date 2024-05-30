@@ -106,6 +106,8 @@
                                     {{ 'Asset' }}
                                 {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_COMMERCE_PRODUCT') %}
                                     {{ element.type }}
+                                {% elseif element.className == constant('acclaro\\translations\\Constants::CLASS_NAVIGATION') %}
+                                    {{ 'Navigation' }}
                                 {% else %}
                                     {{ element.section.name }}
                                 {% endif %}
