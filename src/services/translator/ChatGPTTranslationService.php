@@ -212,6 +212,8 @@ class ChatGPTTranslationService implements TranslationServiceInterface
                 $tempStrings = explode("->", $tempStr);
             } elseif (str_contains($tempStr, "Translation:")) {
                 $tempStrings = explode("Translation:", $tempStr);
+            } elseif (str_contains($tempStr, "Translate:")) {
+                $tempStrings = explode("Translate:", $tempStr);
             } else {
                 $tempStrings = explode("Translate to:", $tempStr);
             }
