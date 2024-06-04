@@ -45,6 +45,7 @@ use nystudio107\seomatic\fields\SeoSettings;
 
 use verbb\supertable\fields\SuperTableField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
+use verbb\hyper\fields\HyperField as HyperField;
 
 class Factory
 {
@@ -59,6 +60,7 @@ class Factory
         LinkField::class        => LinkFieldTranslator::class,
         TypedLinkField::class   => TypedLinkFieldTranslator::class,
         LinkitField::class      => LinkitFieldTranslator::class,
+        HyperField::class       => HyperFieldTranslator::class,
         NeoField::class         => NeoFieldTranslator::class,
         Number::class           => GenericFieldTranslator::class,
         PlainText::class        => GenericFieldTranslator::class,
