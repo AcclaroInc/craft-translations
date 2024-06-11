@@ -252,7 +252,7 @@ class Install extends Migration
                 [
                     'id'            => $this->primaryKey(),
                     'message'       => $this->text(),
-                    'targetclass'   => $this->string()->notNull(),
+                    'targetClass'   => $this->string()->notNull(),
                     'targetId'      => $this->integer()->notNull(),
                     'created'       => $this->dateTime()->notNull(),
                     'actions'       => $this->text()
