@@ -1,6 +1,6 @@
 <?php
 /**
- * Translations for Craft plugin for Craft CMS 3.x
+ * Translations for Craft plugin for Craft CMS 4.x
  *
  * Translations for Craft eliminates error prone and costly copy/paste workflows for launching human translated Craft CMS web content.
  *
@@ -15,26 +15,24 @@ use craft\base\Element;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
-class LinkFieldTranslator extends GenericFieldTranslator
+class HyperLinkFieldTranslator extends GenericFieldTranslator
 {
     /**
      * {@inheritdoc}
      */
     public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field)
-    { 
-
+    {
         $source = array();
 
         $fieldHandle = $field->handle;
-        
+
         $fieldData = $element->getFieldValue($fieldHandle);
-        
+
         if($fieldData){
-            
             foreach($fieldData as $key => $value)
-            { 
+            {
                 $k = sprintf('%s.%s.%s', $fieldHandle, $field->id, $key);
-                $source[$k] = $value;
+                $source[$k] = $value->linkText;
             }
         }
 
@@ -45,7 +43,7 @@ class LinkFieldTranslator extends GenericFieldTranslator
      * {@inheritdoc}
      */
     public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field)
-    {        
+    {
         $source = array();
 
         $fieldHandle = $field->handle;
@@ -67,14 +65,11 @@ class LinkFieldTranslator extends GenericFieldTranslator
      * {@inheritdoc} 
      */
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
-    {  
-
+    {
         $post = array();
-        
-        $postRow = array();
-        
+
         $fieldHandle = $field->handle;
-        
+
         $post = $this->toPostArray($elementTranslator, $element, $field);
 
         if( $fieldData )
@@ -87,7 +82,11 @@ class LinkFieldTranslator extends GenericFieldTranslator
                     { 
                         if (isset($row[$key]))
                         {
-                            $post[$fieldHandle][$key] = $row[$key];
+                            $value['linkText'] = $row[$key];
+                            if (isset($value['linkSiteId'])) {
+                                $value['linkSiteId'] = $targetSite;
+                            }
+                            $post[$fieldHandle][$key] = $value;
                         }
                     }
                 }
@@ -113,11 +112,9 @@ class LinkFieldTranslator extends GenericFieldTranslator
 
         foreach ($data as $key => $value) 
         {
-            if($key === 'customText' || $key === 'ariaLabel' || $key === 'title')
-            {
-                $wordCount += Translations::$plugin->wordCounter->getWordCount(strip_tags($value));
-            }
+            $wordCount += Translations::$plugin->wordCounter->getWordCount(strip_tags($value->linkText));
         }
+
         return $wordCount;
     }
 }
