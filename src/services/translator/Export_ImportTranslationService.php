@@ -18,6 +18,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
 use craft\commerce\elements\Product;
+use verbb\navigation\elements\Node as Navigation;
 
 class Export_ImportTranslationService implements TranslationServiceInterface
 {
@@ -114,6 +115,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
             case $element instanceof Product:
                 $elementRepository = Translations::$plugin->commerceRepository;
                 break;
+            case $element instanceof Navigation:
+                $elementRepository = Translations::$plugin->navigationDraftRepository;
+                break;
             default:
                 $elementRepository = Translations::$plugin->draftRepository;
         }
@@ -178,6 +182,32 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->siteId = $targetSite;
 
                 $res = Translations::$plugin->commerceRepository->saveDraft($draft, $post);
+                if ($res !== true) {
+                    if (is_array($res)) {
+                        $errorMessage = '';
+                        foreach ($res as $r) {
+                            $errorMessage .= implode('; ', $r);
+                        }
+                        $order->logActivity(
+                            Translations::$plugin->translator->translate('app', 'Error saving drafts content. Error: ' . $errorMessage)
+                        );
+                    } else {
+                        $order->logActivity(
+                            sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML for entry {%s}'), $element->title)
+                        );
+                    }
+
+                    return false;
+                }
+                break;
+            case $draft instanceof Navigation:
+                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
+                $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
+                /** Use source entry as first argument as the draft in target site might have different block structure as compared to source leading into missing some blocks */
+                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+                $draft->setFieldValues($post);
+                $draft->siteId = $targetSite;
+                $res = Translations::$plugin->navigationDraftRepository->saveDraft($draft);
                 if ($res !== true) {
                     if (is_array($res)) {
                         $errorMessage = '';
