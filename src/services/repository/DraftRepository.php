@@ -91,6 +91,14 @@ class DraftRepository
                         $commerceRepository->deleteDraft($draft);
                     }
                     break;
+                case Node::class:
+                    $navRepository = Translations::$plugin->navigationDraftRepository;
+                    $success = $navRepository->publishDraft($draft);
+
+                    if ($success) {
+                        $navRepository->deleteDraft($draft);
+                    }
+                    break;
                 default:
                     $success = $this->applyTranslationDraft($file->id, $file, $draft);
             }

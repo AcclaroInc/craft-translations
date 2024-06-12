@@ -69,7 +69,6 @@ class NavigationDraftRepository
                 }
 
                 $navDraft->setFieldValues($post);
-                Craft::$app->getElements()->saveElement($navDraft);
             }
         }
 
@@ -85,7 +84,7 @@ class NavigationDraftRepository
      */
     public function getNavById($id, $site = null)
     {
-        return Navigation::$plugin->getNavs()->getNavById($id, $site);
+        return Navigation::getInstance()->getNodes()->getNodesForNav($id, $site)[0];
     }
 
     /**
@@ -97,7 +96,7 @@ class NavigationDraftRepository
     public function getDraftRecord(Node $draft)
     {
         if (isset($draft->draftId)) {
-            $record = NavigationDraftRecord::findOne($draft->id);
+            $record = NavigationDraftRecord::findOne($draft->draftId);
 
             if (!$record) {
                 throw new Exception(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draft->draftId)));
@@ -113,7 +112,7 @@ class NavigationDraftRepository
         return $record;
     }
 
-    public function saveDraft(Node $draft)
+    public function saveDraft(Node &$draft)
     {
         $record = $this->getDraftRecord($draft);
         if (!$draft->name && $draft->id) {
@@ -121,7 +120,7 @@ class NavigationDraftRepository
                 ->from('translations_navigationdrafts')
                 ->where(
                     array('and', 'navId = :navId', 'site = :site'),
-                    array(':navId' => $draft->id, ':site' => $draft->site)
+                    array(':navId' => $draft->navId, ':site' => $draft->site)
                 )
                 ->count('id');
 
@@ -178,6 +177,7 @@ class NavigationDraftRepository
         }
 
         $product->title = $draft->title;
+        $product->setFieldValues($post);
 
         $success = Craft::$app->elements->saveElement($product, false);
 

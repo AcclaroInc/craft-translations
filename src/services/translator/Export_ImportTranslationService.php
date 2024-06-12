@@ -205,8 +205,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
                 /** Use source entry as first argument as the draft in target site might have different block structure as compared to source leading into missing some blocks */
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
-                \Craft::error($post, "bhu123-post");
-                break;
                 $draft->setFieldValues($post);
                 $draft->siteId = $targetSite;
                 $res = Translations::$plugin->navigationDraftRepository->saveDraft($draft);

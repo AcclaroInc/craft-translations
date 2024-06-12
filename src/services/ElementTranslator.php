@@ -149,6 +149,10 @@ class ElementTranslator
                         $container[$key] = array();
                     }
 
+                    if (!is_array($container[$key])) {
+                        $container[$key] = array();
+                    }
+
                     $container =& $container[$key];
                 }
 

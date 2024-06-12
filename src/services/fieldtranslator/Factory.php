@@ -45,6 +45,7 @@ use nystudio107\seomatic\fields\SeoSettings;
 
 use verbb\supertable\fields\SuperTableField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
+use verbb\navigation\fields\NavigationField;
 
 class Factory
 {
@@ -76,6 +77,7 @@ class Factory
         Gender::class           => NsmFieldsTranslator::class,
         Embed::class            => NsmFieldsTranslator::class,
         VizyField::class  	    => VizyFieldTranslator::class,
+        NavigationField::class  => NavigationFieldTranslator::class,
         CkEditorField::class    => GenericFieldTranslator::class
     );
 
