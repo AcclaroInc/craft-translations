@@ -474,6 +474,6 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
     public function updateIOFile(Order $order, FileModel $file)
     {
-        return (new Export_ImportTranslationService([]))->updateIOFile($order, $file);
+        return (new Export_ImportTranslationService())->updateIOFile($order, $file);
     }
 }

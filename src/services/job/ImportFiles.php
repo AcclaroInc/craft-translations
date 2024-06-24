@@ -468,7 +468,7 @@ class ImportFiles extends BaseJob
             if (!$dom->loadXML( $xmlSource )) {
                 $errors = $this->reportXmlErrors();
                 if ($errors) {
-                    $this->orderLog(sprintf("We found errors on source xml : ", $errors));
+                    $this->orderLog("We found errors on source xml : " . sprintf($errors));
                     return true;
                 }
             }

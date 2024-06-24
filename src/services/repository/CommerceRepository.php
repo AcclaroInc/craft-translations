@@ -152,7 +152,7 @@ class CommerceRepository
         foreach ($draft->getFieldLayout()->getCustomFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
-            if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
+            if ($field->getIsTranslatable($draft) || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
                 if (isset($content[$field->handle]) && $content[$field->handle] !== null) {
                     $data['fields'][$field->id] = $content[$field->handle];
                 }
@@ -162,7 +162,7 @@ class CommerceRepository
         $record->data = $data;
         $data = [];
         
-        if ($draft->getType()->hasVariants) {
+        if ($draft->getType()->maxVariants) {
             $variants = $draft->getVariants(true);
 
             foreach ($variants as $variant) {
@@ -171,7 +171,7 @@ class CommerceRepository
                     foreach ($variant->getFieldLayout()->getCustomFields() as $layoutField) {
                         $field = Craft::$app->fields->getFieldById($layoutField->id);
                         
-                        if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
+                        if ($field->getIsTranslatable($variant) || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
                             $fieldData = $content['variant'][$variant->id][$field->handle] ?? null;
                             
                             if ($fieldData) $data[$variant->id][$field->id] = $fieldData;

@@ -79,12 +79,8 @@ class AssetsFieldTranslator extends GenericFieldTranslator
 
         $title = '';
 
-        Craft::info("Field handle = ".$fieldHandle."\n\n", 'craft-translations');
-        Craft::info("ELement = ".json_encode($element)."\n\n", 'craft-translations');
-
         foreach ($blocks as $i => $block)
         {
-            Craft::info("Block id = ".$block->id."\n\n", 'craft-translations');
             try{
                 $i = $block->id;
 
@@ -92,7 +88,7 @@ class AssetsFieldTranslator extends GenericFieldTranslator
                     $title = $fieldData[$i]['title'];
                 }
 
-                $element = Craft::$app->assets->getAssetById($block->id, $sourceSite);
+                $element = Craft::$app->assets->getAssetById($block->id, $targetSite);
                 $assetFields = $element->getFieldValues();
 
                 $post = [];

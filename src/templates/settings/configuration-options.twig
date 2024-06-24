@@ -29,7 +29,6 @@
                 'chkDuplicateEntries': chkDuplicateEntries,
                 'trackSourceChanges': trackSourceChanges,
                 'trackTargetChanges': trackTargetChanges,
-                'preventSlugTranslation': preventSlugTranslation,
                 'apiLogging': apiLogging,
             },
         }) }}
@@ -59,14 +58,6 @@
             id: 'trackTargetChanges',
             name: 'trackTargetChanges',
             on: trackTargetChanges,
-        }) }}
-
-        {{ forms.lightswitchField({
-            label: "Prevent slug translations by default"|t('app'),
-            instructions: "Enables the \"Prevent slug translations\" settings by default on new submission."|t('app'),
-            id: 'preventSlugTranslation',
-            name: 'preventSlugTranslation',
-            on: preventSlugTranslation,
         }) }}
 
         <hr>
@@ -137,7 +128,7 @@
 
 {% js %}
     $( document ).ready(function() {
-        $('#chkDuplicateEntries, #preventSlugTranslation, #apiLogging, #trackSourceChanges, #trackTargetChanges').change(function() {
+        $('#chkDuplicateEntries, #apiLogging, #trackSourceChanges, #trackTargetChanges').change(function() {
             if (isChanged()) {
                 $('#save-configuration').addClass('submit');
             } else {

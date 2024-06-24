@@ -37,11 +37,6 @@ class App extends Component
     public $translator;
 
     /**
-     * @var ElementCloner
-     */
-    public $elementCloner;
-
-    /**
      * @var repository\TranslationRepository
      */
     public $translationRepository;
@@ -181,7 +176,6 @@ class App extends Component
         $this->urlHelper = new UrlHelper();
         $this->urlGenerator = new UrlGenerator();
         $this->translator = new Translator();
-        $this->elementCloner = new ElementCloner();
         $this->translationRepository = new repository\TranslationRepository();
         $this->categoryRepository = new repository\CategoryRepository();
         $this->assetDraftRepository = new repository\AssetDraftRepository();

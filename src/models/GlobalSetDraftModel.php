@@ -10,16 +10,13 @@
 
 namespace acclaro\translations\models;
 
-use Craft;
 use craft\elements\GlobalSet;
 use craft\behaviors\DraftBehavior;
 use craft\validators\SiteIdValidator;
 use craft\validators\DateTimeValidator;
-use craft\behaviors\CustomFieldBehavior;
 use craft\behaviors\FieldLayoutBehavior;
 
 use acclaro\translations\Translations;
-use acclaro\translations\records\GlobalSetDraftRecord;
 
 /**
  * @author    Acclaro
@@ -68,42 +65,9 @@ class GlobalSetDraftModel extends GlobalSet
         return $globalSet->getFieldLayout();
     }
 
-    public function getHandle()
+    public function getHandle(): ?string
     {
         return $this->getGlobalSet()->handle;
-    }
-
-    public static function populateModel($attributes)
-    {
-        if ($attributes instanceof GlobalSetDraftRecord) {
-            $attributes = $attributes->getAttributes();
-        }
-
-        $globalSetData = json_decode($attributes['data'], true);
-        $fieldContent = isset($globalSetData['fields']) ? $globalSetData['fields'] : null;
-        $attributes['id'] = $attributes['globalSetId'];
-
-        $attributes = array_diff_key($attributes, array_flip(array('data', 'fields', 'globalSetId')));
-
-        $attributes = array_merge($attributes, $globalSetData);
-
-        $draft = parent::setAttributes($attributes);
-
-        if ($fieldContent) {
-            $post = array();
-
-            foreach ($fieldContent as $fieldId => $fieldValue) {
-                $field = Craft::$app->fields->getFieldById($fieldId);
-
-                if ($field) {
-                    $post[$field->handle] = $fieldValue;
-                }
-            }
-
-            $draft->setFieldValues($post);
-        }
-
-        return $draft;
     }
 
     public function getGlobalSet()
@@ -140,10 +104,6 @@ class GlobalSetDraftModel extends GlobalSet
     public function behaviors(): array
     {
         $behaviors = parent::behaviors();
-        $behaviors['customFields'] = [
-            'class' => CustomFieldBehavior::class,
-            'hasMethods' => false,
-        ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
             'elementType' => GlobalSet::class,

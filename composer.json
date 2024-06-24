@@ -2,6 +2,7 @@
     "name": "acclaro/translations",
     "description": "Easily launch and manage multilingual Craft websites without having to copy/paste content or manually track updates.",
     "type": "craft-plugin",
+    "version" : "1.0.0",
     "keywords": [
         "craft",
         "cms",

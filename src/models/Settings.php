@@ -25,8 +25,6 @@ class Settings extends Model
 
     public $trackTargetChanges;
 
-    public $preventSlugTranslation;
-
     public $apiLogging;
 
     public $twigSearchFilterSingleQuote = "";

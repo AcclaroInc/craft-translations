@@ -5,7 +5,7 @@ namespace acclaro\translations;
 class Constants
 {
     const PLUGIN_SCHEMA_VERSION = '1.4.2';
-    const CRAFT_MIN_VERSION = '4.0.0';
+    const CRAFT_MIN_VERSION = '5.0.0';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
 
@@ -100,8 +100,8 @@ class Constants
     // Acclaro Constants
     const PRODUCTION_URL    = 'https://my.acclaro.com/api/v2/';
     const SANDBOX_URL       = 'https://apisandbox.acclaro.com/api/v2/';
-    
-    const GOOGLE_TRANSLATE_API_URL  = 'https://translation.googleapis.com/language/translate/v2';
+
+    const GOOGLE_TRANSLATE_API_URL= 'https://translation.googleapis.com/language/translate/v2';
     const CHATGPT_TRANSLATE_API_URL = 'https://api.openai.com/v1/chat';
 
     const DELIVERY      = 'craftcms';

@@ -84,7 +84,7 @@ class CommerceController extends BaseController
 
         $this->_prepVariables($variables);
 
-        if (!$product->getType()->hasVariants) {
+        if (!$product->getType()->maxVariants) {
             $this->getView()->registerJs('Craft.Commerce.initUnlimitedStockCheckbox($("#details"));');
         }
 

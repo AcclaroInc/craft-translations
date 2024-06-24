@@ -29,7 +29,7 @@ class GenericFieldTranslator implements TranslatableFieldInterface
     {
         $fieldValue = $this->getFieldValue($elementTranslator, $element, $field);
 
-        return $field instanceof RedactorField || $field instanceof CkEditorField ? $field->serializeValue($fieldValue) : $fieldValue;
+        return $field instanceof RedactorField || $field instanceof CkEditorField ? $field->serializeValue($fieldValue, $element) : $fieldValue;
     }
 
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)

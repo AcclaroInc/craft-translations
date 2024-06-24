@@ -84,5 +84,6 @@ class EntriesFieldTranslator extends GenericFieldTranslator
      */
     public function getWordCount(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
+        return 0;
     }
 }

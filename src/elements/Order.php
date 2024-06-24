@@ -81,8 +81,6 @@ class Order extends Element
 
     public $includeTmFiles;
 
-    public $preventSlugTranslation;
-
     public $asynchronousPublishing;
 
     public $requestQuote;
@@ -338,7 +336,7 @@ class Order extends Element
         ];
     }
 
-    public function getTableAttributeHtml(string $attribute): string
+    public function getAttributeHtml(string $attribute): string
     {
         $value = $this->$attribute;
 
@@ -405,7 +403,7 @@ class Order extends Element
                 return $this->getTranslator()->label ? $this->getTranslator()->label : $this->getTranslator()->service;
         }
 
-        return parent::getTableAttributeHtml($attribute);
+        return parent::attributeHtml($attribute);
     }
 
     protected static function defineTableAttributes(): array
@@ -756,13 +754,6 @@ class Order extends Element
         return $this->trackTargetChanges;
     }
 
-    public function shouldPreventSlugTranslation()
-    {
-        if (! $this->id) return Translations::getInstance()->settings->preventSlugTranslation;
-
-        return $this->preventSlugTranslation;
-    }
-
     /**
      * Check if the order should be processed using queue
      */
@@ -773,7 +764,7 @@ class Order extends Element
     }
 
     /**
-     * Create translation service class based on translator
+     * Create translation service calss based on translator
      */
     public function getTranslationService()
     {
@@ -841,11 +832,6 @@ class Order extends Element
     {
         return $this->status === Constants::ORDER_STATUS_PUBLISHED;
     }
-    
-    public function isSlugTranslatable()
-    {
-        return !$this->preventSlugTranslation;
-    }
 
     public function requestQuote()
     {
@@ -893,7 +879,6 @@ class Order extends Element
         $record->tags =  $this->tags;
         $record->trackChanges =  $this->trackChanges;
 		$record->trackTargetChanges =  $this->trackTargetChanges;
-		$record->preventSlugTranslation =  $this->preventSlugTranslation;
 		$record->includeTmFiles =  $this->includeTmFiles;
 		$record->requestQuote =  $this->requestQuote;
 

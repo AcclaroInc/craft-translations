@@ -32,7 +32,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		if ($blocks) {
 			foreach ($blocks as $index => $block) {
 				$key = sprintf('%s.new%s', $field->handle, ++$index);
-				$source = array_merge($source, $this->fieldToTranslationSource($block, $key, $sourceSite));
+				$source = array_merge($source, $this->fieldToTranslationSource($element, $block, $key, $sourceSite));
 			}
 		}
 
@@ -65,7 +65,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		return $postArray;
 	}
 
-	private function fieldToTranslationSource($block, $key, $sourceSite)
+	private function fieldToTranslationSource($element, $block, $key, $sourceSite)
 	{
 		$source = [];
 
@@ -80,11 +80,11 @@ class VizyFieldTranslator extends GenericFieldTranslator
 				break;
 			default:
 				foreach ($block->getFieldLayout()->getCustomFields() as $field) {
-					if ($this->getIsTranslatable($field)) {
+					if ($this->getIsTranslatable($element, $field)) {
 						$newKey = sprintf('%s.%s', $key, $field->handle);
 						$value = $block->getFieldValue($field->handle);
 
-						$source = array_merge($source, $this->parseSourceValues($value, $newKey, $sourceSite));
+						$source = array_merge($source, $this->parseSourceValues($element, $value, $newKey, $sourceSite));
 					}
 				}
 		}
@@ -92,7 +92,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		return $source;
 	}
 
-	private function parseSourceValues($value, $key, $sourceSite)
+	private function parseSourceValues($element, $value, $key, $sourceSite)
 	{
 		$source = [];
 
@@ -111,7 +111,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 					$source[$k] = $option->label;
 				}
 				break;
-			case $value instanceof \fruitstudios\linkit\fields\LinkitField:
+			case $value instanceof \presseddigital\linkit\fields\LinkitField:
 				$source[$key] = $value->serializeValue($value)['customText'];
 
 				break;
@@ -135,7 +135,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 			default:
 				foreach ($value->all() as $innerIndex => $innerBlock) {
 					$newKey = sprintf('%s.new%s', $key, $innerIndex + 1);
-					$source = array_merge($source, $this->fieldToTranslationSource($innerBlock, $newKey, $sourceSite));
+					$source = array_merge($source, $this->fieldToTranslationSource($element, $innerBlock, $newKey, $sourceSite));
 				}
 		}
 
@@ -208,9 +208,9 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	 * @param [type] $field
 	 * @return boolean
 	 */
-	private function getIsTranslatable($field)
+	private function getIsTranslatable($element, $field)
 	{
-		return $field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES);
+		return $field->getIsTranslatable($element) || in_array(get_class($field), Constants::NESTED_FIELD_TYPES);
 	}
 
 	/**

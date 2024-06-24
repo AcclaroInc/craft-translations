@@ -12,13 +12,12 @@
 namespace acclaro\translations\services\fieldtranslator;
 
 use craft\base\Element;
-use craft\elements\Category;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
 class CategoryFieldTranslator extends TaxonomyFieldTranslator
 {
-    public function translateRelated(ElementTranslator $elementTranslator, Element $element, Category $category, $sourceSite, $targetSite, $fieldData)
+    public function translateRelated(ElementTranslator $elementTranslator, Element $element, $category, $sourceSite, $targetSite, $fieldData)
     {
         // search for existing translated category in the same group
         $translatedCategory = Translations::$plugin->categoryRepository->find(array(
