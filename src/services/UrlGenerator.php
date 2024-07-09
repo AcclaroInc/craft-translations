@@ -93,9 +93,8 @@ class UrlGenerator
         }
 
         if ($element instanceof (Constants::CLASS_NAVIGATION)) {
-            $data['draftId'] = $file->draftId;
             if ($file->draftId && $file->isComplete()) {
-                $url = sprintf('navigation/navs/build/%s', $element->navId);
+                $url = sprintf('translations/edit/%s/%s', $element->navId, $file->draftId);
                 return Translations::$plugin->urlHelper->cpUrl($url, $data);
             }
 

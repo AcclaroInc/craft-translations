@@ -40,8 +40,6 @@ class NavigationDraftModel extends Node
 
     public array $data = [];
 
-    public $darftId;
-
     public $sourceSite;
 
     /**
@@ -92,8 +90,7 @@ class NavigationDraftModel extends Node
      */
     public function getCpEditUrl(): ?string
     {
-        $nav = $this->getNavigationNav();
-        $path = 'navigation/navs/build/'.$nav->navId;
+        $path = 'translations/edit/'.$this->navId. '/'.$this->draftId;
 
         return Translations::$plugin->urlHelper->cpUrl($path);
     }

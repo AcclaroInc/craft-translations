@@ -23,7 +23,7 @@ use verbb\navigation\Navigation;
 class NavigationDraftRepository
 {
     /**
-     * Create Asset Draft Model object
+     * Create a new NavigationDraftModel object
      *
      * @return NavigationDraftModel
      */
@@ -33,10 +33,10 @@ class NavigationDraftRepository
     }
 
     /**
-     * Find asset draft by id
+     * Find navigation draft by id
      *
      * @param int $draftId
-     * @return NavigationDraftModel
+     * @return NavigationDraftModel|null
      */
     public function getDraftById($draftId)
     {
@@ -45,58 +45,49 @@ class NavigationDraftRepository
 
         if ($record) {
             $navDraft = new NavigationDraftModel($record->toArray([
-                'id',
-                'name',
-                'title',
-                'navId',
-                'site',
-                'data',
-                'draftId',
+                'id', 'name', 'title', 'navId', 'site', 'data', 'draftId'
             ]));
 
             $assetData = json_decode($record['data'], true);
-            $fieldContent = isset($assetData['fields']) ? $assetData['fields'] : null;
+            $fieldContent = $assetData['fields'] ?? null;
 
             if ($fieldContent) {
-                $post = array();
-
+                $post = [];
                 foreach ($fieldContent as $fieldId => $fieldValue) {
                     $field = Craft::$app->fields->getFieldById($fieldId);
-
                     if ($field) {
                         $post[$field->handle] = $fieldValue;
                     }
                 }
-
                 $navDraft->setFieldValues($post);
             }
         }
-
         return $navDraft;
     }
 
     /**
-     * Find Source Asset by id
+     * Find navigation node by id
      *
      * @param int $id
-     * @param int $site
-     * @return Asset
+     * @param int|null $site
+     * @return Node|null
      */
     public function getNavById($id, $site = null)
     {
-        return Navigation::getInstance()->getNodes()->getNodesForNav($id, $site)[0];
+        return Navigation::getInstance()->getNodes()->getNodesForNav($id, $site)[0] ?? null;
     }
 
     /**
-     * Find asset draft row
+     * Find or create navigation draft record
      *
-     * @param \craft\elements\Asset $draft
+     * @param Node $draft
      * @return NavigationDraftRecord
+     * @throws Exception
      */
-    public function getDraftRecord(Node $draft)
+    public function getDraftRecord(Node $draft, bool $isNew = false)
     {
-        if (isset($draft->draftId)) {
-            $record = NavigationDraftRecord::findOne($draft->draftId);
+        if (! $isNew) {
+            $record = NavigationDraftRecord::findOne($draft->id);
 
             if (!$record) {
                 throw new Exception(Translations::$plugin->translator->translate('app', 'No draft exists with the ID “{id}”.', array('id' => $draft->draftId)));
@@ -106,134 +97,135 @@ class NavigationDraftRepository
             $record->navId = $draft->navId;
             $record->site = $draft->site;
             $record->name = $draft->name;
-            $record->title = $draft->titles;
+            $record->title = $draft->title;
         }
-
         return $record;
     }
 
-    public function saveDraft(Node &$draft)
+    /**
+     * Save the navigation draft
+     *
+     * @param Node $draft
+     * @return bool
+     * @throws Exception
+     */
+    public function saveDraft(Node &$draft, array $content = [])
     {
-        $record = $this->getDraftRecord($draft);
+        $isnew = $content['isnew'] ?? false;
+        $record = $this->getDraftRecord($draft, $isnew);
+
         if (!$draft->name && $draft->id) {
-            $totalDrafts = Craft::$app->getDb()->createCommand()
-                ->from('translations_navigationdrafts')
-                ->where(
-                    array('and', 'navId = :navId', 'site = :site'),
-                    array(':navId' => $draft->navId, ':site' => $draft->site)
-                )
-                ->count('id');
-
-            $draft->name = Translations::$plugin->translator->translate('app', 'Draft {num}', array('num' => $totalDrafts + 1));
+            $totalDrafts = (int) NavigationDraftRecord::find()
+                ->andwhere(['navId' => $draft->navId, 'site' => $draft->site])
+                ->count();
+            $draft->name = Translations::$plugin->translator->translate('app', 'Draft {num}', ['num' => $totalDrafts + 1]);
         }
 
-        if (is_null($draft->navId)) {
-            $record->navId = $draft->id;
-        } else {
-            $record->navId = $draft->navId;
-        }
-
+        $record->navId = $draft->navId;
         $record->site = $draft->site;
         $record->name = $draft->name;
         $record->title = $draft->title;
 
-        $data = array(
-            'fields' => array(),
-        );
+        $data = ['fields' => []];
+        $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
 
-        $record->data = $data;
+        foreach ($draft->getFieldLayout()->getCustomFields() as $layoutField) {
+            $field = Craft::$app->fields->getFieldById($layoutField->id);
+            if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
+                if (isset($content[$field->handle])) {
+                    $data['fields'][$field->id] = $content[$field->handle];
+                }
+            }
+        }
 
-        $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
+        $record->data = json_encode($data);
+        $transaction = Craft::$app->db->beginTransaction();
 
         try {
             if ($record->save(false)) {
-                if ($transaction !== null) {
-                    $transaction->commit();
-                }
-
+                $transaction->commit();
                 $draft->draftId = $record->id;
-
                 return true;
             }
         } catch (Exception $e) {
-            if ($transaction !== null) {
-                $transaction->rollback();
-            }
-
+            $transaction->rollBack();
             throw $e;
         }
 
         return false;
     }
 
+    /**
+     * Publish the navigation draft
+     *
+     * @param Node $draft
+     * @return bool
+     */
     public function publishDraft(Node $draft)
     {
         $post = [];
+        $node = $this->getNavById($draft->navId, $draft->site);
 
-        $product = $this->getNavById($draft->navId, $draft->site);
-
-        foreach ($draft->getDirtyFields() as $key => $fieldHandle) {
+        foreach ($draft->getDirtyFields() as $fieldHandle) {
             $post[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
         }
 
-        $product->title = $draft->title;
-        $product->setFieldValues($post);
+        $node->title = $draft->title;
+        $node->setFieldValues($post);
 
-        $success = Craft::$app->elements->saveElement($product, false);
-
-        if (!$success) {
-            Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t publish draft "' . $draft->title . '"', Constants::LOG_LEVEL_ERROR);
-            return false;
-        }
-
-        return true;
+        return Craft::$app->elements->saveElement($node, false);
     }
 
-    public function createDraft(Node $asset, $site, $orderName, $sourceSite)
+    /**
+     * Create a new navigation draft
+     *
+     * @param Node $node
+     * @param int $site
+     * @param string $orderName
+     * @param int $sourceSite
+     * @return NavigationDraftModel
+     */
+    public function createDraft(Node $node, $site, $orderName, $sourceSite)
     {
         try {
             $draft = $this->makeNewDraft();
             $draft->name = sprintf('%s [%s]', $orderName, $site);
-            $draft->id = $asset->id;
+            $draft->id = $node->id;
             $draft->site = $site;
-            $draft->title = $asset->title;
+            $draft->title = $node->title;
             $draft->sourceSite = $sourceSite;
-            $draft->navId = $asset->navId;
-            $draft->data = array();
-            $this->saveDraft($draft);
-
+            $draft->navId = $node->navId;
+            $draft->data = [];
+            $this->saveDraft($draft, ["isnew" => true]);
             return $draft;
         } catch (Exception $e) {
-            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] CreateAssetDraft exception:: '.$e->getMessage(), Constants::LOG_LEVEL_ERROR);
-            return [];
+            Translations::$plugin->logHelper->log('[' . __METHOD__ . '] CreateDraft exception: ' . $e->getMessage(), Constants::LOG_LEVEL_ERROR);
+            return null;
         }
-
     }
 
+    /**
+     * Delete a navigation draft
+     *
+     * @param Node $draft
+     * @return bool
+     * @throws Exception
+     */
     public function deleteDraft(Node $draft)
     {
-        try {
-            $record = $this->getDraftRecord($draft);
-        } catch (Exception $e) {
-            return false;
-        }
-
-        $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
+        $record = $this->getDraftRecord($draft);
+        $transaction = Craft::$app->db->beginTransaction();
 
         try {
             if ($record->delete(false)) {
-                if ($transaction !== null) {
-                    $transaction->commit();
-                }
-
+                $transaction->commit();
                 return true;
             }
         } catch (Exception $e) {
-            if ($transaction !== null) {
-                $transaction->rollback();
-            }
-
+            $transaction->rollBack();
             throw $e;
         }
+
+        return false;
     }
 }

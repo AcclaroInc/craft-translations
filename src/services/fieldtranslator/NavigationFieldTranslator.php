@@ -25,7 +25,7 @@ class NavigationFieldTranslator extends GenericFieldTranslator
         $handlenav = $this->getFieldValue($elementTranslator, $element, $field);
 
         if (! $handlenav) {
-            throw new \Exception('No Navigation field selected for element: ' . $element->title);
+            return $source;
         }
 
         $fieldData = \verbb\navigation\elements\Node::find()

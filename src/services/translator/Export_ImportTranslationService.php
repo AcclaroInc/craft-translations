@@ -207,7 +207,8 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
                 $draft->setFieldValues($post);
                 $draft->siteId = $targetSite;
-                $res = Translations::$plugin->navigationDraftRepository->saveDraft($draft);
+
+                $res = Translations::$plugin->navigationDraftRepository->saveDraft($draft, $post);
                 if ($res !== true) {
                     if (is_array($res)) {
                         $errorMessage = '';
