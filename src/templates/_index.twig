@@ -84,7 +84,7 @@
         <li><a class="go" href="https://www.surveymonkey.com/r/translationsplugin">{{ 'Submit Feedback'|t('app') }}</a></li>
     </ul>
 
-    <div id="translations-dashboard" style="visibility:hidden;">
+    <div id="translations-dashboard" style="visibility:hidden;" class="grid">
         {% for widget in widgets %}
             {% if widget %}
                 <div class="item" data-colspan="{{ widget.colspan }}">
