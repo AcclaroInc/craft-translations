@@ -70,7 +70,7 @@ class TranslationRepository
         $isNew = !$translation->id;
 
         if (!$isNew) {
-            $record = TranslationRecord::model()->findById($translation->id);
+            $record = TranslationRecord::findOne($translation->id);
 
             if (!$record) {
                 throw new Exception('No translation exists with that ID.');

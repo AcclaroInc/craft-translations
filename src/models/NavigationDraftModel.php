@@ -10,28 +10,37 @@
 
 namespace acclaro\translations\models;
 
-use craft\elements\GlobalSet;
+use Craft;
 use craft\behaviors\DraftBehavior;
 use craft\validators\SiteIdValidator;
-use craft\validators\DateTimeValidator;
-use craft\behaviors\FieldLayoutBehavior;
-
 use acclaro\translations\Translations;
+use craft\behaviors\FieldLayoutBehavior;
+use craft\behaviors\CustomFieldBehavior;
+use verbb\navigation\elements\Node;
 
 /**
  * @author    Acclaro
  * @package   Translations
  * @since     1.0.0
  */
-class GlobalSetDraftModel extends GlobalSet
+class NavigationDraftModel extends Node
 {
-    protected $_globalSet = null;
+    /**
+     * @var \acclaro\translations\services\repository\NavigationDraftRepository $_nodes
+     */
+    protected $_nodes = null;
 
-    public $globalSetId;
+    public $name;
+
+    public ?int $navId = null;
 
     public $site;
 
-    public $data;
+    public $titles;
+
+    public array $data = [];
+
+    public $sourceSite;
 
     /**
      * @param array $attributes
@@ -48,40 +57,30 @@ class GlobalSetDraftModel extends GlobalSet
     public function rules(): array
     {
         $rules = parent::rules();
-        $rules[] = [['name', 'globalSetId', 'site', 'data'], 'required'];
+        $rules[] = [['name', 'navId', 'data' , 'site'], 'required'];
         $rules[] = ['site', SiteIdValidator::class];
-        $rules[] = [['dateCreated', 'dateUpdated'], DateTimeValidator::class];
-        $rules[] = ['enabled', 'default', 'value' => true];
-        $rules[] = ['archived', 'default', 'value' => false];
-        $rules[] = ['enabledForSite', 'default', 'value' => true];
 
         return $rules;
     }
 
-    public function getFieldLayout(): \craft\models\FieldLayout
-    {
-        $globalSet = $this->getGlobalSet();
-
-        return $globalSet->getFieldLayout();
-    }
-
     public function getHandle()
     {
-        return $this->getGlobalSet()->handle;
+        return $this->getNavigationNav();
     }
 
-    public function getGlobalSet()
+
+    public function getNavigationNav()
     {
-        if (is_null($this->globalSetId)) {
-            $this->_globalSet = Translations::$plugin->globalSetRepository->getSetById($this->id); // this works for creating orders
+        if (is_null($this->navId)) {
+            $this->_nodes = Translations::$plugin->navigationDraftRepository->getNavById($this->id); // this works for creating orders
         } else {
-            $this->_globalSet = Translations::$plugin->globalSetRepository->getSetById($this->globalSetId); // this works for edit draft
+            $this->_nodes = Translations::$plugin->navigationDraftRepository->getNavById($this->navId); // this works for edit draft
         }
 
-        return $this->_globalSet;
+        return $this->_nodes;
     }
 
-    public function getUrl(): ?string
+    public function getUrl($transform = null, ?bool $generateNow = null): ?string
     {
         return '';
     }
@@ -91,9 +90,7 @@ class GlobalSetDraftModel extends GlobalSet
      */
     public function getCpEditUrl(): ?string
     {
-        $globalSet = $this->getGlobalSet();
-
-        $path = 'translations/globals/'.$globalSet->handle.'/drafts/'.$this->draftId;
+        $path = 'translations/edit/'.$this->navId. '/'.$this->draftId;
 
         return Translations::$plugin->urlHelper->cpUrl($path);
     }
@@ -104,14 +101,18 @@ class GlobalSetDraftModel extends GlobalSet
     public function behaviors(): array
     {
         $behaviors = parent::behaviors();
+        $behaviors['customFields'] = [
+            'class' => CustomFieldBehavior::class,
+            'hasMethods' => false,
+        ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
-            'elementType' => GlobalSet::class,
+            'elementType' => Node::class,
         ];
         $behaviors['draft'] = [
             'class' => DraftBehavior::class,
             'creatorId' => 1,
-            'draftName' => 'Global Draft',
+            'draftName' => 'Navigation Draft',
             'draftNotes' => '',
             'trackChanges' => true,
         ];

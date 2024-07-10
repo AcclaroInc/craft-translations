@@ -232,13 +232,13 @@ class TranslatorRepository
         $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
 
         try {
-            if ($record->delete(false)) {
+            if ($res = $record->delete(false)) {
                 if ($transaction !== null) {
                     $transaction->commit();
                 }
 
-                return true;
             }
+            return $res;
         } catch (Exception $e) {
             if ($transaction !== null) {
                 $transaction->rollback();

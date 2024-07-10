@@ -111,7 +111,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 					$source[$k] = $option->label;
 				}
 				break;
-			case $value instanceof \fruitstudios\linkit\fields\LinkitField:
+			case $value instanceof \presseddigital\linkit\fields\LinkitField:
 				$source[$key] = $value->serializeValue($value)['customText'];
 
 				break;

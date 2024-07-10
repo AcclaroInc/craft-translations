@@ -42,6 +42,7 @@ use acclaro\translations\assetbundles\Assets;
 use acclaro\translations\assetbundles\CommerceAssets;
 use acclaro\translations\assetbundles\UniversalAssets;
 use acclaro\translations\assetbundles\GlobalSetAssets;
+use acclaro\translations\assetbundles\NavigationAssets;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
 
@@ -380,10 +381,14 @@ class Translations extends Plugin
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
 
-                    // Asset, Commerce, Global-set Controllers
+                    // Asset, Commerce, Global-set, Node Controllers
                     'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/global-set/edit-draft',
                     'commerce/product/<productTypeHandle:{handle}>/<productId:\d+><slug:(?:-[^\/]*)?>' => 'translations/commerce/edit-draft',
+                    'translations/edit/<nodeId:\d+>/<draftId:\d+>/' => 'translations/navigation/edit-draft',
+                    'translations/save' => 'translations/navigation/save-draft',
+                    'translations/publish' => 'translations/navigation/publish-draft',
+                    'translations/delete' => 'translations/navigation/delete-draft',
                 ]);
             }
         );
@@ -401,6 +406,10 @@ class Translations extends Plugin
         // Only matches for commerce products
         if (preg_match('#^commerce/products(/|$)#', $path)) {
             $this->_includeCommerceResources();
+        }
+
+        if (preg_match('#^navigation/navs/build/([^/]+)$#', $path, $match)) {
+            $this->_includeNavigationResources($match[1]);
         }
 
         if (preg_match('#^categories(/|$)#', $path, $match)) {
@@ -481,6 +490,27 @@ class Translations extends Plugin
         self::$view->registerAssetBundle(CommerceAssets::class);
 
         self::$view->registerJs("$(function(){ Craft.Translations.AddTranslationsToCommerce.init({$data}); });");
+    }
+
+    /**
+     * Register translations functionality into verbb navigation
+     */
+    private function _includeNavigationResources($navId)
+    {
+        $orders = array();
+
+        foreach (self::$plugin->orderRepository->getDraftOrders() as $order) {
+            $orders[] = array(
+                'id' => $order->id,
+                'title' => $order->title,
+            );
+        }
+
+        $data = json_encode($orders);
+
+        self::$view->registerAssetBundle(NavigationAssets::class);
+
+        self::$view->registerJs("$(function(){ Craft.Translations.AddTranslationsToNavigation.init({$data}, {$navId}); });");
     }
 
     private function _includeEntryResources()

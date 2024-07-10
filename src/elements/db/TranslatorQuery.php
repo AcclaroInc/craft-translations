@@ -9,10 +9,10 @@ class TranslatorQuery extends ElementQuery
     /**
      * @inheritdoc
      */
-    public $id;
+    public mixed $id;
     public $label;
     public $service;
-    public $status;
+    public array|string|null $status;
     public $settings;
 
     /**

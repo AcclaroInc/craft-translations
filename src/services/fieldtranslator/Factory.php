@@ -35,8 +35,6 @@ use verbb\vizy\fields\VizyField;
 use newism\fields\fields\Address;
 use newism\fields\fields\Telephone;
 use newism\fields\fields\PersonName;
-use lenz\linkfield\fields\LinkField;
-use acclaro\translations\Translations;
 use craft\redactor\Field as RedactorField;
 use craft\ckeditor\Field as CkEditorField;
 use presseddigital\linkit\fields\LinkitField;
@@ -45,6 +43,8 @@ use nystudio107\seomatic\fields\SeoSettings;
 
 use verbb\supertable\fields\SuperTableField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
+use verbb\hyper\fields\HyperField as HyperLinkField;
+use verbb\navigation\fields\NavigationField;
 
 class Factory
 {
@@ -56,8 +56,8 @@ class Factory
         Entries::class          => EntriesFieldTranslator::class,
         Matrix::class           => MatrixFieldTranslator::class,
         MultiSelect::class      => MultiSelectFieldTranslator::class,
-        LinkField::class        => LinkFieldTranslator::class,
         TypedLinkField::class   => TypedLinkFieldTranslator::class,
+        HyperLinkField::class   => HyperLinkFieldTranslator::class,
         LinkitField::class      => LinkitFieldTranslator::class,
         NeoField::class         => NeoFieldTranslator::class,
         Number::class           => GenericFieldTranslator::class,
@@ -77,6 +77,7 @@ class Factory
         Gender::class           => NsmFieldsTranslator::class,
         Embed::class            => NsmFieldsTranslator::class,
         VizyField::class  	    => VizyFieldTranslator::class,
+        NavigationField::class  => NavigationFieldTranslator::class,
         CkEditorField::class    => GenericFieldTranslator::class
     );
 
@@ -91,17 +92,7 @@ class Factory
         if (array_key_exists($class, $this->nativeFieldTypes)) {
             $translatorClass = $this->nativeFieldTypes[$class];
 
-            switch ($translatorClass) {
-                case MultiSelectFieldTranslator::class:
-                    return new MultiSelectFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
-                case SingleOptionFieldTranslator::class:
-                    return new SingleOptionFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
-                case TagFieldTranslator::class:
-                    return new TagFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->tagRepository, Translations::$plugin->elementCloner);
-                case CategoryFieldTranslator::class:
-                    return new CategoryFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->categoryRepository);
-            }
-            return new $translatorClass(Craft::$app, Translations::$plugin->wordCounter);
+            return new $translatorClass();
         }
 
         return null;

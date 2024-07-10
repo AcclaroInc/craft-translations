@@ -37,11 +37,6 @@ class App extends Component
     public $translator;
 
     /**
-     * @var ElementCloner
-     */
-    public $elementCloner;
-
-    /**
      * @var repository\TranslationRepository
      */
     public $translationRepository;
@@ -95,6 +90,11 @@ class App extends Component
      * @var repository\GlobalSetDraftRepository
      */
     public $globalSetDraftRepository;
+
+    /**
+     * @var repository\NavigationDraftRepository
+     */
+    public $navigationDraftRepository;
 
     /**
      * @var repository\SiteRepository
@@ -181,7 +181,6 @@ class App extends Component
         $this->urlHelper = new UrlHelper();
         $this->urlGenerator = new UrlGenerator();
         $this->translator = new Translator();
-        $this->elementCloner = new ElementCloner();
         $this->translationRepository = new repository\TranslationRepository();
         $this->categoryRepository = new repository\CategoryRepository();
         $this->assetDraftRepository = new repository\AssetDraftRepository();
@@ -209,5 +208,6 @@ class App extends Component
         $this->orderEdit = new OrderEdit();
         $this->logHelper = new LogHelper();
         $this->activityLogRepository = new repository\ActivityLogRepository();
+        $this->navigationDraftRepository = new repository\NavigationDraftRepository();
     }
 }

@@ -26,6 +26,7 @@ use acclaro\translations\models\FileModel;
 use acclaro\translations\records\FileRecord;
 use acclaro\translations\services\job\ApplyDrafts;
 use acclaro\translations\services\job\CreateDrafts;
+use verbb\navigation\elements\Node;
 
 class DraftRepository
 {
@@ -88,6 +89,14 @@ class DraftRepository
 
                     if ($success) {
                         $commerceRepository->deleteDraft($draft);
+                    }
+                    break;
+                case Node::class:
+                    $navRepository = Translations::$plugin->navigationDraftRepository;
+                    $success = $navRepository->publishDraft($draft);
+
+                    if ($success) {
+                        $navRepository->deleteDraft($draft);
                     }
                     break;
                 default:
@@ -263,6 +272,9 @@ class DraftRepository
                     break;
                 case Asset::class:
                     $draft = Translations::$plugin->assetDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
+                    break;
+                case Node::class:
+                    $draft = Translations::$plugin->navigationDraftRepository->createDraft($element, $site, $order->title, $order->sourceSite);
                     break;
                 default:
                     $draft = Translations::$plugin->entryRepository->createDraft($element, $site, $order->title);

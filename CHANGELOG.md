@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.4.0 - 2024-07-10
+
+### Added
+- Support for verbb hyper plugin. ([AcclaroInc#497](https://github.com/AcclaroInc/craft-translations/issues/497))
+- Support for verbb navigation plugin. ([AcclaroInc#506](https://github.com/AcclaroInc/craft-translations/pull/506))
+
+### Fixed
+- Migration error when upgrading with postgres. ([AcclaroInc#508](https://github.com/AcclaroInc/craft-translations/issues/508))
+- Fresh installation fails to create order with postgres. ([AcclaroInc#505](https://github.com/AcclaroInc/craft-translations/pull/505))
+
+### Chore
+- Code refactoring and cleanup for craft 5 compatibility.
+
 ## 3.3.6 - 2024-02-23
 
 ### Updated

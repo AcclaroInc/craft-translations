@@ -13,9 +13,10 @@ namespace acclaro\translations\models;
 use Craft;
 use craft\commerce\elements\Product;
 use acclaro\translations\Translations;
-use craft\behaviors\CustomFieldBehavior;
 use craft\behaviors\DraftBehavior;
 use craft\behaviors\FieldLayoutBehavior;
+use craft\validators\DateTimeValidator;
+use craft\validators\SiteIdValidator;
 
 /**
  * @author    Acclaro
@@ -109,10 +110,6 @@ class CommerceDraftModel extends Product
     public function behaviors(): array
     {
         $behaviors = parent::behaviors();
-        $behaviors['customFields'] = [
-            'class' => CustomFieldBehavior::class,
-            'hasMethods' => false,
-        ];
         $behaviors['fieldLayout'] = [
             'class' => FieldLayoutBehavior::class,
             'elementType' => Product::class,

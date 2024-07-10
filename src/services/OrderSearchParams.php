@@ -17,13 +17,14 @@ class OrderSearchParams
 {
     public function getParams()
     {
+        // TODO: check usage of this class
         $sites = Craft::$app->sites->getAllSiteIds();
         $category = 'app';
         $statuses = array_map(function($status) use ($category) {
             return Translations::$plugin->translator->translate($category, $status);
         }, Translations::$plugin->orderRepository->getOrderStatuses());
         
-        $query = parse_str(Craft::$app->request->getQueryStringWithoutPath(), $params);
+        parse_str(Craft::$app->request->getQueryStringWithoutPath(), $params);
         
         $results = [];
 

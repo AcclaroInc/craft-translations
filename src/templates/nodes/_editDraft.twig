@@ -1,0 +1,109 @@
+{% extends "_layouts/cp" %}
+{% set title = "Navigations"|t %}
+
+{% block actionButton %}
+<div class="buttons">
+    <div class="btngroup">
+        <input type="submit" form="nodeSetDraft" class="btn submit" value="{{ 'Save'|t }}">
+        <div class="btn submit menubtn" data-form="nodeSetDraft"></div>
+        <div class="menu">
+            <ul>
+                <li><a class="formsubmit" data-action="translations/navigation/publish-draft">{{ 'Publish draft'|t }}</a></li>
+            </ul>
+            <hr>
+            <ul>
+                <li><a class="formsubmit" data-action="translations/navigation/delete-draft" data-confirm="{{ 'Are you sure you want to delete this draft?'|t }}">{{ 'Delete draft'|t }}</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<form id="nodeSetDraft" method="post" accept-charset="UTF-8" data-saveshortcut data-confirm-unload>
+    <input type="hidden" name="action" value="translations/navigation/save-draft">
+    <input type="hidden" name="draftId" value="{{ draft.draftId }}">
+    <input type="hidden" name="site" value="{{ draft.site }}">
+    <input type="hidden" name="navId" value="{{ draft.nodeId }}">
+    {{ csrfInput() }}
+
+    {% if data %}
+        {% if data.getFieldLayout().getCustomFields() | length %}
+            <div id="fields">
+                {% for tab in data.getFieldLayout().getTabs() %}
+                    <div id="{{ tab.getHtmlId() }}" {% if not loop.first %} class="hidden" {% endif %}>
+                        {% include "_includes/fields" with {
+                            fields: tab.getLayout().getCustomFields(),
+                            element: data
+                        } only %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p>No nodes found.</p>
+    {% endif %}
+</form>
+{% endblock %}
+
+{% block footer %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    
+    // Store original values on page load
+    let originalValues = {};
+    $('#nodeSetDraft input[type="text"], #nodeSetDraft textarea').each(function() {
+            let fieldName = $(this).attr('name');
+            let currentValue = $(this).val();
+            originalValues[fieldName] = currentValue;
+    });
+
+    function addToChangedFields(fieldName, currentValue, oldValue, changedFields) {
+        let lastKey = fieldName.split('[').pop().replace(']', '');
+
+        if (changedFields.length === 0 || changedFields[changedFields.length - 1][lastKey]) {
+            let newEntry = {};
+            newEntry[lastKey] = {
+                'currentValue': currentValue,
+                'oldValue': oldValue
+            };
+            changedFields.push(newEntry);
+        } else {
+            changedFields[changedFields.length - 1][lastKey] = {
+                'currentValue': currentValue,
+                'oldValue': oldValue
+            };
+        }
+    };
+
+    // Track changes and append changedFields
+    $('#nodeSetDraft').submit(function(event) {
+        let changedFields = [];
+
+        // Check for changes in input fields
+        $('#nodeSetDraft input[type="text"], #nodeSetDraft textarea').each(function() {
+            let fieldName = $(this).attr('name');
+            let currentValue = $(this).val();
+            let lastKey = "";
+            if( fieldName ){
+                lastKey = fieldName.split('[').pop().replace(']', '');
+            }
+
+            if (originalValues[fieldName] !== currentValue) {
+                addToChangedFields(fieldName, currentValue, originalValues[fieldName], changedFields);
+            }
+        });
+
+        $('<input>').attr({
+            type: 'hidden',
+            name: 'changedFields',
+            value: JSON.stringify(changedFields)
+        }).appendTo('#nodeSetDraft');
+
+        return true;
+    });
+});
+</script>
+{% endblock %}
+
