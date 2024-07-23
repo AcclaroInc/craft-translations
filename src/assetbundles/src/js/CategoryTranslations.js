@@ -46,7 +46,7 @@ Craft.Translations.CategoryTranslations = {
     updateSelectedCategories: function() {
         var entries = [];
 
-        $('.elements table.data tbody tr.sel[data-id]').each(function() {
+        $('.elements table.data tbody tr.sel[data-id], .elements ul.card-grid li.sel[data-id]').each(function() {
             entries.push($(this).data('id'));
         });
 
@@ -76,17 +76,7 @@ Craft.Translations.CategoryTranslations = {
             return $('[name=siteId]').val();
         }
 
-        var localeMenu = $('.sitemenubtn').data('menubtn').menu;
-
-        // Figure out the initial locale
-        var $option = localeMenu.$options.filter('.sel:first');
-
-
-        if ($option.length === 0) {
-            $option = localeMenu.$options.first();
-        }
-
-        var siteId = $option.data('site-id').toString();
+        var siteId = $('.element').attr('data-site-id');
 
         return siteId;
     },

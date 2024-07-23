@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+## 4.0.0 - 2024-07-23
+
+### Updated
+- Requires Craft `5.0.0 or higher`
+- Requires PHP `8.2 or higher`
+
+### Removed
+- Prevent slug translation as craft now natively support this feature.
+
+
 ## 3.4.0 - 2024-07-10
 
 ### Added

@@ -194,7 +194,6 @@
         title = $('#title').val();
 		trackChanges = $('input[type=hidden][name=trackChanges]').val();
 		trackTargetChanges = $('input[type=hidden][name=trackTargetChanges]').val();
-		preventSlugTranslation = $('input[type=hidden][name=preventSlugTranslation]').val();
 		includeTmFiles = $('input[type=hidden][name=includeTmFiles]').val();
 		requestQuote = $('input[type=hidden][name=requestQuote]').val();
         tags = $('input[name="tags[]"]');
@@ -233,7 +232,6 @@
 
         if (trackChanges) url += "&trackChanges=" + trackChanges
         if (trackTargetChanges) url += "&trackTargetChanges=" + trackTargetChanges
-        if (preventSlugTranslation) url += "&preventSlugTranslation=" + preventSlugTranslation
         if (includeTmFiles) url += "&includeTmFiles=" + includeTmFiles
         if (requestQuote) url += "&requestQuote=" + requestQuote
 

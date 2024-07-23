@@ -486,17 +486,18 @@ class FileRepository
             $currentContent = json_encode(array_map("strval", array_values($currentContent)));
 
             $sourceContent = json_decode($converter->xmlToJson($source), true);
-
-            $sourceContent = json_encode(array_values($sourceContent['content']));
-
-            /**
-             * Replace `\u00a0` created by mysql with `space`
-             * as mysql replaces any space before special char like ?, ! with `\u00a0`
-             */
-            $sourceContent = str_replace('\u{00a0}', ' ', $sourceContent);
-
-            if (md5($sourceContent) !== md5($currentContent)) {
-                return true;
+            if (isset($currentContent['content']) && isset($sourceContent['content'])) {
+                $sourceContent = json_encode(array_values($sourceContent['content']));
+    
+                /**
+                 * Replace `\u00a0` created by mysql with `space`
+                 * as mysql replaces any space before special char like ?, ! with `\u00a0`
+                 */
+                $sourceContent = str_replace('\u{00a0}', ' ', $sourceContent);
+    
+                if (md5($sourceContent) !== md5($currentContent)) {
+                    return true;
+                }
             }
         } catch (\Exception $e) {
             Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);

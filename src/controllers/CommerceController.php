@@ -63,7 +63,7 @@ class CommerceController extends BaseController
 
         /** @var Product $product */
         $product = $variables['product'];
-
+        $variables['sideBar'] = $product->getSidebarHtml(true);
         /** @var craft\elements\User $user */
         $user = Craft::$app->getUser()->getIdentity();
 
@@ -84,7 +84,7 @@ class CommerceController extends BaseController
 
         $this->_prepVariables($variables);
 
-        if (!$product->getType()->hasVariants) {
+        if (!$product->getType()->maxVariants) {
             $this->getView()->registerJs('Craft.Commerce.initUnlimitedStockCheckbox($("#details"));');
         }
 

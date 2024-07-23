@@ -121,27 +121,6 @@
 			</div>
 
 			<input type="hidden" id="originalTrackTargetChanges" value="{{ order.trackTargetChanges }}">
-			
-			{% set preventSlugTranslationClass = "" %}
-			{% set preventSlugTranslationTitle = "" %}
-			{% if not order.isPending %}
-				{% set preventSlugTranslationClass = "non-editable disabled" %}
-				{% set preventSlugTranslationTitle = "This field cannot be edited." %}
-			{% endif %}
-			<span class="{{ preventSlugTranslationClass }}">
-				<div style="margin-bottom: 10px" class="{% if preventSlugTranslationClass %} noClick {% endif %}" title="{{ preventSlugTranslationTitle }}">
-					{{ forms.lightswitchField({
-						label: 'Prevent Slug Translation<p class="fw-400">\
-						Prevent\'s the translation of slug fields for the entries in this order.</p>'|t('app'),
-						id: "preventSlugTranslation",
-						name: "preventSlugTranslation",
-						class: "noClick",
-						on: shouldPreventSlugTranslation is defined ? shouldPreventSlugTranslation : order.shouldPreventSlugTranslation
-				}) }}
-				</div>
-			</span>
-
-			<input type="hidden" id="originalPreventSlugTranslation" value="{{ order.preventSlugTranslation }}">
 
 			{% set includeTmFilesClass = "" %}
 			{% set includeTmFilesTitle = "" %}

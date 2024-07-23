@@ -5,7 +5,7 @@ namespace acclaro\translations;
 class Constants
 {
     const PLUGIN_SCHEMA_VERSION = '1.4.2';
-    const CRAFT_MIN_VERSION = '4.0.0';
+    const CRAFT_MIN_VERSION = '5.0.0';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
 

@@ -168,6 +168,8 @@ class DraftRepository
         }
 
         try {
+            $canonical = $draft->getCanonical();
+            $draft->setFieldValues($canonical->getFieldValues());
             // Let's try saving the element prior to applying draft
             if (!Craft::$app->getElements()->saveElement($draft, true, true, false)) {
                 throw new InvalidElementException($draft);

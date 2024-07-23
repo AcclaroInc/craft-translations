@@ -21,7 +21,6 @@ use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\commerce\elements\Product;
 use craft\fields\Color;
-use acclaro\translations\services\repository\OrderRepository;
 
 class ElementTranslator
 {
@@ -33,16 +32,8 @@ class ElementTranslator
             if ($element->title && $element->getIsTitleTranslatable()) {
                 $source['title'] = $element->title;
             }
-            if ($element->slug) {
-                switch (true) {
-                    case ($orderId):
-                        $order = (new OrderRepository())->getOrderById($orderId);
-                        if ($order && !$order->isSlugTranslatable()) {
-                            break;
-                        }
-                    default:
-                        $source['slug'] = $element->slug;
-                }
+            if ($element->slug && $element->getIsSlugTranslatable()) {
+                $source['slug'] = $element->slug;
             }
         
         }
@@ -54,7 +45,7 @@ class ElementTranslator
             $source = array_merge($source, $fieldSource);
         }
 
-        if ($element instanceof Product && $element->getType()->hasVariants) {
+        if ($element instanceof Product && $element->getType()->maxVariants) {
             $variants = $element->getVariants(true);
 
             foreach ($variants as $variant) {
@@ -210,7 +201,7 @@ class ElementTranslator
             $post = array_merge($post, $fieldPost);
         }
 
-        if ($element instanceof Product && $element->getType()->hasVariants) {
+        if ($element instanceof Product && $element->getType()->maxVariants) {
             $variants = $element->getVariants(true);
             $variantPost = [];
             foreach ($variants as $variant) {
@@ -235,7 +226,7 @@ class ElementTranslator
             $source = array_merge($source, $fieldSource);
         }
 
-        if ($element instanceof Product && $element->getType()->hasVariants) {
+        if ($element instanceof Product && $element->getType()->maxVariants) {
             $variants = $element->getVariants(true);
             $variantSource = [];
             foreach ($variants as $variant) {
@@ -274,7 +265,7 @@ class ElementTranslator
         $fieldSource = array();
 
         // Check if field is translatable or is nested field
-        if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
+        if ($translator && $field->getIsTranslatable($element) || $translator && in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
             $fieldSource = $translator->toTranslationSource($this, $element, $field, $sourceSite);
 
             if (!is_array($fieldSource)) {
@@ -296,7 +287,7 @@ class ElementTranslator
         $fieldSource = array();
 
         // Check if field is translatable or is nested field
-        if ($translator && $field->getIsTranslatable() || $translator && in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
+        if ($translator && $field->getIsTranslatable($element) || $translator && in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
             $fieldSource = $translator->toPostArray($this, $element, $field);
 
             if (!is_array($fieldSource)) {
@@ -312,7 +303,7 @@ class ElementTranslator
         $fieldType = $field;
 
         // Check if field is translatable or is nested field
-        if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
+        if ($field->getIsTranslatable($element) || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
 
             return $translator ? $translator->getWordCount($this, $element, $field) : 0;

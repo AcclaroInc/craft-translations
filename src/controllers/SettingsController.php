@@ -59,7 +59,7 @@ class SettingsController extends BaseController
         $variables['settings']['phpVersion'] = CraftApp::phpVersion();
         $variables['settings']['DOMEnabled'] = extension_loaded('dom');
         $variables['settings']['isMultisite'] = Craft::$app->getIsMultiSite();
-        $variables['settings']['sections'] = Craft::$app->getSections()->getAllSections();
+        $variables['settings']['sections'] = Craft::$app->getEntries()->getAllSections();
 
         foreach (Craft::$app->getFields()->getAllFieldTypes() as $key => $fieldType) {
             if (in_array($fieldType, $supportedFieldTypes)) {
@@ -236,7 +236,6 @@ class SettingsController extends BaseController
         $variables['chkDuplicateEntries'] = $settings->chkDuplicateEntries ?? '';
         $variables['trackSourceChanges'] = $settings->trackSourceChanges ?? '';
         $variables['trackTargetChanges'] = $settings->trackTargetChanges ?? '';
-        $variables['preventSlugTranslation'] = $settings->preventSlugTranslation ?? '';
         $variables['apiLogging'] = $settings->apiLogging ?? '';
         $variables['uploadVolume'] = $settings->uploadVolume;
         $variables['twigSearchFilterSingleQuote'] = !empty($settings->twigSearchFilterSingleQuote) ? $settings->twigSearchFilterSingleQuote : "";
@@ -272,7 +271,6 @@ class SettingsController extends BaseController
         $duplicateEntries = $request->getParam('chkDuplicateEntries');
         $trackSourceChanges = $request->getParam('trackSourceChanges');
         $trackTargetChanges = $request->getParam('trackTargetChanges');
-        $preventSlugTranslation = $request->getParam('preventSlugTranslation');
         $apiLogging = $request->getParam('apiLogging');
         $selectedVolume = $request->getParam('uploadVolume');
         $twigSearchFilterSingleQuote = $request->getParam('twigSearchFilterSingleQuote');
@@ -288,7 +286,6 @@ class SettingsController extends BaseController
                 'chkDuplicateEntries'           => $duplicateEntries,
                 'trackSourceChanges'            => $trackSourceChanges,
                 'trackTargetChanges'            => $trackTargetChanges,
-                'preventSlugTranslation'        => $preventSlugTranslation,
                 'apiLogging'		            => $apiLogging,
                 'uploadVolume'                  => $selectedVolume,
                 'twigSearchFilterSingleQuote'   => $twigSearchFilterSingleQuote,

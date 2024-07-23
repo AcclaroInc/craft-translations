@@ -158,7 +158,6 @@ class Install extends Migration
                     'trackChanges'              => $this->integer()->defaultValue(0),
 					'includeTmFiles'            => $this->integer()->defaultValue(0),
 					'trackTargetChanges'        => $this->integer()->defaultValue(0),
-                    'preventSlugTranslation'    => $this->integer()->defaultValue(0),
                     'asynchronousPublishing'    => $this->integer()->defaultValue(0),
                     'requestQuote'              => $this->integer()->defaultValue(0),
                     'dateCreated'               => $this->dateTime()->notNull(),

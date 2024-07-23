@@ -8,26 +8,8 @@
 ] %}
 
 {% set fullPageForm = true %}
-{% set saveShortcutRedirect = continueEditingUrl %}
-{% do view.setIsDeltaRegistrationActive(true) %}
-
-{% set formActions = [
-  {
-    action: 'translations/commerce/publish-draft',
-    redirect: 'translations/order/index'|hash,
-    label: 'Publish'|t('translations'),
-  },
-  {
-    action: 'translations/commerce/delete-draft',
-    confirm: 'Are you sure you want to delete this draft?'|t('translations'),
-    redirect: 'translations/order/index'|hash,
-    label: 'Delete'|t('translations'),
-    destructive: true,
-  }
-] %}
 
 {% import "_includes/forms" as forms %}
-{% import "commerce/products/_fields" as productFields %}
 
 {% block header %}
   <div class="flex flex-nowrap">
@@ -79,10 +61,16 @@
 {% block actionButton %}
     <div id="save-btn-container" class="btngroup submit">
         <button type="submit" class="btn submit">{{ 'Save'|t('translations') }}</button>
-        {% if formActions|length %}
             <button type="button" class="btn submit menubtn" aria-lable="{{ 'Actions'|t('translations') }}"></button>
-            {% include '_layouts/components/form-action-menu' %}
-        {% endif %}
+            <div class="menu">
+              <ul>
+                  <li><a class="formsubmit" data-action="translations/commerce/publish-draft" data-redirect="{{'translations/order/index'|hash}}">{{ 'Publish draft'|t }}</a></li>
+              </ul>
+              <hr>
+              <ul>
+                  <li><a class="formsubmit" data-action="translations/commerce/delete-draft" data-redirect="{{'translations/order/index'|hash}}" data-confirm="{{ 'Are you sure you want to delete this draft?'|t }}">{{ 'Delete draft'|t }}</a></li>
+              </ul>
+            </div>
     </div>
 {% endblock %}
 
@@ -100,56 +88,7 @@
 {% endblock %}
 
 {% block details %}
-  <div class="meta">
-      {{ productFields.generalMetaFields(product) }}
-
-      {# {{ forms.lightswitchField({
-          label: "Enabled"|t('commerce'),
-          id: 'enabled',
-          name: 'enabled',
-          on: product.enabled
-      }) }}
-
-      {% if craft.app.getIsMultiSite() %}
-          {{ forms.lightswitchField({
-              label: "Enabled for site"|t('commerce'),
-              id: 'enabledForSite',
-              name: 'enabledForSite',
-              on: product.enabledForSite
-          }) }}
-      {% endif %} #}
-  </div>
-
-  {# <div class="meta">
-      {{ productFields.behavioralMetaFields(product) }}
-  </div> #}
-
-  {# {{ productFields.singleVariantFields(product, productType) }} #}
-
-  {% if product.id %}
-    <div class="meta">
-      {# Related Sales #}
-      {# {% if currentUser.can('commerce-managePromotions') and not craft.app.request.isAjax %}
-          {% set productDefaultVariant = product.getDefaultVariant(true) %}
-          {% if currentUser.can('commerce-editSales') and productDefaultVariant is not null %}
-              {{ productFields.relatedSales(productDefaultVariant.id, productType.hasVariants) }}
-          {% endif %}
-
-        {% if craft.commerce.is('pro') and currentUser.can('commerce-editDiscounts') and productDefaultVariant is not null %}
-          {{ productFields.relatedDiscounts(productDefaultVariant.id, productDefaultVariant) }}
-        {% endif %}
-      {% endif %} #}
-      <div class="data">
-        <h5 class="heading">{{ "Date Created"|t('commerce') }}</h5>
-        <div class="value">{{ product.dateCreated|date('short') }} {{ product.dateCreated|time('short') }}</div>
-      </div>
-      <div class="data">
-        <h5 class="heading">{{ "Date Updated"|t('commerce') }}</h5>
-        <div class="value">{{ product.dateUpdated|date('short') }} {{ product.dateUpdated|time('short') }}</div>
-      </div>
-    </div>
-    {% hook "cp.commerce.product.edit.details" %}
-  {% endif %}
+ {{ sideBar|raw }}
 {% endblock %}
 
 {% if not product.slug %}
@@ -160,7 +99,6 @@
   {% js %}
       new Craft.Commerce.ProductEdit({
         id: {{ product.id|raw }},
-        hasVariants: {{ productType.hasVariants ? 'true' : 'false' }},
         purchasables: {{ product.getVariants()|map(v => {id: v.id, title: v.title, sku: v.sku})|json_encode|raw }}
       });
   {% endjs %}
