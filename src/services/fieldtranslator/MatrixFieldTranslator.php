@@ -97,8 +97,10 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             $blockId = $field->getIsTranslatable($element) ? $i : $block->id;
             $blockData = $fieldData[$i] ?? $fieldData[$oldKey] ?? array();
 
+            $titleDiff = !is_null($fieldData[$i]['title']) && ($block->title !== $fieldData[$i]['title']) ? $fieldData[$i]['title'] : $block->title;
+            
             $post[$fieldHandle][$blockId] = array(
-                'title'             => $block->title,
+                'title'             => $titleDiff,
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
                 'collapsed'         => $block->getAttributes()['collapsed'],

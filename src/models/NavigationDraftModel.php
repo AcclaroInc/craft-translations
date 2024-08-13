@@ -42,6 +42,8 @@ class NavigationDraftModel extends Node
 
     public $sourceSite;
 
+    public ?int $canonicalId = null;
+
     /**
      * @param array $attributes
      */

@@ -103,9 +103,10 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
             $blockId = $field->getIsTranslatable($element) ? $i : $block->id;
             $blockData = $allBlockData[$i] ?? array();
+            $titleDiff = !is_null($fieldData[$i]['title']) && ($block->title !== $fieldData[$i]['title']) ? $fieldData[$i]['title'] : $block->title;
 
             $post[$fieldHandle][$blockId] = array(                
-                'title' => $block->title,
+                'title' => $titleDiff,
                 'modified' => '1',
                 'type' => $block->getType()->handle,
                 'enabled' => $block->enabled,

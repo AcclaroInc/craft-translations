@@ -48,16 +48,8 @@
     },
 
     getSourceSite: function () {
-      var localeMenu = $(".sitemenubtn").data("menubtn").menu;
-
-      // Figure out the initial locale
-      var $option = localeMenu.$options.filter(".sel:first");
-
-      if ($option.length === 0) {
-        $option = localeMenu.$options.first();
-      }
-
-      var siteId = $option.data("site-id").toString();
+      let localeMenu = $(".menu-item.sel").attr('data-site-id');
+      let siteId = localeMenu.toString();
 
       return siteId;
     },

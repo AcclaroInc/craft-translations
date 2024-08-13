@@ -45,7 +45,7 @@ class NavigationDraftRepository
 
         if ($record) {
             $navDraft = new NavigationDraftModel($record->toArray([
-                'id', 'name', 'title', 'navId', 'site', 'data', 'draftId'
+                'id', 'name', 'title', 'navId', 'site', 'data', 'draftId', 'canonicalId'
             ]));
 
             $assetData = json_decode($record['data'], true);
@@ -98,6 +98,7 @@ class NavigationDraftRepository
             $record->site = $draft->site;
             $record->name = $draft->name;
             $record->title = $draft->title;
+            $record->canonicalId = $draft->canonicalId;
         }
         return $record;
     }
@@ -126,12 +127,16 @@ class NavigationDraftRepository
         $record->name = $draft->name;
         $record->title = $draft->title;
 
+        if ($isnew) {
+            $record->canonicalId = $draft->canonicalId;
+        }
+
         $data = ['fields' => []];
         $content = $content ?? Translations::$plugin->elementTranslator->toPostArray($draft);
 
         foreach ($draft->getFieldLayout()->getCustomFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-            if ($field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
+            if ($field->getIsTranslatable($draft) || in_array(get_class($field), Constants::NESTED_FIELD_TYPES)) {
                 if (isset($content[$field->handle])) {
                     $data['fields'][$field->id] = $content[$field->handle];
                 }
@@ -163,17 +168,15 @@ class NavigationDraftRepository
      */
     public function publishDraft(Node $draft)
     {
-        $post = [];
-        $node = $this->getNavById($draft->navId, $draft->site);
-
-        foreach ($draft->getDirtyFields() as $fieldHandle) {
-            $post[$fieldHandle] = $draft->getBehavior('customFields')->$fieldHandle;
+        $node = $draft->createAnother();
+        $success = Craft::$app->elements->saveElement($node, false);
+        if (!$success) {
+            Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t publish draft "' . $draft->title . '"', Constants::LOG_LEVEL_ERROR);
+            return false;
         }
+        Craft::$app->elements->deleteElement($node, false);
 
-        $node->title = $draft->title;
-        $node->setFieldValues($post);
-
-        return Craft::$app->elements->saveElement($node, false);
+        return true;
     }
 
     /**
@@ -196,6 +199,7 @@ class NavigationDraftRepository
             $draft->sourceSite = $sourceSite;
             $draft->navId = $node->navId;
             $draft->data = [];
+            $draft->canonicalId = $node->canonicalId;
             $this->saveDraft($draft, ["isnew" => true]);
             return $draft;
         } catch (Exception $e) {
