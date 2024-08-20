@@ -121,6 +121,7 @@ class OrderController extends BaseController
 		$variables['elementWordCounts'] = array();
         $variables['orderWordCount'] = 0;
         $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
+        $variables['programOptions'] = [];
         $variables['translatorServices'] = [];
 
         if ($variables['isProcessing']) {
@@ -493,6 +494,7 @@ class OrderController extends BaseController
 
             $order->comments = Craft::$app->getRequest()->getParam('comments');
             $order->translatorId = Craft::$app->getRequest()->getParam('translatorId');
+            $order->programId = Craft::$app->getRequest()->getBodyParam('programId');
 
             $order->elementIds = json_encode($elementIds);
 
@@ -687,6 +689,7 @@ class OrderController extends BaseController
 
         $elementIds = Craft::$app->getRequest()->getBodyParam('elements');
         $sourceSite = Craft::$app->getRequest()->getBodyParam('sourceSite');
+        $programId = Craft::$app->getRequest()->getBodyParam('programId');
 
         if (!$currentUser->can('translations:orders:create')) {
             return $this->asFailure($this->getErrorMessage("User does not have permission to perform this action."));
@@ -822,6 +825,14 @@ class OrderController extends BaseController
 							}
 						}
 					}
+				}
+            }
+
+            if($order->programId != $programId = Craft::$app->getRequest()->getBodyParam('programId')) {
+                $order->programId = $programId;
+
+                if ($isAcclaroTranslator) {
+					$translatorService->addProgramToOrder($order->serviceOrderId, $programId);
 				}
             }
 

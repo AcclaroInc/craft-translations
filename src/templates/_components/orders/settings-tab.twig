@@ -94,7 +94,17 @@
 		}) }}
 		<input type="hidden" id="originalTranslatorId" value="{{ order.translatorId }}" data-id="{{ defaultTranslatorId|default(0) }}">
 
-		<hr>
+		<div id="programOption" class="hidden mb-1">
+			{{ forms.selectField({
+				label: 'Add To Program'|t,
+				value: order.programId,
+				options: programOptions,
+				name: 'programId',
+				id: 'programId',
+				class: isEditable
+			}) }}
+		</div>
+		<input type="hidden" id="originalProgramId" value="{{ order.programId }}">
 
 		<a class="fieldtoggle collapsed" data-target="advance-fields" style="margin-bottom: 0; margin-top: -7px">Advanced</a>
 		<div id="advance-fields" class="field hidden" style="margin-top: 20px">

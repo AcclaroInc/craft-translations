@@ -77,11 +77,19 @@
                 }) }}
             </div>
 
-            <div id="settings-sandboxMode" class="hidden">
+            <div id="settings-sandboxMode" class="hidden mb-1">
                 {{ forms.lightswitchField({
                     label: 'Sandbox Mode'|t,
                     on: translator.setting('sandboxMode'),
                     name: 'settings[sandboxMode]'
+                }) }}
+            </div>
+
+            <div id="settings-addToProgram" class="hidden">
+                {{ forms.lightswitchField({
+                    label: 'Add To Program'|t,
+                    on: translator.setting('addToProgram'),
+                    name: 'settings[addToProgram]'
                 }) }}
             </div>
         </div>

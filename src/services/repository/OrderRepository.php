@@ -344,6 +344,10 @@ class OrderRepository
 
         $order->status = $order->requestQuote() ? Constants::ORDER_STATUS_GETTING_QUOTE : Constants::ORDER_STATUS_NEW;
 
+        if($order->programId) {
+            $translationService->addProgramToOrder($order->serviceOrderId, $order->programId);
+        }
+
         $order->dateOrdered = new \DateTime();
 
         Craft::$app->getElements()->saveElement($order);

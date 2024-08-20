@@ -210,6 +210,7 @@ class Constants
     // Api Constant
     const REQUEST_METHOD_GET = 'GET';
     const REQUEST_METHOD_POST = 'POST';
+    const REQUEST_METHOD_PUT = 'PUT';
 
     // Acclaro Api
     const ACCLARO_API_GET_ACCOUNT           = 'info/account';
@@ -224,6 +225,7 @@ class Constants
     const ACCLARO_API_DELETE_ORDER_TAG          = 'orders/{orderid}/tag-delete';
     const ACCLARO_API_ADD_ORDER_COMMENT         = 'orders/{orderid}/comment';
     const ACCLARO_API_REQUEST_ORDER_CALLBACK    = 'orders/{orderid}/callback';
+    const ACCLARO_ADD_PROGRAM_TO_ORDER          = 'orders/{orderid}/programs';
 
     const ACCLARO_API_REQUEST_ORDER_QUOTE       = 'orders/{orderid}/quote';
     const ACCLARO_API_GET_QUOTE_DETAILS         = 'orders/{orderid}/quote-details';
@@ -239,6 +241,8 @@ class Constants
     const ACCLARO_API_ADD_FILE_COMMENT      = 'orders/{orderid}/files/{fileid}/comment';
     const ACCLARO_API_REQUEST_FILE_CALLBACK = 'orders/{orderid}/files/{fileid}/callback';
     const ACCLARO_API_ADD_FILE_REVIEW_URL   = 'orders/{orderid}/files/{fileid}/review-url';
+
+    const ACCLARO_API_GET_PROGRAMS = 'programs/list';
 
     // Iso mapping
     const PLUGIN_STORAGE_LOCATION = "@storage/" . self::PLUGIN_HANDLE;

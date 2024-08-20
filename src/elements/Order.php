@@ -53,6 +53,8 @@ class Order extends Element
 
     public $targetSites;
 
+    public $programId;
+
     public $status;
 
     public $statusColour;
@@ -763,7 +765,7 @@ class Order extends Element
     }
 
     /**
-     * Create translation service calss based on translator
+     * Create translation service calls based on translator
      */
     public function getTranslationService()
     {
@@ -864,6 +866,7 @@ class Order extends Element
 
         $record->translatorId =  $this->translatorId;
         $record->ownerId =  $this->ownerId;
+        $record->programId =  $this->programId;
         $record->sourceSite =  $this->sourceSite;
         $record->targetSites =  $this->targetSites;
         $record->status =  $this->status;

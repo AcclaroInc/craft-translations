@@ -178,6 +178,17 @@
 			});
 
 			if (haveDifferences($originalTags, $currentTags)) return true;
+
+            $originalProgramId = $('#originalProgramId').val();
+            let programId = $('#programId').val();
+
+            if ($originalProgramId && programId) {
+                $originalProgramId = $originalProgramId.split(',');
+                programId = programId.split(',');
+
+                if (haveDifferences($originalProgramId, programId)) return true;
+            }
+
 		}
 
         return false;
@@ -288,8 +299,66 @@
         return translatorServices[getSelectedTranslator().val()] == translator;
     }
 
+    function updateProgramOptions(options) {
+        const selectElement = $('#programId');
+
+        if (selectElement.length === 0) {
+            console.error('Select element with ID "programId" not found.');
+            return;
+        }
+
+        // Clear existing options
+        selectElement.empty();
+
+        let originalProgramId = $('#originalProgramId').val();
+
+        options.forEach(function (option) {
+            let optionElement = $('<option></option>')
+                .val(option.id)
+                .text(option.name);
+
+            if (option.id == originalProgramId) {
+                optionElement.attr('selected', 'selected');
+            }
+
+            selectElement.append(optionElement);
+        });
+    }
+
+    function showProgramsList() {
+        let translatorId = getSelectedTranslator().val();
+
+        // Construct the endpoint URL
+        const url = `/admin/translations/translators/${translatorId}/programs`;
+
+        // Make the GET request
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': Craft.csrfTokenValue // Include the CSRF token if needed
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.addToProgramAllowed) {
+                    updateProgramOptions(data.programOptions);
+                    $('#programOption').removeClass('hidden non-editable disabled');
+                } else {
+                    $('#programOption').addClass('hidden non-editable disabled');
+                }
+            })
+            .catch(error => console.error('There was a problem with the fetch operation:', error));
+    }
+
     function toggleTranslatorBasedFields() {
         if (isSelectedTranslator('acclaro')) {
+            showProgramsList();
             $('#extra-fields').removeClass('hidden non-editable disabled');
 
             if (!isPending) {
@@ -557,6 +626,14 @@
                     setSubmitButtonStatus(false);
                 }
             });
+
+            $('#programId').on('change', function() {
+                if (validateForm() && (isPending || isOrderChanged())) {
+                    setSubmitButtonStatus(true);
+                } else {
+                    setSubmitButtonStatus(false);
+                }
+            })
 
             $('.order-warning', '#global-container').infoicon();
 

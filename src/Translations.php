@@ -362,6 +362,7 @@ class Translations extends Plugin
                     'translations/translators' => 'translations/translator/index',
                     'translations/translators/new' => 'translations/translator/detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/translator/detail',
+                    'translations/translators/<translatorId:\d+>/programs' => 'translations/translator/program-list',
 
                     // Order Controller
                     'translations/orders' => 'translations/order/order-index',

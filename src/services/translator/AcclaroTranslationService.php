@@ -476,4 +476,14 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         return (new Export_ImportTranslationService())->updateIOFile($order, $file);
     }
+
+    public function getProgramsList()
+    {
+        return $this->apiClient->getProgramsList();
+    }
+
+    public function addProgramToOrder($orderId, $programId) 
+    {
+        return $this->apiClient->addProgramToOrder($orderId, $programId);
+    }
 }
