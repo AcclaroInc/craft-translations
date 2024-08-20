@@ -76,6 +76,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 			case \verbb\vizy\nodes\BulletList::class:
 			case \verbb\vizy\nodes\OrderedList::class:
 			case \verbb\vizy\nodes\Heading::class:
+				break;
 			case \verbb\vizy\nodes\ListItem::class:
 				$source = array_merge($source, $this->customFieldsToSourceArray($block->serializeValue(), $key));
 				break;
@@ -183,8 +184,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 
 							if (isset($targetData[$handle][$key])) {
 								$target = $targetData[$handle][$key];
-
-								$postArray['attrs']['values']['content']['fields'][$handle][$index] = $this->fieldToPostArrayFromTranslationTarget($value, $target);
+								$postArray['attrs']['values']['content']['fields'][$handle][$index] = is_array($value) ? $this->fieldToPostArrayFromTranslationTarget($value, $target) : $value;
 							}
 						}
 					} else {

@@ -16,7 +16,7 @@
         hasSpinner: null,
         $originalContent: null,
 
-        init: function (t, e) {
+        init: function (t, e, elementId) {
             this.$container = $('#files'),
             this.$originalContent = $('#content'),
             this.setSettings(e, Craft.Translations.FilePreview.defaults),
@@ -24,6 +24,8 @@
             this.previewLinks = [],
             this.previewTokenQueue = this._createQueue(),
             this.$previewBtn = this.$container.find(t);
+            this.elementId = elementId;
+            this.draftId = this.settings.draftId;
             var s = $("#page-title");
 
             if ($('#page-title').find('div.revision-spinner').length == 0) {
@@ -93,8 +95,7 @@
 
             return (this.preview = new Craft.Preview(this),
                 this.preview.on("open", (function () {
-                        $preview = $(document).find('div[aria-labelledby=lp-preview-heading]');
-
+                        $preview = $(document).find('div.lp-device-mask');
                         if ($preview.length) {
                             $preview.find('.lp-editor-container').addClass('hidden');
                             $button = $preview.find('div.lp-editor-container header button');

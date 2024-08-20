@@ -89,7 +89,8 @@ class AssetsFieldTranslator extends GenericFieldTranslator
                 }
 
                 $element = Craft::$app->assets->getAssetById($block->id, $targetSite);
-                $assetFields = $element->getFieldValues();
+
+                $assetFields =$element ? $element->getFieldValues(): array();
 
                 $post = [];
                 $element->siteId = $targetSite;

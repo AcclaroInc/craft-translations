@@ -89,7 +89,7 @@
                                             {% if element.className == constant('acclaro\\translations\\Constants::CLASS_COMMERCE_PRODUCT') %}
                                                 new Craft.Translations.CommercePreview({{ file.filePreviewSettings('#'~ fileId)|json_encode|raw }});
                                             {% else %}
-                                                new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.filePreviewSettings|json_encode|raw }});
+                                                new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.filePreviewSettings|json_encode|raw }}, {{ file.elementId}});
                                             {% endif %}
                                         {% endjs %}
                                     {% endif %}
