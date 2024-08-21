@@ -689,7 +689,6 @@ class OrderController extends BaseController
 
         $elementIds = Craft::$app->getRequest()->getBodyParam('elements');
         $sourceSite = Craft::$app->getRequest()->getBodyParam('sourceSite');
-        $programId = Craft::$app->getRequest()->getBodyParam('programId');
 
         if (!$currentUser->can('translations:orders:create')) {
             return $this->asFailure($this->getErrorMessage("User does not have permission to perform this action."));
