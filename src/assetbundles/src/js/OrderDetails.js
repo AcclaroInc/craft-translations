@@ -179,16 +179,6 @@
 
 			if (haveDifferences($originalTags, $currentTags)) return true;
 
-            $originalProgramId = $('#originalProgramId').val();
-            let programId = $('#programId').val();
-
-            if ($originalProgramId && programId) {
-                $originalProgramId = $originalProgramId.split(',');
-                programId = programId.split(',');
-
-                if (haveDifferences($originalProgramId, programId)) return true;
-            }
-
 		}
 
         return false;
@@ -312,17 +302,24 @@
 
         let originalProgramId = $('#originalProgramId').val();
 
-        options.forEach(function (option) {
-            let optionElement = $('<option></option>')
-                .val(option.id)
-                .text(option.name);
-
-            if (option.id == originalProgramId) {
-                optionElement.attr('selected', 'selected');
-            }
-
-            selectElement.append(optionElement);
-        });
+        if (options.length === 0) {
+            let noneOptionElement = $('<option></option>')
+                .val('')
+                .text('None');
+            selectElement.append(noneOptionElement);
+        } else {
+            options.forEach(function (option) {
+                let optionElement = $('<option></option>')
+                    .val(option.id)
+                    .text(option.name);
+        
+                if (option.id == originalProgramId) {
+                    optionElement.attr('selected', 'selected');
+                }
+        
+                selectElement.append(optionElement);
+            });
+        }
     }
 
     function showProgramsList() {
@@ -370,6 +367,9 @@
                 $('#comments-field').prop('title', 'This field cannot be edited.');
                 $('#requestedDueDate-field').addClass('disabled non-editable');
                 $('#requestedDueDate-field').prop('title', 'This field cannot be edited.');
+
+                $('#programId-field').addClass('disabled non-editable');
+                $('#programId-field').prop('title', 'This field cannot be edited.');
             }
         } else {
             $('#extra-fields').addClass('hidden non-editable disabled');
@@ -626,14 +626,6 @@
                     setSubmitButtonStatus(false);
                 }
             });
-
-            $('#programId').on('change', function() {
-                if (validateForm() && (isPending || isOrderChanged())) {
-                    setSubmitButtonStatus(true);
-                } else {
-                    setSubmitButtonStatus(false);
-                }
-            })
 
             $('.order-warning', '#global-container').infoicon();
 

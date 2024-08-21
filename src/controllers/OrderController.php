@@ -828,14 +828,6 @@ class OrderController extends BaseController
 				}
             }
 
-            if($order->programId != $programId = Craft::$app->getRequest()->getBodyParam('programId')) {
-                $order->programId = $programId;
-
-                if ($isAcclaroTranslator) {
-					$translatorService->addProgramToOrder($order->serviceOrderId, $programId);
-				}
-            }
-
             // Update Order Status
 			$order->elementIds = json_encode($elementIds);
 			$order->targetSites = json_encode($targetSites);

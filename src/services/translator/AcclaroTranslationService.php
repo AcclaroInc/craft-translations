@@ -122,6 +122,13 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $dueDate = new \DateTime($orderResponse->duedate);
             $order->orderDueDate = $dueDate->format('Y-m-d H:i:s');
         }
+
+        if($orderResponse->program) {
+            $programId = $orderResponse->program['id'];
+            if($programId !== $order->programId) {
+                $order->programId = $programId;
+            }
+        }
     }
 
     /**
