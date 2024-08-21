@@ -323,6 +323,7 @@
     }
 
     function showProgramsList() {
+        $('.program-loader').removeClass('hidden');
         let translatorId = getSelectedTranslator().val();
 
         // Construct the endpoint URL
@@ -340,6 +341,7 @@
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
+                $('.program-loader').addClass('hidden');
                 return response.json();
             })
             .then(data => {
@@ -349,6 +351,7 @@
                 } else {
                     $('#programOption').addClass('hidden non-editable disabled');
                 }
+                $('.program-loader').addClass('hidden');
             })
             .catch(error => console.error('There was a problem with the fetch operation:', error));
     }
