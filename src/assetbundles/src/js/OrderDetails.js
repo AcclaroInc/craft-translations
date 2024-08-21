@@ -373,6 +373,7 @@
             }
         } else {
             $('#extra-fields').addClass('hidden non-editable disabled');
+            $('#programOption').addClass('hidden non-editable disabled');
         }
     }
 
