@@ -513,7 +513,7 @@ class FileRepository
      *
      *@return array $settings
      */
-    public function getFilePreviewSettings(FileModel $file, $trigger)
+    public function getFilePreviewSettings(FileModel $file)
     {
         $settings = [];
         $element = $file->getElement(false);
@@ -521,43 +521,30 @@ class FileRepository
         if ($element) {
             $security = Craft::$app->getSecurity();
 
-            if ($trigger) {
-                $settings = [
-                    'trigger' => $trigger,
-                    'previewUrl' => $element->getUrl(),
-                    'previewAction' => $security->hashData('commerce/products-preview/preview-product'),
-                    'previewParams' => [
-                        'typeId' => $element->typeId,
-                        'productId' => $element->id,
-                        'siteId' => $element->siteId,
-                    ]
-                ];
-            } else {
-                if ($previewTargets = $element->getPreviewTargets() ?? []) {
-                    if ($file->hasDraft() && $file->isComplete()) {
-                        Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
+            if ($previewTargets = $element->getPreviewTargets() ?? []) {
+                if ($file->hasDraft() && $file->isComplete()) {
+                    Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
+                } else {
+                    if ($element->getIsDraft()) {
+                        Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
                     } else {
-                        if ($element->getIsDraft()) {
-                            Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
-                        } else {
-                            Craft::$app->getSession()->authorize("previewElement:$element->id");
-                        }
+                        Craft::$app->getSession()->authorize("previewElement:$element->id");
                     }
                 }
+            }
 
-                $settings = [
-                    'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
-                    'elementType' => get_class($element),
-                    'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
-                    'previewTargets' => $previewTargets,
-                    'previewToken' => $security->generateRandomString() ?? null,
-                    'siteId' => $file->targetSite,
-                    'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
-                ];
+            $settings = [
+                'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
+                'elementType' => get_class($element),
+                'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
+                'previewTargets' => $previewTargets,
+                'previewToken' => $security->generateRandomString() ?? null,
+                'siteId' => $file->targetSite,
+                'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
+            ];
 
-                if ($file->isComplete() || $element->getIsDraft()) {
-                    $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
-                }
+            if ($file->isComplete() || $element->getIsDraft()) {
+                $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
             }
         }
 
