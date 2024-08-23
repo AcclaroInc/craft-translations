@@ -262,7 +262,7 @@
             return siteId;
         },
         getEditProductId: function() {
-            var entryId = $('form#main-form input[type=hidden][name=productId]').val();
+            var entryId = $('form#main-form input[type=hidden][name=elementId]').val();
 
             return entryId;
         }
