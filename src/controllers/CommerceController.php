@@ -45,6 +45,7 @@ class CommerceController extends BaseController
     {
         $variables = $this->request->resolve()[1];
         $variables['selectedSubnavItem'] = 'products';
+        $variables['showPreviewBtn'] = false;
 
         if (empty($variables['productTypeHandle'])) {
             throw new NotFoundHttpException(Translations::$plugin->translator->translate('app', 'Invalid: “{name}”', array('name' => 'productTypeHandle')));
@@ -86,25 +87,6 @@ class CommerceController extends BaseController
 
         if (!$product->getType()->maxVariants) {
             $this->getView()->registerJs('Craft.Commerce.initUnlimitedStockCheckbox($("#details"));');
-        }
-
-        // Enable Live Preview?
-        if (!$this->request->isMobileBrowser(true) && Plugin::getInstance()->getProductTypes()->isProductTypeTemplateValid($variables['productType'], $variables['site']->id)) {
-            $this->getView()->registerJs('Craft.LivePreview.init(' . Json::encode([
-                'fields' => '#fields > .flex-fields > .field',
-                'extraFields' => '#details',
-                'previewUrl' => $product->getUrl(),
-                'previewAction' => Craft::$app->getSecurity()->hashData('commerce/products-preview/preview-product'),
-                'previewParams' => [
-                    'typeId' => $variables['productType']->id,
-                    'productId' => $product->id,
-                    'siteId' => $product->siteId,
-                ],
-            ]) . ');');
-
-            $variables['showPreviewBtn'] = true;
-        } else {
-            $variables['showPreviewBtn'] = false;
         }
 
         $this->getView()->registerAssetBundle(EditProductAsset::class);

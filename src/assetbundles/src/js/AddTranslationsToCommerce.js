@@ -221,7 +221,7 @@
             });
         },
         isEditScreen: function() {
-            return $('form#main-form input[type=hidden][name=productId]').length > 0;
+            return $('form#main-form input[type=hidden][name=elementId]').length > 0;
         },
         isIndexScreen: function () {
             return $('form#main-form').length == 0;
@@ -262,7 +262,7 @@
             return siteId;
         },
         getEditProductId: function() {
-            var entryId = $('form#main-form input[type=hidden][name=productId]').val();
+            var entryId = $('form#main-form input[type=hidden][name=elementId]').val();
 
             return entryId;
         }

@@ -26,7 +26,6 @@ class FilePreviewAssets extends AssetBundle
 
         $this->js = [
             'js/FilePreview.js',
-            'js/CommercePreview.js',
             'js/EntryPreview.js',
         ];
 

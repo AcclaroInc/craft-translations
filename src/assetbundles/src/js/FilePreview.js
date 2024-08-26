@@ -26,6 +26,7 @@
             this.$previewBtn = this.$container.find(t);
             this.elementId = elementId;
             this.draftId = this.settings.draftId;
+            this.siteId = this.settings.siteId;
             var s = $("#page-title");
 
             if ($('#page-title').find('div.revision-spinner').length == 0) {
