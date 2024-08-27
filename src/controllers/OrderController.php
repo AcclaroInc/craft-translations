@@ -199,6 +199,10 @@ class OrderController extends BaseController
 				$order->translatorId = $orderTranslatorId;
 			}
 
+            if ($selectedProgramId = Craft::$app->getRequest()->getQueryParam('programId')) {
+				$order->programId = $selectedProgramId;
+			}
+
 			if ($orderTrackChanges= Craft::$app->getRequest()->getQueryParam('trackChanges')) {
 				$order->trackChanges = $orderTrackChanges;
 			}

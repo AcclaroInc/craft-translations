@@ -209,6 +209,7 @@
         });
         dueDate = $('#requestedDueDate-date').val();
         comments = $('#comments').val();
+        programId = $('#programId').val();
         url = '';
         if (typeof title !== undefined && title !== '') {
             url += '&title='+title
@@ -221,6 +222,9 @@
         }
         if (typeof translatorId !== undefined && translatorId!== '') {
             url += '&translatorId='+translatorId
+        }
+        if (typeof programId !== undefined && programId!== '') {
+            url += '&programId='+programId
         }
         if (targetSites !== '') {
             url += targetSites
@@ -301,25 +305,23 @@
         selectElement.empty();
 
         let originalProgramId = $('#originalProgramId').val();
+        
+        let noneOptionElement = $('<option></option>')
+            .val('')
+            .text('None');
+        selectElement.append(noneOptionElement);
 
-        if (options.length === 0) {
-            let noneOptionElement = $('<option></option>')
-                .val('')
-                .text('None');
-            selectElement.append(noneOptionElement);
-        } else {
-            options.forEach(function (option) {
-                let optionElement = $('<option></option>')
-                    .val(option.id)
-                    .text(option.name);
-        
-                if (option.id == originalProgramId) {
-                    optionElement.attr('selected', 'selected');
-                }
-        
-                selectElement.append(optionElement);
-            });
-        }
+        options.forEach(function (option) {
+            let optionElement = $('<option></option>')
+                .val(option.id)
+                .text(option.name);
+    
+            if (option.id == originalProgramId) {
+                optionElement.attr('selected', 'selected');
+            }
+    
+            selectElement.append(optionElement);
+        });
     }
 
     function showProgramsList() {
