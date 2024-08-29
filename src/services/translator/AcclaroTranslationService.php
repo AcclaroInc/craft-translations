@@ -122,6 +122,13 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $dueDate = new \DateTime($orderResponse->duedate);
             $order->orderDueDate = $dueDate->format('Y-m-d H:i:s');
         }
+
+        if($orderResponse->program) {
+            $programId = $orderResponse->program['id'];
+            if($programId !== $order->programId) {
+                $order->programId = $programId;
+            }
+        }
     }
 
     /**
@@ -475,5 +482,15 @@ class AcclaroTranslationService implements TranslationServiceInterface
     public function updateIOFile(Order $order, FileModel $file)
     {
         return (new Export_ImportTranslationService())->updateIOFile($order, $file);
+    }
+
+    public function getProgramsList()
+    {
+        return $this->apiClient->getProgramsList();
+    }
+
+    public function addProgramToOrder($orderId, $programId) 
+    {
+        return $this->apiClient->addProgramToOrder($orderId, $programId);
     }
 }

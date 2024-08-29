@@ -9,21 +9,25 @@ Craft.Translations.TranslatorDetail = {
         var service = this.getService();
         var apiToken = $('#settings-apiToken');
         var sandboxMode = $('#settings-sandboxMode');
+        var addToProgram = $('#settings-addToProgram');
 
         switch (service) {
             case 'acclaro':
                 this.updateServiceTokenLabel(service);
                 apiToken.removeClass('hidden');
                 sandboxMode.removeClass('hidden');
+                addToProgram.removeClass('hidden')
                 break;
             case 'google':
                 this.updateServiceTokenLabel(service);
                 apiToken.removeClass('hidden');
                 sandboxMode.addClass('hidden');
+                addToProgram.addClass('hidden');
                 break;
             default:
                 apiToken.addClass('hidden');
                 sandboxMode.addClass('hidden');
+                addToProgram.addClass('hidden');
         }
     },
 
