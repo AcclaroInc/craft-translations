@@ -166,7 +166,7 @@ class StaticTranslations extends Element
     /**
      * @inheritdoc
      */
-    protected function tableAttributeHtml(string $attribute): string
+    protected function attributeHtml(string $attribute): string
     {
         return $this->$attribute;
     }
@@ -200,7 +200,7 @@ class StaticTranslations extends Element
     /**
      * @inheritdoc
      */
-    public static function indexHtml(ElementQueryInterface $elementQuery, ?array $disabledElementIds, array $viewState, ?string $sourceKey, ?string $context, bool $includeContainer, bool $showCheckboxes): string
+    public static function indexHtml(ElementQueryInterface $elementQuery, ?array $disabledElementIds, array $viewState, ?string $sourceKey, ?string $context, bool $includeContainer, bool $selectable, bool $sortable = false): string
     {
         // if not getting siteId then set primary site id
         if (empty($elementQuery->siteId)) {
@@ -228,9 +228,14 @@ class StaticTranslations extends Element
             'context' => $context,
             'disabledElementIds' => $disabledElementIds,
             'collapsedElementIds' => Craft::$app->getRequest()->getParam('collapsedElementIds'),
+            'selectable' => $selectable,
+            'sortable' => $sortable,
+            'showHeaderColumn' => $viewState['showHeaderColumn'] ?? false,
+            'inlineEditing' => $viewState['inlineEditing'] ?? false,
+            'nestedInputNamespace' => $viewState['nestedInputNamespace'] ?? null,
+            'tableName' => static::pluralDisplayName(),
             'attributes' => $attributes,
             'elements' => $elements,
-            'showCheckboxes' => $showCheckboxes
         ];
 
         Craft::$app->view->registerJs("$('table.fullwidth thead th').css('width', '50%');");

@@ -192,7 +192,7 @@ class FileModel extends Model
     {
         $element = $this->getElement();
 
-        return $element instanceof (Constants::CLASS_ENTRY) || $element instanceof (Constants::CLASS_CATEGORY);
+        return $element instanceof (Constants::CLASS_ENTRY) || $element instanceof (Constants::CLASS_CATEGORY) || $element instanceof (Constants::CLASS_COMMERCE_PRODUCT);
     }
     
     public function getOrder()
@@ -269,9 +269,9 @@ class FileModel extends Model
 		return $element;
 	}
 
-    public function getFilePreviewSettings($trigger = null)
+    public function getFilePreviewSettings()
     {
-        return $this->_service->getFilePreviewSettings($this, $trigger);
+        return $this->_service->getFilePreviewSettings($this);
     }
 
     public function getEntryPreviewSettings()

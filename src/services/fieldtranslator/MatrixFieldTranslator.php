@@ -94,10 +94,15 @@ class MatrixFieldTranslator extends GenericFieldTranslator
              * Block id changes for localised block so use $i and using same for non localised blocks merges other
              * sites non localised block to non localised block.
              */
-            $blockId = $field->getIsTranslatable() ? $i : $block->id;
+            $blockId = $field->getIsTranslatable($element) ? $i : $block->id;
             $blockData = $fieldData[$i] ?? $fieldData[$oldKey] ?? array();
 
+            $titleDiff = (!empty($fieldData[$i]['title']) && $block->title !== $fieldData[$i]['title'])
+                ? $fieldData[$i]['title']
+                : ($block->title ?? '');
+
             $post[$fieldHandle][$blockId] = array(
+                'title'             => $titleDiff,
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
                 'collapsed'         => $block->getAttributes()['collapsed'],

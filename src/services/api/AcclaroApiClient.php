@@ -185,6 +185,19 @@ class AcclaroApiClient
     }
 
     /**
+     * Create and send a POST api request
+     *
+     * @param string $endpoint
+     * @param array $query
+     * @param array $files
+     * @return void|object
+     */
+    public function put($endpoint, $query = array(), $files = array())
+    {
+        return $this->request(Constants::REQUEST_METHOD_PUT, $endpoint, $query, $files);
+    }
+
+    /**
      * Get acclaro account details
      *
      * @return void|object
@@ -571,6 +584,31 @@ class AcclaroApiClient
     {
         return $this->get(Constants::ACCLARO_API_GET_LANGUAGE_PAIRS, array(
             'sourcelang' => $sourceLang,
+        ));
+    }
+
+    /**
+     * Get programs list
+     * 
+     * @return void|object
+     */
+    public function getProgramsList()
+    {
+        return $this->get(Constants::ACCLARO_API_GET_PROGRAMS);
+    }
+
+    /**
+     * Attach program ID to an 
+     *
+     * @param int|string $orderId
+     * @param string $comment
+     * @return void|object
+     */
+    public function addProgramToOrder($orderId, $programId)
+    {
+        return $this->put(Constants::ACCLARO_ADD_PROGRAM_TO_ORDER, array(
+            'orderid'   => $orderId,
+            'program_id' => $programId
         ));
     }
 }

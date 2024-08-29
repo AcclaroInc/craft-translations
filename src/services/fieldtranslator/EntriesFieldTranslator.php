@@ -45,7 +45,18 @@ class EntriesFieldTranslator extends GenericFieldTranslator
     {
         $fieldHandle = $field->handle;
 
-        $blocks = $element->getFieldValue($fieldHandle)->all();
+        try {
+            $blocks = $element->getFieldValue($fieldHandle)->all();
+        } catch (\Exception $e) {
+            $blocks = $blocks ?? [];
+            foreach ($element->getFieldValues() as $key => $value) {
+                if ($key === $field->handle) {
+                    $blocks[] = $value;
+                } elseif ($key === preg_replace('/\d+$/', '', $field->handle)) {
+                    $blocks[] = $value;
+                }
+            }
+        }
 
         $post[$fieldHandle] = [];
 

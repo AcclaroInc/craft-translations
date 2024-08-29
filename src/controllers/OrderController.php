@@ -121,6 +121,7 @@ class OrderController extends BaseController
 		$variables['elementWordCounts'] = array();
         $variables['orderWordCount'] = 0;
         $variables['translatorOptions'] = Translations::$plugin->translatorRepository->getTranslatorOptions();
+        $variables['programOptions'] = [];
         $variables['translatorServices'] = [];
 
         if ($variables['isProcessing']) {
@@ -198,16 +199,16 @@ class OrderController extends BaseController
 				$order->translatorId = $orderTranslatorId;
 			}
 
+            if ($selectedProgramId = Craft::$app->getRequest()->getQueryParam('programId')) {
+				$order->programId = $selectedProgramId;
+			}
+
 			if ($orderTrackChanges= Craft::$app->getRequest()->getQueryParam('trackChanges')) {
 				$order->trackChanges = $orderTrackChanges;
 			}
 
 			if ($orderTrackTargetChanges = Craft::$app->getRequest()->getQueryParam('trackTargetChanges')) {
 				$order->trackTargetChanges = $orderTrackTargetChanges;
-			}
-
-			if ($orderPreventSlugTranslation = Craft::$app->getRequest()->getQueryParam('preventSlugTranslation')) {
-				$order->preventSlugTranslation = $orderPreventSlugTranslation;
 			}
 
 			if ($orderIncludeTmFiles = Craft::$app->getRequest()->getQueryParam('includeTmFiles')) {
@@ -480,7 +481,6 @@ class OrderController extends BaseController
             $order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
-            $order->preventSlugTranslation = Craft::$app->getRequest()->getBodyParam('preventSlugTranslation');
 			$order->requestQuote = Craft::$app->getRequest()->getBodyParam('requestQuote');
 			$order->sourceSite = $sourceSite;
             $order->targetSites = $targetSites ? json_encode($targetSites) : null;
@@ -498,6 +498,7 @@ class OrderController extends BaseController
 
             $order->comments = Craft::$app->getRequest()->getParam('comments');
             $order->translatorId = Craft::$app->getRequest()->getParam('translatorId');
+            $order->programId = Craft::$app->getRequest()->getBodyParam('programId');
 
             $order->elementIds = json_encode($elementIds);
 
@@ -835,7 +836,6 @@ class OrderController extends BaseController
 			$order->targetSites = json_encode($targetSites);
 			$order->trackChanges = Craft::$app->getRequest()->getBodyParam('trackChanges');
 			$order->trackTargetChanges = Craft::$app->getRequest()->getBodyParam('trackTargetChanges');
-			$order->preventSlugTranslation = Craft::$app->getRequest()->getBodyParam('preventSlugTranslation');
 			$order->includeTmFiles = Craft::$app->getRequest()->getBodyParam('includeTmFiles');
 			$translatorService->updateOrder($order);
 

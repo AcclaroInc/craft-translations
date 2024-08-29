@@ -16,7 +16,7 @@ class OrderQuery extends ElementQuery
 
     public $elementIds;
     
-    public function status(array|string|null $value): self
+    public function status(array|string|null $value): static
     {
         $this->status = $value;
 
