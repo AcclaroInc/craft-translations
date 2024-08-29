@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.4.1 - 2024-08-29
+
+### Fixed
+- An issue where migration failed to run in postgres database.
+
+
 ## 3.4.0 - 2024-07-10
 
 ### Added
