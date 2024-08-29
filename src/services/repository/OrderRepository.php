@@ -466,7 +466,7 @@ class OrderRepository
         } else if ($element instanceof Asset) {
             $draftElement = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
         } else if ($element instanceof Product) {
-            $draftElement = Translations::$plugin->commerceRepository->getDraftById($file->draftId);
+            $draftElement = Translations::$plugin->commerceRepository->getDraftById($file->draftId, $file->targetSite);
         } else {
             $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }

@@ -586,7 +586,7 @@ class FileRepository
                     $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
                     break;
                 case Product::class:
-                    $draft = Translations::$plugin->commerceRepository->getDraftById($file->draftId);
+                    $draft = Translations::$plugin->commerceRepository->getDraftById($file->draftId, $file->targetSite);
                     break;
                 case Node::class:
                     $draft = Translations::$plugin->navigationDraftRepository->getDraftById($file->draftId);

@@ -113,27 +113,6 @@ class Install extends Migration
             );
         }
 
-        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_COMMERCE_DRAFT);
-        if ($tableSchema === null) {
-            $tablesCreated = true;
-            $this->createTable(
-                Constants::TABLE_COMMERCE_DRAFT,
-                [
-                    'id'            => $this->primaryKey(),
-                    'name'          => $this->string()->notNull(),
-                    'title'         => $this->string()->notNull(),
-                    'productId'     => $this->integer()->notNull(),
-                    'typeId'        => $this->integer()->notNull(),
-                    'site'          => $this->integer()->notNull(),
-                    'data'          => $this->mediumText()->notNull(),
-                    'variants'      => $this->mediumText()->notNull(),
-                    'dateCreated'   => $this->dateTime()->notNull(),
-                    'dateUpdated'   => $this->dateTime()->notNull(),
-                    'uid'           => $this->uid()
-                ]
-            );
-        }
-
         $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_ORDERS);
         if ($tableSchema === null) {
             $tablesCreated = true;
