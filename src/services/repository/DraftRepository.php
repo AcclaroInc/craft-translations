@@ -83,14 +83,6 @@ class DraftRepository
                         $globalSetDraftRepo->deleteDraft($draft);
                     }
                     break;
-                case Product::class:
-                    $commerceRepository = Translations::$plugin->commerceRepository;
-                    $success = $commerceRepository->publishDraft($draft);
-
-                    if ($success) {
-                        $commerceRepository->deleteDraft($draft);
-                    }
-                    break;
                 case Node::class:
                     $navRepository = Translations::$plugin->navigationDraftRepository;
                     $success = $navRepository->publishDraft($draft);

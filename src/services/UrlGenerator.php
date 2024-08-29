@@ -85,13 +85,6 @@ class UrlGenerator
             return Translations::$plugin->urlHelper->url($element->getCpEditUrl(), $data);
         }
 
-        if ($element instanceof (Constants::CLASS_COMMERCE_PRODUCT) && $file->hasDraft() && $file->isComplete()) {
-            $data['draftId'] = $file->draftId;
-            $url = sprintf('commerce/product/%s/%s-%s', $element->type, $element->id ,$element->slug);
-
-            return Translations::$plugin->urlHelper->cpUrl($url, $data);
-        }
-
         if ($element instanceof (Constants::CLASS_NAVIGATION)) {
             if ($file->draftId && $file->isComplete()) {
                 $url = sprintf('translations/edit/%s/%s', $element->navId, $file->draftId);
@@ -141,9 +134,7 @@ class UrlGenerator
 
         $className = get_class($element);
 
-        if ($className === Product::class) {
-            $previewUrl = $element->url;
-        } else if (($className === Entry::class || $className === Category::class) && !$element->getIsDraft()) {
+        if (($className === Entry::class || $className === Category::class || $className === Product::class) && !$element->getIsDraft()) {
             $previewUrl = $element->url;
         } else {
             $route = [

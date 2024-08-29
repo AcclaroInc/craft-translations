@@ -169,7 +169,6 @@ class Constants
     const TABLE_TRANSLATIONS        = '{{%translations_translations}}';
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
-    const TABLE_COMMERCE_DRAFT      = '{{%translations_commercedrafts}}';
     const TABLE_ACTIVITY_LOG        = '{{%translations_activitylogs}}';
     const TABLE_NAVIGATION_DRAFT    = '{{%translations_navigationdrafts}}';
 

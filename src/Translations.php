@@ -385,7 +385,6 @@ class Translations extends Plugin
                     // Asset, Commerce, Global-set, Node Controllers
                     'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/global-set/edit-draft',
-                    'commerce/product/<productTypeHandle:{handle}>/<productId:\d+><slug:(?:-[^\/]*)?>' => 'translations/commerce/edit-draft',
                     'translations/edit/<nodeId:\d+>/<draftId:\d+>/' => 'translations/navigation/edit-draft',
                     'translations/save' => 'translations/navigation/save-draft',
                     'translations/publish' => 'translations/navigation/publish-draft',
@@ -403,7 +402,6 @@ class Translations extends Plugin
         if (preg_match('#^entries(/|$)#', $path)) {
             $this->_includeEntryResources();
         }
-
         // Only matches for commerce products
         if (preg_match('#^commerce/products(/|$)#', $path)) {
             $this->_includeCommerceResources();
