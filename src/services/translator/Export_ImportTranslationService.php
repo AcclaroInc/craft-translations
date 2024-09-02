@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\translator;
 
+use acclaro\translations\Constants;
 use craft\elements\Asset;
 use craft\elements\Category;
 use craft\elements\GlobalSet;
@@ -17,6 +18,7 @@ use craft\elements\GlobalSet;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
+use Craft;
 use craft\commerce\elements\Product;
 use verbb\navigation\elements\Node as Navigation;
 
@@ -169,37 +171,6 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                     return false;
                 }
                 break;
-            // Updated Craft Commerce Product Drafts
-            case $draft instanceof Product:
-                $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
-                $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
-
-                $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
-                $variants = $post['variant'];
-                unset($post['variant']);
-                $draft->setFieldValues($post);
-                $post['variant'] = $variants;
-                $draft->siteId = $targetSite;
-
-                $res = Translations::$plugin->commerceRepository->saveDraft($draft, $post);
-                if ($res !== true) {
-                    if (is_array($res)) {
-                        $errorMessage = '';
-                        foreach ($res as $r) {
-                            $errorMessage .= implode('; ', $r);
-                        }
-                        $order->logActivity(
-                            Translations::$plugin->translator->translate('app', 'Error saving drafts content. Error: ' . $errorMessage)
-                        );
-                    } else {
-                        $order->logActivity(
-                            sprintf(Translations::$plugin->translator->translate('app', 'Unable to save draft, please review your XML for entry {%s}'), $element->title)
-                        );
-                    }
-
-                    return false;
-                }
-                break;
             case $draft instanceof Navigation:
                 $draft->title = isset($targetData['title']) ? $targetData['title'] : $draft->title;
                 $draft->slug = isset($targetData['slug']) ? $targetData['slug'] : $draft->slug;
@@ -233,8 +204,31 @@ class Export_ImportTranslationService implements TranslationServiceInterface
 
                 /** Use source entry as first argument as the draft in target site might have different block structure as compared to source leading into missing some blocks */
                 $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($element, $sourceSite, $targetSite, $targetData);
+                $variantData = $post['variant'] ?? [];
+                unset($post['variant']);
                 $draft->setFieldValues($post);
                 $draft->siteId = $targetSite;
+
+                if ($element instanceof Product) {
+                    $variants = $draft->getVariants(true);
+
+                    if (! empty($variantData)) {
+                        foreach ($variants as $key => $variant) {
+                            if (isset($variantData[$variant->id])) {
+                                $variant->title = $variantData[$variant->id]['title'];
+                                foreach ($variant->getFieldLayout()->getCustomFields() as $layoutField) {
+                                    $field = Craft::$app->fields->getFieldById($layoutField->id);
+                                    
+                                    if (isset($variantData[$variant->id][$field->id])) {
+                                        $variant->setFieldValue($field->handle, $variantData[$variant->id][$field->id]);
+                                    }
+                                }
+                            }
+                            $variants[$key] = $variant;
+                        }
+                    }
+                    $draft->setVariants($variants);
+                }
 
                 $res = Translations::$plugin->draftRepository->saveDraft($draft);
                 if ($res !== true) {

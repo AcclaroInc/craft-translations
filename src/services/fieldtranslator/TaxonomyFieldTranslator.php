@@ -47,7 +47,19 @@ class TaxonomyFieldTranslator extends GenericFieldTranslator
     {
         $fieldHandle = $field->handle;
 
-        $relations = $element->getFieldValue($fieldHandle)->all();
+        try {
+            $relations = $element->getFieldValue($fieldHandle)->all();
+        } catch (\Exception $e) {
+            // Added this block to handle the fields created in craft 5 like heading4, body2, etc.
+            foreach ($element->getFieldValues() as $key => $value) {
+                if ($key === $field->handle) {
+                    return $value;
+                } elseif ($key === preg_replace('/\d+$/', '', $field->handle)) {
+                    $result = $value;
+                }
+            }
+            return $result;
+        }     
 
         if (!$relations) {
             return '';
@@ -71,7 +83,19 @@ class TaxonomyFieldTranslator extends GenericFieldTranslator
     {
         $fieldHandle = $field->handle;
 
-        $relations = $element->getFieldValue($fieldHandle)->all();
+        try {
+            $relations = $element->getFieldValue($fieldHandle)->all();
+        } catch (\Exception $e) {
+            // Added this block to handle the fields created in craft 5 like heading4, body2, etc.
+            foreach ($element->getFieldValues() as $key => $value) {
+                if ($key === $field->handle) {
+                    return $value;
+                } elseif ($key === preg_replace('/\d+$/', '', $field->handle)) {
+                    $result = $value;
+                }
+            }
+            return $result;
+        }
 
         if (!$relations) {
             return array();

@@ -32,7 +32,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		if ($blocks) {
 			foreach ($blocks as $index => $block) {
 				$key = sprintf('%s.new%s', $field->handle, ++$index);
-				$source = array_merge($source, $this->fieldToTranslationSource($block, $key, $sourceSite));
+				$source = array_merge($source, $this->fieldToTranslationSource($element, $block, $key, $sourceSite));
 			}
 		}
 
@@ -65,7 +65,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		return $postArray;
 	}
 
-	private function fieldToTranslationSource($block, $key, $sourceSite)
+	private function fieldToTranslationSource($element, $block, $key, $sourceSite)
 	{
 		$source = [];
 
@@ -75,16 +75,18 @@ class VizyFieldTranslator extends GenericFieldTranslator
 			case \verbb\vizy\nodes\Paragraph::class:
 			case \verbb\vizy\nodes\BulletList::class:
 			case \verbb\vizy\nodes\OrderedList::class:
+			case \verbb\vizy\nodes\Heading::class:
+				break;
 			case \verbb\vizy\nodes\ListItem::class:
 				$source = array_merge($source, $this->customFieldsToSourceArray($block->serializeValue(), $key));
 				break;
 			default:
 				foreach ($block->getFieldLayout()->getCustomFields() as $field) {
-					if ($this->getIsTranslatable($field)) {
+					if ($this->getIsTranslatable($element, $field)) {
 						$newKey = sprintf('%s.%s', $key, $field->handle);
 						$value = $block->getFieldValue($field->handle);
 
-						$source = array_merge($source, $this->parseSourceValues($value, $newKey, $sourceSite));
+						$source = array_merge($source, $this->parseSourceValues($element, $value, $newKey, $sourceSite));
 					}
 				}
 		}
@@ -92,7 +94,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 		return $source;
 	}
 
-	private function parseSourceValues($value, $key, $sourceSite)
+	private function parseSourceValues($element, $value, $key, $sourceSite)
 	{
 		$source = [];
 
@@ -102,7 +104,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 			case is_string($value):
 				$source[$key] = $value;
 				break;
-			case $value instanceof \craft\redactor\FieldData:
+			case $value instanceof \craft\ckeditor\data\FieldData:
 				$source[$key] = $value->getRawContent();
 				break;
 			case $value instanceof \craft\fields\Checkboxes:
@@ -135,7 +137,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 			default:
 				foreach ($value->all() as $innerIndex => $innerBlock) {
 					$newKey = sprintf('%s.new%s', $key, $innerIndex + 1);
-					$source = array_merge($source, $this->fieldToTranslationSource($innerBlock, $newKey, $sourceSite));
+					$source = array_merge($source, $this->fieldToTranslationSource($element, $innerBlock, $newKey, $sourceSite));
 				}
 		}
 
@@ -182,8 +184,7 @@ class VizyFieldTranslator extends GenericFieldTranslator
 
 							if (isset($targetData[$handle][$key])) {
 								$target = $targetData[$handle][$key];
-
-								$postArray['attrs']['values']['content']['fields'][$handle][$index] = $this->fieldToPostArrayFromTranslationTarget($value, $target);
+								$postArray['attrs']['values']['content']['fields'][$handle][$index] = is_array($value) ? $this->fieldToPostArrayFromTranslationTarget($value, $target) : $value;
 							}
 						}
 					} else {
@@ -208,9 +209,9 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	 * @param [type] $field
 	 * @return boolean
 	 */
-	private function getIsTranslatable($field)
+	private function getIsTranslatable($element, $field)
 	{
-		return $field->getIsTranslatable() || in_array(get_class($field), Constants::NESTED_FIELD_TYPES);
+		return $field->getIsTranslatable($element) || in_array(get_class($field), Constants::NESTED_FIELD_TYPES);
 	}
 
 	/**

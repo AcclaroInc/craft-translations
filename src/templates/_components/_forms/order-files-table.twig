@@ -86,11 +86,7 @@
                                         <a id="{{ fileId }}" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
 
                                         {% js %}
-                                            {% if element.className == constant('acclaro\\translations\\Constants::CLASS_COMMERCE_PRODUCT') %}
-                                                new Craft.Translations.CommercePreview({{ file.filePreviewSettings('#'~ fileId)|json_encode|raw }});
-                                            {% else %}
-                                                new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.filePreviewSettings|json_encode|raw }});
-                                            {% endif %}
+                                            new Craft.Translations.FilePreview($('#{{fileId}}'), {{ file.filePreviewSettings|json_encode|raw }}, {{ file.elementId}});
                                         {% endjs %}
                                     {% endif %}
 

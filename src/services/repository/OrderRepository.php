@@ -344,6 +344,10 @@ class OrderRepository
 
         $order->status = $order->requestQuote() ? Constants::ORDER_STATUS_GETTING_QUOTE : Constants::ORDER_STATUS_NEW;
 
+        if($order->programId) {
+            $translationService->addProgramToOrder($order->serviceOrderId, $order->programId);
+        }
+
         $order->dateOrdered = new \DateTime();
 
         Craft::$app->getElements()->saveElement($order);
@@ -466,7 +470,7 @@ class OrderRepository
         } else if ($element instanceof Asset) {
             $draftElement = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
         } else if ($element instanceof Product) {
-            $draftElement = Translations::$plugin->commerceRepository->getDraftById($file->draftId);
+            $draftElement = Translations::$plugin->commerceRepository->getDraftById($file->draftId, $file->targetSite);
         } else {
             $draftElement = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
         }
@@ -510,12 +514,13 @@ class OrderRepository
 
                     $sourceContent = json_decode($converter->xmlToJson($file->source), true);
                     $currentContent = json_decode($converter->xmlToJson($currentContent), true);
+                    if (isset($currentContent['content']) && isset($sourceContent['content'])) {
+                        $sourceContent = json_encode(array_values($sourceContent['content']));
+                        $currentContent = json_encode(array_values($currentContent['content']));
 
-                    $sourceContent = json_encode(array_values($sourceContent['content']));
-                    $currentContent = json_encode(array_values($currentContent['content']));
-
-                    if (md5($sourceContent) !== md5($currentContent)) {
-                        array_push($originalIds, $element->id);
+                        if (md5($sourceContent) !== md5($currentContent)) {
+                            array_push($originalIds, $element->id);
+                        }
                     }
                 } catch (Exception $e) {
                     throw new Exception("Source entry changes check, Error: " . $e->getMessage(), 1);

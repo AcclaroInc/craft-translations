@@ -4,8 +4,8 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '1.4.2';
-    const CRAFT_MIN_VERSION = '4.0.0';
+    const PLUGIN_SCHEMA_VERSION = '2.0.0';
+    const CRAFT_MIN_VERSION = '5.0.0';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
 
@@ -169,7 +169,6 @@ class Constants
     const TABLE_TRANSLATIONS        = '{{%translations_translations}}';
     const TABLE_GLOBAL_SET_DRAFT    = '{{%translations_globalsetdrafts}}';
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
-    const TABLE_COMMERCE_DRAFT      = '{{%translations_commercedrafts}}';
     const TABLE_ACTIVITY_LOG        = '{{%translations_activitylogs}}';
     const TABLE_NAVIGATION_DRAFT    = '{{%translations_navigationdrafts}}';
 
@@ -210,6 +209,7 @@ class Constants
     // Api Constant
     const REQUEST_METHOD_GET = 'GET';
     const REQUEST_METHOD_POST = 'POST';
+    const REQUEST_METHOD_PUT = 'PUT';
 
     // Acclaro Api
     const ACCLARO_API_GET_ACCOUNT           = 'info/account';
@@ -224,6 +224,7 @@ class Constants
     const ACCLARO_API_DELETE_ORDER_TAG          = 'orders/{orderid}/tag-delete';
     const ACCLARO_API_ADD_ORDER_COMMENT         = 'orders/{orderid}/comment';
     const ACCLARO_API_REQUEST_ORDER_CALLBACK    = 'orders/{orderid}/callback';
+    const ACCLARO_ADD_PROGRAM_TO_ORDER          = 'orders/{orderid}/programs';
 
     const ACCLARO_API_REQUEST_ORDER_QUOTE       = 'orders/{orderid}/quote';
     const ACCLARO_API_GET_QUOTE_DETAILS         = 'orders/{orderid}/quote-details';
@@ -239,6 +240,8 @@ class Constants
     const ACCLARO_API_ADD_FILE_COMMENT      = 'orders/{orderid}/files/{fileid}/comment';
     const ACCLARO_API_REQUEST_FILE_CALLBACK = 'orders/{orderid}/files/{fileid}/callback';
     const ACCLARO_API_ADD_FILE_REVIEW_URL   = 'orders/{orderid}/files/{fileid}/review-url';
+
+    const ACCLARO_API_GET_PROGRAMS = 'programs/list';
 
     // Iso mapping
     const PLUGIN_STORAGE_LOCATION = "@storage/" . self::PLUGIN_HANDLE;

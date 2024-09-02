@@ -8,7 +8,6 @@
 namespace acclaro\translations\elements\actions;
 
 use Craft;
-use craft\commerce\elements\Product;
 use craft\elements\actions\Delete;
 use craft\elements\Asset;
 use acclaro\translations\Translations;
@@ -99,11 +98,6 @@ class OrderDelete extends Delete
                                 break;
                             case ($element instanceof Asset):
                                 $elementRepository = Translations::$plugin->assetDraftRepository;
-                                $draft = $elementRepository->getDraftById($file->draftId);
-                                $elementRepository->deleteDraft($draft);
-                                break;
-                            case ($element instanceof Product):
-                                $elementRepository = Translations::$plugin->commerceRepository;
                                 $draft = $elementRepository->getDraftById($file->draftId);
                                 $elementRepository->deleteDraft($draft);
                                 break;

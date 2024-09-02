@@ -486,17 +486,18 @@ class FileRepository
             $currentContent = json_encode(array_map("strval", array_values($currentContent)));
 
             $sourceContent = json_decode($converter->xmlToJson($source), true);
-
-            $sourceContent = json_encode(array_values($sourceContent['content']));
-
-            /**
-             * Replace `\u00a0` created by mysql with `space`
-             * as mysql replaces any space before special char like ?, ! with `\u00a0`
-             */
-            $sourceContent = str_replace('\u{00a0}', ' ', $sourceContent);
-
-            if (md5($sourceContent) !== md5($currentContent)) {
-                return true;
+            if (isset($currentContent['content']) && isset($sourceContent['content'])) {
+                $sourceContent = json_encode(array_values($sourceContent['content']));
+    
+                /**
+                 * Replace `\u00a0` created by mysql with `space`
+                 * as mysql replaces any space before special char like ?, ! with `\u00a0`
+                 */
+                $sourceContent = str_replace('\u{00a0}', ' ', $sourceContent);
+    
+                if (md5($sourceContent) !== md5($currentContent)) {
+                    return true;
+                }
             }
         } catch (\Exception $e) {
             Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
@@ -512,7 +513,7 @@ class FileRepository
      *
      *@return array $settings
      */
-    public function getFilePreviewSettings(FileModel $file, $trigger)
+    public function getFilePreviewSettings(FileModel $file)
     {
         $settings = [];
         $element = $file->getElement(false);
@@ -520,43 +521,30 @@ class FileRepository
         if ($element) {
             $security = Craft::$app->getSecurity();
 
-            if ($trigger) {
-                $settings = [
-                    'trigger' => $trigger,
-                    'previewUrl' => $element->getUrl(),
-                    'previewAction' => $security->hashData('commerce/products-preview/preview-product'),
-                    'previewParams' => [
-                        'typeId' => $element->typeId,
-                        'productId' => $element->id,
-                        'siteId' => $element->siteId,
-                    ]
-                ];
-            } else {
-                if ($previewTargets = $element->getPreviewTargets() ?? []) {
-                    if ($file->hasDraft() && $file->isComplete()) {
-                        Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
+            if ($previewTargets = $element->getPreviewTargets() ?? []) {
+                if ($file->hasDraft() && $file->isComplete()) {
+                    Craft::$app->getSession()->authorize("previewDraft:$file->draftId");
+                } else {
+                    if ($element->getIsDraft()) {
+                        Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
                     } else {
-                        if ($element->getIsDraft()) {
-                            Craft::$app->getSession()->authorize("previewDraft:$element->draftId");
-                        } else {
-                            Craft::$app->getSession()->authorize("previewElement:$element->id");
-                        }
+                        Craft::$app->getSession()->authorize("previewElement:$element->id");
                     }
                 }
+            }
 
-                $settings = [
-                    'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
-                    'elementType' => get_class($element),
-                    'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
-                    'previewTargets' => $previewTargets,
-                    'previewToken' => $security->generateRandomString() ?? null,
-                    'siteId' => $file->targetSite,
-                    'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
-                ];
+            $settings = [
+                'canonicalId' => $element->getIsDraft() ? $element->getCanonicalId() : $element->id,
+                'elementType' => get_class($element),
+                'isLive' => !(($file->isComplete() && $file->hasDraft()) || $element->getIsDraft()),
+                'previewTargets' => $previewTargets,
+                'previewToken' => $security->generateRandomString() ?? null,
+                'siteId' => $file->targetSite,
+                'siteToken' => !$element->getSite()->enabled ? $security->hashData((string)$file->targetSite, '') : null,
+            ];
 
-                if ($file->isComplete() || $element->getIsDraft()) {
-                    $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
-                }
+            if ($file->isComplete() || $element->getIsDraft()) {
+                $settings['draftId'] = $file->isComplete() ? $file->draftId : $element->draftId;
             }
         }
 
@@ -598,7 +586,7 @@ class FileRepository
                     $draft = Translations::$plugin->assetDraftRepository->getDraftById($file->draftId);
                     break;
                 case Product::class:
-                    $draft = Translations::$plugin->commerceRepository->getDraftById($file->draftId);
+                    $draft = Translations::$plugin->commerceRepository->getDraftById($file->draftId, $file->targetSite);
                     break;
                 case Node::class:
                     $draft = Translations::$plugin->navigationDraftRepository->getDraftById($file->draftId);

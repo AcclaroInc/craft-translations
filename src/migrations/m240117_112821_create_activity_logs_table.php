@@ -32,7 +32,7 @@ class m240117_112821_create_activity_logs_table extends Migration
         $data = $this->db->createCommand('SELECT "id", "activityLog" FROM {{%translations_orders}}')->queryAll();
 
         foreach ($data as $row) {
-            $messages = json_decode($row['activityLog'], true);
+            $messages = json_decode($row['activityLog'], true) ?: [];
 
             foreach ($messages as $message) {
                 // Insert data into activity_log table

@@ -178,6 +178,7 @@
 			});
 
 			if (haveDifferences($originalTags, $currentTags)) return true;
+
 		}
 
         return false;
@@ -194,7 +195,6 @@
         title = $('#title').val();
 		trackChanges = $('input[type=hidden][name=trackChanges]').val();
 		trackTargetChanges = $('input[type=hidden][name=trackTargetChanges]').val();
-		preventSlugTranslation = $('input[type=hidden][name=preventSlugTranslation]').val();
 		includeTmFiles = $('input[type=hidden][name=includeTmFiles]').val();
 		requestQuote = $('input[type=hidden][name=requestQuote]').val();
         tags = $('input[name="tags[]"]');
@@ -209,6 +209,7 @@
         });
         dueDate = $('#requestedDueDate-date').val();
         comments = $('#comments').val();
+        programId = $('#programId').val();
         url = '';
         if (typeof title !== undefined && title !== '') {
             url += '&title='+title
@@ -222,6 +223,9 @@
         if (typeof translatorId !== undefined && translatorId!== '') {
             url += '&translatorId='+translatorId
         }
+        if (typeof programId !== undefined && programId!== '') {
+            url += '&programId='+programId
+        }
         if (targetSites !== '') {
             url += targetSites
         }
@@ -233,7 +237,6 @@
 
         if (trackChanges) url += "&trackChanges=" + trackChanges
         if (trackTargetChanges) url += "&trackTargetChanges=" + trackTargetChanges
-        if (preventSlugTranslation) url += "&preventSlugTranslation=" + preventSlugTranslation
         if (includeTmFiles) url += "&includeTmFiles=" + includeTmFiles
         if (requestQuote) url += "&requestQuote=" + requestQuote
 
@@ -290,8 +293,74 @@
         return translatorServices[getSelectedTranslator().val()] == translator;
     }
 
+    function updateProgramOptions(options) {
+        const selectElement = $('#programId');
+
+        if (selectElement.length === 0) {
+            console.error('Select element with ID "programId" not found.');
+            return;
+        }
+
+        // Clear existing options
+        selectElement.empty();
+
+        let originalProgramId = $('#originalProgramId').val();
+        
+        let noneOptionElement = $('<option></option>')
+            .val('')
+            .text('None');
+        selectElement.append(noneOptionElement);
+
+        options.forEach(function (option) {
+            let optionElement = $('<option></option>')
+                .val(option.id)
+                .text(option.name);
+    
+            if (option.id == originalProgramId) {
+                optionElement.attr('selected', 'selected');
+            }
+    
+            selectElement.append(optionElement);
+        });
+    }
+
+    function showProgramsList() {
+        $('.program-loader').removeClass('hidden');
+        let translatorId = getSelectedTranslator().val();
+
+        // Construct the endpoint URL
+        const url = `/admin/translations/translators/${translatorId}/programs`;
+
+        // Make the GET request
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': Craft.csrfTokenValue // Include the CSRF token if needed
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                $('.program-loader').addClass('hidden');
+                return response.json();
+            })
+            .then(data => {
+                if (data.addToProgramAllowed) {
+                    updateProgramOptions(data.programOptions);
+                    $('#programOption').removeClass('hidden non-editable disabled');
+                } else {
+                    $('#programOption').addClass('hidden non-editable disabled');
+                }
+                $('.program-loader').addClass('hidden');
+            })
+            .catch(error => console.error('There was a problem with the fetch operation:', error));
+    }
+
     function toggleTranslatorBasedFields() {
         if (isSelectedTranslator('acclaro')) {
+            showProgramsList();
             $('#extra-fields').removeClass('hidden non-editable disabled');
 
             if (!isPending) {
@@ -303,9 +372,13 @@
                 $('#comments-field').prop('title', 'This field cannot be edited.');
                 $('#requestedDueDate-field').addClass('disabled non-editable');
                 $('#requestedDueDate-field').prop('title', 'This field cannot be edited.');
+
+                $('#programId-field').addClass('disabled non-editable');
+                $('#programId-field').prop('title', 'This field cannot be edited.');
             }
         } else {
             $('#extra-fields').addClass('hidden non-editable disabled');
+            $('#programOption').addClass('hidden non-editable disabled');
         }
     }
 

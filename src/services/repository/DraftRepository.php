@@ -83,14 +83,6 @@ class DraftRepository
                         $globalSetDraftRepo->deleteDraft($draft);
                     }
                     break;
-                case Product::class:
-                    $commerceRepository = Translations::$plugin->commerceRepository;
-                    $success = $commerceRepository->publishDraft($draft);
-
-                    if ($success) {
-                        $commerceRepository->deleteDraft($draft);
-                    }
-                    break;
                 case Node::class:
                     $navRepository = Translations::$plugin->navigationDraftRepository;
                     $success = $navRepository->publishDraft($draft);
@@ -168,8 +160,10 @@ class DraftRepository
         }
 
         try {
+            $canonical = $draft->getCanonical();
+            $draft->setFieldValues($canonical->getFieldValues());
             // Let's try saving the element prior to applying draft
-            if (!Craft::$app->getElements()->saveElement($draft, true, true, false)) {
+            if (!Craft::$app->getElements()->saveElement($draft, true, true, true)) {
                 throw new InvalidElementException($draft);
             }
 

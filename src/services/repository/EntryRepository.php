@@ -19,6 +19,7 @@ use craft\events\DraftEvent;
 use craft\behaviors\DraftBehavior;
 use acclaro\translations\Translations;
 use craft\base\ElementInterface;
+use craft\helpers\ArrayHelper;
 
 class EntryRepository extends Component
 {
@@ -53,6 +54,7 @@ class EntryRepository extends Component
 	private function makeNewDraft($canonical, $creatorId, $name, $notes, $newAttributes, $provisional = false)
 	{
         $canonical = $canonical->getIsDraft() ? $canonical->getCanonical() : $canonical;
+        $markAsSaved = ArrayHelper::remove($newAttributes, 'markAsSaved') ?? true;
 		// Fire a 'beforeCreateDraft' event
         $event = new DraftEvent([
             'canonical' => $canonical,
@@ -83,6 +85,7 @@ class EntryRepository extends Component
                 'draftName' => $name,
                 'draftNotes' => $notes,
                 'trackChanges' => $canonical::trackChanges(),
+                'markAsSaved' => $markAsSaved,
             ];
 
             if (!$entryInTargetSite) {

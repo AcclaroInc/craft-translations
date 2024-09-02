@@ -6,6 +6,8 @@ use acclaro\translations\Constants;
 use Craft;
 use acclaro\translations\Translations;
 
+use function Embed\isEmpty;
+
 class NavigationController extends BaseController
 {
     /**
@@ -18,7 +20,7 @@ class NavigationController extends BaseController
     {
         $variables = $this->request->resolve()[1];
         $nodeId = $variables['nodeId'];
-        $siteId = $variables['site'];
+
         if (!$nodeId) {
             $this->setError('Node ID is missing.');
             return;
@@ -29,8 +31,21 @@ class NavigationController extends BaseController
             $this->setError('Node not found.');
             return;
         }
+        $canonical = Craft::$app->elements->getElementById($node['canonicalId']);
+    
+        if ($canonical) {
+            foreach ($node['data']['fields'] as $key => $value) {
+                $field = Craft::$app->fields->getFieldById($key);
+                $canonical[$field->handle] = $value;
+            }
+            
+        } else {
+            $this->setError('No node found with matching canonicalId.');
+            return;
+        }
+    
         $this->renderTemplate('translations/nodes/_editDraft', [
-            'data' => $node,
+            'data' => $canonical,
             'draft' => $variables
         ]);
     }
@@ -69,7 +84,7 @@ class NavigationController extends BaseController
             }
         }
 
-        if (Translations::$plugin->navigationDraftRepository->saveDraft($draft, $fields)) {
+        if (Translations::$plugin->navigationDraftRepository->saveDraft($draft, $fields, false)) {
             $this->setSuccess('Node saved.');
             return $this->redirect($draft->getCpEditUrl(), 302);
         } else {
@@ -111,31 +126,9 @@ class NavigationController extends BaseController
             return;
         }
 
-        $nav = Translations::$plugin->navigationDraftRepository->getNavById($draft->navId, $draft->site);
-
-        if (!$nav) {
-            $this->setError("No global set exists with the ID '{$draft->id}'.");
+        if (!isEmpty(json_decode($changedFields))) {
+            $this->setError("Please save fields before publishing draft '{$draft->id}'.");
             return;
-        }
-
-        $fields = $this->request->getParam('fields') ?? [];
-
-        if ($changedFields) {
-            $changedFieldsFlattened = json_decode($changedFields, true);
-            foreach ($changedFieldsFlattened as $changedField) {
-                $this->replaceValues($fields, $changedField);
-            }
-        }
-
-        if ($fields) {
-            // Get the keys of the object
-            $domFields = array_keys($fields)[0];
-            $draftFields = array_keys($draft->data['fields'])[0];
-            if ($fields[$domFields] !== $draft->data['fields'][$draftFields]) {
-                $this->setError("Please save fields before publishing draft '{$draft->id}'.");
-                return;
-            }
-            $draft->setFieldValues($fields);
         }
 
         $file = Translations::$plugin->fileRepository->getFileByDraftId($draftId);

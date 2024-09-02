@@ -153,7 +153,7 @@ class FilesController extends BaseController
             return $this->asFailure($this->getErrorMessage(implode('\n', $errors)));
         }
 
-        Craft::$app->getElements()->saveElement($order, true, true, false);
+        Craft::$app->getElements()->saveElement($order, true, true, true);
         $transaction->commit();
 
         return $this->asSuccess(null, ['translatedFiles' => $zipDest]);

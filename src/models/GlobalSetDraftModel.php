@@ -65,7 +65,7 @@ class GlobalSetDraftModel extends GlobalSet
         return $globalSet->getFieldLayout();
     }
 
-    public function getHandle()
+    public function getHandle(): ?string
     {
         return $this->getGlobalSet()->handle;
     }

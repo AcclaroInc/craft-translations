@@ -248,7 +248,7 @@ class BaseController extends Controller
                     if ($element instanceof Entry) {
                         $sites = array();
 
-                        $elementSection = Craft::$app->getSections()->getSectionById($element->sectionId);
+                        $elementSection = Craft::$app->getEntries()->getSectionById($element->sectionId);
                         foreach ($elementSection->getSiteIds() as $key => $site) {
                             $sites[] = $site;
                         }

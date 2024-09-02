@@ -30,13 +30,13 @@
             </tr>
             <tr>
                 <td class="thin centeralign">
-                    {% if settings.phpVersion < '8.0.2' %}
+                    {% if settings.phpVersion < '8.2' %}
                         <span class="error" title="{{ 'Failed'|t('app') }}" data-icon="alert"></span>
                     {% else %}
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
                     {% endif %}
                 </td>
-                <td>PHP 8.0.2+ <span class="info">{{ 'PHP 8.0.2 or higher is required.' }}</span></td>
+                <td>PHP 8.2 <span class="info">{{ 'PHP 8.2 or higher is required.' }}</span></td>
             </tr>
             <tr>
                 <td class="thin centeralign">
@@ -83,10 +83,10 @@
                         {{ section.name }}
                     </td>
                     <td>
-                        {% switch section.propagationMethod %}
+                        {% switch section.propagationMethod.value %}
                             {% case 'none' %}
                                 {{'Only save entries to the site they were created in'|t('app')}}
-                                 <span class="info">Section propagation is required to create translation drafts within this section. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                                <span class="info">Section propagation is required to create translation drafts within this section. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
                             {% case 'siteGroup' %}
                                 {{'Save entries to other sites in the same site group'|t('app')}}
                                 <span class="info">With this propagation method, translation drafts can only be created within the same site group. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
