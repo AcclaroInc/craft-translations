@@ -547,7 +547,7 @@ class OrderController extends BaseController
             $order->wordCount = array_sum($wordCounts);
 
             // Manual Translation will make orders 'in progress' status after creation
-            $success = Craft::$app->getElements()->saveElement($order, true, true, false);
+            $success = Craft::$app->getElements()->saveElement($order, true, true, true);
 
             if (!$success) {
                 Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
@@ -617,7 +617,7 @@ class OrderController extends BaseController
                 $order->status = Constants::ORDER_STATUS_NEW;
                 $order->dateOrdered = new DateTime();
 
-                $success = Craft::$app->getElements()->saveElement($order, true, true, false);
+                $success = Craft::$app->getElements()->saveElement($order, true, true, true);
 
                 if (! $success) {
                     Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
