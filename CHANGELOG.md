@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 4.0.0 - 2024-09-02
+## 4.0.0-beta.1 - 2024-09-02
 
 ### Updated
 - Requires Craft `5.0.0 or higher`
@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Removed
 - Prevent slug translation as craft now natively support this feature.
 - Custom commerce draft replaced with native ones.
+
+### Chore
+- Code refactoring and cleanup as craft 5 standard.
 
 ## 3.4.1 - 2024-08-29
 
