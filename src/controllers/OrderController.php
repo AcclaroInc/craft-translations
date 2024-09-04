@@ -547,7 +547,7 @@ class OrderController extends BaseController
             $order->wordCount = array_sum($wordCounts);
 
             // Manual Translation will make orders 'in progress' status after creation
-            $success = Craft::$app->getElements()->saveElement($order, true, true, true);
+            $success = Craft::$app->getElements()->saveElement($order);
 
             if (!$success) {
                 Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
@@ -617,7 +617,7 @@ class OrderController extends BaseController
                 $order->status = Constants::ORDER_STATUS_NEW;
                 $order->dateOrdered = new DateTime();
 
-                $success = Craft::$app->getElements()->saveElement($order, true, true, true);
+                $success = Craft::$app->getElements()->saveElement($order);
 
                 if (! $success) {
                     Translations::$plugin->logHelper->log('[' . __METHOD__ . '] Couldn’t save the order', Constants::LOG_LEVEL_ERROR);
@@ -1185,7 +1185,7 @@ class OrderController extends BaseController
                 }
             }
 
-            Craft::$app->getElements()->saveElement($order, true, true, false);
+            Craft::$app->getElements()->saveElement($order);
             $transaction->commit();
         } catch (\Exception $e) {
             $transaction->rollBack();
@@ -1229,7 +1229,7 @@ class OrderController extends BaseController
 
         $order->status = Constants::ORDER_STATUS_NEW;
         $order->logActivity("Order quote accepted");
-        Craft::$app->getElements()->saveElement($order, true, true, false);
+        Craft::$app->getElements()->saveElement($order);
 
         return $this->asSuccess($this->getSuccessMessage("Quote approve request sent"));
     }
@@ -1266,7 +1266,7 @@ class OrderController extends BaseController
 
         $order->status = Constants::ORDER_STATUS_GETTING_QUOTE;
         $order->logActivity("Order quote declined");
-        Craft::$app->getElements()->saveElement($order, true, true, false);
+        Craft::$app->getElements()->saveElement($order);
 
         return $this->asSuccess($this->getSuccessMessage("Quote decline request sent"));
     }
