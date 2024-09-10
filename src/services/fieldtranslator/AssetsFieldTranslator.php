@@ -14,6 +14,7 @@ use Craft;
 use Exception;
 use craft\base\Field;
 use craft\base\Element;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
@@ -23,7 +24,15 @@ class AssetsFieldTranslator extends GenericFieldTranslator
     {
         $source = array();
 
-        $blocks = $element->getFieldValue($field->handle)->siteId($sourceSite)->all();
+        try {
+            $blocks = $element->getFieldValue($field->handle)->siteId($sourceSite)->all();
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log(
+                `[' . __METHOD__ . '] $field->handle not found.`,
+                Constants::LOG_LEVEL_ERROR
+            );
+            return $source;
+        }
 
         if ($blocks)
         {
