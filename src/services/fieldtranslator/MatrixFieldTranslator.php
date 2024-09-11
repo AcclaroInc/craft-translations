@@ -10,9 +10,11 @@
 
 namespace acclaro\translations\services\fieldtranslator;
 
+use acclaro\translations\Constants;
 use craft\base\Field;
 use craft\base\Element;
 use acclaro\translations\services\ElementTranslator;
+use acclaro\translations\Translations;
 
 class MatrixFieldTranslator extends GenericFieldTranslator
 {
@@ -23,7 +25,15 @@ class MatrixFieldTranslator extends GenericFieldTranslator
     {
         $source = array();
 
-        $blocks = $element->getFieldValue($field->handle)->all();
+        try {
+            $blocks = $element->getFieldValue($field->handle)->all();
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log(
+                `[' . __METHOD__ . '] $field->handle not found.`,
+                Constants::LOG_LEVEL_ERROR
+            );
+            return $source;
+        }
 
         if ($blocks) {
 

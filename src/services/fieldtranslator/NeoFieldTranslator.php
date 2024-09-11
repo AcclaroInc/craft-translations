@@ -13,6 +13,8 @@ namespace acclaro\translations\services\fieldtranslator;
 use craft\base\Field;
 use craft\base\Element;
 use benf\neo\elements\Block;
+use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
 class NeoFieldTranslator extends GenericFieldTranslator
@@ -24,7 +26,15 @@ class NeoFieldTranslator extends GenericFieldTranslator
     {
         $source = array();
 
-        $blocks = $element->getFieldValue($field->handle)->all();
+        try {
+            $blocks = $element->getFieldValue($field->handle)->all();
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log(
+                `[' . __METHOD__ . '] $field->handle not found.`,
+                Constants::LOG_LEVEL_ERROR
+            );
+            return $source;
+        }
 
         if ($blocks) {
             $new = 0;
@@ -103,10 +113,8 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
             $blockId = $field->getIsTranslatable($element) ? $i : $block->id;
             $blockData = $allBlockData[$i] ?? array();
-            $titleDiff = !is_null($fieldData[$i]['title']) && ($block->title !== $fieldData[$i]['title']) ? $fieldData[$i]['title'] : $block->title;
 
             $post[$fieldHandle][$blockId] = array(                
-                'title' => $titleDiff,
                 'modified' => '1',
                 'type' => $block->getType()->handle,
                 'enabled' => $block->enabled,

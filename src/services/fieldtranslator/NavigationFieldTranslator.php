@@ -31,7 +31,6 @@ class NavigationFieldTranslator extends GenericFieldTranslator
         $fieldData = \verbb\navigation\elements\Node::find()
             ->handle($handlenav)
             ->all();
-
     
         if ($fieldData) {
             foreach ($fieldData as $key => $value) {
