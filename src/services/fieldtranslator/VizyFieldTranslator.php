@@ -14,6 +14,7 @@ namespace acclaro\translations\services\fieldtranslator;
 use craft\base\Field;
 use craft\base\Element;
 use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
 
 class VizyFieldTranslator extends GenericFieldTranslator
@@ -27,7 +28,15 @@ class VizyFieldTranslator extends GenericFieldTranslator
 	{
 		$source = [];
 
-		$blocks = $element->getFieldValue($field->handle)->all();
+		try {
+            $blocks = $element->getFieldValue($field->handle)->all();
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log(
+                `[' . __METHOD__ . '] $field->handle not found.`,
+                Constants::LOG_LEVEL_ERROR
+            );
+            return $source;
+        }
 
 		if ($blocks) {
 			foreach ($blocks as $index => $block) {
