@@ -197,7 +197,7 @@ class TranslatorController extends BaseController
         
         $translatorSettings = json_decode($translator->settings, true);
         
-        $addToProgramAllowed = (bool) $translatorSettings['addToProgram'];
+        $addToProgramAllowed = isset($translatorSettings['addToProgram']) ? $translatorSettings['addToProgram'] : false;
         
         $programOptions = [];
         if($addToProgramAllowed) {
