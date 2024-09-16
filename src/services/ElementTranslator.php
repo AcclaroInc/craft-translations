@@ -40,6 +40,7 @@ class ElementTranslator
 
         foreach ($element->getFieldLayout()->getCustomFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
+            $field->handle = $layoutField->handle;
             $fieldSource = $this->fieldToTranslationSource($element, $field, $sourceSite);
 
             $source = array_merge($source, $fieldSource);
@@ -120,7 +121,6 @@ class ElementTranslator
 
         $contents = $dom->getElementsByTagName('content');
 
-
         foreach ($contents as $content) {
             $name = (string) $content->getAttribute('resname');
             $value = (string) $content->nodeValue;
@@ -163,7 +163,7 @@ class ElementTranslator
 
         foreach($element->getFieldLayout()->getCustomFields() as $key => $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-            $fieldHandle = $field->handle;
+            $fieldHandle = $field->handle = $layoutField->handle;
 
             $fieldType = $field;
 
@@ -254,6 +254,7 @@ class ElementTranslator
         }
         foreach($element->getFieldLayout()->getCustomFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
+            $field->handle = $layoutField->handle;
 
             $wordCount += $this->getFieldWordCount($element, $field);
         }
