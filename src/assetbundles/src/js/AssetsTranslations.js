@@ -227,7 +227,7 @@ Craft.Translations.AssetsTranslations = {
 
         var self = this;
 
-        $(document).on('click', '.elements .checkbox, .elements .selectallcontainer .btn', function() {
+        $(document).on('click', '.elements .checkbox, .elements .selectallcontainer .btn, .elements table.data tbody tr, .elements ul li', function() {
             setTimeout($.proxy(self.updateSelectedAssets(), self), 100);
         });
 
