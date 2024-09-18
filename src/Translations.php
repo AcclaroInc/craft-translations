@@ -77,6 +77,11 @@ class Translations extends Plugin
         parent::__construct($id, $parent, $config);
     }
 
+    public static function editions(): array
+    {
+        return Constants::PLUGIN_EDITIONS;
+    }
+
     /**
      * @inheritdoc
      */

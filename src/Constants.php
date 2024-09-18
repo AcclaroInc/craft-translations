@@ -11,6 +11,13 @@ class Constants
 
     // Licenses
     const LICENSE_STATUS_VALID  = 'valid';
+    const EDITION_LITE = 'lite';
+    const EDITION_PRO = 'pro';
+
+    const PLUGIN_EDITIONS = [
+        self::EDITION_LITE,
+        self::EDITION_PRO,
+    ];
 
     // Translators
     const TRANSLATOR_DEFAULT            = 'export_import';
