@@ -152,7 +152,6 @@ class WidgetController extends BaseController
         $view->registerJs('window.translationsdashboard = new Craft.Translations.Dashboard(' . Json::encode($widgetTypeInfo) . ');');
 
         $view->registerJs($allWidgetJs);
-        $variables['licenseStatus'] = Craft::$app->plugins->getPluginLicenseKeyStatus(Constants::PLUGIN_HANDLE);
         $variables['baseAssetsUrl'] = Craft::$app->assetManager->getPublishedUrl(
             Constants::URL_BASE_ASSETS,
             true

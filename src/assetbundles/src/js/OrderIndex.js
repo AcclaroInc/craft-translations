@@ -9,27 +9,7 @@ if (typeof Craft.Translations === 'undefined') {
  */
 Craft.Translations.OrderIndex = Garnish.Base.extend(
 {
-    init: function() {
-        var paidNotification = localStorage.getItem(Craft.username+"PaidNotification");
-        if(paidNotification == null || paidNotification == "false"){
-            if (document.getElementById("trial-notice")) {
-                document.getElementById("trial-notice").style.display = "block";
-            }
-        }
-
-        var UpdateNotification = localStorage.getItem(Craft.username+"UpdateNotification");
-        if(UpdateNotification == null || UpdateNotification == "false") {
-            if (document.getElementById("update-notice")) {
-                document.getElementById("update-notice").style.display = "block";
-            }
-        }
-
-        $(document).on("click", ".close-notice", function() {
-            var that = $(this);
-            $("#"+that.data('id')).fadeOut();
-            localStorage.setItem(Craft.username+that.data('key'), "true");
-        })
-    }
+    init: function() {}
 });
 
 $(function() {

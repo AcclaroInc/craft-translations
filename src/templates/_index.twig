@@ -6,7 +6,7 @@
 {% set pluginHandle = constant('acclaro\\translations\\Constants::PLUGIN_HANDLE') %}
 {% set proEdition = constant('acclaro\\translations\\Constants::EDITION_PRO') %}
 {% set isPro = plugin(pluginHandle).is(proEdition) %}
-{% set edition = isPro ? "Pro" : "Lite" %}
+{% set edition = isPro ? "Pro" : "" %}
 
 {% block toolbar %}
     <div id="edition-logo" title="Translations ({{ edition }})" aria-label="Translations ({{ edition }})" style="margin: 7px 0px 10px 15px;">

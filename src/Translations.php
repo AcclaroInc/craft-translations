@@ -487,7 +487,6 @@ class Translations extends Plugin
             'orders' => $orders,
             'openOrders' => $openOrders,
             'sites' => Craft::$app->sites->getAllSiteIds(),
-            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus(Constants::PLUGIN_HANDLE)
         ];
         $data = json_encode($data);
 
@@ -541,7 +540,6 @@ class Translations extends Plugin
             'orders' => $orders,
             'openOrders' => $openOrders,
             'sites' => Craft::$app->sites->getAllSiteIds(),
-            'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus(Constants::PLUGIN_HANDLE)
         ];
         $data = json_encode($data);
 
