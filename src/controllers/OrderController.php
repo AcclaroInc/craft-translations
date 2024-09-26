@@ -404,6 +404,11 @@ class OrderController extends BaseController
 
 		$variables['order'] = $order;
 
+        // Ads
+        $variables['ads'] = [
+            'sidebar' => Translations::$plugin->adsRepository->OrderSidebar(),
+        ];
+
         $this->renderTemplate('translations/orders/_detail', $variables);
     }
 

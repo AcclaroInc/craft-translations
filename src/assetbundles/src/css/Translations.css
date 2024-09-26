@@ -170,6 +170,16 @@
     margin-right: 10%;
 }
 
+.ad-container {
+    height: 20rem;
+    .field {
+        padding: 1rem;
+        .heading {
+            justify-content: center;
+        }
+    }
+}
+
 .translations-order-detail-summary h2 {
     font-size: 1.5em;
     margin-top: 0;
