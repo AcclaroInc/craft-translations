@@ -27,8 +27,9 @@
 }
 
 .services-title {
+    color: #0077cc;
     font-size: 1.25em;
-    margin-bottom: 15px;
+    margin-bottom: 30px;
 }
 
 .services-description {
