@@ -66,6 +66,7 @@ class Constants
     const URL_TRANSLATIONS          = 'translations/';
     const URL_TRANSLATOR            = 'translations/translators';
     const URL_STATIC_TRANSLATIONS   = 'translations/static-translations';
+    const URL_SERVICES              = 'translations/services';
     const URL_SETTINGS              = 'translations/settings';
     const URL_ENTRIES               = 'entries/';
     const URL_BASE_ASSETS           = '@acclaro/translations/assetbundles/src';
