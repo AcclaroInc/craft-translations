@@ -89,6 +89,7 @@ class Translations extends Plugin
             Plugins::EVENT_AFTER_LOAD_PLUGINS,
             function() { 
                 $this->registerAfterLoadEvents();
+                $this->sendWebhook();
             }
         );
 
@@ -178,6 +179,8 @@ class Translations extends Plugin
                             'translations/settings'
                         ))->send();
                     }
+
+                    $this->sendWebhook();
                 }
             }
         );
@@ -192,6 +195,43 @@ class Translations extends Plugin
             );
         }
 
+    }
+
+    private function sendWebhook()
+    {
+        // $currentUser = Craft::$app->getUser()->getIdentity();
+
+        // if ($currentUser) {
+        //     $email = $currentUser->email;
+        //     $username = $currentUser->username;
+
+        //     $siteName = Craft::$app->sites->getPrimarySite()->getName();
+        //     $baseUrl = Craft::$app->sites->getPrimarySite()->getBaseUrl();
+
+        //     $data = [
+        //         'email' => $email,
+        //         'username' => $username,
+        //         'siteName' => $siteName,
+        //         'baseUrl' => $baseUrl
+        //     ];
+            
+        //     $client = new Client();
+            
+        //     $response = $client->post('http://localhost:5678/webhook-test/5f5cd671-3128-402a-b32f-0d7f8140d484', [
+        //         'json' => [
+        //             'plugin' => $this->handle,
+        //             // 'action' => $action,
+        //             'timestamp' => time(),
+        //         ],
+        //     ]);
+
+        //     \Craft::info($data, "HHHHHHH");
+
+        //     return;
+        //     // $this->syncToHubSpot($data);
+        // } else {
+        //     Craft::error('No user found for syncing to HubSpot.', __METHOD__);
+        // }
     }
 
     /**
@@ -363,6 +403,7 @@ class Translations extends Plugin
                     'translations/translators/new' => 'translations/translator/detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/translator/detail',
                     'translations/translators/<translatorId:\d+>/programs' => 'translations/translator/program-list',
+                    'translations/translators/unsubscribe' => 'translations/translator/unsubscribe',
 
                     // Order Controller
                     'translations/orders' => 'translations/order/order-index',
@@ -792,7 +833,7 @@ class Translations extends Plugin
                 'nested' => [
                     'translations:orders:create' => [
                         'label' => Craft::t('translations', 'Create Orders'),
-                    ],
+                      ],
                     'translations:orders:edit' => [
                         'label' => Craft::t('translations', 'Edit Orders'),
                     ],

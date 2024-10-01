@@ -25,6 +25,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\services\job\CreateDrafts;
 use acclaro\translations\services\job\SyncOrderJob;
 use acclaro\translations\services\repository\OrderRepository;
+use GuzzleHttp\Client;
 
 /**
  * @author    Acclaro
@@ -56,11 +57,94 @@ class OrderController extends BaseController
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin(Constants::PLUGIN_HANDLE)->getVersion();
     }
 
+    function postToApi($email, $username, $sitename, $baseUrl)
+    {
+        // Create the data array
+        $data = [
+            'email'    => $email,
+            'username' => $username,
+            'sitename' => $sitename,
+            'baseUrl'  => $baseUrl,
+        ];
+    
+        // Set the API endpoint URL
+        $apiEndpoint = 'http://localhost:5678/webhook-test/5f5cd671-3128-402a-b32f-0d7f8140d484'; // Replace with the actual API URL
+    
+        // Initialize the Guzzle HTTP client
+        $client = new Client();
+    
+        try {
+            // Make the POST request
+            $response = $client->post($apiEndpoint, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => $data, // Sends the data as JSON
+            ]);
+    
+            // Check if the request was successful
+            if ($response->getStatusCode() === 200) {
+                $responseData = json_decode($response->getBody()->getContents(), true);
+                Craft::info('API call was successful: ' . json_encode($responseData), __METHOD__);
+            } else {
+                Craft::error('API call failed with status: ' . $response->getStatusCode(), __METHOD__);
+            }
+        } catch (\Exception $e) {
+            // Handle any exceptions during the request
+            Craft::error('API call failed: ' . $e->getMessage(), __METHOD__);
+        }
+    }
+    
+
+    public function sendWebHook()
+    {
+        \Craft::WARNING("HHHHHHH");
+
+        $this->postToApi('info@email.com', 'username', 'wwwlll', 'wwwlll.com');
+
+        // $currentUser = Craft::$app->getUser()->getIdentity();
+
+        // if ($currentUser) {
+        //     $email = $currentUser->email;
+        //     $username = $currentUser->username;
+
+        //     $siteName = Craft::$app->sites->getPrimarySite()->getName();
+        //     $baseUrl = Craft::$app->sites->getPrimarySite()->getBaseUrl();
+
+        //     $data = [
+        //         'email' => $email,
+        //         'username' => $username,
+        //         'siteName' => $siteName,
+        //         'baseUrl' => $baseUrl
+        //     ];
+            
+        //     $client = new Client();
+            
+        //     $response = $client->post('http://localhost:5678/webhook-test/5f5cd671-3128-402a-b32f-0d7f8140d484', [
+        //         'json' => [
+        //             'plugin' => $this->handle,
+        //             // 'action' => $action,
+        //             'timestamp' => time(),
+        //         ],
+        //     ]);
+
+        //     \Craft::info($data, "HHHHHHH");
+
+        //     return;
+        //     // $this->syncToHubSpot($data);
+        // } else {
+        //     Craft::error('No user found for syncing to HubSpot.', __METHOD__);
+        // }
+        // return true;
+    }
+
     /**
      * @return mixed
      */
     public function actionOrderIndex()
     {
+        $this->sendWebhook();
+
         $variables = array();
 
         $variables['pluginVersion'] = $this->pluginVersion;
@@ -85,6 +169,8 @@ class OrderController extends BaseController
 
 	public function actionOrderDetail(array $variables = array())
     {
+        $this->sendWebhook();
+
         $variables = Craft::$app->getRequest()->resolve()[1];
         $data = Craft::$app->getRequest()->getBodyParams();
 
