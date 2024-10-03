@@ -61,8 +61,6 @@ class OrderController extends BaseController
      */
     public function actionOrderIndex()
     {
-        $this->sendWebhook();
-
         $variables = array();
 
         $variables['pluginVersion'] = $this->pluginVersion;
@@ -87,8 +85,6 @@ class OrderController extends BaseController
 
 	public function actionOrderDetail(array $variables = array())
     {
-        $this->sendWebhook();
-
         $variables = Craft::$app->getRequest()->resolve()[1];
         $data = Craft::$app->getRequest()->getBodyParams();
 
