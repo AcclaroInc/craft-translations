@@ -405,7 +405,6 @@
             let $source = $("#sourceSite").val() == '' ? 0 : 1;
             if (($all-$source) == $checked) {
                 $(':checkbox[name=targetSites]').prop('checked', true);
-                $(':checkbox[name="targetSites[]"]').prop('disabled', true);
             }
         }
     }
@@ -548,15 +547,17 @@
             $(':checkbox[name="targetSites[]"], :checkbox[name="targetSites"]').on('change', function() {
                 if ($(this).attr('name') == "targetSites") {
                     toggleSelections($(this).is(':checked'));
+                    $(':checkbox[name="targetSites[]"]').prop('disabled', false);
                 } else {
-                    var $all = $(':checkbox[name="targetSites[]"]');
+                    var $all = $(':checkbox[name="targetSites[]"]:not(:disabled)');
                     var $checkboxes = $(':checkbox[name="targetSites[]"]:checked:not(:disabled)');
-                    var $sourceSite = $("#sourceSite").val();
-                    $sourceSite = $sourceSite == '' ? 0 : 1;
+                    let selectedtarget = $checkboxes.length;
+                    let allEnabledTarget = $all.length;
 
-                    if (($all.length - $sourceSite) == $checkboxes.length) {
+                    if (allEnabledTarget == selectedtarget) {
                         $(':checkbox[name=targetSites]').prop('checked', true);
-                        $(':checkbox[name="targetSites[]"]').prop('disabled', true);
+                    } else {
+                        $(':checkbox[name=targetSites]').prop('checked', false);
                     }
                 }
 
