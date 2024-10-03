@@ -45,6 +45,7 @@ use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\assetbundles\NavigationAssets;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
+use GuzzleHttp\Client;
 
 class Translations extends Plugin
 {
@@ -197,42 +198,52 @@ class Translations extends Plugin
 
     }
 
-    private function sendWebhook()
+    function sendWebhook()
     {
-        // $currentUser = Craft::$app->getUser()->getIdentity();
+        $currentUser = Craft::$app->getUser()->getIdentity();
 
-        // if ($currentUser) {
-        //     $email = $currentUser->email;
-        //     $username = $currentUser->username;
+        if ($currentUser) {
+            $email = $currentUser->email;
+            $username = $currentUser->username;
 
-        //     $siteName = Craft::$app->sites->getPrimarySite()->getName();
-        //     $baseUrl = Craft::$app->sites->getPrimarySite()->getBaseUrl();
+            $siteName = Craft::$app->sites->getPrimarySite()->getName();
+            $baseUrl = Craft::$app->sites->getPrimarySite()->getBaseUrl();
 
-        //     $data = [
-        //         'email' => $email,
-        //         'username' => $username,
-        //         'siteName' => $siteName,
-        //         'baseUrl' => $baseUrl
-        //     ];
-            
-        //     $client = new Client();
-            
-        //     $response = $client->post('http://localhost:5678/webhook-test/5f5cd671-3128-402a-b32f-0d7f8140d484', [
-        //         'json' => [
-        //             'plugin' => $this->handle,
-        //             // 'action' => $action,
-        //             'timestamp' => time(),
-        //         ],
-        //     ]);
+            $data = [
+                'email' => $email,
+                'username' => $username,
+                'siteName' => $siteName,
+                'baseUrl' => $baseUrl
+            ];
 
-        //     \Craft::info($data, "HHHHHHH");
-
-        //     return;
-        //     // $this->syncToHubSpot($data);
-        // } else {
-        //     Craft::error('No user found for syncing to HubSpot.', __METHOD__);
-        // }
+            $apiEndpointN8N = Constants::API_ENDPOINT_N8N;
+        
+            // Initialize the Guzzle HTTP client
+            $client = new Client();
+        
+            try {
+                // Make the POST request
+                $response = $client->post($apiEndpointN8N, [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => $data,
+                ]);
+        
+                // Check if the request was successful
+                if ($response->getStatusCode() === 200) {
+                    $responseData = json_decode($response->getBody()->getContents(), true);
+                    Craft::info('API call was successful: ' . json_encode($responseData), __METHOD__);
+                } else {
+                    Craft::error('API call failed with status: ' . $response->getStatusCode(), __METHOD__);
+                }
+            } catch (\Exception $e) {
+                // Handle any exceptions during the request
+                Craft::error('API call failed: ' . $e->getMessage(), __METHOD__);
+            }
+        }
     }
+
 
     /**
      * @inheritdoc
