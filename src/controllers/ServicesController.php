@@ -46,7 +46,7 @@ class ServicesController extends Controller
                     'title' => 'Technical Support',
                     'description' => 'Get priority support for your Craft Translations installation.',
                     'message' => 'Maximize your efficiency with our dedicated technical support. Our team ensures your translation workflow runs smoothly, allowing you to focus on what matters most.',
-                    'ctaText' => 'Upgrade Now',
+                    'ctaText' => 'Request Support',
                     'ctaUrl' => '#',
                     'keyBenefits' => [
                         'Direct access to our plugin experts',

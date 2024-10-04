@@ -23,7 +23,7 @@
     background-color: #fff;
     text-align: center;
     transition: transform 0.3s;
-    min-height: 300px;
+    min-height: 200px;
 }
 
 .services-title {
@@ -55,7 +55,7 @@
 
 .services-benefit {
     list-style: none;
-    padding: 0;
+    padding-left: 3%;
     margin-top: 10px;
     text-align: left;
 }
