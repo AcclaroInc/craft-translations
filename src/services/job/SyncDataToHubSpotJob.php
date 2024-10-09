@@ -11,7 +11,6 @@ class SyncDataToHubSpotJob extends BaseJob
 {
     public function execute($queue): void
     {
-        \Craft::WARNING('API call was successful: ');
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         if ($currentUser) {
