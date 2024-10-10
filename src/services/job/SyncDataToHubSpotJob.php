@@ -3,6 +3,7 @@
 namespace acclaro\translations\services\job;
 
 use acclaro\translations\Constants;
+use acclaro\translations\Translations;
 use Craft;
 use craft\queue\BaseJob;
 use GuzzleHttp\Client;
@@ -44,13 +45,14 @@ class SyncDataToHubSpotJob extends BaseJob
                 // Check if the request was successful
                 if ($response->getStatusCode() === 200) {
                     $responseData = json_decode($response->getBody()->getContents(), true);
-                    Craft::info('API call was successful: ' . json_encode($responseData), __METHOD__);
+                    Translations::$plugin->logHelper->log('API call was successful: ' . json_encode($responseData) . ' ' . __METHOD__, Constants::LOG_LEVEL_INFO);
                 } else {
-                    Craft::error('API call failed with status: ' . $response->getStatusCode(), __METHOD__);
+                    Translations::$plugin->logHelper->log('API call failed with status: ' . $response->getStatusCode() . ' ' . __METHOD__, Constants::LOG_LEVEL_ERROR);
                 }
             } catch (\Exception $e) {
                 // Handle any exceptions during the request
                 Craft::error('API call failed: ' . $e->getMessage(), __METHOD__);
+                Translations::$plugin->logHelper->log('API call failed: ' . $e->getMessage() . ' ' .  __METHOD__, Constants::LOG_LEVEL_ERROR);
             }
         }
     }
