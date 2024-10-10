@@ -25,6 +25,7 @@ use craft\errors\MissingComponentException;
 use acclaro\translations\records\WidgetRecord;
 use acclaro\translations\Translations;
 // Widget Classes
+use acclaro\translations\widgets\Ads;
 use acclaro\translations\widgets\News;
 use acclaro\translations\widgets\Translators;
 use acclaro\translations\widgets\RecentOrders;
@@ -64,6 +65,7 @@ class WidgetRepository extends BaseComponent
             RecentOrders::class,
             NewAndModifiedEntries::class,
             LanguageCoverage::class,
+            Ads::class,
         ];
 
         return $widgetTypes;
@@ -377,6 +379,7 @@ class WidgetRepository extends BaseComponent
     private function _addDefaultUserWidgets()
     {
         $user = Craft::$app->getUser()->getIdentity();
+        $this->saveWidget($this->createWidget(Ads::class));
         $this->saveWidget($this->createWidget(RecentOrders::class));
         $this->saveWidget($this->createWidget(NewAndModifiedEntries::class));
         $this->saveWidget($this->createWidget(LanguageCoverage::class));

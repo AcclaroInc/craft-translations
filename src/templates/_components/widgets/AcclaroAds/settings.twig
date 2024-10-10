@@ -1,0 +1,10 @@
+{% import "_includes/forms" as forms %}
+
+{{ forms.textField({
+    label: "Limit"|t('app'),
+    id: 'limit',
+    name: 'limit',
+    value: widget.limit,
+    size: 2,
+    errors: widget.getErrors('limit')
+}) }}

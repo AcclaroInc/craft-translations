@@ -322,4 +322,36 @@ class Constants
         'craft\fields\Users',
         'craft\fields\Money',
     ];
+
+    // Dashboard will be array of ads to show more ads if needed in future
+    const ADS_CONTENT = [
+        "dashboard" => [
+            [
+                "heading" => "AI/Machine Translation",
+                "content" => "Translate more content faster with AI.",
+                "linkText" => "Try it now",
+                "link" => "#",
+            ]
+        ],
+        "sidebar" => [
+            "create" => [
+                "heading" => "Professional Translation",
+                "content" => "Get expert human translation for critical content.",
+                "linkText" => "Learn more.",
+                "link" => "#",
+            ],
+            "edit" => [
+                "heading" => "Quality Review",
+                "content" => "Ensure accuracy with our professional quality review.",
+                "linkText" => "Get started.",
+                "link" => "#",
+            ],
+        ],
+        "footer" => [
+            "heading" => "Technical Support",
+            "content" => "Need personalized help?",
+            "linkText" => "Upgrade to priority support.",
+            "link" => "#",
+        ],
+    ];
 }

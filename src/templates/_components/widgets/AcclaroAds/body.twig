@@ -1,0 +1,21 @@
+<div class="recentnews-container scroll-x-auto">
+    {% if ads|length %}
+        <div class="data ad-container fullwidth">
+            {% for ad in ads %}
+                <div class="field">
+                    <div class="heading">
+                        <label> {{ ad.heading }} </label>
+                    </div>
+                    <div class="input ltr">
+                        {{ ad.content }}
+                        <a href="{{ ad.link }}">{{ ad.linkText }}</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="data fullwidth">
+            <p>{{ "No ads to show."|t('app') }}</p>
+        </div>
+    {% endif %}
+</div>

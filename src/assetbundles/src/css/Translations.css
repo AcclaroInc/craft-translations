@@ -171,12 +171,19 @@
 }
 
 .ad-container {
-    height: 20rem;
+    &.sidebar-ad {
+        height: 6rem;
+    }
     .field {
         padding: 1rem;
         .heading {
             justify-content: center;
+            font-size: medium;
+            margin-block: -5px 10px;
         }
+    }
+    .input.ltr {
+        font: caption;
     }
 }
 
