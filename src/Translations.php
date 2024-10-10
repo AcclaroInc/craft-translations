@@ -90,7 +90,6 @@ class Translations extends Plugin
             Plugins::EVENT_AFTER_LOAD_PLUGINS,
             function() { 
                 $this->registerAfterLoadEvents();
-                Craft::$app->queue->push(new SyncDataToHubSpotJob());
             }
         );
 
