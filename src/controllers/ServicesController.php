@@ -68,7 +68,8 @@ class ServicesController extends Controller
                 ],
             ];
 
-        $variables['servicesData']  = $servicesData;            
+        $variables['servicesData']  = $servicesData;     
+        $variables['selectedSubnavItem'] = 'services';       
         $this->requireLogin();
         return $this->renderTemplate('translations/services/_index', $variables);
     }
