@@ -330,7 +330,7 @@ class Constants
                 "heading" => "AI/Machine Translation",
                 "content" => "Translate more content faster with AI.",
                 "linkText" => "Try it now",
-                "link" => "#",
+                "link" => "https://www.acclaro.com/localization-partner",
             ]
         ],
         "sidebar" => [
@@ -338,20 +338,20 @@ class Constants
                 "heading" => "Professional Translation",
                 "content" => "Get expert human translation for critical content.",
                 "linkText" => "Learn more.",
-                "link" => "#",
+                "link" => "https://www.acclaro.com/localization-partner",
             ],
             "edit" => [
                 "heading" => "Quality Review",
                 "content" => "Ensure accuracy with our professional quality review.",
                 "linkText" => "Get started.",
-                "link" => "#",
+                "link" => "https://www.acclaro.com/localization-partner",
             ],
         ],
         "footer" => [
             "heading" => "Technical Support",
             "content" => "Need personalized help?",
             "linkText" => "Upgrade to priority support.",
-            "link" => "#",
+            "link" => "https://www.acclaro.com/localization-partner",
         ],
     ];
 }
