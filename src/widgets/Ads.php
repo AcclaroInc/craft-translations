@@ -52,12 +52,20 @@ class Ads extends Widget
         return $rules;
     }
 
-        /**
+    /**
      * @inheritdoc
      */
     public static function maxColspan(): ?int
     {
         return null;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function minColspan()
+    {
+        return 2;
     }
 
     /**
