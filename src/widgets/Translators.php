@@ -22,6 +22,7 @@ use acclaro\translations\services\repository\TranslatorRepository;
  */
 class Translators extends Widget
 {
+    public $limit = 5;
     /**
      * @inheritdoc
      */
@@ -54,6 +55,17 @@ class Translators extends Widget
     public function minColspan()
     {
         return 1;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSettingsHtml(): ?string
+    {
+        return Craft::$app->getView()->renderTemplate(
+            'translations/_components/widgets/AcclaroAds/settings',
+            [ 'widget' => $this ]
+        );
     }
 
     /**
