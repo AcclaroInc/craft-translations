@@ -14,11 +14,11 @@ use acclaro\translations\Constants;
 use Craft;
 use craft\elements\User;
 use craft\base\Component;
-use craft\services\Drafts;
 use craft\events\DraftEvent;
 use craft\behaviors\DraftBehavior;
 use acclaro\translations\Translations;
 use craft\base\ElementInterface;
+use craft\db\Table;
 use craft\helpers\ArrayHelper;
 
 class EntryRepository extends Component
@@ -73,7 +73,7 @@ class EntryRepository extends Component
             $entryInTargetSite = Translations::$plugin->elementRepository->getElementById($canonical->id, $targetSiteId);
 
             // Create the draft row
-            $draftId = (new Drafts())->insertDraftRow($name, $notes, $creatorId, $canonical->id, $canonical::trackChanges(), $provisional);
+            $draftId = Craft::$app->getDrafts()->insertDraftRow($name, $notes, $creatorId, $canonical->id, $canonical::trackChanges(), $provisional);
 
             // Duplicate the element
             $newAttributes['isProvisionalDraft'] = $provisional;
@@ -101,6 +101,21 @@ class EntryRepository extends Component
                 }
                 $draft = Craft::$app->getElements()->propagateElement($draft, $targetSiteId);
             }
+
+            // Duplicate nested element ownership
+            Craft::$app->getDb()->createCommand(sprintf(
+                <<<SQL
+INSERT INTO %s ([[elementId]], [[ownerId]], [[sortOrder]])
+SELECT [[o.elementId]], :draftId, [[o.sortOrder]]
+FROM %s AS [[o]]
+WHERE [[o.ownerId]] = :canonicalId
+SQL,
+                Table::ELEMENTS_OWNERS,
+                Table::ELEMENTS_OWNERS,
+            ), [
+                ':draftId' => $draft->id,
+                ':canonicalId' => $canonical->id,
+            ])->execute();
 
             $transaction->commit();
         } catch (\Throwable $e) {

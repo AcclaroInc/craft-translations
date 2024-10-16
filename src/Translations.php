@@ -245,6 +245,12 @@ class Translations extends Plugin
                 'url' => Constants::URL_STATIC_TRANSLATIONS,
             ];
         }
+        if ($currentUser->can('translations:services')) {
+            $subNavs['services'] = [
+                'label' => 'Services',
+                'url' => Constants::URL_SERVICES,
+            ];
+        }
 
         if ($currentUser->can('translations:settings')) {
             $subNavs['settings'] = [
@@ -381,6 +387,9 @@ class Translations extends Plugin
                     'translations/static-translations' => 'translations/static-translations',
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
+
+                    // Services Controller
+                    'translations/services' => 'translations/services/index',
 
                     // Asset, Commerce, Global-set, Node Controllers
                     'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
@@ -786,6 +795,9 @@ class Translations extends Plugin
                         'label' => Craft::t('translations', 'Export'),
                     ]
                 ]
+            ],
+            'translations:services' => [
+                'label' => Craft::t('translations', 'View Services'),
             ],
             'translations:orders' => [
                 'label' => Craft::t('translations', 'View Orders'),

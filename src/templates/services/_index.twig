@@ -1,0 +1,42 @@
+{% extends "_layouts/cp" %}
+{% set title = "Services"|t('app') %}
+
+{% set crumbs = [
+    { label: 'Translations'|t('app'), url: url('translations') }
+] %}
+{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\ServicesAssets") %}
+
+{% block content %}
+    <div class="services-container card-box">
+        <div class="services-grid">
+            {% for service in servicesData %}
+                <div>
+                    <div class="services-card">
+                        <h3 class="services-title">{{ service.title |t('app')}}</h3>
+                        <p class="services-description">{{ service.description |t('app')}}</p>
+                        <p class="services-message">{{ service.message |t('app')}}</p>
+                        <a href="{{ service.ctaUrl }}" class="cta-button">
+                            {{ service.ctaText |t('app') }}
+                        </a>
+                    </div>
+                    <div>
+                        <ul class="services-benefit">
+                            {% for benefit in service.keyBenefits %}
+                                <li class="list">
+                                    <span class="marker">✔</span> 
+                                    <span>{{ benefit |t('app') }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block initJs %}
+    let servicesData = {{ servicesData|json_encode|raw }};
+{% endblock %}
+
+{% js block('initJs') %}
