@@ -330,28 +330,22 @@ class Constants
                 "heading" => "AI/Machine Translation",
                 "content" => "Translate more content faster with AI.",
                 "linkText" => "Try it now",
-                "link" => "https://www.acclaro.com/localization-partner",
+                "link" => "https://info.acclaro.com/translation-plugin-for-craft3-support-info",
             ]
         ],
         "sidebar" => [
             "create" => [
                 "heading" => "Professional Translation",
                 "content" => "Get expert human translation for critical content.",
-                "linkText" => "Learn more.",
-                "link" => "https://www.acclaro.com/localization-partner",
+                "linkText" => "Learn more",
+                "link" => "https://www.acclaro.com/solutions/global-marketing/website-localization-services",
             ],
             "edit" => [
                 "heading" => "Quality Review",
                 "content" => "Ensure accuracy with our professional quality review.",
-                "linkText" => "Get started.",
-                "link" => "https://www.acclaro.com/localization-partner",
+                "linkText" => "Get started",
+                "link" => "https://www.acclaro.com/solutions/language-quality",
             ],
-        ],
-        "footer" => [
-            "heading" => "Technical Support",
-            "content" => "Need personalized help?",
-            "linkText" => "Upgrade to priority support.",
-            "link" => "https://www.acclaro.com/localization-partner",
         ],
     ];
 }

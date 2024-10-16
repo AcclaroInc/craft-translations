@@ -1,3 +1,5 @@
+{% import 'translations/_components/_forms/button' as button %}
+
 <div class="recentnews-container scroll-x-auto">
     {% if ads|length %}
         <div class="data ad-container fullwidth">
@@ -8,7 +10,12 @@
                     </div>
                     <div class="input ltr">
                         {{ ad.content }}
-                        <a href="{{ ad.link }}">{{ ad.linkText }}</a>
+                    </div>
+                    <div class="flex" style="justify-content: end;">
+                        {{ button.anchorButton({
+                            label: ad.linkText,
+                            href: ad.link,
+                        }) }}
                     </div>
                 </div>
             {% endfor %}

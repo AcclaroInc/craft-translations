@@ -11,16 +11,16 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\base\Widget;
 use acclaro\translations\Constants;
 use acclaro\translations\records\WidgetRecord;
+use acclaro\translations\Translations;
 
 /**
  * @author    Acclaro
  * @package   Translations
  * @since     1.0.2
  */
-class Ads extends Widget
+class Ads extends BaseWidget
 {
     /**
      * @inheritdoc
@@ -57,7 +57,15 @@ class Ads extends Widget
      */
     public static function maxColspan(): ?int
     {
-        return null;
+        return 1;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function isDeletable(): bool
+    {
+        return false;
     }
 
     /**
@@ -65,7 +73,7 @@ class Ads extends Widget
      */
     public function minColspan()
     {
-        return 2;
+        return 1;
     }
 
     /**
@@ -109,6 +117,13 @@ class Ads extends Widget
      */
     public static function isSelectable(): bool
     {
+        // Create widget if user visits dashboard for first time.
+        if (!static::doesUserHaveWidget(static::class)) {
+            $widgetRepository = Translations::$plugin->widgetRepository;
+            $adsWidget = $widgetRepository->createWidget(static::class);
+
+            $widgetRepository->saveWidget($adsWidget);
+        }
         return (static::allowMultipleInstances() || !static::doesUserHaveWidget(static::class));
     }
 

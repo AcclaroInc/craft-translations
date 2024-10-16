@@ -1,8 +1,8 @@
+{% import 'translations/_components/_forms/button' as button %}
+
 {% if ads is not empty %}
 	{% set heading = ads.heading %}
 	{% set content = ads.content %}
-	{% set linkText = ads.linkText %}
-	{% set link = ads.link %}
 {% endif %}
 
 <div id="sidebar-ad" class="meta">
@@ -14,7 +14,12 @@
 
 			<div class="input ltr">
 				<label> {{ content }} </label>
-				<a href={{link}}> {{ linkText }} </a>
+			</div>
+			<div class="flex" style="justify-content: end;">
+				{{ button.anchorButton({
+					label: ads.linkText,
+					href: ads.link,
+				}) }}
 			</div>
 		</div>
 	</div>

@@ -26,6 +26,7 @@ use acclaro\translations\records\WidgetRecord;
 use acclaro\translations\Translations;
 // Widget Classes
 use acclaro\translations\widgets\Ads;
+use acclaro\translations\widgets\BaseWidget;
 use acclaro\translations\widgets\News;
 use acclaro\translations\widgets\Translators;
 use acclaro\translations\widgets\RecentOrders;
@@ -132,7 +133,7 @@ class WidgetRepository extends BaseComponent
      * Returns a widget by its ID.
      *
      * @param int $id The widget’s ID
-     * @return WidgetInterface|null The widget, or null if it doesn’t exist
+     * @return BaseWidget|null The widget, or null if it doesn’t exist
      */
     public function getWidgetById(int $id)
     {
@@ -210,8 +211,8 @@ class WidgetRepository extends BaseComponent
     public function deleteWidgetById(int $widgetId): bool
     {
         $widget = $this->getWidgetById($widgetId);
-        if (!$widget) {
-            return false;
+        if (!$widget || !$widget::isDeletable()) {
+            throw new \Exception("operation not allowed");
         }
         return $this->deleteWidget($widget);
     }
@@ -219,11 +220,11 @@ class WidgetRepository extends BaseComponent
     /**
      * Soft-deletes a widget.
      *
-     * @param WidgetInterface $widget The widget to be deleted
+     * @param BaseWidget $widget The widget to be deleted
      * @return bool Whether the widget was deleted successfully
      * @throws \Throwable if reasons
      */
-    public function deleteWidget(WidgetInterface $widget): bool
+    public function deleteWidget(BaseWidget $widget): bool
     {
         $widgets = [$widget];
 

@@ -11,7 +11,6 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\base\Widget;
 use acclaro\translations\records\WidgetRecord;
 use acclaro\translations\services\repository\TranslatorRepository;
 
@@ -20,7 +19,7 @@ use acclaro\translations\services\repository\TranslatorRepository;
  * @package   Translations
  * @since     1.0.2
  */
-class Translators extends Widget
+class Translators extends BaseWidget
 {
     public $limit = 5;
     /**
