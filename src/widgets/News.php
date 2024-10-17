@@ -11,7 +11,6 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\base\Widget;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\records\WidgetRecord;
@@ -21,7 +20,7 @@ use acclaro\translations\records\WidgetRecord;
  * @package   Translations
  * @since     1.0.2
  */
-class News extends Widget
+class News extends BaseWidget
 {
     /**
      * @inheritdoc

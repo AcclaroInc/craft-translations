@@ -404,6 +404,10 @@ class OrderController extends BaseController
 
 		$variables['order'] = $order;
 
+        // Ads
+        $adContext = $order->isPending() ? "create" : "edit";
+        $variables['ads'] = Translations::$plugin->adsRepository->sidebar($adContext);
+
         $this->renderTemplate('translations/orders/_detail', $variables);
     }
 

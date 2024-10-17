@@ -131,8 +131,9 @@ class TranslatorController extends BaseController
         $variables['selectedSubnavItem'] = 'translators';
 
         $variables['translatorId'] = isset($variables['translatorId']) ? $variables['translatorId'] : null;
+        $isNew = !isset($variables['translatorId']);
 
-        if ($variables['translatorId']) {
+        if (!$isNew) {
             $variables['translator'] = Translations::$plugin->translatorRepository->getTranslatorById($variables['translatorId']);
 
             if (!$variables['translator']) {
@@ -144,6 +145,10 @@ class TranslatorController extends BaseController
 
         $variables['translationServices'] = Translations::$plugin->translatorRepository->getTranslationServices();
         $variables['labels'] = json_encode(Constants::TRANSLATOR_LABELS);
+
+        // Ads
+        $adContext = $isNew ? "create" : "edit";
+        $variables['ads'] = Translations::$plugin->adsRepository->sidebar($adContext);
 
         $this->renderTemplate('translations/translators/_detail', $variables);
     }
