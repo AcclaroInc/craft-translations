@@ -30,11 +30,6 @@ class AdsRepository
 		return $this->getAdsContent("sidebar", $context);
 	}
 
-	public function footer()
-	{
-		return $this->getAdsContent("footer");
-	}
-
 	/**
 	 * Returns ads to be shown based on location of ad and context if applies.
 	 * 

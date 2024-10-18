@@ -95,14 +95,8 @@
                                 <div class="spinner body-loading"></div>
                                 <div class="settings icon hidden"></div>
                                 <h2>{{ widget.title }}</h2>
-                                {% if widget.name == "Acclaro News" %}
-                                    <div style="text-align:right;">
-                                        <a href="{{ url('https://www.acclaro.com/translation-blog/') }}">{{ 'Visit Blog'|t }} &raquo;</a>
-                                    </div>
-                                {% elseif widget.name == "Translation Coverage by Site" %}
-                                    <h5 style="margin-bottom:10px;">Coverage information for target site entries.</h5>
-                                {% endif %}
-                                <div class="body" style="margin-bottom: 40px;">
+                                {{ widget.subTitle|raw}}
+                                <div class="body">
                                     {{ widget.bodyHtml|raw }}
                                 </div>
                             </div>

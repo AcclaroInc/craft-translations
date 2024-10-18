@@ -63,6 +63,16 @@ class News extends BaseWidget
     /**
      * @inheritdoc
      */
+    public function getSubtitle(): ?string
+    {
+        return "<div style=\"text-align:right;\">
+            <a href=\"https://www.acclaro.com/translation-blog\">Visit Blog &raquo;</a>
+            </div>";
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getSettingsHtml(): ?string
     {
         return Craft::$app->getView()->renderTemplate('translations/_components/widgets/News/settings',

@@ -331,6 +331,7 @@ class WidgetRepository extends BaseComponent
             'type' => get_class($widget),
             'colspan' => $colspan,
             'title' => $widget->getTitle(),
+            'subTitle' => $widget->getSubtitle(),
             'name' => $widget->displayName(),
             'bodyHtml' => $widgetBodyHtml,
             'settingsHtml' => $settingsHtml,

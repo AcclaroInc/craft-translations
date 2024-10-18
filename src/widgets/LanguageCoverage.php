@@ -63,6 +63,14 @@ class LanguageCoverage extends BaseWidget
     /**
      * @inheritdoc
      */
+    public function getSubtitle(): ?string
+    {
+        return "<h5>Coverage information for target site entries.</h5>";
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getSettingsHtml(): ?string
     {
         return Craft::$app->getView()->renderTemplate('translations/_components/widgets/LanguageCoverage/settings',
