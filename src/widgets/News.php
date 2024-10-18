@@ -11,7 +11,6 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\base\Widget;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\records\WidgetRecord;
@@ -21,7 +20,7 @@ use acclaro\translations\records\WidgetRecord;
  * @package   Translations
  * @since     1.0.2
  */
-class News extends Widget
+class News extends BaseWidget
 {
     /**
      * @inheritdoc
@@ -59,6 +58,16 @@ class News extends Widget
     public function minColspan()
     {
         return 1;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSubtitle(): ?string
+    {
+        return "<div style=\"text-align:right;\">
+            <a href=\"https://www.acclaro.com/translation-blog\">Visit Blog &raquo;</a>
+            </div>";
     }
 
     /**

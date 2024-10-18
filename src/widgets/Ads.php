@@ -1,6 +1,6 @@
 <?php
 /**
- * Translations for Craft plugin for Craft CMS 3.x
+ * Translations for Craft plugin for Craft CMS 5.x
  *
  * Translations for Craft eliminates error prone and costly copy/paste workflows for launching human translated Craft CMS web content.
  *
@@ -11,23 +11,23 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
+use acclaro\translations\Constants;
 use acclaro\translations\records\WidgetRecord;
-use acclaro\translations\services\repository\TranslatorRepository;
+use acclaro\translations\Translations;
 
 /**
  * @author    Acclaro
  * @package   Translations
  * @since     1.0.2
  */
-class Translators extends BaseWidget
+class Ads extends BaseWidget
 {
-    public $limit = 5;
     /**
      * @inheritdoc
      */
     public static function displayName(): string
     {
-        return Craft::t('app', 'Translator Services');
+        return Craft::t('app', 'Acclaro Features');
     }
 
     /**
@@ -35,8 +35,10 @@ class Translators extends BaseWidget
      */
     public static function icon(): ?string
     {
-        return Craft::getAlias('@acclaro/translations/icon-mask.svg');
+        return Craft::getAlias('@app/icons/feed.svg');
     }
+
+    public $limit = 5;
 
     /**
      * @inheritdoc
@@ -45,7 +47,25 @@ class Translators extends BaseWidget
     {
         $rules = parent::rules();
 
+        $rules[] = ['limit', 'number', 'integerOnly' => true];
+
         return $rules;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function maxColspan(): ?int
+    {
+        return 1;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function isDeletable(): bool
+    {
+        return false;
     }
 
     /**
@@ -74,9 +94,12 @@ class Translators extends BaseWidget
     {
         $view = Craft::$app->getView();
 
-        $translators = $this->_getTranslators();
+        $ads = $this->_getAds();
 
-        return $view->renderTemplate('translations/_components/widgets/Translators/body', ['translators' => $translators]);
+        return $view->renderTemplate(
+            'translations/_components/widgets/AcclaroAds/body',
+            ['ads' => $ads]
+        );
     }
 
     public static function doesUserHaveWidget(string $type): bool
@@ -94,19 +117,24 @@ class Translators extends BaseWidget
      */
     public static function isSelectable(): bool
     {
+        // Create widget if user visits dashboard for first time.
+        if (!static::doesUserHaveWidget(static::class)) {
+            $widgetRepository = Translations::$plugin->widgetRepository;
+            $adsWidget = $widgetRepository->createWidget(static::class);
+
+            $widgetRepository->saveWidget($adsWidget);
+        }
         return (static::allowMultipleInstances() || !static::doesUserHaveWidget(static::class));
     }
 
     /**
-     * Returns translator data
+     * Returns the recent ads to be show in dahboard widget from contants file
      *
      * @return array
      */
-    private function _getTranslators(): array
+    private function _getAds(): array
     {
-        $repository = new TranslatorRepository();
-
-        return $repository->getTranslators();
+        return Constants::ADS_CONTENT["dashboard"];
     }
 
     /**
