@@ -327,7 +327,7 @@ class Constants
     const CTA_PROFESSIONAL_TRANSLATION = "https://www.acclaro.com/solutions/global-marketing/website-localization-services";
     const CTA_QUALITY_REVIEW = "https://www.acclaro.com/solutions/language-quality";
     const CTA_TECHNICAL_SUPPORT = "https://info.acclaro.com/craftcms-technical-support";
-    const CTA_AI_ML_TRANSLATION = "https://info.acclaro.com/translation-plugin-for-craft3-support-info";
+    const CTA_AI_ML_TRANSLATION = "#";
 
     const SERVICES_CONTENT = [
             [

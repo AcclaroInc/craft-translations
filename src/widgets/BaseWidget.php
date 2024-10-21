@@ -26,4 +26,11 @@ class BaseWidget extends Widget
 	{
 		return true;
 	}
+	/**
+	 * Will be used to prevent showing any widget which is not needed
+	 */
+	public static function isLive(): bool
+	{
+		return true;
+	}
 }

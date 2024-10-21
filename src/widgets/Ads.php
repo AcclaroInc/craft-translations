@@ -71,6 +71,14 @@ class Ads extends BaseWidget
     /**
      * @inheritdoc
      */
+    public static function isLive(): bool
+    {
+        return false;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function minColspan()
     {
         return 1;

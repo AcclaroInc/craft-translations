@@ -652,7 +652,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 }
 
 #translations-dashboard > .item > .widget {
-    padding-top: 4%;
+    margin-top: 1rem;
 }
 
 .btngroup-container {

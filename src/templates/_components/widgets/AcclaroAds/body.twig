@@ -11,7 +11,7 @@
                     <div class="input ltr">
                         {{ ad.content }}
                     </div>
-                    <div class="flex" style="justify-content: end;">
+                    <div class="flex">
                         {{ button.anchorButton({
                             label: ad.linkText,
                             href: ad.link,
@@ -19,10 +19,6 @@
                     </div>
                 </div>
             {% endfor %}
-        </div>
-    {% else %}
-        <div class="data fullwidth">
-            <p>{{ "No ads to show."|t('app') }}</p>
         </div>
     {% endif %}
 </div>
