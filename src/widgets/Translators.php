@@ -62,7 +62,7 @@ class Translators extends BaseWidget
     public function getSettingsHtml(): ?string
     {
         return Craft::$app->getView()->renderTemplate(
-            'translations/_components/widgets/AcclaroAds/settings',
+            'translations/_components/widgets/Translators/settings',
             [ 'widget' => $this ]
         );
     }
