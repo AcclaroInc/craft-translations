@@ -45,6 +45,7 @@ use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\assetbundles\NavigationAssets;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
+use acclaro\translations\services\job\SyncDataToHubSpotJob;
 
 class Translations extends Plugin
 {
@@ -178,6 +179,8 @@ class Translations extends Plugin
                             'translations/settings'
                         ))->send();
                     }
+
+                    Craft::$app->queue->push(new SyncDataToHubSpotJob());
                 }
             }
         );
@@ -369,6 +372,7 @@ class Translations extends Plugin
                     'translations/translators/new' => 'translations/translator/detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/translator/detail',
                     'translations/translators/<translatorId:\d+>/programs' => 'translations/translator/program-list',
+                    'translations/translators/unsubscribe' => 'translations/translator/unsubscribe',
 
                     // Order Controller
                     'translations/orders' => 'translations/order/order-index',
@@ -804,7 +808,7 @@ class Translations extends Plugin
                 'nested' => [
                     'translations:orders:create' => [
                         'label' => Craft::t('translations', 'Create Orders'),
-                    ],
+                      ],
                     'translations:orders:edit' => [
                         'label' => Craft::t('translations', 'Edit Orders'),
                     ],
