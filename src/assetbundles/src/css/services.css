@@ -23,7 +23,10 @@
     background-color: #fff;
     text-align: center;
     transition: transform 0.3s;
-    min-height: 200px;
+    min-height: 257px;
+    div.not-allowed {
+        cursor: not-allowed;
+    }
 }
 
 .services-title {
@@ -51,6 +54,9 @@
     text-decoration: none;
     border-radius: 20px;
     transition: background-color 0.3s;
+    &.disabled {
+        background-color: gray;
+    }
 }
 
 .services-benefit {
