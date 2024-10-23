@@ -16,15 +16,17 @@ class SyncDataToHubSpotJob extends BaseJob
 
         if ($currentUser) {
             $email = $currentUser->email;
-            $username = $currentUser->username;
+            $firstName = $currentUser->firstName;
+            $lastName = $currentUser->lastName;
 
             $siteName = Craft::$app->sites->getPrimarySite()->getName();
             $baseUrl = Craft::$app->sites->getPrimarySite()->getBaseUrl();
 
             $data = [
                 'email' => $email,
-                'username' => $username,
-                'siteName' => $siteName,
+                'firstName' => $firstName,
+                'lastName' => $lastName,
+                'companyName' => $siteName,
                 'baseUrl' => $baseUrl
             ];
 
