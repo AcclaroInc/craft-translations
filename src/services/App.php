@@ -117,6 +117,11 @@ class App extends Component
     public $userRepository;
 
     /**
+     * @var repository\AdsRepository
+     */
+    public $adsRepository;
+
+    /**
      * @var repository\WidgetRepository
      */
     public $widgetRepository;
@@ -208,6 +213,7 @@ class App extends Component
         $this->orderEdit = new OrderEdit();
         $this->logHelper = new LogHelper();
         $this->activityLogRepository = new repository\ActivityLogRepository();
+        $this->adsRepository = new repository\AdsRepository();
         $this->navigationDraftRepository = new repository\NavigationDraftRepository();
     }
 }

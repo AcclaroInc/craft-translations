@@ -404,6 +404,10 @@ class OrderController extends BaseController
 
 		$variables['order'] = $order;
 
+        // Ads
+        $adContext = $order->isPending() ? "create" : "edit";
+        $variables['ads'] = Translations::$plugin->adsRepository->sidebar($adContext);
+
         $this->renderTemplate('translations/orders/_detail', $variables);
     }
 
@@ -460,15 +464,15 @@ class OrderController extends BaseController
 
             if ($targetSites === '*') {
                 $targetSites = Craft::$app->getSites()->getAllSiteIds();
-
-                if (($key = array_search($sourceSite, $targetSites)) !== false) {
-                    unset($targetSites[$key]);
-                    $targetSites = array_values($targetSites);
-                }
             }
 
             if (! is_array($targetSites)) {
                 $targetSites = explode(",", str_replace(", ", ",", $targetSites));
+            }
+
+            if (($key = array_search($sourceSite, $targetSites)) !== false) {
+                unset($targetSites[$key]);
+                $targetSites = array_values($targetSites);
             }
 
 			$elementIds = Craft::$app->getRequest()->getBodyParam('elements', []);
