@@ -1,5 +1,6 @@
 {% extends "_layouts/cp" %}
 {% set title = "Services"|t('app') %}
+{% set disabledClass = "" %}
 
 {% set crumbs = [
     { label: 'Translations'|t('app'), url: url('translations') }
@@ -10,14 +11,19 @@
     <div class="services-container card-box">
         <div class="services-grid">
             {% for service in servicesData %}
+                {% if service.title|lower == "ai/machine translation" %}
+                    {% set disabledClass = "disabled" %}
+                {% endif %}
                 <div>
                     <div class="services-card">
                         <h3 class="services-title">{{ service.title |t('app')}}</h3>
                         <p class="services-description">{{ service.description |t('app')}}</p>
                         <p class="services-message">{{ service.message |t('app')}}</p>
-                        <a href="{{ service.ctaUrl }}" class="cta-button">
-                            {{ service.ctaText |t('app') }}
-                        </a>
+                        <div class="{{ disabledClass ? "not-allowed" : ""}}">
+                            <a href="{{ service.ctaUrl }}" class="cta-button {{ disabledClass }}">
+                                {{ service.ctaText |t('app') }}
+                            </a>
+                        </div>
                     </div>
                     <div>
                         <ul class="services-benefit">

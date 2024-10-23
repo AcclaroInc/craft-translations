@@ -16,7 +16,7 @@ use craft\helpers\Json;
 use craft\elements\Entry;
 use craft\helpers\UrlHelper;
 use craft\helpers\ArrayHelper;
-use craft\base\WidgetInterface;
+use acclaro\translations\widgets\BaseWidget;
 use craft\models\Updates as UpdatesModel;
 
 use acclaro\translations\records\FileRecord;
@@ -24,7 +24,6 @@ use acclaro\translations\Translations;
 use acclaro\translations\assetbundles\DashboardAssets;
 use acclaro\translations\Constants;
 use acclaro\translations\services\repository\WidgetRepository;
-
 use yii\web\BadRequestHttpException;
 
 /**
@@ -83,8 +82,8 @@ class WidgetController extends BaseController
 
         $isSelectableWidget = false;
         foreach ($widgetTypes as $widgetType) {
-            /** @var WidgetInterface $widgetType */
-            if (!$widgetType::isSelectable()) {
+            /** @var BaseWidget $widgetType */
+            if (!$widgetType::isSelectable() || !$widgetType::isLive()) {
                 continue;
             }
             $view->startJsBuffer();
@@ -111,7 +110,7 @@ class WidgetController extends BaseController
         // Assemble the list of existing widgets
         $variables['widgets'] = [];
 
-        /** @var WidgetInterface[] $widgets */
+        /** @var BaseWidget[] $widgets */
         $widgets = $this->service->getAllWidgets();
         $allWidgetJs = '';
 
@@ -119,7 +118,7 @@ class WidgetController extends BaseController
             $view->startJsBuffer();
             $info = $this->service->getWidgetInfo($widget);
             $widgetJs = $view->clearJsBuffer(false);
-            if ($info === false) {
+            if ($info === false || !$widget::isLive()) {
                 continue;
             }
             // If this widget type didn't come back in our getAllWidgetTypes() call, add it now
@@ -584,7 +583,7 @@ class WidgetController extends BaseController
      * @param \Craft\base\Widget $widget
      * @return Response
      */
-    private function _saveAndReturnWidget(WidgetInterface $widget): Response
+    private function _saveAndReturnWidget(BaseWidget $widget): Response
     {
         if (! $this->service->saveWidget($widget)) {
             return $this->asFailure(data: [
