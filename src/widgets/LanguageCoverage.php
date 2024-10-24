@@ -11,7 +11,6 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\base\Widget;
 use craft\helpers\Json;
 use acclaro\translations\records\WidgetRecord;
 use acclaro\translations\assetbundles\LanguageCoverageAssets as JS;
@@ -21,7 +20,7 @@ use acclaro\translations\assetbundles\LanguageCoverageAssets as JS;
  * @package   Translations
  * @since     1.0.2
  */
-class LanguageCoverage extends Widget
+class LanguageCoverage extends BaseWidget
 {
     /**
      * @inheritdoc
@@ -59,6 +58,14 @@ class LanguageCoverage extends Widget
     public function minColspan()
     {
         return 2;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSubtitle(): ?string
+    {
+        return "<h5>Coverage information for target site entries.</h5>";
     }
 
     /**

@@ -170,6 +170,24 @@
     margin-right: 10%;
 }
 
+.ad-container {
+    &.sidebar-ad {
+        .field {
+            padding: 1rem;
+        }
+    }
+    .field {
+        padding-top: 1rem;
+        .heading {
+            font-size: medium;
+        }
+    }
+    .input.ltr {
+        font: caption;
+        padding-block: 10px 10px;
+    }
+}
+
 .translations-order-detail-summary h2 {
     font-size: 1.5em;
     margin-top: 0;
@@ -631,6 +649,10 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 
 #translations-dashboard .buttons {
     margin: 10px 0 14px;
+}
+
+#translations-dashboard > .item > .widget {
+    margin-top: 1rem;
 }
 
 .btngroup-container {

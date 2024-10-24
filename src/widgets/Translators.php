@@ -11,7 +11,6 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\base\Widget;
 use acclaro\translations\records\WidgetRecord;
 use acclaro\translations\services\repository\TranslatorRepository;
 
@@ -20,8 +19,9 @@ use acclaro\translations\services\repository\TranslatorRepository;
  * @package   Translations
  * @since     1.0.2
  */
-class Translators extends Widget
+class Translators extends BaseWidget
 {
+    public $limit = 5;
     /**
      * @inheritdoc
      */
@@ -54,6 +54,17 @@ class Translators extends Widget
     public function minColspan()
     {
         return 1;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSettingsHtml(): ?string
+    {
+        return Craft::$app->getView()->renderTemplate(
+            'translations/_components/widgets/Translators/settings',
+            [ 'widget' => $this ]
+        );
     }
 
     /**

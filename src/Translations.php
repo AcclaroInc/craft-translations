@@ -45,6 +45,7 @@ use acclaro\translations\assetbundles\GlobalSetAssets;
 use acclaro\translations\assetbundles\NavigationAssets;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
+use acclaro\translations\services\job\SyncDataToHubSpotJob;
 
 class Translations extends Plugin
 {
@@ -178,6 +179,8 @@ class Translations extends Plugin
                             'translations/settings'
                         ))->send();
                     }
+
+                    Craft::$app->queue->push(new SyncDataToHubSpotJob());
                 }
             }
         );
@@ -243,6 +246,12 @@ class Translations extends Plugin
             $subNavs['static-translations'] = [
                 'label' => 'Static Translations',
                 'url' => Constants::URL_STATIC_TRANSLATIONS,
+            ];
+        }
+        if ($currentUser->can('translations:services')) {
+            $subNavs['services'] = [
+                'label' => 'Services',
+                'url' => Constants::URL_SERVICES,
             ];
         }
 
@@ -363,6 +372,7 @@ class Translations extends Plugin
                     'translations/translators/new' => 'translations/translator/detail',
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/translator/detail',
                     'translations/translators/<translatorId:\d+>/programs' => 'translations/translator/program-list',
+                    'translations/translators/unsubscribe' => 'translations/translator/unsubscribe',
 
                     // Order Controller
                     'translations/orders' => 'translations/order/order-index',
@@ -381,6 +391,9 @@ class Translations extends Plugin
                     'translations/static-translations' => 'translations/static-translations',
                     'translations/static-translations/export-file' => 'translations/static-translations/export-file',
                     'translations/static-translations/import' => 'translations/static-translations/import',
+
+                    // Services Controller
+                    'translations/services' => 'translations/services/index',
 
                     // Asset, Commerce, Global-set, Node Controllers
                     'translations/assets/<elementId:\d+>/drafts/<draftId:\d+>' => 'translations/asset/edit-draft',
@@ -787,12 +800,15 @@ class Translations extends Plugin
                     ]
                 ]
             ],
+            'translations:services' => [
+                'label' => Craft::t('translations', 'View Services'),
+            ],
             'translations:orders' => [
                 'label' => Craft::t('translations', 'View Orders'),
                 'nested' => [
                     'translations:orders:create' => [
                         'label' => Craft::t('translations', 'Create Orders'),
-                    ],
+                      ],
                     'translations:orders:edit' => [
                         'label' => Craft::t('translations', 'Edit Orders'),
                     ],

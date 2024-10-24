@@ -1,0 +1,26 @@
+{% import 'translations/_components/_forms/button' as button %}
+
+{% if ads is not empty %}
+	{% set heading = ads.heading %}
+	{% set content = ads.content %}
+{% endif %}
+
+<div id="sidebar-ad" class="meta">
+	<div class="ad-container sidebar-ad">
+		<div class="field">
+			<div class="heading">
+				<label> {{ heading }} </label>
+			</div>
+
+			<div class="input ltr">
+				<label> {{ content }} </label>
+			</div>
+			<div class="flex">
+				{{ button.anchorButton({
+					label: ads.linkText,
+					href: ads.link,
+				}) }}
+			</div>
+		</div>
+	</div>
+</div>

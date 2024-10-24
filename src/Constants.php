@@ -66,6 +66,7 @@ class Constants
     const URL_TRANSLATIONS          = 'translations/';
     const URL_TRANSLATOR            = 'translations/translators';
     const URL_STATIC_TRANSLATIONS   = 'translations/static-translations';
+    const URL_SERVICES              = 'translations/services';
     const URL_SETTINGS              = 'translations/settings';
     const URL_ENTRIES               = 'entries/';
     const URL_BASE_ASSETS           = '@acclaro/translations/assetbundles/src';
@@ -322,4 +323,89 @@ class Constants
         'craft\fields\Users',
         'craft\fields\Money',
     ];
+
+    const CTA_PROFESSIONAL_TRANSLATION = "https://www.acclaro.com/solutions/global-marketing/website-localization-services";
+    const CTA_QUALITY_REVIEW = "https://www.acclaro.com/solutions/language-quality";
+    const CTA_TECHNICAL_SUPPORT = "https://info.acclaro.com/craftcms-technical-support";
+    const CTA_AI_ML_TRANSLATION = "#";
+
+    const SERVICES_CONTENT = [
+            [
+                'title' => 'Professional Translation',
+                'description' => 'Elevate your content with our professional human translation services.',
+                'message' => 'Our team of expert linguists ensures your message resonates in any language. Perfect for critical content where accuracy and cultural relevance are paramount.',
+                'ctaText' => 'Get a Quote',
+                'ctaUrl' => self::CTA_PROFESSIONAL_TRANSLATION,
+                'keyBenefits' => [
+                    'Industry-specific expertise',
+                    'Cultural nuance and context preservation',
+                    'Consistent brand voice across languages',
+                ],
+            ],
+            [
+                'title' => 'Quality Review',
+                'description' => 'Ensure flawless translations with our comprehensive quality review.',
+                'message' => 'Our rigorous quality review process guarantees that your translations are accurate, polished, and ready for your global audience.',
+                'ctaText' => 'Learn More',
+                'ctaUrl' => self::CTA_QUALITY_REVIEW,
+                'keyBenefits' => [
+                    'Catch and correct linguistic errors',
+                    'Enhance overall translation quality',
+                    'Maintain consistency across all content',
+                ],
+            ],
+            [
+                'title' => 'Technical Support',
+                'description' => 'Get priority support for your Craft Translations installation.',
+                'message' => 'Maximize your efficiency with our dedicated technical support. Our team ensures your translation workflow runs smoothly, allowing you to focus on what matters most.',
+                'ctaText' => 'Request Support',
+                'ctaUrl' => self::CTA_TECHNICAL_SUPPORT,
+                'keyBenefits' => [
+                    'Direct access to our plugin experts',
+                    'Faster resolution of technical issues',
+                    'Personalized guidance for optimal plugin use',
+                ],
+            ],
+            [
+                'title' => 'AI/Machine Translation',
+                'description' => 'Leverage cutting-edge AI for fast, cost-effective translations.',
+                'message' => 'Ideal for high-volume, time-sensitive projects. Our AI translation perfectly balances speed, cost, and quality for appropriate content types.',
+                'ctaText' => 'Coming Soon',
+                'ctaUrl' => self::CTA_AI_ML_TRANSLATION,
+                'keyBenefits' => [
+                    'High-speed translation for large volumes',
+                    'Cost-effective solution for suitable content types',
+                    'Continuous improvement with machine learning',
+                ],
+            ],
+    ];
+
+    // Dashboard will be array of ads to show more ads if needed in future
+    const ADS_CONTENT = [
+        "dashboard" => [
+            [
+                "heading" => "AI/Machine Translation",
+                "content" => "Translate more content faster with AI.",
+                "linkText" => "Try it now",
+                "link" => self::CTA_AI_ML_TRANSLATION,
+            ]
+        ],
+        "sidebar" => [
+            "create" => [
+                "heading" => "Professional Translation",
+                "content" => "Get expert human translation for critical content.",
+                "linkText" => "Learn more",
+                "link" => self::CTA_PROFESSIONAL_TRANSLATION,
+            ],
+            "edit" => [
+                "heading" => "Quality Review",
+                "content" => "Ensure accuracy with our professional quality review.",
+                "linkText" => "Get started",
+                "link" => self::CTA_QUALITY_REVIEW,
+            ],
+        ],
+    ];
+
+    // N8N Endpoint
+    const API_ENDPOINT_N8N = 'https://automate.acclaro-apps.com/webhook/5f5cd671-3128-402a-b32f-0d7f8140d484'; 
 }

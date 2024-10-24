@@ -1,0 +1,24 @@
+{% import 'translations/_components/_forms/button' as button %}
+
+<div class="recentnews-container scroll-x-auto">
+    {% if ads|length %}
+        <div class="data ad-container fullwidth">
+            {% for ad in ads %}
+                <div class="field">
+                    <div class="heading">
+                        <label> {{ ad.heading }} </label>
+                    </div>
+                    <div class="input ltr">
+                        {{ ad.content }}
+                    </div>
+                    <div class="flex">
+                        {{ button.anchorButton({
+                            label: ad.linkText,
+                            href: ad.link,
+                        }) }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
