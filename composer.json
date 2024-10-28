@@ -9,6 +9,7 @@
         "craft-plugin",
         "translations",
         "multisite",
+        "localization",
         "multisite translations",
         "translation plugin for craft"
     ],

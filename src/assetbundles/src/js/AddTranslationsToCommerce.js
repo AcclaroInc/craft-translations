@@ -203,7 +203,7 @@
                 $form.submit();
             });
 
-            $(document).on('click', '.elements .checkbox, .elements .selectallcontainer .btn', function() {
+            $(document).on('click', '.elements .checkbox, .elements .selectallcontainer .btn, .elements table.data tbody tr, .elements ul li', function() {
                 setTimeout($.proxy(self.updateSelectedEntries, self), 100);
             });
 

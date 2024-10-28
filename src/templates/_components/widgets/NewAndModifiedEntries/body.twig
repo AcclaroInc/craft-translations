@@ -1,6 +1,6 @@
 {% import 'translations/_components/_forms/button' as button %}
 
-<div class="tab-container mt--30">
+<div class="tab-container">
     {% set tabs = {
             "recent-entries-widget": {label: "New Source Entries"|t, url: 'javascript:void(0)'},
             "recently-modified-widget": {label: "Modified Source Entries"|t, url: 'javascript:void(0)'},
@@ -18,7 +18,7 @@
     <div id="recently-modified-widget" class="recentlymodified-container hidden">
         <div class="spinner body-loading"></div>
         <div class="elements hidden">
-            <div class="tableview scroll-x-auto mt--30">
+            <div class="tableview scroll-x-auto">
                 <table class="data fullwidth table">
                     <tr>
                         <td class="checkbox-cell"></td>
@@ -30,19 +30,19 @@
                         <tr id="item-{{i}}">&nbsp;</tr>
                     {% endfor %}
                 </table>
-            </div>
-            <div class="buttons right">
-                {{ button.anchorButton({
-                    label: 'Re-order'|t('app'),
-                    id: 'bulk-reorder',
-                    class: 'link-disabled icon submit',
-                    attributes: {
-                        target: '_blank',
-                        data: {
-                            icon: 'language'
+                <div class="buttons right">
+                    {{ button.anchorButton({
+                        label: 'Re-order'|t('app'),
+                        id: 'bulk-reorder',
+                        class: 'link-disabled icon submit',
+                        attributes: {
+                            target: '_blank',
+                            data: {
+                                icon: 'language'
+                            }
                         }
-                    }
-                }) }}
+                    }) }}
+                </div>
             </div>
         </div>
     </div>
@@ -137,7 +137,7 @@
 
     <div id="recent-entries-widget" class="recententries-container">
         <div class="elements hidden">
-            <div class="tableview scroll-x-auto mt--30">
+            <div class="tableview scroll-x-auto">
                 <table class="data fullwidth table">
                     <tr>
                         <td class="checkbox-cell"></td>

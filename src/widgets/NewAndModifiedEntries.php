@@ -11,7 +11,6 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use craft\base\Widget;
 use craft\helpers\Json;
 use acclaro\translations\records\WidgetRecord;
 use acclaro\translations\assetbundles\NewAndModifiedAssets;
@@ -21,7 +20,7 @@ use acclaro\translations\assetbundles\NewAndModifiedAssets;
  * @package   Translations
  * @since     1.0.2
  */
-class NewAndModifiedEntries extends Widget
+class NewAndModifiedEntries extends BaseWidget
 {
     /**
      * @inheritdoc

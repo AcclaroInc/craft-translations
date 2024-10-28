@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.0 - 2024-10-25
+
+### Added
+- New Ads system. ([AcclaroInc#551](https://github.com/AcclaroInc/pm-craft-translations/issues/551))
+- Dedicated services page. ([AcclaroInc#552](https://github.com/AcclaroInc/pm-craft-translations/issues/552))
+- New user registration system. ([AcclaroInc#550](https://github.com/AcclaroInc/pm-craft-translations/issues/550))
+
+### Updated
+- New pricing policy for paid version of plugin.
+
+### Chore
+- Code refactoring and cleanup.
+
 ## 4.0.0-beta.2 - 2024-09-11
 
 ### Fixed
