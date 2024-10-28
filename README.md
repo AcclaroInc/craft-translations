@@ -2,7 +2,7 @@
 
 The Translations plugin facilitates seamless content translation workflows within Craft CMS. It is a comprehensive, powerful, and flexible system that supports Export/Import and professional translation services, enabling you to submit, track, review, and publish content using your preferred translation service provider.
 
-![repo-img](./resources/img/image.jpg)
+https://github.com/user-attachments/assets/74a299f3-6dc1-4c1f-9d88-8f0894b97dd0
 
 > [!NOTE]
 > The license fee for this plugin is $99.00 via the [Craft Plugin Store](https://plugins.craftcms.com/translations?craft5).
