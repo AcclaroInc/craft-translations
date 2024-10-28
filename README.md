@@ -13,6 +13,38 @@ https://github.com/user-attachments/assets/74a299f3-6dc1-4c1f-9d88-8f0894b97dd0
 - **Effortless Content Management:** Enjoy intuitive workflows for reviewing, approving, and publishing translations, ensuring quality and consistency.
 - **Comprehensive Content Submission:** Easily submit and manage translations for all your content types, including Entries, Categories, Globals, and Assets.
 
+## ⚠️ System Requirements
+- **Craft CMS:** Version 5.0.0 or later
+- **PHP:** Version 8.2 or higher
+- **PHP DOM Extension:** Required
+- **Craft Multi-site Configuration:** Required
+
+## 🔌 Installation
+
+> **Reminder:** Before installing the plugin, back up your site. We recommend testing multisite settings and configuration changes on a staging site before implementing them in a production environment.
+
+To install the plugin, follow these instructions:
+
+1. Open your terminal and navigate to your Craft project:
+
+   ```bash
+   cd /path/to/project
+   ```
+
+2. Tell Composer to load the plugin:
+
+   ```bash
+   composer require acclaro/translations
+   ```
+
+3. In the Control Panel, go to Settings → Plugins and click the “Install” button for Translations.
+
+You can also [install Translations via the Plugin Store](https://plugins.craftcms.com/translations) or from the Craft Control Panel.
+
+## 🚀 Getting Started
+
+Please refer to the [Getting Started Guide](https://github.com/AcclaroInc/craft-translations/wiki/Getting-Started) for detailed plugin setup. For recommended workflows, FAQs, and additional documentation, visit our plugin [Wiki](https://github.com/AcclaroInc/craft-translations/wiki).
+
 ## 🧩 Supported Elements, Fields, and Plugins
 
 ### Craft CMS Elements
@@ -55,38 +87,6 @@ https://github.com/user-attachments/assets/74a299f3-6dc1-4c1f-9d88-8f0894b97dd0
 - [Super Table](https://plugins.craftcms.com/super-table?craft5)
 
 *Need support for a specific plugin? [Open an issue](https://github.com/AcclaroInc/craft-translations/issues/new).*
-
-## ⚠️ System Requirements
-- **Craft CMS:** Version 5.0.0 or later
-- **PHP:** Version 8.2 or higher
-- **PHP DOM Extension:** Required
-- **Craft Multi-site Configuration:** Required
-
-## 🔌 Installation
-
-> **Reminder:** Before installing the plugin, back up your site. We recommend testing multisite settings and configuration changes on a staging site before implementing them in a production environment.
-
-To install the plugin, follow these instructions:
-
-1. Open your terminal and navigate to your Craft project:
-
-   ```bash
-   cd /path/to/project
-   ```
-
-2. Tell Composer to load the plugin:
-
-   ```bash
-   composer require acclaro/translations
-   ```
-
-3. In the Control Panel, go to Settings → Plugins and click the “Install” button for Translations.
-
-You can also [install Translations via the Plugin Store](https://plugins.craftcms.com/translations) or from the Craft Control Panel.
-
-## 🚀 Getting Started
-
-Please refer to the [Getting Started Guide](https://github.com/AcclaroInc/craft-translations/wiki/Getting-Started) for detailed plugin setup. For recommended workflows, FAQs, and additional documentation, visit our plugin [Wiki](https://github.com/AcclaroInc/craft-translations/wiki).
 
 ## ℹ️ Additional Information
 
