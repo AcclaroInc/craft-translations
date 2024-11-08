@@ -43,7 +43,7 @@ You can also [install Translations via the Plugin Store](https://plugins.craftcm
 
 ## 🚀 Getting Started
 
-Please refer to the [Getting Started Guide](https://github.com/AcclaroInc/craft-translations/wiki/Getting-Started) for detailed plugin setup. For recommended workflows, FAQs, and additional documentation, visit our plugin [Wiki](https://github.com/AcclaroInc/craft-translations/wiki).
+To get started with the Translations plugin, please refer to the [User Guide](./docs/user-guide.md) for detailed setup and configuration instructions.
 
 ## 🧩 Supported Elements, Fields, and Plugins
 
