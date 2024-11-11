@@ -122,6 +122,7 @@ class Install extends Migration
                     'translatorId'              => $this->integer(),
                     'id'                        => $this->integer()->notNull(),
                     'ownerId'                   => $this->integer()->notNull(),
+                    'programId'                 => $this->integer()->null(),
                     'sourceSite'                => $this->integer()->notNull(),
                     'targetSites'               => $this->string(1020)->notNull()->defaultValue(''),
                     'status'                    => $this->enum('status', Constants::ORDER_STATUSES)->defaultValue(Constants::ORDER_STATUS_PENDING),
