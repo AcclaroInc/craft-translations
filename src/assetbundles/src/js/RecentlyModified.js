@@ -99,6 +99,7 @@
 
                                 $container.attr('data-id', item.entryId);
 
+                                item.entryName = item.entryName || 'Untitled';
                                 var widgetHtml = `
                                 <td id="check-${i}" class="entry-check checkbox-cell"></td>
                                 <td><a href="${item.entryUrl}">${item.entryName}</a></td>
