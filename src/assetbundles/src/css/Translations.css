@@ -1041,3 +1041,7 @@ td.target{
     background-color: #EF8686;
     border: none;
 }
+
+.activity-log .bullets {
+    padding-inline-start: var(--padding);
+}

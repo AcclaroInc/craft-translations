@@ -103,8 +103,8 @@
 	{% include "translations/_components/ads/sidebar" %}
 	{% include "translations/_components/orders/info-tab" %}
 
-	<div id="meta-details" class="meta read-only">
-		<div class="data">
+	<div id="meta-details" class="meta">
+		<div class="field">
 			<div class="heading">
 				<label>Status</label>
 			</div>
@@ -112,7 +112,7 @@
                 <span class="status {{ order.getStatusColour() }}"></span> {{ order.getStatusLabel()|t }}
 			</div>
 		</div>
-		<div class="data">
+		<div class="field">
 			<div class="heading">
 				<span>Created At</span>
 			</div>
@@ -120,7 +120,7 @@
                 <span> {{ order.dateOrdered ? order.dateOrdered|date('n/j/Y, H:i A') : 'N/A' }} </span>
 			</div>
 		</div>
-		<div class="data">
+		<div class="field">
 			<div class="heading">
 				<span>Updated At</span>
 			</div>
