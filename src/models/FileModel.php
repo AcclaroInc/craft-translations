@@ -127,7 +127,7 @@ class FileModel extends Model
             case Constants::FILE_STATUS_PUBLISHED:
                 return 'green';
             default:
-                return '';
+                return 'disabled';
         }
     }
 

@@ -711,7 +711,7 @@ class Order extends Element
                 $statusColour = 'red';
                 break;
             default :
-                $statusColour = '';
+                $statusColour = 'disabled';
         }
 
         $this->statusColour = $this->statusColour ?? $statusColour;

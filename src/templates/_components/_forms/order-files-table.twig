@@ -60,7 +60,7 @@
                         {% else %}
                             <div id="{{ "filePreview-"~ file.id }}">
                                 <div class="elements">
-                                    <div class="element flex" title="{{ file.uiLabel ~" - " ~siteObjects[file.targetSite].name }}">
+                                    <div class="element flex flex-nowrap" title="{{ file.uiLabel ~" - " ~siteObjects[file.targetSite].name }}">
                                         {% if element.className == constant('acclaro\\translations\\Constants::CLASS_NAVIGATION') %}
                                             {% set node = craft.navigation.nodes().uid(element.uid).one() %}
                                             <div class="label" data-id="{{ file.elementId }}" data-editable="" data-site-id={{ file.targetSite }} {% if file.isComplete or element.isDraft %} data-draft-id={{ file.isComplete ? file.draftId : element.draftId }} {% endif %}>
