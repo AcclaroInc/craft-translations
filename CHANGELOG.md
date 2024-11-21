@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.2 - 2024-11-21
+
+### Fixed
+- Entry title overflowing the tables & new status icon missing. ([AcclaroInc#565](https://github.com/AcclaroInc/pm-craft-translations/issues/565))
+
 ## 4.0.1 - 2024-11-12
 
 ### Fixed
