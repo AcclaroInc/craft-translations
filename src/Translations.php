@@ -698,7 +698,7 @@ class Translations extends Plugin
 				if ($currentFile) {
 					$order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
-                    $currentFile->status = Constants::FILE_STATUS_CANCELED;
+                    $currentFile->status = Constants::FILE_STATUS_REVIEW_READY;
 
                     self::$plugin->fileRepository->saveFile($currentFile);
 

@@ -111,17 +111,24 @@ class NeoFieldTranslator extends GenericFieldTranslator
         foreach ($blocks as $i => $block) {
             $i = 'new' . ++$new;
 
-            $blockId = $field->getIsTranslatable($element) ? $i : $block->id;
+            $isTranslatable = $field->getIsTranslatable($element);
+            $blockId = $isTranslatable ? $i : $this->getBlockUid($block);
             $blockData = $allBlockData[$i] ?? array();
 
-            $post[$fieldHandle][$blockId] = array(                
+            $data = [
                 'modified' => '1',
                 'type' => $block->getType()->handle,
                 'enabled' => $block->enabled,
                 'collapsed' => $block->collapsed,
                 'level' => $block->level,
-                'fields' => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceLanguage, $targetLanguage, $blockData, true),
-            );
+                'fields' => $elementTranslator->toPostArrayFromTranslationTarget($block, $sourceLanguage, $targetLanguage, $blockData, true),                
+            ];
+
+            if ($isTranslatable) {
+                $post[$fieldHandle][$blockId] = $data;
+            } else {
+                $post[$fieldHandle]['blocks'][$blockId] = $data;
+            }
         }
 
         return $post;
@@ -147,6 +154,11 @@ class NeoFieldTranslator extends GenericFieldTranslator
         return $wordCount;
     }
 
+    private function getBlockUid($block)
+    {
+        return sprintf('uid:%s', $block->getCanonicalUid());
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -165,13 +177,23 @@ class NeoFieldTranslator extends GenericFieldTranslator
         );
 
         foreach ($blocks as $i => $block) {
+            $isTranslatable = $field->getIsTranslatable($element);
+            $blockId = $isTranslatable ? $i : $this->getBlockUid($block);
 
-            $blockId = $block->id ?? sprintf('new%s', ++$i);
-            $post[$fieldHandle][$blockId] = array(
+            $data = [
+                'modified' => '1',
                 'type' => $block->getType()->handle,
                 'enabled' => $block->enabled,
-                'fields' => $elementTranslator->toPostArray($block),
-            );
+                'collapsed' => $block->collapsed,
+                'level' => $block->level,
+                'fields' => $elementTranslator->toPostArray($block)
+            ];
+
+            if ($isTranslatable) {
+                $post[$fieldHandle][$blockId] = $data;
+            } else {
+                $post[$fieldHandle]['blocks'][$blockId] = $data;
+            }
         }
 
         return $post;
