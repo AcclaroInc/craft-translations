@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.3 - 2024-12-13
+
+### Fixed
+- Neo blocks overwriting content in other sites on draft creation. ([AcclaroInc#562](https://github.com/AcclaroInc/pm-craft-translations/issues/562))
+
 ## 4.0.2 - 2024-11-21
 
 ### Fixed
