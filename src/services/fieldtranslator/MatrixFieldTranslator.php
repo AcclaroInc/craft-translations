@@ -88,14 +88,12 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         foreach ($blocks as $i => $block) {
             $i = sprintf('new%s', ++$new);
 
-            // Check for old key in case an order was created before plugin update
-            $oldKey = sprintf('%s_%s', $block->fieldId, $block->canonicalId);
             /**
              * Block id changes for localised block so use $i and using same for non localised blocks merges other
              * sites non localised block to non localised block.
              */
-            $blockId = $field->getIsTranslatable() ? $i : $block->id;
-            $blockData = $fieldData[$i] ?? $fieldData[$oldKey] ?? array();
+            $blockId = $field->getIsTranslatable($element) ? $i : $block->id;
+            $blockData = $fieldData[$i] ?? array();
 
             $post[$fieldHandle][$blockId] = array(
                 'type'              => $block->getType()->handle,
