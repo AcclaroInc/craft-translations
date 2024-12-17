@@ -7,18 +7,27 @@ use Craft;
 use craft\db\Migration;
 
 /**
- * m240808_084903_add_program_id_to_orders migration.
+ * m241216_081944_upsert_program_id_column migration.
  */
-class m240808_084903_add_program_id_to_orders extends Migration
+class m241216_081944_upsert_program_id_column extends Migration
 {
     /**
      * @inheritdoc
      */
     public function safeUp(): bool
     {
-        echo "Adding translations_orders requestQuote column...\n";
-        $this->addColumn(Constants::TABLE_ORDERS, 'programId', $this->integer()->null()->after('ownerId'));
-        echo "Done adding translations_orders requestQuote column...\n";
+        $tableName = Constants::TABLE_ORDERS;
+        $columnName = 'programId';
+
+        // Check if the column exists
+        if (!$this->db->columnExists($tableName, $columnName)) {
+
+            $this->addColumn($tableName, $columnName, $this->integer()->null()->after('ownerId'));
+
+            Craft::info("Added column '{$columnName}' to table '{$tableName}'", __METHOD__);
+        } else {
+            Craft::info("Column '{$columnName}' already exists in table '{$tableName}'", __METHOD__);
+        }
 
         return true;
     }
