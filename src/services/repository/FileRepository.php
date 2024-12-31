@@ -351,7 +351,7 @@ class FileRepository
 
     public function createOrderFile($order, $elementId, $targetSite)
     {
-        $element = Translations::$plugin->elementRepository->getElementById($elementId);
+        $element = Translations::$plugin->elementRepository->getElementById($elementId, $order->sourceSite);
         $wordCount = Translations::$plugin->elementTranslator->getWordCount($element) ?? 0;
 
         $file = $this->makeNewFile();

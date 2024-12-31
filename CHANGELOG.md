@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.5 - 2024-12-31
+
+### Fixed
+- Headers already sent error. ([AcclaroInc#573](https://github.com/AcclaroInc/pm-craft-translations/issues/573))
+- Error adding entry to existing order. ([AcclaroInc#538](https://github.com/AcclaroInc/craft-translations/issues/538))
+
 ## 4.0.4 - 2024-12-17
 
 ### Fixed
