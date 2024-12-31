@@ -55,18 +55,18 @@ class BaseController extends Controller
 
     public function actionOrderCallback()
     {
+        Craft::$app->getResponse()->headers->set('Content-Type', 'text/plain');
+        
         $this->logIncomingRequest('orderCallback');
 
-        Craft::$app->getResponse()->headers->set('Content-Type', 'text/plain');
-
         $key = sha1_file(Craft::$app->path->getConfigPath().'/license.key');
+        $output = '';
 
         if (Craft::$app->request->getRequiredQueryParam('key') !== $key) {
-            echo $key.PHP_EOL;
-            Craft::$app->end('Invalid key');
+            $output .= $key.PHP_EOL.'Invalid key';
+            Craft::$app->end($output);
         } else {
-            echo $key.PHP_EOL;
-            echo 'Valid key'.PHP_EOL;
+            $output .= "Valid key: $key".PHP_EOL;
         }
 
         $orderId = Craft::$app->request->getRequiredQueryParam('orderId');
@@ -80,7 +80,7 @@ class BaseController extends Controller
         if (!$order) {
             Craft::$app->end('Invalid orderId');
         } else {
-            echo 'Order found'.PHP_EOL;
+            $output .= 'Order found'.PHP_EOL;
             $order->logActivity('Order callback received.');
             Craft::$app->getElements()->saveElement($order);
         }
@@ -100,20 +100,20 @@ class BaseController extends Controller
         if (!$translationService) {
             Craft::$app->end('Couldn’t find the translation service');
         } else {
-            echo 'Translation service found'.PHP_EOL;
+            $output .= 'Translation service found'.PHP_EOL;
         }
 
         $translationService->updateOrder($order);
 
-        echo 'Updating order'.PHP_EOL;
+        $output .= 'Updating order'.PHP_EOL;
 
         $success = Craft::$app->getElements()->saveElement($order);
 
         if (!$success) {
             Craft::$app->end('Couldn’t save the order');
         } else {
-            echo 'Order changes saved'.PHP_EOL;
-            echo 'Starting file sync' . PHP_EOL;
+            $output .= 'Order changes saved'.PHP_EOL;
+            $output .= 'Starting file sync' . PHP_EOL;
 
             foreach($order->getFiles() as $file) {
                 // Only process the file is not already done
@@ -123,24 +123,25 @@ class BaseController extends Controller
                 }
             }
 
-            echo 'File sync successful' . PHP_EOL;
+            $output .= 'File sync successful' . PHP_EOL;
         }
 
-        Craft::$app->end('OK');
+        Craft::$app->end("$output OK");
     }
 
     public function actionFileCallback()
     {
-        $this->logIncomingRequest('fileCallback');
-
         Craft::$app->getResponse()->headers->set('Content-Type', 'text/plain');
 
+        $this->logIncomingRequest('fileCallback');
+
         $key = sha1_file(Craft::$app->path->getConfigPath().'/license.key');
+        $output = '';
 
         if (Craft::$app->request->getQueryParam('key') !== $key) {
             Craft::$app->end('Invalid key');
         } else {
-            echo 'Valid key'.PHP_EOL;
+            $output .= 'Valid key'.PHP_EOL;
         }
 
         $fileId = Craft::$app->request->getRequiredQueryParam('fileId');
@@ -150,7 +151,7 @@ class BaseController extends Controller
         if (!$file) {
             Craft::$app->end('Couldn’t find the file');
         } else {
-            echo 'Found file'.PHP_EOL;
+            $output .= 'Found file'.PHP_EOL;
         }
 
         // don't process published files
@@ -168,7 +169,7 @@ class BaseController extends Controller
         if (!$order) {
             Craft::$app->end('Couldn’t find the order');
         } else {
-            echo 'Found order'.PHP_EOL;
+            $output .= 'Found order'.PHP_EOL;
             $order->logActivity('File callback received.');
             Craft::$app->getElements()->saveElement($order);
         }
@@ -178,10 +179,10 @@ class BaseController extends Controller
         if (!$translationService) {
             Craft::$app->end('Couldn’t find the translation service');
         } else {
-            echo 'Translation service found'.PHP_EOL;
+            $output .= 'Translation service found'.PHP_EOL;
         }
 
-        echo 'Updating file'.PHP_EOL;
+        $output .= 'Updating file'.PHP_EOL;
         // Skip if file already has target content
         if ($file->isNew() || $file->isInProgress()) {
             $translationService->updateFile($order, $file);
@@ -191,13 +192,13 @@ class BaseController extends Controller
             if (!$success) {
                 Craft::$app->end('Couldn’t save the file');
             } else {
-                echo 'File saved'.PHP_EOL;
+                $output .= 'File saved'.PHP_EOL;
             }
         } else {
-            echo 'File skipped'.PHP_EOL;
+            $output .= 'File skipped'.PHP_EOL;
         }
 
-        Craft::$app->end('OK');
+        Craft::$app->end("$output OK");
     }
 
     public function actionAddElementsToOrder()
