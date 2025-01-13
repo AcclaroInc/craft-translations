@@ -102,7 +102,7 @@ class NeoFieldTranslator extends GenericFieldTranslator
             $i = 'new' . ++$new;
 
             $isTranslatable = $field->getIsTranslatable($element);
-            $blockId = $isTranslatable ? $i : $this->getBlockUid($block);
+            $blockId = $isTranslatable ? $i : $block->id;
             $blockData = $allBlockData[$i] ?? array();
 
             $data = array(                
@@ -163,7 +163,7 @@ class NeoFieldTranslator extends GenericFieldTranslator
 
         foreach ($blocks as $i => $block) {
             $isTranslatable = $field->getIsTranslatable($element);
-            $blockId = $isTranslatable ? $i : $this->getBlockUid($block);
+            $blockId = $isTranslatable ? $i : $block->id;
 
             $data = array(
                 'modified' => '1',
@@ -182,10 +182,5 @@ class NeoFieldTranslator extends GenericFieldTranslator
         }
 
         return $post;
-    }
-
-    private function getBlockUid($block)
-    {
-        return sprintf('uid:%s', $block->getCanonicalUid());
     }
 }
