@@ -28,9 +28,12 @@ class TableMakerFieldTranslator extends GenericFieldTranslator
 
         $columnsData = $data['columns'];
         $columns = $this->getTableColumns($columnsData);
-        
+
         foreach ($data['rows'] as $i => $row) {
             foreach ($columns as $id => $name) {
+                $columnKey = sprintf('%s.%s.%s', $field->handle, 'columnTitle', $id);
+                $source[$columnKey] = $name;
+
                 $key = sprintf('%s.%s.%s', $field->handle, $i, $name);
 
                 // Check to translate dropdown lable not values
@@ -64,9 +67,12 @@ class TableMakerFieldTranslator extends GenericFieldTranslator
         $fieldHandle = $field->handle;
 
         $post = $this->toPostArray($elementTranslator, $element, $field);
-
         foreach ($fieldData as $i => $row) {
-            if (isset($post[$fieldHandle]['rows'][$i])) {
+            if ($i === 'columnTitle') {
+                foreach ($row as $index => $columnTitle) {
+                    $post[$fieldHandle]['columns'][$index]['heading'] = $columnTitle;
+                }
+            } else if (isset($post[$fieldHandle]['rows'][$i])) {
                 // Custom logic to replace the dropdown lable in place of value
                 $this->handleDropdownValues($post, $row, $fieldHandle, $i);
                 $post[$fieldHandle]['rows'][$i] = array_values($row);
