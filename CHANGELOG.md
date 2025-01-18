@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.4.4- 2025-01-17
+
+### Added
+- Support for TableMaker field. ([AcclaroInc#547](https://github.com/AcclaroInc/craft-translations/issues/547))
+
+
 ## 3.4.3- 2025-01-13
 
 ### Fixed
-
 - An issue with Neo block propagation for non-localized blocks. ([AcclaroInc#562](https://github.com/AcclaroInc/pm-craft-translations/issues/562))
 
 ## 3.4.2 - 2024-12-16
