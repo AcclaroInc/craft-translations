@@ -45,6 +45,7 @@ use verbb\supertable\fields\SuperTableField;
 use lenz\linkfield\fields\LinkField as TypedLinkField;
 use verbb\hyper\fields\HyperField as HyperLinkField;
 use verbb\navigation\fields\NavigationField;
+use verbb\tablemaker\fields\TableMakerField;
 
 class Factory
 {
@@ -78,7 +79,8 @@ class Factory
         Embed::class            => NsmFieldsTranslator::class,
         VizyField::class  	    => VizyFieldTranslator::class,
         NavigationField::class  => NavigationFieldTranslator::class,
-        CkEditorField::class    => GenericFieldTranslator::class
+        CkEditorField::class    => GenericFieldTranslator::class,
+        TableMakerField::class  => TableMakerFieldTranslator::class
     );
 
     public function makeTranslator(Field $field)
