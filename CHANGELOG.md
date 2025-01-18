@@ -9,7 +9,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Added
 - Support for TableMaker field. ([AcclaroInc#547](https://github.com/AcclaroInc/craft-translations/issues/547))
 
-
 ## 3.4.3- 2025-01-13
 
 ### Fixed
@@ -24,7 +23,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 - An issue where migration failed to run in postgres database.
-
 
 ## 3.4.0 - 2024-07-10
 
