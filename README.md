@@ -85,6 +85,7 @@ To get started with the Translations plugin, please refer to the [User Guide](./
   - Checkboxes
   - Multi-select
 - [Super Table](https://plugins.craftcms.com/super-table?craft5)
+- [Table Maker](https://plugins.craftcms.com/tablemaker?craft5)
 
 *Need support for a specific plugin? [Open an issue](https://github.com/AcclaroInc/craft-translations/issues/new).*
 
