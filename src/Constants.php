@@ -288,6 +288,7 @@ class Constants
         'craft\fields\RadioButtons',
         'benf\neo\Field',
         'verbb\vizy\fields\VizyField',
+        'verbb\tablemaker\fields\TableMakerField',
         'craft\redactor\Field',
         'presseddigital\linkit\fields\LinkitField',
         'verbb\hyper\fields\HyperField',
