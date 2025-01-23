@@ -1045,3 +1045,25 @@ td.target{
 .activity-log .bullets {
     padding-inline-start: var(--padding);
 }
+
+.meta .field .heading {
+    border-inline-end: none;
+}
+
+#settings, #meta-details {
+    padding-right: 2.5rem;
+}
+
+#settings .input.ltr:not(.value) {
+    display: block;
+}
+
+#settings .field.button {
+    align-items: center;
+    justify-content: space-between;
+}
+
+#meta-details .value {
+    display: flex;
+    align-items: center;
+}
