@@ -226,12 +226,6 @@
     align-self: center;
 }
 
-.utility-status .progressbar {
-    left: 50%;
-        width: 50%;
-    transform: translateX(-50%) translateY(-50%);
-}
-
 .translations-order-confirmation .readable{
     margin: 30px auto;
     max-width: 400px;
