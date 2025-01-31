@@ -86,9 +86,7 @@
         <div class="data">
             <dt class="heading">Uploaded by</dt>
             <dd class="value">
-                {% include '_elements/element' with {
-					element: author,
-				} %}
+                {{ elementChip(author) }}
             </dd>
         </div>
         <div class="data">
