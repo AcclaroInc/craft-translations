@@ -40,7 +40,7 @@ class ActivityLogRepository
             $activityLog = $this->makeNewActivityLogModel();
             $activityLog->targetId = $target->id;
             $activityLog->message = $message;
-            $activityLog->created = date('Y-m-d H:i:s');
+            $activityLog->created = Craft::$app->getFormatter()->asDatetime('now', 'php:Y-m-d H:i:s');
             $activityLog->targetClass = get_class($target);
 
             return $this->saveActivityLog($activityLog);
