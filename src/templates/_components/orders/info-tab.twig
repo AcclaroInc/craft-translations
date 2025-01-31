@@ -75,9 +75,7 @@
 		<div class="data field">
 			<h5 class="heading">{{ 'Author'|t('app') }}</h5>
 			<div class="value input ltr" style="justify-content:flex-end" id="uploader-element">
-				{% include '_elements/element' with {
-					element: author,
-				} %}
+				{{ elementChip(author) }}
 			</div>
 			{% js %}
 			new Craft.ElementThumbLoader().load($('#uploader-element'));
