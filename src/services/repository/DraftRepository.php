@@ -46,8 +46,10 @@ class DraftRepository
     public function saveDraft($element)
     {
         $element->validate();
-        if($element->getErrors()){
-            return $element->getErrors();
+        if($element->getErrors()) {
+            // Extract the error messages from the element's errors
+            $errorMessages = $this->extractErrorMessages($element->getErrors());
+            throw new Exception("Validation failed: " . $errorMessages);
         }
 
         return Craft::$app->elements->saveElement($element, true, true, false);
@@ -188,9 +190,12 @@ class DraftRepository
         $currentElement = 0;
 
         $createDrafts = new CreateDrafts();
-        $transaction = Craft::$app->db->beginTransaction();
-
+        
         foreach ($order->getFiles() as $file) {
+            /* Create transaction per file so that in case a file has validation error
+            only that will be rolledback and others can be processed */
+            $transaction = Craft::$app->db->beginTransaction();
+
             if (! in_array($file->id, $fileIds)) {
                 continue;
             }
@@ -231,12 +236,13 @@ class DraftRepository
                 if ($publish) {
                     $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
                 }
+                $transaction->commit();
             } catch(Exception $e) {
                 $transaction->rollback();
-                throw $e;
+                $this->setError($e->getMessage());
+                continue;
             }
         }
-        $transaction->commit();
 
         if ($isNewDraft)
 			$order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
@@ -417,5 +423,26 @@ class DraftRepository
             $transaction->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Extract error messages from an error object in string format
+     */
+    private function extractErrorMessages($errorObject)
+    {
+        $errorMessages = [];
+
+        // Iterate through each key in the error object
+        foreach ($errorObject as $field => $messages) {
+            if (is_array($messages)) {
+                // Iterate through each error message in the array
+                foreach ($messages as $message) {
+                    $errorMessages[] = $message; // Add the message to the list
+                }
+            }
+        }
+
+        // Return the concatenated error messages as a string
+        return implode("\n", $errorMessages);
     }
 }
