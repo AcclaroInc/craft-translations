@@ -70,7 +70,7 @@
 			});
 
 			// Modal checkboxes behaviour script
-			$(document).on('click, change', '.clone:checkbox', function() {
+			$(document).on('click change', '.clone:checkbox', function () {
 				$value = $(this).val();
 				$selected = $('tbody .clone:checkbox:checked').length;
 				if ($selected == 0) {
