@@ -47,8 +47,8 @@
                     $('div.menu ul.padded li a[data-id="'+recent+'"]').removeClass('sel');
                     $('div.menu ul.padded li a[data-id="'+modified+'"]').addClass('sel');
                     $("#"+modified).removeClass('hidden');
-                    $("#"+recent).addClass('hidden');
-                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    $("#" + recent).addClass('hidden');
+                    this.$container.updateContainerHeight();
                     window.translationsdashboard.grid.refreshCols(true, true);
                 });
 
@@ -60,8 +60,8 @@
                     $('div.menu ul.padded li a[data-id="'+recent+'"]').addClass('sel');
                     $('div.menu ul.padded li a[data-id="'+modified+'"]').removeClass('sel');
                     $("#"+modified).addClass('hidden');
-                    $("#"+recent).removeClass('hidden');
-                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
+                    $("#" + recent).removeClass('hidden');
+                    this.$container.updateContainerHeight();
                     window.translationsdashboard.grid.refreshCols(true, true);
                 });
 
