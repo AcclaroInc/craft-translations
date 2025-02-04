@@ -777,8 +777,8 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     padding-top: 10px !important;
 }
 
-.pt-5 {
-    padding-top: 5px !important;
+.pt-7 {
+    padding-top: 7px !important;
 }
 
 .w-300 {
@@ -1044,4 +1044,27 @@ td.target{
 
 .activity-log .bullets {
     padding-inline-start: var(--padding);
+}
+
+.meta .field .heading {
+    border-inline-end: none;
+}
+
+#settings, #meta-details {
+    padding-right: 2.5rem;
+}
+
+#settings .input.ltr:not(.value) {
+    display: block;
+    align-self: center;
+}
+
+#settings .field.button {
+    align-items: center;
+    justify-content: space-between;
+}
+
+#meta-details .value {
+    display: flex;
+    align-items: center;
 }
