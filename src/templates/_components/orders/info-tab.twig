@@ -12,7 +12,7 @@
 					{% if isCancelable %}
 						<table class="data right"><thead><th id="cancel-order-link" class="bg-none icon ordered desc orderable"><button></button></th></thead></table>
 					{% endif %}
-					<a class="right pt-5 mr--10" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
+					<a class="right pt-7 mr--10" href="{{translator_url}}" target="_blank">#{{ order.serviceOrderId }} </a>
 				{% else %}
 					<label class="right">{{ 'N/A' }} </label>
 				{% endif %}
@@ -75,9 +75,7 @@
 		<div class="data field">
 			<h5 class="heading">{{ 'Author'|t('app') }}</h5>
 			<div class="value input ltr" style="justify-content:flex-end" id="uploader-element">
-				{% include '_elements/element' with {
-					element: author,
-				} %}
+				{{ elementChip(author) }}
 			</div>
 			{% js %}
 			new Craft.ElementThumbLoader().load($('#uploader-element'));
@@ -115,7 +113,7 @@
 	</div>
 
 	{# Export/Import And Sync Buttons #}
-	<div class="field" style="justify-content: space-between;">
+	<div class="field button">
 		<div class="heading">
 			<label id="source-files">Source files</label>
 			<form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
@@ -137,7 +135,7 @@
 		</button>
 	</div>
 
-	<div class="field" style="justify-content: space-between;">
+	<div class="field button">
 		<div class="heading">
 			<label id="translated-files">Translated files</label>
 			<div class="hud-wrapper hidden">
@@ -157,7 +155,7 @@
 	</div>
 	{% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
 	{% if order.hasTranslator('acclaro') %}
-		<div class="field" style="justify-content: space-between;">
+		<div class="field button">
 			<div class="heading">
 				<label>My Acclaro</label>
 				<form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
@@ -181,7 +179,7 @@
 			{% endif %}
 		</div>
 	{% elseif order.hasTranslator('google') %}
-		<div class="field" style="justify-content: space-between;">
+		<div class="field button">
 			<div class="heading">
 				<label>Google</label>
 				<form id="sync-order" class="utility" method="post" accept-charset="UTF-8">
