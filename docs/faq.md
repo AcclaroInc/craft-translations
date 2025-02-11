@@ -65,6 +65,22 @@ Yes, we recommend testing the Translation plugin and localization workflow on a 
 
 ## Technical Issues
 
+<details><summary>Why are my static translations being overwritten in production?</summary>
+
+Static translation files (e.g., `/translations/es/Site.php`) can sometimes overwrite production values during deployment. To prevent this, you have two options:
+
+1. Add the `/translations` folder to your `.gitignore` file to prevent the files from being pushed to production.
+
+2. Set a custom translations path for production by adding this to your `web/index.php`:
+
+    ```php
+    define('CRAFT_TRANSLATIONS_PATH', CRAFT_BASE_PATH.'/static-translations');
+    ```
+
+    This will store translations in a separate directory that won't be overwritten during deployments.
+
+</details>
+
 <details><summary>How do I display translated values for dropdown, multi-select, and radio fields?</summary>
 
 To display translated string values for these fields, use the Twig `|t` filter with the 'translations' category in your templates. For example: `'some string'|t('translations')`.
