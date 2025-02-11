@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.7 - 2024-02-11
+
+### Fixed
+- Widget overlapping in tranlsation dashbaord. ([AcclaroInc#560](https://github.com/AcclaroInc/pm-craft-translations/issues/560))
+- Deprecation warning issue. ([AcclaroInc#536](https://github.com/AcclaroInc/craft-translations/issues/536))
+- Date time issue in activity logs. ([AcclaroInc#539](https://github.com/AcclaroInc/craft-translations/issues/539))
+- Wrong event handler issue. ([AcclaroInc#550](https://github.com/AcclaroInc/craft-translations/issues/550))
+- Database button UI glitch. ([AcclaroInc#556](https://github.com/AcclaroInc/craft-translations/issues/556))
+- Error notification for character limit. ([AcclaroInc#576](https://github.com/AcclaroInc/pm-craft-translations/issues/576))
+- UI issue where order details sidebar distorted due to change in craft's native css.
+
 ## 4.0.6 - 2024-01-20
 
 ### Added
