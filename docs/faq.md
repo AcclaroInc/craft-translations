@@ -67,17 +67,36 @@ Yes, we recommend testing the Translation plugin and localization workflow on a 
 
 <details><summary>Why are my static translations being overwritten in production?</summary>
 
-Static translation files (e.g., `/translations/es/Site.php`) can sometimes overwrite production values during deployment. To prevent this, you have two options:
+Sometimes, production deployments use **atomic, zero-downtime** techniques that replace the entire application instead of applying incremental updates. As a result, your static translation files (for example, `/translations/es/Site.php`) may be overwritten during deployment.
 
-1. Add the `/translations` folder to your `.gitignore` file to prevent the files from being pushed to production.
+To ensure that your static translations persist across deployments, follow these steps:
 
-2. Set a custom translations path for production by adding this to your `web/index.php`:
+1. **Create a Persistent Directory**  
+   Start a new shell session on your production server and create a shared directory:
+   ```bash
+   mkdir -p /var/www/shared/translations
+   ```
 
-    ```php
-    define('CRAFT_TRANSLATIONS_PATH', CRAFT_BASE_PATH.'/static-translations');
-    ```
+2. **Set Folder Permissions**  
+   Ensure that the user running your application (e.g., `www-data` for Craft) has access to the shared directory:
+   ```bash
+   chown -R www-data:www-data /var/www/shared
+   chmod -R 755 /var/www/shared
+   ```
 
-    This will store translations in a separate directory that won't be overwritten during deployments.
+3. **Configure the Translations Path**  
+   In your `web/index.php`, update the environment variable to point to the persistent translations directory:
+   ```php
+   define('CRAFT_TRANSLATIONS_PATH', '/var/www/shared/translations');
+   ```
+
+4. **Upload Your Static Translation Files**  
+   Move your static translation files into the new persistent directory and confirm they are in place:
+   ```bash
+   ls -la /var/www/shared/translations
+   ```
+
+Following these steps ensures that updates to your static translations will persist across deployments.
 
 </details>
 
