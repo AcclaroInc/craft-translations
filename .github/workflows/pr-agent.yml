@@ -1,0 +1,37 @@
+# This workflow enables developers to call PR-Agents `/[actions]` in PR's comments and upon PR creation.
+# Learn more at https://www.codium.ai/pr-agent/
+# This is v0.2 of this workflow file
+
+name: PR-Agent
+
+on:
+  pull_request:
+      types: [opened, reopened, ready_for_review]
+  issue_comment:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+
+jobs:
+  pr_agent_job:
+    if: ${{ github.event.sender.type != 'Bot' }}
+    runs-on: ubuntu-latest
+    name: Run pr agent on every pull request
+    steps:
+      - name: PR Agent action step
+        id: pragent
+        uses: Codium-ai/pr-agent@main
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          OPENAI_ORG: ${{ secrets.OPENAI_ORG }} # optional
+          PINECONE.API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE.ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTION_CONFIG.AUTO_DESCRIBE: true
+          GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
+          GITHUB_ACTION_CONFIG.AUTO_IMPROVE: true
+          GITHUB_ACTION_CONFIG.MODEL: "anthropic/claude-3-7-sonnet-20250219"
+          ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_KEY }}
