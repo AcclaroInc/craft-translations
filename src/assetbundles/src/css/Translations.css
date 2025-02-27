@@ -408,6 +408,10 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     transition: all 0.05s ease-in-out;
 }
 
+#recent-entries-widget {
+    display: grid;
+}
+
 #recent-entries-widget .view-diff-entry {
     transition: all 0.05s ease-in-out;
 }
@@ -420,7 +424,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     border-bottom: 1px dotted #e3e5e8;
     display: flex;
     justify-content: flex-start;
-    padding: 10px 0px;
+    padding: 10px 10px;
 }
 
 #diff-modal .instructions, #diff-modal-entry .instructions {
@@ -430,6 +434,7 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
 #diff-modal .modal-title, #diff-modal-entry .modal-title {
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
 }
 
 #duplicate-modal {
@@ -959,10 +964,6 @@ td.target{
 .diff-box{
     box-shadow: 0 0 0 1px #cdd8e4, 0 2px 12px rgba(205, 216, 228, 0.5);
     border-radius: 5px;
-}
-
-.diff-meta{
-    padding: 24px 0 12px
 }
 
 .bg-none {
