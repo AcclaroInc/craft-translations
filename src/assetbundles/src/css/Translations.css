@@ -408,8 +408,8 @@ body.ltr .widget[data-type="acclaro\\translations\\widgets\\NewAndModifiedEntrie
     transition: all 0.05s ease-in-out;
 }
 
-#recent-entries-widget {
-    display: grid;
+#recent-entries-widget, #recently-modified-widget {
+    display: flow-root;
 }
 
 #recent-entries-widget .view-diff-entry {
