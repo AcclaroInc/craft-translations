@@ -30,19 +30,19 @@
                         <tr id="item-{{i}}">&nbsp;</tr>
                     {% endfor %}
                 </table>
-                <div class="buttons right">
-                    {{ button.anchorButton({
-                        label: 'Re-order'|t('app'),
-                        id: 'bulk-reorder',
-                        class: 'link-disabled icon submit',
-                        attributes: {
-                            target: '_blank',
-                            data: {
-                                icon: 'language'
-                            }
+            </div>
+            <div class="buttons right">
+                {{ button.anchorButton({
+                    label: 'Re-order'|t('app'),
+                    id: 'bulk-reorder',
+                    class: 'link-disabled icon submit',
+                    attributes: {
+                        target: '_blank',
+                        data: {
+                            icon: 'language'
                         }
-                    }) }}
-                </div>
+                    }
+                }) }}
             </div>
         </div>
     </div>

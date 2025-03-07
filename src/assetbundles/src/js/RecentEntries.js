@@ -49,7 +49,7 @@
                         var content = [];
 
                         if (response.data.length) {
-                            this.$widget.find('#recent-entries-widget .tableview').prepend('<h2 style="padding-top: 24px;">New Source Entries</h2><h5>Entries that have not been translated yet.</h5>');
+                            this.$widget.find('#recent-entries-widget .elements').prepend('<h2 style="padding-top: 2px;">New Source Entries</h2><h5>Entries that have not been translated yet.</h5>');
                             for (var i = 0; i < response.data.length; i++) {
                                 var item = response.data[i],
                                     $container = $('#item-entry-'+ (i + 1));
