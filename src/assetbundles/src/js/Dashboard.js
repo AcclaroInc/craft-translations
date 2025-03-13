@@ -30,6 +30,15 @@
                     this.$grid = $('#translations-dashboard');
                     this.grid = this.$grid.data('grid');
                     $('#newwidgetmenubtn').data('menubtn').menu.on('optionselect', $.proxy(this, 'handleNewWidgetOptionSelect'));
+                    // Click on settings to recalculate the height
+                    setTimeout($.proxy(function () {
+                        this.showWidgetManager();
+                        setTimeout($.proxy(function() {
+                            if (this.widgetManager) {
+                                this.widgetManager.hide();
+                            }
+                        }, this), 1);
+                    }, this), 500);
                 }, this));
             },
 
@@ -265,6 +274,18 @@
                     this.refreshSettings();
                     this.onShowBack();
                 }
+
+                if (typeof ResizeObserver !== 'undefined') {
+                    const resizeObserver = new ResizeObserver($.proxy(function() {
+                        this.updateContainerHeight();
+                    }, this));
+                    
+                    resizeObserver.observe(this.$bodyContainer[0]);
+                }
+
+                this.$bodyContainer.on('load', $.proxy(function() {
+                    this.updateContainerHeight();
+                }, this));
 
                 this.addListener(this.$settingsBtn, 'click', 'showSettings');
 
