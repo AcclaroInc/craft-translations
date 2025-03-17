@@ -73,9 +73,14 @@
 
                             this.$body.html(widgetHtml);
                         }
-    
+
+                        /**
+                         * Re calculate dashbaord widget height after referesh grid after
+                         * data is loaded into table
+                         */
                         window.translationsdashboard.widgets[widgetId].updateContainerHeight();
                         window.translationsdashboard.grid.refreshCols(true, true);
+                        window.translationsdashboard.handleRefresh();
                     })
                     .catch(({response}) => {
                         var widgetHtml = `

@@ -31,15 +31,19 @@
                     this.grid = this.$grid.data('grid');
                     $('#newwidgetmenubtn').data('menubtn').menu.on('optionselect', $.proxy(this, 'handleNewWidgetOptionSelect'));
                     // Click on settings to recalculate the height
-                    setTimeout($.proxy(function () {
-                        this.showWidgetManager();
-                        setTimeout($.proxy(function() {
-                            if (this.widgetManager) {
-                                this.widgetManager.hide();
-                            }
-                        }, this), 1);
-                    }, this), 500);
+                    this.handleRefresh();
                 }, this));
+            },
+
+            handleRefresh: function () {
+                setTimeout($.proxy(function () {
+                    this.showWidgetManager();
+                    setTimeout($.proxy(function() {
+                        if (this.widgetManager) {
+                            this.widgetManager.hide();
+                        }
+                    }, this), 1);
+                }, this), 200);
             },
 
             getTypeInfo: function(type, property, defaultValue) {
@@ -450,6 +454,7 @@
                 this.setSettingsHtml(response.info.settingsHtml, function() {
                     eval(response.info.settingsJs);
                 });
+                this.updateContainerHeight();
             },
 
             cancelSettings: function() {
