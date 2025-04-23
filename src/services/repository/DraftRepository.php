@@ -219,16 +219,14 @@ class DraftRepository
             }
 
             try {
-                if ($isFileReady) {
-                    // Translation Service Always Local
-                    $translationService = $order->getTranslationService();
+                // Translation Service Always Local
+                $translationService = $order->getTranslationService();
 
-                    $translationService->updateIOFile($order, $file);
+                $translationService->updateIOFile($order, $file);
 
-                    $file->reference = null;
+                $file->reference = null;
 
-                    Translations::$plugin->fileRepository->saveFile($file);
-                }
+                Translations::$plugin->fileRepository->saveFile($file);
 
                 /**
                  * Updated applyDrafts logic to apply drafts individually v.s all at once

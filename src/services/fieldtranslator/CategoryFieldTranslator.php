@@ -19,21 +19,7 @@ class CategoryFieldTranslator extends TaxonomyFieldTranslator
 {
     public function translateRelated(ElementTranslator $elementTranslator, Element $element, $category, $sourceSite, $targetSite, $fieldData)
     {
-        // search for existing translated category in the same group
-        $translatedCategory = Translations::$plugin->categoryRepository->find(array(
-            'groupId' => $category->groupId,
-            'siteId' => $targetSite,
-        ));
-
-        if ($translatedCategory) {
-            return $translatedCategory->id;
-        }
-
-        $translatedCategory = Translations::$plugin->categoryRepository->find(array(
-            'id' => $category->id,
-            'groupId' => $category->groupId,
-            'siteId' => $targetSite,
-        ));
+        $translatedCategory = Translations::$plugin->categoryRepository->getCategoryById($category->id, $targetSite);
 
         if ($translatedCategory) {
             $category = $translatedCategory;
