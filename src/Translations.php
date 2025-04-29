@@ -689,7 +689,8 @@ class Translations extends Plugin
 
     private function _onDeleteElement(Event $event)
     {
-		if (!empty($event->element->draftId)) {
+        // Only execute on hard delete not on trashing drafts
+		if (!empty($event->element->draftId) && $event->hardDelete) {
 			$response = self::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
 			if ($response) {
 

@@ -43,6 +43,16 @@ class DraftRepository
         return $draft;
     }
 
+    public function getTrashedDraftById($draftId)
+    {
+        $draft = Entry::find()
+            ->draftId($draftId)
+            ->trashed()
+            ->one();
+
+        return $draft;
+    }
+
     public function saveDraft($element)
     {
         $element->validate();
@@ -189,6 +199,16 @@ class DraftRepository
         $totalElements = count($order->getFiles());
         $currentElement = 0;
 
+        // Trash all existing drafts
+        if ($publish) {
+            foreach($order->getFiles() as $file) {
+                if ($file->hasDraft()) {
+                    // Only mark as deleted
+                    $this->deleteDraft($file->draftId, $file->targetSite, false);
+                }
+            }
+        }
+
         $createDrafts = new CreateDrafts();
         
         foreach ($order->getFiles() as $file) {
@@ -201,10 +221,15 @@ class DraftRepository
             }
 
             $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
-            $isFileReady = $file->isReviewReady();
+            $isFileReady = $file->isReviewReady() || $file->isComplete();
 
             if ($queue) {
                 $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
+            }
+
+            // Enable targeted draft to apply/merge
+            if ($file->draftId && $this->getTrashedDraftById($file->draftId)) {
+                $this->restoreDraft($file->draftId);
             }
 
             // Create draft only if not already exist
@@ -241,6 +266,15 @@ class DraftRepository
                 $transaction->rollback();
                 $this->setError($e->getMessage());
                 continue;
+            }
+        }
+
+        // Restore existing trashed drafts that were marked as deleted
+        if ($publish) {
+            foreach($order->getFiles() as $file) {
+                if ($file->draftId) {
+                    $this->restoreDraft($file->draftId);
+                }
             }
         }
 
@@ -401,12 +435,13 @@ class DraftRepository
 
     /**
      * Delete a translation draft
+     * Do not hard delete the draft if need to only mark it as deleted
      *
      * @param int|string $draftId
      *
      * @return void
      */
-    public function deleteDraft($draftId, $siteId)
+    public function deleteDraft($draftId, $siteId, $hardDelete = true)
     {
         if (! $draftId) return;
 
@@ -416,7 +451,7 @@ class DraftRepository
             $draft = $this->getDraftById($draftId, $siteId);
 
             if ($draft) {
-                Craft::$app->getElements()->deleteElement($draft, true);
+                Craft::$app->getElements()->deleteElement($draft, $hardDelete);
             }
             $transaction->commit();
         } catch (\Throwable $e) {
@@ -444,5 +479,23 @@ class DraftRepository
 
         // Return the concatenated error messages as a string
         return implode("\n", $errorMessages);
+    }
+
+    private function restoreDraft($draftId)
+    {
+        if (! $draftId) return;
+
+        $transaction = Craft::$app->getDb()->beginTransaction();
+
+        try {
+            $draft = $this->getTrashedDraftById($draftId);
+            if ($draft) {
+                Craft::$app->getElements()->restoreElement($draft);
+            }
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            \Craft::error($e);
+        }
     }
 }
