@@ -201,7 +201,7 @@ class DraftRepository
             }
 
             $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
-            $isFileReady = $file->isReviewReady();
+            $isFileReady = $file->isReviewReady() || $file->isComplete();
 
             if ($queue) {
                 $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
