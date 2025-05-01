@@ -215,10 +215,10 @@ class FileModel extends Model
                 return $this->isReviewReady() || $this->isComplete() || $this->isPublished();
         }
     }
-    
+
     public function canBeCheckedForTargetChanges()
     {
-        return ! ($this->isPublished() || $this->isNew() || $this->isModified() || 
+        return ! ($this->isPublished() || $this->isCanceled() || 
             ($this->isInProgress() && $this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE)
         );
     }
@@ -281,17 +281,29 @@ class FileModel extends Model
 
     public function hasTmMisalignments($ignoreReference = false)
     {
-        // Reference or miss alignment can only be check if source entry exists in given target site
-        if (!Craft::$app->elements->getElementById($this->elementId, null, $this->targetSite)) {
+        if ($this->isPublished() || $this->isCanceled()) {
             return false;
         }
 
-        if ($this->reference && !$ignoreReference) {
-            return $this->_service->isReferenceChanged($this);
+        $dbVersion = $this->reference;
+        $targetEntry = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->targetSite);
+        $fileData = [
+            'sourceSite'    => $this->sourceSite,
+            'targetSite'    => $this->targetSite,
+            'wordCount'     => $this->wordCount,
+            'orderId'       => $this->orderId
+        ];
+
+        if ($this->isComplete()) {
+            $targetEntry = $this->hasDraft();
+            $dbVersion = $this->target;
         }
 
-        if ($ignoreReference || $this->isNew() || $this->isComplete()) {
-            return $this->_service->checkTmMisalignments($this);
+        if ($dbVersion && $targetEntry) {
+            $currentVersion = Translations::$plugin->elementToFileConverter->convert(
+                $targetEntry, Constants::FILE_FORMAT_XML, $fileData
+            );
+            return $this->_service->getIsContentChanged($dbVersion, $currentVersion);
         }
 
         return false;
@@ -349,5 +361,25 @@ class FileModel extends Model
             'fileContent' => Translations::$plugin->fileRepository->createReferenceData($TmData, $metaData),
             'reference' => Translations::$plugin->fileRepository->createReferenceData($TmData, $metaData, false),
         ];
+    }
+
+    public function getReferenceFileName($format = Constants::FILE_FORMAT_CSV)
+    {
+        $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
+
+        if ($element instanceof GlobalSet) {
+            $entrySlug= ElementHelper::normalizeSlug($element->name);
+        } else if ($element instanceof Asset) {
+            $assetFilename = $element->getFilename();
+            $fileInfo = pathinfo($assetFilename);
+            $entrySlug= basename($assetFilename, '.' . $fileInfo['extension']);
+        } else {
+            $entrySlug= $element->slug;
+        }
+
+        $targetLang = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($this->targetSite)->language);
+        $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), $format);
+
+        return $filename;
     }
 }

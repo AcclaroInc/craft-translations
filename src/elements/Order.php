@@ -668,14 +668,12 @@ class Order extends Element
 
     public function isTmMisaligned($ignoreNew = true)
     {
-        if (!$this->hasDefaultTranslator() && ($this->isComplete() || $this->isReviewReady() || $this->isPublished())) {
+        if ($this->isPublished() || $this->isCanceled() || $this->isPending()) {
             return false;
         }
 
         foreach ($this->getFiles() as $file) {
-            if ($file->isPublished() || ($ignoreNew && $file->isNew())) continue;
-
-            if ($file->hasTmMisalignments(!$ignoreNew)) return true;
+            if ($file->hasTmMisalignments()) return true;
         }
 
         return false;

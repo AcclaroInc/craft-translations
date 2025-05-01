@@ -109,7 +109,7 @@ class FilesController extends BaseController
                     $fileContent = $file->source;
                 }
 
-                if ($order->includeTmFiles && $hasMisalignment) $fileName = "source/" . $fileName;
+                if ($order->includeTmFiles) $fileName = "source/" . $fileName;
 
                 if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
                     $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
@@ -117,19 +117,13 @@ class FilesController extends BaseController
                 }
 
                 /** Check if entry exists in target site for reference comparison */
-                if ($hasMisalignment && Translations::$plugin->elementRepository->getElementById($file->elementId, $file->targetSite)) {
-                    $tmFile = $file->getTmMisalignmentFile($fileFormat);
-                    $fileName = $tmFile['fileName'];
+                if ($order->includeTmFiles && $file->reference) {
+                    $fileName = $file->getReferenceFileName($fileFormat);
 
-                    if ($order->includeTmFiles && $file->hasTmMisalignments(true)) {
-
-                        if (! $zip->addFromString("references/" . $fileName, $tmFile['fileContent'])) {
-                            $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
-                            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_ERROR );
-                        }
+                    if (! $zip->addFromString("references/" . $fileName, $file->reference)) {
+                        $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
+                        Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_ERROR );
                     }
-
-                    $file->reference = $tmFile['reference'];
                 }
 
                 if ($file->isNew() || $file->isModified()) {
@@ -483,11 +477,9 @@ class FilesController extends BaseController
                 foreach ($order->getFiles() as $file) {
                     if (! in_array($file->id, $files) || !$file->hasTmMisalignments()) continue;
 
-                    $tmFile = $file->getTmMisalignmentFile($format);
-                    $fileName = $tmFile['fileName'];
-                    $fileContent = $tmFile['fileContent'];
+                    $fileName = $file->getReferenceFileName($format);
 
-                    if (! $fileContent || ! $zip->addFromString($fileName, $fileContent)) {
+                    if (! $zip->addFromString($fileName, $file->reference)) {
                         return $this->asFailure(sprintf(
                             $this->getErrorMessage('There was an error adding the file {%s} to the zip. {%s}'),
                             $fileName,
@@ -495,7 +487,7 @@ class FilesController extends BaseController
                         ));
                     }
 
-                    $file->reference = $tmFile['reference'];
+                    // $file->reference = $tmFile['reference'];
                     Translations::$plugin->fileRepository->saveFile($file);
                 }
             }

@@ -282,7 +282,7 @@ class DraftRepository
         }
 
         if (!($file instanceof FileModel)) {
-            $file = Translations::$plugin->fileRepository->makeNewFile();
+            $file = Translations::$plugin->fileRepository->getNewFile();
         }
 
         if (empty($draft)) {
