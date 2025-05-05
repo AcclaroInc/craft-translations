@@ -62,6 +62,34 @@ class StaticTranslationsController extends BaseController
 
     /**
      * @return \yii\web\Response
+     * @throws \yii\web\BadRequestHttpException
+     */
+    public function actionSync() {
+        $this->requirePostRequest();
+
+        $source = Craft::$app->request->getRequiredBodyParam('sourceKey');
+        $siteId = Craft::$app->request->getRequiredBodyParam('siteId');
+
+        $res = Translations::$plugin->staticTranslationsRepository->syncToDB($source, $siteId);
+
+        if (!$res['success']) {
+            return $this->asFailure(
+                $this->getErrorMessage($res['message']), 
+                [
+                    'success' => false,
+                    'errors' => []
+                ]
+            );
+        }
+
+        return $this->asSuccess($this->getSuccessMessage($res['message']), [
+            'success' => $res['success'],
+            'errors' => []
+        ]);
+    }
+
+    /**
+     * @return \yii\web\Response
      * @throws \craft\errors\SiteNotFoundException
      * @throws \yii\base\Exception
      * @throws \yii\web\BadRequestHttpException

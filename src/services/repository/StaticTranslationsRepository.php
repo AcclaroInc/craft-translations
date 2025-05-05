@@ -13,10 +13,13 @@ namespace acclaro\translations\services\repository;
 use Craft;
 use Exception;
 use craft\helpers\FileHelper;
+use craft\helpers\StringHelper;
 use craft\helpers\ElementHelper;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\elements\db\ElementQueryInterface;
 use acclaro\translations\elements\StaticTranslations;
+use acclaro\translations\models\StaticTranslationsModel;
 
 class StaticTranslationsRepository
 {
@@ -216,5 +219,95 @@ class StaticTranslationsRepository
         }
 
         return true;
+    }
+
+    /**
+     * Sync translations to database
+     * @param string $source
+     * @return [] ["success" : bool, "message": string]
+     */
+    public function syncToDB(?string $source = "*", string|int $siteId = "*") {
+        $response = [
+            "success" => true,
+            "message" => "Static Translations saved to database."
+        ];
+        if ($source === "*") {
+            $source = $this->getTemplatesPath();
+        }
+        $source = str_replace('*', '/', $source);
+        $siteIds = [];
+        if ($siteId === "*") {
+            $siteIds = Craft::$app->getSites()->getAllSiteIds();
+        } else {
+            $siteIds = [$siteId];
+        }
+        $elementQuery = StaticTranslations::find();
+        $elementQuery->status = null;
+        $elementQuery->source = [$source];
+        $elementQuery->search = null;
+
+        foreach ($siteIds as $site) {
+            $elementQuery->siteId = $site;
+            $translations = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
+
+            foreach ($translations as $row) {
+                $target = StringHelper::convertToUTF8($row->translation);
+                $original = $row->original;
+                try {
+                    $this->createNewTranslation($site, $original, $target);
+                } catch (\Exception $e) {
+                    $response = [
+                        'message' => 'Error saving some static translations check logs.',
+                        'success' => false
+                    ];
+                    Translations::$plugin->logHelper->log(
+                        'Error saving static translation for text"'.$original.'"',
+                        Constants::LOG_LEVEL_ERROR
+                    );
+                }
+            }
+        }
+        return $response;
+    }
+
+    /**
+     * Sync translations from database to translation directory
+     * @param string $source
+     * @return bool|null
+     * TODO:
+     */
+    public function syncFromDB() {
+        // 
+    }
+
+    /**
+     * Return path where static translation files are stored.
+     */
+    public function getTranslationsPath(): string
+    {
+        return Craft::$app->getPath()->getSiteTranslationsPath();
+    }
+
+    /**
+     * Return path where templates lives.
+     */
+    public function getTemplatesPath(): string
+    {
+        return Craft::$app->getPath()->getSiteTemplatesPath();
+    }
+
+    private function getNewTranslation()
+    {
+        return new StaticTranslationsModel();
+    }
+
+    private function createNewTranslation(string|int $siteId, string $original, string $target)
+    {
+        $translation = $this->getNewTranslation();
+        $translation->siteId = $siteId;
+        $translation->original = $original;
+        $translation->translation = $target;
+
+        return $translation->createOrUpdate();
     }
 }

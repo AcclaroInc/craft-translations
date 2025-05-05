@@ -6,8 +6,7 @@ if (typeof Craft.Translations === 'undefined') {
 
 Craft.Translations.StaticTranslations = {
 
-    saveStaticTranslation: function() {
-
+    saveStaticTranslation: function(element) {
         form = $("#static-translation");
         postData = Garnish.getPostData(form),
         $data = Craft.expandPostArray(postData);
@@ -23,11 +22,8 @@ Craft.Translations.StaticTranslations = {
                 Craft.cp.displayError(Craft.t('app', response.data.error));
             })
             .finally(() => {
-                $('.save-static-translation').removeClass('disabled');
-                $('.save-static-translation').attr("disabled", false);
+                element.removeClass('link-disabled loading');
             });
-
-
     },
 
     exportStaticTranslation: function() {
@@ -50,19 +46,44 @@ Craft.Translations.StaticTranslations = {
 
     },
 
+    syncToDB: function (element) { 
+        params = {
+            siteId: Craft.elementIndex.siteId,
+            sourceKey: Craft.elementIndex.sourceKey
+        };
+
+        Craft.sendActionRequest('POST', 'translations/static-translations/sync', {data: params})
+            .then((response) => {
+                Craft.cp.displaySuccess(Craft.t('app', response.data.message));
+            })
+            .catch(({response}) => {
+                Craft.cp.displayError(Craft.t('app', response.data.error));
+            })
+            .finally(() => {
+                element.removeClass('link-disabled loading');
+            });
+    },
+
     init: function() {
         var self = this;
+        var syncToDatabaseButton = $('#sync-static-translation');
+        var saveStaticTranslations = $('#save-static-translation');
+
         $('.sortmenubtn').hide();
         $('.statusmenubtn').hide();
         $(".sitemenubtn").appendTo("#toolbar");
 
-        $('.save-static-translation').on('click', function(e) {
-
-            $('.save-static-translation').addClass('disabled');
-            $('.save-static-translation').attr("disabled", true);
+        saveStaticTranslations.on('click', function(e) {
+            saveStaticTranslations.addClass('link-disabled loading');
 
             e.preventDefault();
-            self.saveStaticTranslation();
+            self.saveStaticTranslation(saveStaticTranslations);
+        });
+
+        syncToDatabaseButton.on('click', function(e) {
+            syncToDatabaseButton.addClass('link-disabled loading');
+            e.preventDefault();
+            self.syncToDB(syncToDatabaseButton);
         });
 
         $('#translate-export').on('click', function(e) {

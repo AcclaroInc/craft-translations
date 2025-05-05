@@ -172,6 +172,7 @@ class Constants
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
     const TABLE_ACTIVITY_LOG        = '{{%translations_activitylogs}}';
     const TABLE_NAVIGATION_DRAFT    = '{{%translations_navigationdrafts}}';
+    const TABLE_STATIC_TRANSLATIONS = '{{%translations_statictranslations}}';
 
     // Job Descriptions
     const JOB_ACCLARO_UPDATING_REVIEW_URL   = 'Updating Acclaro review urls';
