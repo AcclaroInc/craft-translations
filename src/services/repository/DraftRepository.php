@@ -192,13 +192,13 @@ class DraftRepository
         $createDrafts = new CreateDrafts();
         
         foreach ($order->getFiles() as $file) {
-            /* Create transaction per file so that in case a file has validation error
-            only that will be rolledback and others can be processed */
-            $transaction = Craft::$app->db->beginTransaction();
-
             if (! in_array($file->id, $fileIds)) {
                 continue;
             }
+
+            /* Create transaction per file so that in case a file has validation error
+            only that will be rolledback and others can be processed */
+            $transaction = Craft::$app->db->beginTransaction();
 
             $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
             $isFileReady = $file->isReviewReady() || $file->isComplete();
