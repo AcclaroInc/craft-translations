@@ -7,13 +7,13 @@ if (typeof Craft.Translations === 'undefined') {
 Craft.Translations.StaticTranslations = {
 
     saveStaticTranslation: function(element) {
-        form = $("#static-translation");
-        postData = Garnish.getPostData(form),
-        $data = Craft.expandPostArray(postData);
-        $data['source'] = Craft.elementIndex.sourceKey;
-        $data['siteId'] = Craft.elementIndex.siteId;
+        const form = $("#static-translation");
+        const postData = Garnish.getPostData(form);
+        const data = Craft.expandPostArray(postData);
+        data.source = Craft.elementIndex.sourceKey;
+        data.siteId = Craft.elementIndex.siteId;
 
-        Craft.sendActionRequest('POST', 'translations/static-translations/save', {data: $data})
+        Craft.sendActionRequest('POST', 'translations/static-translations/save', {data: data})
             .then((response) => {
                 Craft.cp.displaySuccess(Craft.t('app', response.data.message));
                 this.setJobTracking(
@@ -23,7 +23,7 @@ Craft.Translations.StaticTranslations = {
                 Craft.elementIndex.updateElements();
             })
             .catch(({response}) => {
-                Craft.cp.displayError(Craft.t('app', response.data.error));
+                Craft.cp.displayError(Craft.t('app', response.data.errors));
             })
             .finally(() => {
                 element.removeClass('link-disabled loading');
