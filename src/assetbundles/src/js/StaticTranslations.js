@@ -16,6 +16,10 @@ Craft.Translations.StaticTranslations = {
         Craft.sendActionRequest('POST', 'translations/static-translations/save', {data: $data})
             .then((response) => {
                 Craft.cp.displaySuccess(Craft.t('app', response.data.message));
+                this.setJobTracking(
+                    response.data.jobId,
+                    "Success: Static translations synced."
+                );
                 Craft.elementIndex.updateElements();
             })
             .catch(({response}) => {
@@ -24,6 +28,17 @@ Craft.Translations.StaticTranslations = {
             .finally(() => {
                 element.removeClass('link-disabled loading');
             });
+    },
+
+    setJobTracking: function (jobId, onComplete) {
+        Craft.Translations.trackJobCompletion(jobId, {
+            onComplete: () => {
+                Craft.cp.displaySuccess(onComplete);
+            },
+            onError: (error) => {
+                Craft.cp.displayError('Job failed: ' + error);
+            }
+        });
     },
 
     exportStaticTranslation: function() {
@@ -54,7 +69,12 @@ Craft.Translations.StaticTranslations = {
 
         Craft.sendActionRequest('POST', 'translations/static-translations/sync', {data: params})
             .then((response) => {
-                Craft.cp.displaySuccess(Craft.t('app', response.data.message));
+                Craft.cp.displayNotice(Craft.t('app', "Notice: Sync job added to queue."));
+
+                this.setJobTracking(
+                    response.data.jobId,
+                    "Success: Static translations synced."
+                );
             })
             .catch(({response}) => {
                 Craft.cp.displayError(Craft.t('app', response.data.error));

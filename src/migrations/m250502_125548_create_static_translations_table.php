@@ -35,7 +35,7 @@ class m250502_125548_create_static_translations_table extends Migration
         echo "Done creating translations_statictranslations table...\n";
 
         echo "Seeding static translation to database...\n";
-        (new StaticTranslationsRepository())->syncToDB();
+        (new StaticTranslationsRepository())->syncWithDB();
         echo "Completed static translation seeding to database...\n";
 
         return true;

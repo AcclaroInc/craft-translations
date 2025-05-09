@@ -46,6 +46,7 @@ use acclaro\translations\assetbundles\NavigationAssets;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\job\SyncDataToHubSpotJob;
+use acclaro\translations\services\job\SyncStaticTranslations;
 
 class Translations extends Plugin
 {
@@ -181,6 +182,7 @@ class Translations extends Plugin
                     }
 
                     Craft::$app->queue->push(new SyncDataToHubSpotJob());
+                    Craft::$app->queue->push(new SyncStaticTranslations());
                 }
             }
         );

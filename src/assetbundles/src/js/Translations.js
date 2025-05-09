@@ -87,6 +87,28 @@
                 })
             );
         },
+
+        trackJobCompletion(jobId, { onComplete, onError }) {
+            Craft.cp.trackJobProgress();
+            this.jobPollInterval = setInterval(() => {
+                Craft.sendActionRequest('POST', 'queue/get-job-info?dontExtendSession=1')
+                .then(({ data }) => {
+                    const job = data.jobs.find(j => j.id === jobId);
+
+                    if (!job) {
+                        clearInterval(this.jobPollInterval);
+                        onComplete?.();
+                    } else if (job.status === Craft.CP.JOB_STATUS_FAILED) {
+                        clearInterval(this.jobPollInterval);
+                        onError?.(job.error || 'Unknown error');
+                    }
+                })
+                .catch((err) => {
+                    console.warn('Job polling failed', err);
+                    clearInterval(this.jobPollInterval);
+                });
+            }, 2000); // check every 2 seconds
+        }
     };
 
     })(jQuery);

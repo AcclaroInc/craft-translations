@@ -53,9 +53,11 @@ class StaticTranslationsController extends BaseController
         $translations = Craft::$app->request->getRequiredBodyParam('translation');
 
         Translations::$plugin->staticTranslationsRepository->set($lang, $translations);
+        $job = Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
 
         return $this->asSuccess($this->getSuccessMessage('Static Translations saved.'), [
             'success' => true,
+            'jobId' => (int) $job,
             'errors' => []
         ]);
     }
@@ -67,24 +69,11 @@ class StaticTranslationsController extends BaseController
     public function actionSync() {
         $this->requirePostRequest();
 
-        $source = Craft::$app->request->getRequiredBodyParam('sourceKey');
-        $siteId = Craft::$app->request->getRequiredBodyParam('siteId');
+        $job = Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
 
-        $res = Translations::$plugin->staticTranslationsRepository->syncToDB($source, $siteId);
-
-        if (!$res['success']) {
-            return $this->asFailure(
-                $this->getErrorMessage($res['message']), 
-                [
-                    'success' => false,
-                    'errors' => []
-                ]
-            );
-        }
-
-        return $this->asSuccess($this->getSuccessMessage($res['message']), [
-            'success' => $res['success'],
-            'errors' => []
+        return $this->asSuccess($this->getSuccessMessage("Sync job added to queue"), [
+            'success' => true,
+            'jobId' => (int) $job
         ]);
     }
 
@@ -183,6 +172,7 @@ class StaticTranslationsController extends BaseController
 
                 if ($rows) {
                     Translations::$plugin->staticTranslationsRepository->set($site->language, $rows);
+                    Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
                     $this->setSuccess('Translations imported successfully.');
                 } else {
                     $this->setError('No translation imported.');

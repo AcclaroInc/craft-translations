@@ -327,9 +327,6 @@ class Install extends Migration
             'handle'    => Constants::ORDER_TAG_GROUP_HANDLE,
         ];
         $this->upsert('{{%taggroups}}', $data);
-
-        // Store static translations to DB on plugin install
-        (new StaticTranslationsRepository())->syncToDB();
     }
 
     /**
@@ -350,6 +347,10 @@ class Install extends Migration
         $this->dropTableIfExists(Constants::TABLE_TRANSLATIONS);
 
         $this->dropTableIfExists(Constants::TABLE_WIDGET);
+
+        $this->dropTableIfExists(Constants::TABLE_ACTIVITY_LOG);
+
+        $this->dropTableIfExists(Constants::TABLE_NAVIGATION_DRAFT);
 
         $this->dropTableIfExists(Constants::TABLE_STATIC_TRANSLATIONS);
     }
