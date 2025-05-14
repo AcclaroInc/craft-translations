@@ -194,6 +194,11 @@ class FileModel extends Model
 
         return $element instanceof (Constants::CLASS_ENTRY) || $element instanceof (Constants::CLASS_CATEGORY) || $element instanceof (Constants::CLASS_COMMERCE_PRODUCT);
     }
+
+    public function hasReference()
+    {
+        return !!$this->reference;
+    }
     
     public function getOrder()
     {
@@ -279,88 +284,20 @@ class FileModel extends Model
         return $this->_service->getEntryPreviewSettings($this);
     }
 
-    public function hasTmMisalignments($ignoreReference = false)
+    public function hasTmMisalignments()
     {
         if ($this->isPublished() || $this->isCanceled()) {
             return false;
         }
 
-        $dbVersion = $this->reference;
-        $targetEntry = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->targetSite);
-        $fileData = [
-            'sourceSite'    => $this->sourceSite,
-            'targetSite'    => $this->targetSite,
-            'wordCount'     => $this->wordCount,
-            'orderId'       => $this->orderId
-        ];
+        $dbVersion =  $this->isComplete() ? $this->target : $this->reference;
 
-        if ($this->isComplete()) {
-            $targetEntry = $this->hasDraft();
-            $dbVersion = $this->target;
-        }
-
-        if ($dbVersion && $targetEntry) {
-            $currentVersion = Translations::$plugin->elementToFileConverter->convert(
-                $targetEntry, Constants::FILE_FORMAT_XML, $fileData
-            );
+        if (!!$dbVersion) {
+            $currentVersion = $this->getReferenceFileContent();
             return $this->_service->getIsContentChanged($dbVersion, $currentVersion);
         }
 
         return false;
-    }
-
-    public function getTmMisalignmentFile($format = Constants::FILE_FORMAT_CSV)
-    {
-        $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
-
-        $metaData = [
-            'orderId'       => $this->orderId,
-            'elementId'     => $this->elementId,
-            'dateCreated'   => $element->dateCreated->format('YmdTHi'),
-        ];
-
-        $targetSite = $this->targetSite;
-        $source = $this->source;
-
-        $targetElement = Translations::$plugin->elementRepository->getElementById($this->elementId, $targetSite);
-
-        if ($this->isComplete()) {
-            $draft = $this->_service->getDraft($this);
-            $targetElement = $draft ?: $targetElement;
-        }
-
-        if ($element instanceof GlobalSet) {
-            $entrySlug= ElementHelper::normalizeSlug($element->name);
-        } else if ($element instanceof Asset) {
-            $assetFilename = $element->getFilename();
-            $fileInfo = pathinfo($assetFilename);
-            $entrySlug= basename($assetFilename, '.' . $fileInfo['extension']);
-        } else {
-            $entrySlug= $element->slug;
-        }
-
-        $targetLang = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($targetSite)->language);
-
-        $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), $format);
-        
-        $metaData += [
-            'entrySlug'     => $entrySlug,
-            'entryTitle'    => $this->getUiLabel(),
-        ];
-
-        $TmData = [
-            'sourceContent' => $source,
-            'sourceElementSite' => $this->sourceSite,
-            'targetElement' => $targetElement,
-            'targetElementSite' => $targetSite,
-            'format' => $format
-        ];
-
-        return [
-            'fileName' => $filename,
-            'fileContent' => Translations::$plugin->fileRepository->createReferenceData($TmData, $metaData),
-            'reference' => Translations::$plugin->fileRepository->createReferenceData($TmData, $metaData, false),
-        ];
     }
 
     public function getReferenceFileName($format = Constants::FILE_FORMAT_CSV)
@@ -381,5 +318,29 @@ class FileModel extends Model
         $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), $format);
 
         return $filename;
+    }
+
+    public function getReferenceFileContent()
+    {
+        $targetEntry = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->targetSite);
+
+        if ($this->isComplete()) {
+            $targetEntry = $this->hasDraft();
+        }
+
+        if (!$targetEntry) {
+            return null;
+        }
+
+        $fileData = [
+            'sourceSite'    => $this->sourceSite,
+            'targetSite'    => $this->targetSite,
+            'wordCount'     => $this->wordCount,
+            'orderId'       => $this->orderId
+        ];
+
+        return Translations::$plugin->elementToFileConverter->convert(
+            $targetEntry, Constants::FILE_FORMAT_XML, $fileData
+        );
     }
 }

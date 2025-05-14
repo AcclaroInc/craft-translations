@@ -666,7 +666,7 @@ class Order extends Element
         return $this->statusLabel;
     }
 
-    public function isTmMisaligned($ignoreNew = true)
+    public function isTmMisaligned()
     {
         if ($this->isPublished() || $this->isCanceled() || $this->isPending()) {
             return false;

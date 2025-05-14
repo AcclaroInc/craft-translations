@@ -327,7 +327,7 @@ class OrderRepository
 
             $translationService->sendOrderFile($order, $file, $settings);
 
-            if ($order->shouldIncludeTmFiles() && $file->hasTmMisalignments()) {
+            if ($order->shouldIncludeTmFiles() && $file->hasReference()) {
                 array_push($orderReferenceFiles, $file);
             }
         }

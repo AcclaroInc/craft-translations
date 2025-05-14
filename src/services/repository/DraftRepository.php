@@ -222,8 +222,6 @@ class DraftRepository
 
                     $translationService->updateIOFile($order, $file);
 
-                    $file->reference = null;
-
                     Translations::$plugin->fileRepository->saveFile($file);
                 }
 

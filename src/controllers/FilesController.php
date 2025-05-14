@@ -80,7 +80,6 @@ class FilesController extends BaseController
         //Iterate over each file on this order
         if ($order->files)
         {
-            $hasMisalignment = $order->isTmMisaligned(false);
             foreach ($order->getFiles() as $file)
             {
                 // skip failed files
@@ -117,7 +116,7 @@ class FilesController extends BaseController
                 }
 
                 /** Check if entry exists in target site for reference comparison */
-                if ($order->includeTmFiles && $file->reference) {
+                if ($order->includeTmFiles && $file->hasReference()) {
                     $fileName = $file->getReferenceFileName($fileFormat);
 
                     if (! $zip->addFromString("references/" . $fileName, $file->reference)) {
@@ -478,8 +477,9 @@ class FilesController extends BaseController
                     if (! in_array($file->id, $files) || !$file->hasTmMisalignments()) continue;
 
                     $fileName = $file->getReferenceFileName($format);
+                    $fileContent = $file->getReferenceFileContent();
 
-                    if (! $zip->addFromString($fileName, $file->reference)) {
+                    if (! $zip->addFromString($fileName, $fileContent)) {
                         return $this->asFailure(sprintf(
                             $this->getErrorMessage('There was an error adding the file {%s} to the zip. {%s}'),
                             $fileName,
@@ -487,7 +487,7 @@ class FilesController extends BaseController
                         ));
                     }
 
-                    // $file->reference = $tmFile['reference'];
+                    $file->reference = $fileContent;
                     Translations::$plugin->fileRepository->saveFile($file);
                 }
             }

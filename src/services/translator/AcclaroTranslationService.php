@@ -363,12 +363,12 @@ class AcclaroTranslationService implements TranslationServiceInterface
             $sourceSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->sourceSite)->language);
             $targetSite = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($file->targetSite)->language);
 
-            $tmFile = $file->getTmMisalignmentFile($format);
+            $tmFile = $file->getReferenceFileContent();
             $path = $tempPath .'-'. $tmFile['fileName'];
 
             $stream = fopen($path, 'w+');
 
-            fwrite($stream, $tmFile['fileContent']);
+            fwrite($stream, $file->getReferenceFileName());
 
             $client->sendReferenceFile(
                 $order->serviceOrderId,
@@ -377,7 +377,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 $path
             );
 
-            $file->reference = $tmFile['reference'];
+            $file->reference = $tmFile;
             Translations::$plugin->fileRepository->saveFile($file);
 
             fclose($stream);

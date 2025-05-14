@@ -129,7 +129,7 @@ class ElementToFileConverter
      * @param \craft\base\Element $element
      * @param [string] $format like [JSON, XML, CSV]
      * @param [array] $data
-     * @return file
+     * @return string
      */
     public function convert(Element $element, $format, $data) {
         if ($format == Constants::FILE_FORMAT_XML) {

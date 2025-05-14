@@ -185,10 +185,6 @@ class ImportFiles extends BaseJob
             return $file->isModified() ? false : '';
         }
 
-        if ($file->isComplete() || $file->isPublished()) {
-            $file->reference = null;
-        }
-
         //Translation Service
         $translationService = Translations::$plugin->translatorFactory
             ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, []);
@@ -316,10 +312,6 @@ class ImportFiles extends BaseJob
             return $file->isModified() ? false : '';
         }
 
-        if ($file->isComplete() || $file->isPublished()) {
-            $file->reference = null;
-        }
-
         //Translation Service
         $translationService = Translations::$plugin->translatorFactory
             ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, []);
@@ -416,10 +408,6 @@ class ImportFiles extends BaseJob
             $this->orderLog(sprintf("File {%s} %s", $this->assetName($asset), $message));
 
             return $file->isModified() ? false : '';
-        }
-
-        if ($file->isComplete() || $file->isPublished()) {
-            $file->reference = null;
         }
 
         //Translation Service

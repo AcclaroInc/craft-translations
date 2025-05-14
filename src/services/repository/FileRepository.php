@@ -334,7 +334,6 @@ class FileRepository
     public function createOrderFile($order, $elementId, $targetSite, $wordCount = null)
     {
         $element = Translations::$plugin->elementRepository->getElementById($elementId, $order->sourceSite);
-        $targetElement = Translations::$plugin->elementRepository->getElementById($element->id, $targetSite);
         $wordCount = $wordCount ?? Translations::$plugin->elementTranslator->getWordCount($element) ?? 0;
 
         $fileData = [
@@ -352,12 +351,11 @@ class FileRepository
             'source' => Translations::$plugin->elementToFileConverter->convert(
                 $element, Constants::FILE_FORMAT_XML, $fileData
             ),
-            'reference' => Translations::$plugin->elementToFileConverter->convert(
-                $targetElement, Constants::FILE_FORMAT_XML, $fileData
-            ),
             'wordCount' => $wordCount,
         ];
         $file = $this->createFileWithData($data);
+
+        $file->reference = $file->getReferenceFileContent();
 
         return $file;
     }
@@ -656,7 +654,7 @@ class FileRepository
 
         return json_encode($tmContent);
     }
-    
+
     private function referenceAsXml($source, $target, $meta)
     {
         $dom = new DOMDocument('1.0', 'utf-8');
@@ -729,7 +727,6 @@ class FileRepository
         $file->targetSite = $data["targetSite"];
         $file->source = $data["source"];
         $file->wordCount = $data["wordCount"];
-        $file->reference = $data["reference"];
 
         return $file;
     }
@@ -739,11 +736,14 @@ class FileRepository
         $converter = Translations::$plugin->elementToFileConverter;
         $sourceContent = json_decode($converter->xmlToJson($source), true);
         $targetContent = json_decode($converter->xmlToJson($target), true);
-
+        
         if (isset($targetContent['content']) && isset($sourceContent['content'])) {
-            $sourceContent = json_encode(array_values($sourceContent['content']));
-            $targetContent = json_encode(array_values($targetContent['content']));
-
+            // Removed temporary slugs comming in from drafts
+            $sourceContent = $sourceContent['content'];
+            $targetContent = $targetContent['content'];
+            $targetContent = array_intersect_key($sourceContent, $targetContent);
+            $sourceContent = json_encode(array_values($sourceContent));
+            $targetContent = json_encode(array_values($targetContent));
             /**
              * Replace `\u00a0` created by mysql with `space`
              * as mysql replaces any space before special char like ?, ! with `\u00a0`
