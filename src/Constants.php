@@ -289,7 +289,6 @@ class Constants
         'benf\neo\Field',
         'verbb\vizy\fields\VizyField',
         'verbb\tablemaker\fields\TableMakerField',
-        'craft\redactor\Field',
         'presseddigital\linkit\fields\LinkitField',
         'verbb\hyper\fields\HyperField',
         'luwes\codemirror\fields\CodeMirrorField',

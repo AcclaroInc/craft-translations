@@ -64,33 +64,6 @@ class NeoFieldTranslator extends GenericFieldTranslator
         return $source;
     }
 
-    protected function parseBlockData(&$allBlockData, $blockData, $blockId=null)
-    {
-        $newBlockData = array();
-        $newToParse = array();
-
-        foreach ($blockData as $key => $value) {
-            if (is_numeric($key) || strpos($key, "new", 0) !== false) {
-                $newToParse[$key] = $value;
-            } else {
-                $newBlockData[$key] = $value;
-            }
-        }
-
-        if ($newBlockData) {
-            if($blockId)
-            {
-                $allBlockData[$blockId] = $newBlockData;
-            } else {
-                $allBlockData[] = $newBlockData;
-            }
-        }
-
-        foreach ($newToParse as $blockId => $blockData) {
-            $this->parseBlockData($allBlockData, $blockData, $blockId);
-        }
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -152,11 +125,6 @@ class NeoFieldTranslator extends GenericFieldTranslator
         }
 
         return $wordCount;
-    }
-
-    private function getBlockUid($block)
-    {
-        return sprintf('uid:%s', $block->getCanonicalUid());
     }
 
     /**

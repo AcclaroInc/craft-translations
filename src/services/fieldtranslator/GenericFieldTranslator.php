@@ -15,7 +15,6 @@ use craft\base\Field;
 use craft\base\Element;
 use acclaro\translations\Translations;
 use acclaro\translations\services\ElementTranslator;
-use craft\redactor\Field as RedactorField;
 use craft\ckeditor\Field as CkEditorField;
 
 class GenericFieldTranslator implements TranslatableFieldInterface
@@ -41,17 +40,17 @@ class GenericFieldTranslator implements TranslatableFieldInterface
     {
         $fieldValue = $this->getFieldValue($elementTranslator, $element, $field);
 
-        return $field instanceof RedactorField || $field instanceof CkEditorField ? $field->serializeValue($fieldValue, $element) : $fieldValue;
+        return $field instanceof CkEditorField ? $field->serializeValue($fieldValue, $element) : $fieldValue;
     }
 
     public function toPostArrayFromTranslationTarget(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite, $targetSite, $fieldData)
     {
         if ($element->siteId != $targetSite) {
-            // Get element in target site so redactor links can be set for target sites using normalise
+            // Get element in target site so ckeditor links can be set for target sites using normalise
             $element = Translations::$plugin->elementRepository->getElementById($element->id, $targetSite) ?? $element;
         }
 
-        return $field instanceof RedactorField ? $field->normalizeValue($fieldData, $element) : $fieldData;
+        return $field instanceof CkEditorField ? $field->normalizeValue($fieldData, $element) : $fieldData;
     }
 
     public function toPostArray(ElementTranslator $elementTranslator, Element $element, Field $field)
@@ -62,5 +61,37 @@ class GenericFieldTranslator implements TranslatableFieldInterface
     public function getWordCount(ElementTranslator $elementTranslator, Element $element, Field $field)
     {
         return Translations::$plugin->wordCounter->getWordCount($this->getFieldValue($elementTranslator, $element, $field));
+    }
+
+    protected function getBlockUid($block)
+    {
+        return sprintf('uid:%s', $block->getCanonicalUid());
+    }
+
+    protected function parseBlockData(&$allBlockData, $blockData, $blockId=null)
+    {
+        $newBlockData = array();
+        $newToParse = array();
+
+        foreach ($blockData as $key => $value) {
+            if (is_numeric($key) || strpos($key, "new", 0) !== false) {
+                $newToParse[$key] = $value;
+            } else {
+                $newBlockData[$key] = $value;
+            }
+        }
+
+        if ($newBlockData) {
+            if($blockId)
+            {
+                $allBlockData[$blockId] = $newBlockData;
+            } else {
+                $allBlockData[] = $newBlockData;
+            }
+        }
+
+        foreach ($newToParse as $blockId => $blockData) {
+            $this->parseBlockData($allBlockData, $blockData, $blockId);
+        }
     }
 }
