@@ -35,7 +35,6 @@ use verbb\vizy\fields\VizyField;
 use newism\fields\fields\Address;
 use newism\fields\fields\Telephone;
 use newism\fields\fields\PersonName;
-use craft\redactor\Field as RedactorField;
 use craft\ckeditor\Field as CkEditorField;
 use presseddigital\linkit\fields\LinkitField;
 use luwes\codemirror\fields\CodeMirrorField;
@@ -64,7 +63,6 @@ class Factory
         Number::class           => GenericFieldTranslator::class,
         PlainText::class        => GenericFieldTranslator::class,
         RadioButtons::class     => SingleOptionFieldTranslator::class,
-        RedactorField::class    => GenericFieldTranslator::class,
         SeoSettings::class      => SeomaticMetaFieldTranslator::class,
         SeoField::class         => SeoFieldTranslator::class,
         SuperTableField::class  => SuperTableFieldTranslator::class,
