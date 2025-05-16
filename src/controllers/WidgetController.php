@@ -397,6 +397,7 @@ class WidgetController extends BaseController
 
         // Get array of entry IDs sorted by most recently updated
         $entries = Entry::find()
+            ->sectionId(['not', null])
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->ids();
 
