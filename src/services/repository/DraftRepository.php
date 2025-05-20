@@ -196,37 +196,39 @@ class DraftRepository
         $currentElement = 0;
 
         $createDrafts = new CreateDrafts();
-        $transaction = Craft::$app->db->beginTransaction();
 
         foreach ($order->getFiles() as $file) {
             if (! in_array($file->id, $fileIds)) {
                 continue;
             }
 
-            $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
-            $isFileReady = $file->isReviewReady();
-
-            if ($queue) {
-                $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
-            }
-
-            // Create draft only if not already exist
-            if ($file->hasDraft()) {
-                $file->status = Constants::FILE_STATUS_COMPLETE;
-                Translations::$plugin->fileRepository->saveFile($file);
-            } else {
-                $isNewDraft = $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
-            }
-
             try {
-                // Translation Service Always Local
-                $translationService = $order->getTranslationService();
+                $transaction = Craft::$app->db->beginTransaction();
+                $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
+                $isFileReady = $file->isReviewReady() || $file->isComplete();
+    
+                if ($queue) {
+                    $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
+                }
+    
+                // Create draft only if not already exist
+                if ($file->hasDraft()) {
+                    $file->status = Constants::FILE_STATUS_COMPLETE;
+                    Translations::$plugin->fileRepository->saveFile($file);
+                } else {
+                    $isNewDraft = $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+                }
 
-                $translationService->updateIOFile($order, $file);
-
-                $file->reference = null;
-
-                Translations::$plugin->fileRepository->saveFile($file);
+                if ($isFileReady) {
+                    // Translation Service Always Local
+                    $translationService = $order->getTranslationService();
+    
+                    $translationService->updateIOFile($order, $file);
+    
+                    $file->reference = null;
+    
+                    Translations::$plugin->fileRepository->saveFile($file);
+                }
 
                 /**
                  * Updated applyDrafts logic to apply drafts individually v.s all at once
@@ -237,12 +239,16 @@ class DraftRepository
                 if ($publish) {
                     $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
                 }
+                if ($transaction !== null) {
+                    $transaction->commit();
+                }
             } catch(Exception $e) {
-                $transaction->rollback();
+                if ($transaction !== null) {
+                    $transaction->rollBack();
+                }
                 throw $e;
             }
         }
-        $transaction->commit();
 
         if ($isNewDraft)
 			$order->logActivity(Translations::$plugin->translator->translate('app', 'Drafts created'));
