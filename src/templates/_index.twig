@@ -46,7 +46,6 @@
     }) }}
 {% endblock %}
 
-{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
 
 {% set elementInstance = craft.app.elements.createElement(elementType) %}
 {% set context = 'index' %}
@@ -59,8 +58,6 @@
 {% if showSiteMenu == 'auto' %}
     {% set showSiteMenu = elementInstance.isLocalized() %}
 {% endif %}
-
-{# {% do view.registerJsFile("https://cdn.jsdelivr.net/npm/apexcharts") %} #}
 
 {% js "$('#content').css({'background': 'none'});" %}
 

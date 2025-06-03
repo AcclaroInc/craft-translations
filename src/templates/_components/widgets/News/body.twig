@@ -1,26 +1,9 @@
 <div class="recentnews-container scroll-x-auto">
-    {% if articles|length %}
-        <table class="data fullwidth table">
-            {% for article in articles %}
-                <tr>
-                    <td>
-                        <a href="{{ article.link }}">{{ article.title }}</a>
-                    </td>
-                    <td style="text-align:right;">
-                        <span class="light">
-                            {{ article.pubDate }}
-                        </span>
-                    </td>
-                </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <table class="data fullwidth table">
-            <tr>
-                <td>
-                    <p>{{ "Unable to fetch Acclaro news."|t('app') }}</p>
-                </td>
-            </tr>
-        </table>
-    {% endif %}
+    <div class="elements hidden">
+        <div class="tableview">
+            <table class="data fullwidth table">
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 </div>

@@ -11,9 +11,9 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
-use acclaro\translations\Constants;
-use acclaro\translations\Translations;
+use craft\helpers\Json;
 use acclaro\translations\records\WidgetRecord;
+use acclaro\translations\assetbundles\AcclaroNewsAssets as JS;
 
 /**
  * @author    Acclaro
@@ -86,11 +86,19 @@ class News extends BaseWidget
      */
     public function getBodyHtml(): ?string
     {
+        $params = [];
+
+        $params['limit'] = (int)$this->limit;
+
         $view = Craft::$app->getView();
 
-        $articles = $this->_getArticles();
+        // $articles = $this->_getArticles();
+        $view->registerAssetBundle(JS::class);
+        $view->registerJs(
+            'new Craft.Translations.AcclaroNews(' . $this->id . ', ' . Json::encode($params) . ');'
+        );
 
-        return $view->renderTemplate('translations/_components/widgets/News/body', ['articles' => $articles]);
+        return $view->renderTemplate('translations/_components/widgets/News/body');
     }
 
     public static function doesUserHaveWidget(string $type): bool
@@ -109,47 +117,6 @@ class News extends BaseWidget
     public static function isSelectable(): bool
     {
         return (static::allowMultipleInstances() || !static::doesUserHaveWidget(static::class));
-    }
-
-    /**
-     * Returns the recent articles from Acclaro Blog RSS feed
-     *
-     * @return array
-     */
-    private function _getArticles(): array
-    {
-        $articles = [];
-
-        $client = Craft::createGuzzleClient(array(
-            'base_uri' => 'https://www.acclaro.com/',
-            'timeout' => 2.0,
-            'verify' => false
-        ));
-
-        try {
-            $response = $client->get('feed/');
-        } catch (\Exception $e) {
-            Translations::$plugin->logHelper->log("[" . __METHOD__ . "] . $e", Constants::LOG_LEVEL_ERROR);
-            return [];
-        }
-
-        $data = $response->getBody()->getContents();
-        $feed = simplexml_load_string($data);
-
-        $i = 0;
-        foreach ($feed->channel->item as $key => $article) {
-            $articles[$i]['title'] = $article->title;
-            $articles[$i]['link'] = $article->link;
-            $articles[$i]['pubDate'] = date('m/d/Y', strtotime($article->pubDate));
-
-            if ($i + 1 < $this->limit) {
-                $i++;
-            } else {
-                break;
-            }
-        }
-
-        return $articles;
     }
 
     /**

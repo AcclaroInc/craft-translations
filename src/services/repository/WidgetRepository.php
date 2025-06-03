@@ -373,6 +373,11 @@ class WidgetRepository extends BaseComponent
         return $closest;
     }
 
+    public function getNewsArticles($limit): array
+    {
+        return $this->_getArticles($limit);
+    }
+
     // Private Methods
     // =========================================================================
     /**
@@ -493,5 +498,46 @@ class WidgetRepository extends BaseComponent
         return Craft::$app->getView()->renderTemplate('_includes/defaulticon.svg', [
             'label' => $widget::displayName()
         ]);
+    }
+
+    /**
+     * Returns the recent articles from Acclaro Blog RSS feed
+     *
+     * @return array
+     */
+    private function _getArticles($limit): array
+    {
+        $articles = [];
+
+        $client = Craft::createGuzzleClient(array(
+            'base_uri' => 'https://www.acclaro.com/',
+            'timeout' => 2.0,
+            'verify' => false
+        ));
+
+        try {
+            $response = $client->get('feed/');
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log("[" . __METHOD__ . "] . $e", Constants::LOG_LEVEL_ERROR);
+            return [];
+        }
+
+        $data = $response->getBody()->getContents();
+        $feed = simplexml_load_string($data);
+
+        $i = 0;
+        foreach ($feed->channel->item as $key => $article) {
+            $articles[$i]['title'] = $article->title;
+            $articles[$i]['link'] = $article->link;
+            $articles[$i]['pubDate'] = date('m/d/Y', strtotime($article->pubDate));
+
+            if ($i + 1 < $limit) {
+                $i++;
+            } else {
+                break;
+            }
+        }
+
+        return $articles;
     }
 }

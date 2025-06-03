@@ -24,6 +24,7 @@
                 // Hide widget title
                 this.$widget.find('h2').html('');
                 this.$widget.find('div.settings.icon').addClass('on-top');
+                this.$widget.find('div.spinner.body-loading').addClass('on-top');
                 this.$widget.addClass('loading');
 
                 $modal = new Garnish.Modal($('#diff-modal').removeClass('hidden'), {
@@ -48,7 +49,7 @@
                     $('div.menu ul.padded li a[data-id="'+modified+'"]').addClass('sel');
                     $("#"+modified).removeClass('hidden');
                     $("#" + recent).addClass('hidden');
-                    this.$container.updateContainerHeight();
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
                     window.translationsdashboard.grid.refreshCols(true, true);
                 });
 
@@ -61,7 +62,7 @@
                     $('div.menu ul.padded li a[data-id="'+modified+'"]').removeClass('sel');
                     $("#"+modified).addClass('hidden');
                     $("#" + recent).removeClass('hidden');
-                    this.$container.updateContainerHeight();
+                    window.translationsdashboard.widgets[widgetId].updateContainerHeight();
                     window.translationsdashboard.grid.refreshCols(true, true);
                 });
 

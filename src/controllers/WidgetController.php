@@ -575,6 +575,20 @@ class WidgetController extends BaseController
         return $this->asSuccess(null, $data);
     }
 
+    public function actionGetAcclaroNews($limit = 0)
+    {
+        // Get the post request
+        $this->requirePostRequest();
+
+        // Set variables
+        $limit = Craft::$app->getRequest()->getParam('limit');
+
+        // Get the articles from the RSS feed
+        $articles = Translations::$plugin->widgetRepository->getNewsArticles($limit);
+
+        return $this->asSuccess(null, $articles);
+    }
+
     // PRIVATE METHODS
 
     /**
