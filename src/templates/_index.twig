@@ -12,9 +12,6 @@
         <div class="edition-name">{{ edition }}</div>
         <div class="edition-trial">{{ craft.app.getPlugins().getPlugin(pluginHandle).getVersion() }}</div>
     </div>
-    {% if updates %}
-        <a class="btn small go" href="utilities/updates" data-icon="info" style="margin: 7px 0px 10px 0px;"> Update available</a>
-    {% endif %}
 {% endblock %}
 
 {% block actionButton %}

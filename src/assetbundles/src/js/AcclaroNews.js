@@ -25,7 +25,7 @@
 
                                 var widgetHtml = `<tr>
                                     <td>
-                                        <a href="${ article.link[0] }">${ article.title[0] }</a>
+                                        <a href="${ article.link }">${ article.title }</a>
                                     </td>
                                     <td style="text-align:right;">
                                         <span class="light">
