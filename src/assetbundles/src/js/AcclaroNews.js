@@ -38,7 +38,7 @@
                         } else {
                             var widgetHtml = `<tr>
                                 <td>
-                                    <p>${ "No Acclaro news available."|Craft.t('app') }</p>
+                                    <p>${ Craft.t('app', "No Acclaro news available.") }</p>
                                 </td>
                             </tr>`;
 
@@ -51,7 +51,7 @@
                     .catch(({response}) => {
                         var widgetHtml = `<tr>
                             <td>
-                                <p>${ "Unable to fetch Acclaro news."|Craft.t('app') }</p>
+                                <p>${ Craft.t('app', "Unable to fetch Acclaro news.") }</p>
                             </td>
                         </tr>`;
                         

@@ -28,9 +28,7 @@ class CacheHelper
 		$cache = Craft::$app->getCache();
 
 		foreach ($cacheKeys as $cacheKey) {
-			if ($cache->exists($cacheKey)) {
-				$cache->delete($cacheKey);
-			}
+			$cache->delete($cacheKey);
 		}
 	}
 }
