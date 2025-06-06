@@ -53,10 +53,27 @@ class StaticTranslationsController extends BaseController
         $translations = Craft::$app->request->getRequiredBodyParam('translation');
 
         Translations::$plugin->staticTranslationsRepository->set($lang, $translations);
+        $job = Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
 
         return $this->asSuccess($this->getSuccessMessage('Static Translations saved.'), [
             'success' => true,
+            'jobId' => (int) $job,
             'errors' => []
+        ]);
+    }
+
+    /**
+     * @return \yii\web\Response
+     * @throws \yii\web\BadRequestHttpException
+     */
+    public function actionSync() {
+        $this->requirePostRequest();
+
+        $job = Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
+
+        return $this->asSuccess($this->getSuccessMessage("Sync job added to queue"), [
+            'success' => true,
+            'jobId' => (int) $job
         ]);
     }
 
@@ -155,6 +172,7 @@ class StaticTranslationsController extends BaseController
 
                 if ($rows) {
                     Translations::$plugin->staticTranslationsRepository->set($site->language, $rows);
+                    Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
                     $this->setSuccess('Translations imported successfully.');
                 } else {
                     $this->setError('No translation imported.');

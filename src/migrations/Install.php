@@ -15,6 +15,7 @@ use craft\db\Query;
 use craft\db\Migration;
 
 use acclaro\translations\Constants;
+use acclaro\translations\services\repository\StaticTranslationsRepository;
 
 /**
  * @author    Acclaro
@@ -258,6 +259,22 @@ class Install extends Migration
             );
         }
 
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_STATIC_TRANSLATIONS);
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                Constants::TABLE_STATIC_TRANSLATIONS,
+                [
+                    'id' => $this->primaryKey(),
+                    'siteId' => $this->integer()->notNull(),
+                    'original' => $this->text(),
+                    'translation' => $this->text(),
+                    'dateCreated' => $this->dateTime()->notNull(),
+                    'dateUpdated' => $this->dateTime()->notNull(),
+                ]
+            );
+        }
+
         return $tablesCreated;
     }
 
@@ -271,6 +288,7 @@ class Install extends Migration
         $this->createIndex(null, Constants::TABLE_FILES, ['elementId'], false);
         $this->createIndex(null, Constants::TABLE_GLOBAL_SET_DRAFT, ['globalSetId'], false);
         $this->createIndex(null, Constants::TABLE_WIDGET, ['userId'], false);
+        $this->createIndex(null, Constants::TABLE_STATIC_TRANSLATIONS, ['siteId']);
         // Orders table - Indexing
         $this->createIndex(null, Constants::TABLE_ORDERS, ['status']);
         $this->createIndex(null, Constants::TABLE_ORDERS, ['translatorId']);
@@ -345,6 +363,12 @@ class Install extends Migration
         $this->dropTableIfExists(Constants::TABLE_TRANSLATIONS);
 
         $this->dropTableIfExists(Constants::TABLE_WIDGET);
+
+        $this->dropTableIfExists(Constants::TABLE_ACTIVITY_LOG);
+
+        $this->dropTableIfExists(Constants::TABLE_NAVIGATION_DRAFT);
+
+        $this->dropTableIfExists(Constants::TABLE_STATIC_TRANSLATIONS);
     }
 
     /**
