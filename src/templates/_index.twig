@@ -12,9 +12,6 @@
         <div class="edition-name">{{ edition }}</div>
         <div class="edition-trial">{{ craft.app.getPlugins().getPlugin(pluginHandle).getVersion() }}</div>
     </div>
-    {% if updates %}
-        <a class="btn small go" href="utilities/updates" data-icon="info" style="margin: 7px 0px 10px 0px;"> Update available</a>
-    {% endif %}
 {% endblock %}
 
 {% block actionButton %}
@@ -46,7 +43,6 @@
     }) }}
 {% endblock %}
 
-{% do view.registerAssetBundle("acclaro\\translations\\assetbundles\\OrderAssets") %}
 
 {% set elementInstance = craft.app.elements.createElement(elementType) %}
 {% set context = 'index' %}
@@ -59,8 +55,6 @@
 {% if showSiteMenu == 'auto' %}
     {% set showSiteMenu = elementInstance.isLocalized() %}
 {% endif %}
-
-{# {% do view.registerJsFile("https://cdn.jsdelivr.net/npm/apexcharts") %} #}
 
 {% js "$('#content').css({'background': 'none'});" %}
 

@@ -254,6 +254,7 @@ class DraftRepository
 		}
 
         Translations::$plugin->orderRepository->saveOrder($order);
+        Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
     }
 
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
