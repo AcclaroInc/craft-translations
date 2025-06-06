@@ -250,6 +250,20 @@ class Constants
     const PLUGIN_STORAGE_LOCATION = "@storage/" . self::PLUGIN_HANDLE;
     const ISO_MAPPING_FILE_NAME   = 'iso_mapping.' . self::FILE_FORMAT_JSON;
 
+    // Timout will be added in seconds
+    const CACHE_TIMEOUT = 900;
+    const CACHE_KEY_LANGUAGE_COVERAGE_WIDGET = self::PLUGIN_HANDLE . '.language-coverage';
+    const CACHE_KEY_NEWS_ARTICLES_WIDGET = self::PLUGIN_HANDLE . '.news-articles';
+    const CACHE_KEY_RECENT_ENTRIES_WIDGET = self::PLUGIN_HANDLE . '.recent-entries';
+    const CACHE_KEY_RECENTLY_MODIFIED_WIDGET = self::PLUGIN_HANDLE . '.recently-modified';
+    const CACHE_KEY_RECENT_ORDERS_WIDGET = self::PLUGIN_HANDLE . '.recent-orders';
+    const CACHE_KEY_ACCLARO_ORDERS_COUNT = self::PLUGIN_HANDLE . '.acclaro-orders-count';
+    const CACHE_RESET_ORDER_CHANGES = [
+        self::CACHE_KEY_ACCLARO_ORDERS_COUNT,
+        self::CACHE_KEY_LANGUAGE_COVERAGE_WIDGET,
+        self::CACHE_KEY_RECENT_ORDERS_WIDGET
+    ];
+
     const SITE_DEFAULT_ALIASES = [
         'af-NA' => 'af',
         'af-ZA' => 'af',

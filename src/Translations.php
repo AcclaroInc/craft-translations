@@ -150,6 +150,19 @@ class Translations extends Plugin
         );
 
         Event::on(
+            Entry::class,
+            Entry::EVENT_AFTER_DELETE,
+            function (ModelEvent $event) {
+                self::$plugin->logHelper->log(
+                    '['. __METHOD__ .'] Elements::EVENT_AFTER_DELETE_ELEMENT',
+                    Constants::LOG_LEVEL_INFO
+                );
+
+                $this->_onDeleteEntry($event);
+            }
+        );
+
+        Event::on(
             Elements::class,
             Elements::EVENT_BEFORE_DELETE_ELEMENT,
             function (DeleteElementEvent $event) {
@@ -626,8 +639,27 @@ class Translations extends Plugin
 
     private function _onSaveEntry(Event $event)
     {
-        // @TODO check if entry is part of an in-progress translation order
-        // and send notification to acclaro
+        /** @var Entry $entry */
+        $entry = $event->sender;
+
+        if ($entry->getIsCanonical()) {
+            // Invalidate new source entry widget cache
+            self::$plugin->cacheHelper->invalidateCache([
+                Constants::CACHE_KEY_RECENT_ENTRIES_WIDGET,
+                Constants::CACHE_KEY_RECENTLY_MODIFIED_WIDGET
+            ]);
+        }
+    }
+
+    private function _onDeleteEntry(Event $event)
+    {
+        /** @var Entry $entry */
+        $entry = $event->sender;
+
+        if ($entry->getIsCanonical()) {
+            // Invalidate new source entry widget cache
+            self::$plugin->cacheHelper->invalidateCache([Constants::CACHE_KEY_RECENT_ENTRIES_WIDGET]);
+        }
     }
 
     private function _onBeforePublishDraft(Event $event)

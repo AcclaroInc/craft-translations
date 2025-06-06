@@ -289,6 +289,22 @@ class Install extends Migration
         $this->createIndex(null, Constants::TABLE_GLOBAL_SET_DRAFT, ['globalSetId'], false);
         $this->createIndex(null, Constants::TABLE_WIDGET, ['userId'], false);
         $this->createIndex(null, Constants::TABLE_STATIC_TRANSLATIONS, ['siteId']);
+        // Orders table - Indexing
+        $this->createIndex(null, Constants::TABLE_ORDERS, ['status']);
+        $this->createIndex(null, Constants::TABLE_ORDERS, ['translatorId']);
+
+        // Files table - Indexing
+        $this->createIndex(null, Constants::TABLE_FILES, ['status']);
+        $this->createIndex(null, Constants::TABLE_FILES, ['dateUpdated']);
+        $this->createIndex(null, Constants::TABLE_FILES, ['targetSite']);
+        $this->createIndex(null, Constants::TABLE_FILES, ['draftId']);
+
+        // Translators table - Indexing
+        $this->createIndex(null, Constants::TABLE_TRANSLATORS, ['service']);
+
+        // Asset Drafts table - Indexing
+        $this->createIndex(null, Constants::TABLE_ASSET_DRAFT, ['assetId']);
+        $this->createIndex(null, Constants::TABLE_ASSET_DRAFT, ['site']);
     }
 
     /**

@@ -678,6 +678,7 @@ class OrderController extends BaseController
             return $this->asSuccess(null, [], $redirectUrl . "&isProcessing=1");
         } else {
             $this->setSuccess("New order created '{$order->title}'");
+            Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
             return $this->asSuccess(null, [], $redirectUrl);
         }
     }
@@ -844,6 +845,7 @@ class OrderController extends BaseController
 			$translatorService->updateOrder($order);
 
 			Craft::$app->getElements()->saveElement($order);
+            Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
 
 			return $this->asSuccess($this->getSuccessMessage("Order updated."));
         } catch (Exception $e) {
@@ -975,6 +977,7 @@ class OrderController extends BaseController
         Craft::$app->getElements()->saveElement($order);
 
         $this->setSuccess("Order canceled '{$order->title}'");
+        Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
 
         return $this->redirect(Constants::URL_ORDER_DETAIL.$order->id, 302, true);
     }
@@ -1197,6 +1200,7 @@ class OrderController extends BaseController
 
             return $this->asFailure($this->getErrorMessage($e->getMessage()));
         }
+        Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
 
         return $this->asSuccess($this->getSuccessMessage('Entries updated.'));
     }
@@ -1234,6 +1238,7 @@ class OrderController extends BaseController
         $order->status = Constants::ORDER_STATUS_NEW;
         $order->logActivity("Order quote accepted");
         Craft::$app->getElements()->saveElement($order);
+        Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
 
         return $this->asSuccess($this->getSuccessMessage("Quote approve request sent"));
     }
@@ -1271,6 +1276,7 @@ class OrderController extends BaseController
         $order->status = Constants::ORDER_STATUS_GETTING_QUOTE;
         $order->logActivity("Order quote declined");
         Craft::$app->getElements()->saveElement($order);
+        Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
 
         return $this->asSuccess($this->getSuccessMessage("Quote decline request sent"));
     }
