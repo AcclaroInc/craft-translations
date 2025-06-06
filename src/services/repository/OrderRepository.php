@@ -66,6 +66,11 @@ class OrderRepository
         return $orderCount;
     }
 
+    public function getOrders($limit)
+    {
+        return $this->_getOrders($limit);
+    }
+
     public function isTranslationOrder($elementId)
     {
         return Order::findOne(['id' => $elementId]);
@@ -601,5 +606,19 @@ class OrderRepository
         array_push($draftIds, $element->id);
 
         return $draftIds;
+    }
+
+    /**
+     * Returns the recent orders
+     *
+     * @return array
+     */
+    private function _getOrders($limit): array
+    {
+        $query = Order::find()
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->limit($limit);
+
+        return $query->all();
     }
 }

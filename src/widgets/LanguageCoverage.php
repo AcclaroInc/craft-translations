@@ -93,9 +93,8 @@ class LanguageCoverage extends BaseWidget
         $view->registerJs(
             'new Craft.Translations.LanguageCoverage(' . $this->id . ', ' . Json::encode($params) . ');'
         );
-        return Craft::$app->getView()->renderTemplate('translations/_components/widgets/LanguageCoverage/body', [
+        return $view->renderTemplate('translations/_components/widgets/LanguageCoverage/body', [
             'limit' => $this->limit,
-            // 'colspan' => $this->limit
         ]);
     }
 

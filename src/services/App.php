@@ -177,6 +177,11 @@ class App extends Component
     public $logHelper;
 
     /**
+     * @var CacheHelper
+     */
+    public $cacheHelper;
+
+    /**
      * @var repository\ActivityLogRepository
      */
     public $activityLogRepository;
@@ -212,6 +217,7 @@ class App extends Component
         $this->orderDelete = new OrderDelete();
         $this->orderEdit = new OrderEdit();
         $this->logHelper = new LogHelper();
+        $this->cacheHelper = new CacheHelper();
         $this->activityLogRepository = new repository\ActivityLogRepository();
         $this->adsRepository = new repository\AdsRepository();
         $this->navigationDraftRepository = new repository\NavigationDraftRepository();
