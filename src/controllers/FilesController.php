@@ -108,7 +108,10 @@ class FilesController extends BaseController
                     $fileContent = $file->source;
                 }
 
-                if ($order->includeTmFiles) $fileName = "source/" . $fileName;
+                if ($order->includeTmFiles) {
+                    $fileName = "source/" . $fileName;
+                    $file->reference = $file->getReferenceFileContent();
+                }
 
                 if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
                     $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
@@ -478,8 +481,9 @@ class FilesController extends BaseController
 
                     $fileName = $file->getReferenceFileName($format);
                     $fileContent = $file->getReferenceFileContent();
+                    $tmContent = Translations::$plugin->elementToFileConverter->convertTo($fileContent, $format);
 
-                    if (! $zip->addFromString($fileName, $fileContent)) {
+                    if (! $zip->addFromString($fileName, $tmContent)) {
                         return $this->asFailure(sprintf(
                             $this->getErrorMessage('There was an error adding the file {%s} to the zip. {%s}'),
                             $fileName,
@@ -487,7 +491,11 @@ class FilesController extends BaseController
                         ));
                     }
 
-                    $file->reference = $fileContent;
+                    if ($file->isComplete()) {
+                        $file->draftReference = $fileContent;
+                    } else {
+                        $file->reference = $fileContent;
+                    }
                     Translations::$plugin->fileRepository->saveFile($file);
                 }
             }

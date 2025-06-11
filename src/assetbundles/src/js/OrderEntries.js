@@ -139,6 +139,8 @@
 			if (this.hasSelections() && this.canBePublished()) {
 				this.$publishSelectedBtn.prop('disabled', false).removeClass('disabled');
 				this.$fileActions.removeClass('noClick disabled');
+			} else if (this.hasSelections() && this.canBeTranslated) {
+				this.$fileActions.removeClass('noClick disabled');
 			} else {
 				this.$publishSelectedBtn.prop('disabled', true).addClass('disabled');
 				this.$fileActions.addClass('noClick disabled');

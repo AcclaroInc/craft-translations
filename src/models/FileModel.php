@@ -65,6 +65,8 @@ class FileModel extends Model
 
     public $reference;
 
+    public $draftReference;
+
     public function init(): void
     {
         parent::init();
@@ -151,6 +153,11 @@ class FileModel extends Model
         return $this->status === Constants::FILE_STATUS_CANCELED;
     }
 
+    public function isFailed()
+    {
+        return $this->status === Constants::FILE_STATUS_FAILED;
+    }
+
     public function isComplete()
     {
         return $this->status === Constants::FILE_STATUS_COMPLETE;
@@ -197,7 +204,7 @@ class FileModel extends Model
 
     public function hasReference()
     {
-        return !!$this->reference;
+        return !!($this->isComplete() ? $this->draftReference : $this->reference);
     }
     
     public function getOrder()
@@ -217,15 +224,13 @@ class FileModel extends Model
                 return $this->isNew() || $this->isInProgress() || $this->isModified() || $this->isReviewReady() ||
                     $this->isComplete() || $this->isPublished();
             default:
-                return $this->isReviewReady() || $this->isComplete() || $this->isPublished();
+                return $this->isReviewReady() || $this->isComplete() || $this->isPublished() || $this->isNew() || $this->isInProgress();
         }
     }
 
     public function canBeCheckedForTargetChanges()
     {
-        return ! ($this->isPublished() || $this->isCanceled() || 
-            ($this->isInProgress() && $this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE)
-        );
+        return ! ($this->isPublished() || $this->isCanceled() || $this->isFailed());
     }
 
     public function getSourceLangCode()
@@ -286,11 +291,23 @@ class FileModel extends Model
 
     public function hasTmMisalignments()
     {
-        if ($this->isPublished() || $this->isCanceled()) {
+        if ($this->isPublished() || $this->isCanceled() || $this->isFailed()) {
             return false;
         }
 
-        $dbVersion =  $this->isComplete() ? $this->target : $this->reference;
+        /**
+         * Will only be triggered for existing drafts that existed before the
+         * draftReference column was added to the translations_files table.
+         * No target changes will be detected at this point
+         */
+        if ($this->isComplete() && is_null($this->draftReference)) {
+            \Craft::error($this->draftReference, "bhu123");
+            $this->draftReference = $this->getReferenceFileContent();
+            Translations::$plugin->fileRepository->saveFile($this);
+            return false;
+        }
+
+        $dbVersion =  $this->isComplete() ? $this->draftReference : $this->reference;
 
         if (!!$dbVersion) {
             $currentVersion = $this->getReferenceFileContent();

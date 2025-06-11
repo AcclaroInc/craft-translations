@@ -394,7 +394,7 @@ class OrderController extends BaseController
             $variables['isSourceChanged'] = Translations::$plugin->orderRepository->getIsSourceChanged($order);
 		}
 
-		if ($order->trackTargetChanges && $variables['isSubmitted'] && $order->isTmMisaligned()) {
+		if ($order->trackTargetChanges && $variables['isSubmitted']) {
             $variables['isTargetChanged'] = Translations::$plugin->orderRepository->getIsTargetChanged($order);
 		}
 

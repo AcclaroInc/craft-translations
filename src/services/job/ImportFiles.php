@@ -189,7 +189,7 @@ class ImportFiles extends BaseJob
         $translationService = Translations::$plugin->translatorFactory
             ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, []);
 
-        $file->target = Translations::$plugin->elementToFileConverter->jsonToXml($file_content);
+        $file->target = $file->draftReference = Translations::$plugin->elementToFileConverter->jsonToXml($file_content);
         $file->status = Constants::FILE_STATUS_REVIEW_READY;
         $file->dateDelivered = new \DateTime();
 
@@ -316,9 +316,8 @@ class ImportFiles extends BaseJob
         $translationService = Translations::$plugin->translatorFactory
             ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, []);
 
-
         $file->status = Constants::FILE_STATUS_REVIEW_READY;
-        $file->target = $xml_content;
+        $file->target = $file->draftReference = $xml_content;
         $file->dateDelivered = new \DateTime();
 
         //If Successfully saved
@@ -414,7 +413,7 @@ class ImportFiles extends BaseJob
         $translationService = Translations::$plugin->translatorFactory
             ->makeTranslationService(Constants::TRANSLATOR_DEFAULT, []);
 
-        $file->target = Translations::$plugin->elementToFileConverter->jsonToXml($file_content);
+        $file->target = $file->draftReference = Translations::$plugin->elementToFileConverter->jsonToXml($file_content);
         $file->status = Constants::FILE_STATUS_REVIEW_READY;
         $file->dateDelivered = new \DateTime();
 

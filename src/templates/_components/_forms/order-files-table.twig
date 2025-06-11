@@ -41,8 +41,8 @@
                                         <a href="{{ file.cpEditUrl }}" target="_blank">
                                             {{ file.uiLabel }}
                                         </a>
-                                        {% set sourceUpdated = file.elementId in isSourceChanged %}
-                                        {% set targetUpdated = file.elementId in isTargetChanged %}
+                                        {% set sourceUpdated = file.id in isSourceChanged %}
+                                        {% set targetUpdated = file.id in isTargetChanged %}
                                         {% if canUpdateFiles and not file.isPublished and (sourceUpdated or targetUpdated) %}
                                             <span class="warning order-warning font-size-15" data-icon="alert">
                                                 {% if sourceUpdated %}
@@ -71,8 +71,8 @@
                                                 <span class="title text-link">{{ file.uiLabel }}</span>
                                             </div>
                                         {% endif %}
-                                        {% set sourceUpdated = file.elementId in isSourceChanged %}
-                                        {% set targetUpdated = file.elementId in isTargetChanged %}
+                                        {% set sourceUpdated = file.id in isSourceChanged %}
+                                        {% set targetUpdated = file.id in isTargetChanged %}
 
                                     {# Create Preview for each target entry #}
                                     {% if file.hasPreview or isCraftCommerce %}

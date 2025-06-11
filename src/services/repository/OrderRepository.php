@@ -490,7 +490,7 @@ class OrderRepository
 
         if ($files = $order->getFiles()) {
             foreach ($files as $file) {
-                if ($file->isPublished() || ! $file->source || in_array($file->elementId, $originalIds)) continue;
+                if ($file->isPublished()) continue;
 
                 try {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
@@ -519,7 +519,7 @@ class OrderRepository
                         $currentContent = json_encode(array_values($currentContent['content']));
 
                         if (md5($sourceContent) !== md5($currentContent)) {
-                            array_push($originalIds, $element->id);
+                            array_push($originalIds, $file->id);
                         }
                     }
                 } catch (Exception $e) {
@@ -544,7 +544,7 @@ class OrderRepository
 		foreach ($order->getFiles() as $file) {
             if (! $file->canBeCheckedForTargetChanges()) continue;
 
-			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
+			if ($file->hasTmMisalignments()) array_push($originalIds, $file->id);
 		}
 
 		return $originalIds;

@@ -380,4 +380,22 @@ class ElementToFileConverter
 
         return $headers."\n".$content;
     }
+
+    /**
+     * Convert content to the specified format
+     *
+     * @param string $content in xml format
+     * @param string $format in which to convert in
+     * @return string
+     */
+    public function convertTo($content, $format) {
+        switch ($format) {
+            case Constants::FILE_FORMAT_CSV:
+                return $this->xmlToCsv($content);
+            case Constants::FILE_FORMAT_JSON:
+                return $this->xmlToJson($content);
+            default:
+                return $content;
+        }
+    }
 }

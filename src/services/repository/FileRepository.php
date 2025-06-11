@@ -38,6 +38,7 @@ class FileRepository
         'wordCount',
         'source',
         'reference',
+        'draftReference',
         'target',
         'previewUrl',
         'serviceFileId',
@@ -731,6 +732,13 @@ class FileRepository
         return $file;
     }
 
+    /**
+     * Check if the content of source and target files are changed
+     *
+     * @param $source is the version stored in database
+     * @param $target is the current version of source/draft element
+     * @return bool
+     */
     public function getIsContentChanged($source, $target): bool
     {
         $converter = Translations::$plugin->elementToFileConverter;
@@ -741,7 +749,9 @@ class FileRepository
             // Removed temporary slugs comming in from drafts
             $sourceContent = $sourceContent['content'];
             $targetContent = $targetContent['content'];
-            $targetContent = array_intersect_key($sourceContent, $targetContent);
+
+            $commonKeys = array_intersect_key($sourceContent, $targetContent);
+            $targetContent = array_intersect_key($targetContent, $commonKeys);
             $sourceContent = json_encode(array_values($sourceContent));
             $targetContent = json_encode(array_values($targetContent));
             /**
