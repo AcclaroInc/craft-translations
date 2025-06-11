@@ -224,7 +224,7 @@ class FileModel extends Model
                 return $this->isNew() || $this->isInProgress() || $this->isModified() || $this->isReviewReady() ||
                     $this->isComplete() || $this->isPublished();
             default:
-                return $this->isReviewReady() || $this->isComplete() || $this->isPublished() || $this->isNew() || $this->isInProgress();
+                return $this->isReviewReady() || $this->isComplete() || $this->isPublished();
         }
     }
 

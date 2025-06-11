@@ -531,20 +531,6 @@
             });
             $updateLi.append($updateAndDownloadAction);
             if (hasCompleteFiles) this._addDownloadPreviewLinksAction($updateAndDownloadAction, true);
-
-            // Download/Sync TM Files Button
-            $dropdown.append($('<hr>'));
-            $downloadTmLi = $('<li>');
-            $dropdown.append($downloadTmLi);
-            $label = (isDefaultTranslator ? 'Download ' : 'Sync ') + 'memory alignment files';
-
-            $downloadTmAction = $('<a>', {
-				'href': '#',
-                'class': isTmAligned ? 'link-disabled' : '',
-                'text': $label,
-            });
-            $downloadTmLi.append($downloadTmAction);
-            this._addDownloadTmFilesAction($downloadTmAction);
 		},
 		_addRebuildDraftPreviewAction: function(that) {
 			var $form = $('#regenerate-preview-urls');
@@ -589,83 +575,6 @@
 						});
 				}
 			});
-		},
-		_addDownloadTmFilesAction: function(that) {
-			var self = this;
-			var action = !isAcclaroTranslator ? 'download' : 'sync';
-            $(that).on('click', function(e) {
-				e.preventDefault();
-				
-				var $form = $('<form/>', {
-					'class': 'export-form'
-				});
-
-				var $formatField = Craft.ui.createSelectField({
-					label: Craft.t('app', 'Format'),
-					options: [
-						{label: 'CSV', value: 'csv'}, {label: 'XML', value: 'xml'}, {label: 'JSON', value: 'json'},
-					],
-					'class': 'fullwidth',
-				}).appendTo($form);
-
-				let $typeSelect = $formatField.find('select');
-				$typeSelect.on('change', () => {
-					$('<input/>', {
-						'class': 'hidden',
-						'name': 'format',
-						'value': $typeSelect.val()
-					}).appendTo($form);
-				});
-
-				$download = $('<button/>', {
-					type: 'button',
-					'class': 'btn submit fullwidth',
-					text: Craft.t('app', action)
-				}).appendTo($form);
-
-				var hud = new Garnish.HUD($('#file-actions'), $form);
-
-				$download.on('click', () => {
-					self._downloadTmFiles($typeSelect.val(), action);
-					hud.hide();
-				});
-            });
-		},
-		_downloadTmFiles: function($format, action) {
-			self.toggleLoader(true);
-
-			let files = Object.keys(self.$selectedFileIds);
-
-			$data = {
-				files: JSON.stringify(files),
-				orderId: $("input[type=hidden][name=id]").val(),
-				format: $format
-			}
-
-			actions = {
-				download: 'translations/files/create-tm-export-zip',
-				sync: 'translations/files/sync-tm-files'
-			}
-
-			Craft.sendActionRequest('POST', actions[action], {data: $data})
-				.then((response) => {
-					if (isAcclaroTranslator) {
-						Craft.cp.displaySuccess('Translation memory files sent successfully.');
-						location.reload();
-					} else if (response.data.tmFiles) {
-						let $downloadForm = $('#regenerate-preview-urls');
-						let $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.tmFiles})}).hide();
-						$downloadForm.append($iframe);
-						setTimeout(function() {
-							location.reload();
-						}, 100);
-					}
-				})
-				.catch(() => {
-					Craft.cp.displayError(Craft.t('app', 'Unable to '+ action +' files.'));
-					self.toggleLoader();
-				});
-
 		},
 		toggleLoader: function(show = false) {
 			if (show) {
