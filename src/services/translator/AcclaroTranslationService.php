@@ -250,6 +250,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
         }
 
         $this->updateOrder($order);
+        Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
         return Translations::$plugin->orderRepository->saveOrder($order);
     }
 

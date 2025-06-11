@@ -25,12 +25,24 @@
                 this.addListener(this.$widgetManagerBtn, 'click', 'showWidgetManager');
 
                 Garnish.$doc.ready($.proxy(function() {
+                    this.checkForUpdates();
                     new Craft.Grid($('#translations-dashboard'));
                     $('#translations-dashboard').css('visibility', 'visible');
                     this.$grid = $('#translations-dashboard');
                     this.grid = this.$grid.data('grid');
                     $('#newwidgetmenubtn').data('menubtn').menu.on('optionselect', $.proxy(this, 'handleNewWidgetOptionSelect'));
                 }, this));
+            },
+
+            checkForUpdates: function () {
+                Craft.sendActionRequest('GET', 'translations/widget/check-for-plugin-updates')
+                .then((response) => {
+                    let toolbar = $('#toolbar');
+                    let updateIcon = $('<a class="btn small go" href="utilities/updates" data-icon="info" style="margin: 7px 0px 10px 0px;"> Update available</a>');
+                    if (response.data.update) { 
+                        updateIcon.appendTo(toolbar);
+                    }
+                });
             },
 
             getTypeInfo: function(type, property, defaultValue) {

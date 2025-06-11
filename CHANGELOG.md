@@ -4,7 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 4.0.7 - 2024-02-11
+## 4.0.9 - 2025-06-06
+
+### Added
+- Database indexes for quick data retrival. ([AcclaroInc#599](https://github.com/AcclaroInc/pm-craft-translations/issues/599))
+
+### Fixed
+- Dashboard performace issues. ([AcclaroInc#600](https://github.com/AcclaroInc/pm-craft-translations/issues/600))
+
+## 4.0.8 - 2025-05-07
+
+### Updated
+- Bumped min [craftcms/cms](https://github.com/craftcms/cms/blob/5.x/CHANGELOG.md#5617---2025-04-10-critical) version to 5.6.17.
+
+### Fixed
+- One draft can be merged multiple times. ([AcclaroInc#591](https://github.com/AcclaroInc/pm-craft-translations/issues/591))
+- Merge into draft not persisting issue. ([AcclaroInc#589](https://github.com/AcclaroInc/pm-craft-translations/issues/589))
+
+## 4.0.7 - 2025-02-11
 
 ### Fixed
 - Widget overlapping in tranlsation dashbaord. ([AcclaroInc#560](https://github.com/AcclaroInc/pm-craft-translations/issues/560))
@@ -15,7 +32,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - Error notification for character limit. ([AcclaroInc#576](https://github.com/AcclaroInc/pm-craft-translations/issues/576))
 - UI issue where order details sidebar distorted due to change in craft's native css.
 
-## 4.0.6 - 2024-01-20
+## 4.0.6 - 2025-01-20
 
 ### Added
 - Support for table maker plugin. ([AcclaroInc#547](https://github.com/AcclaroInc/craft-translations/issues/547))
