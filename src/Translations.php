@@ -151,7 +151,7 @@ class Translations extends Plugin
         Event::on(
             Entry::class,
             Entry::EVENT_AFTER_DELETE,
-            function (ModelEvent $event) {
+            function (Event $event) {
                 self::$plugin->logHelper->log(
                     '['. __METHOD__ .'] Elements::EVENT_AFTER_DELETE_ELEMENT',
                     Constants::LOG_LEVEL_INFO
