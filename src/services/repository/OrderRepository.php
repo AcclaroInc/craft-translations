@@ -524,7 +524,7 @@ class OrderRepository
                         $currentContent = json_encode(array_values($currentContent['content']));
 
                         if (md5($sourceContent) !== md5($currentContent)) {
-                            array_push($originalIds, $file->id);
+                            array_push($originalIds, $file->elementId);
                         }
                     }
                 } catch (Exception $e) {
@@ -549,7 +549,7 @@ class OrderRepository
 		foreach ($order->getFiles() as $file) {
             if (! $file->canBeCheckedForTargetChanges()) continue;
 
-			if ($file->hasTmMisalignments()) array_push($originalIds, $file->id);
+			if ($file->hasTmMisalignments()) array_push($originalIds, $file->elementId);
 		}
 
 		return $originalIds;
