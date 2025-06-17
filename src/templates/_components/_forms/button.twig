@@ -2,8 +2,30 @@
 {% macro syncOrderButton(disabled) %}
     <div class="btngroup">
         {% set config = {
+            id: 'save-static-translation',
             class: 'big icon'|explodeClass|merge([disabled]),
             label: 'Sync orders'|t('app'),
+            type: 'submit',
+            attributes: {
+                value: 'submit',
+                data: {
+                    icon: 'refresh',
+                },
+            },
+            spinner: true,
+        } %}
+
+        {{ _self.button(config) }}
+    </div>
+{% endmacro %}
+
+{# Sync static translation to DB #}
+{% macro syncToDatabaseButton(disabled) %}
+    <div class="btngroup">
+        {% set config = {
+            id: 'sync-static-translation',
+            class: 'big icon'|explodeClass|merge([disabled]),
+            label: 'Sync with DB'|t('app'),
             type: 'submit',
             attributes: {
                 value: 'submit',
