@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.10 - 2025-06-12
+
+### Fixed
+- An issue where unexpected event encountered when merging into draft. ([AcclaroInc#581](https://github.com/AcclaroInc/craft-translations/issues/581))
+
 ## 4.0.9 - 2025-06-06
 
 ### Added
