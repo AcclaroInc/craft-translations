@@ -13,7 +13,6 @@ namespace acclaro\translations\services\fieldtranslator;
 
 use craft\base\Field;
 use craft\base\Element;
-use verbb\supertable\SuperTable;
 use craft\elements\db\ElementQuery;
 use acclaro\translations\services\ElementTranslator;
 
@@ -92,7 +91,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 			$fieldHandle => array(),
 		);
 
-		$blockTypes = SuperTable::$plugin->service->getBlockTypesByFieldId($field->id);
+		$blockTypes = $this->getBlockTypesByFieldId($field->id);
 
 		$blockType = $blockTypes[0] ?? $blockTypes; // There will only ever be one SuperTable_BlockType
 
@@ -149,7 +148,7 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 			$fieldHandle => array(),
 		);
 
-		$blockTypes = SuperTable::$plugin->service->getBlockTypesByFieldId($field->id);
+		$blockTypes = $this->getBlockTypesByFieldId($field->id);
 
 		$blockType = $blockTypes[0]; // There will only ever be one SuperTable_BlockType
 
@@ -227,5 +226,22 @@ class SuperTableFieldTranslator extends GenericFieldTranslator
 		}
 
 		return $wordCount;
+	}
+
+	/**
+	 * Retrieves the list of entry types (block types) for a Super Table field.
+	 *
+	 * In Super Table v5, blocks are stored as native Craft entries, and each field
+	 * is associated with one or more entry types. This method fetches those entry types
+	 * for a given field ID.
+	 *
+	 * @param int $fieldId The ID of the Super Table field.
+	 * @return array The array of EntryType models representing Super Table block types.
+	 */
+	public function getBlockTypesByFieldId(int $fieldId): array
+	{
+		$field = \Craft::$app->getFields()->getFieldById($fieldId);
+
+		return $field->getEntryTypes();
 	}
 }
