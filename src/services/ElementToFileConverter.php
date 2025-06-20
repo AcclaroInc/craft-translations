@@ -398,4 +398,15 @@ class ElementToFileConverter
                 return $content;
         }
     }
+
+    public function isValidXml($content) {
+        $dom = new \DOMDocument('1.0', 'utf-8');
+
+        //Turn LibXml Internal Errors Reporting On!
+        libxml_use_internal_errors(true);
+        $isValid = $dom->loadXML( $content );
+        libxml_clear_errors();
+
+        return $isValid;
+    }
 }
