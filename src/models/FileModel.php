@@ -301,7 +301,6 @@ class FileModel extends Model
          * No target changes will be detected at this point
          */
         if ($this->isComplete() && is_null($this->draftReference)) {
-            \Craft::error($this->draftReference, "bhu123");
             $this->draftReference = $this->getReferenceFileContent();
             Translations::$plugin->fileRepository->saveFile($this);
             return false;
@@ -309,7 +308,7 @@ class FileModel extends Model
 
         $dbVersion =  $this->isComplete() ? $this->draftReference : $this->reference;
 
-        if (!!$dbVersion) {
+        if (!!$dbVersion && Translations::$plugin->elementToFileConverter->isValidXml($dbVersion)) {
             $currentVersion = $this->getReferenceFileContent();
             return $this->_service->getIsContentChanged($dbVersion, $currentVersion);
         }
