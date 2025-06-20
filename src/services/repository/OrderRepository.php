@@ -332,7 +332,7 @@ class OrderRepository
 
             $translationService->sendOrderFile($order, $file, $settings);
 
-            if ($order->shouldIncludeTmFiles() && $file->hasTmMisalignments()) {
+            if ($order->shouldIncludeTmFiles() && $file->hasReference()) {
                 array_push($orderReferenceFiles, $file);
             }
         }
@@ -495,7 +495,7 @@ class OrderRepository
 
         if ($files = $order->getFiles()) {
             foreach ($files as $file) {
-                if ($file->isPublished() || ! $file->source || in_array($file->elementId, $originalIds)) continue;
+                if ($file->isPublished()) continue;
 
                 try {
                     $element = Craft::$app->getElements()->getElementById($file->elementId, null, $file->sourceSite);
@@ -524,7 +524,7 @@ class OrderRepository
                         $currentContent = json_encode(array_values($currentContent['content']));
 
                         if (md5($sourceContent) !== md5($currentContent)) {
-                            array_push($originalIds, $element->id);
+                            array_push($originalIds, $file->elementId);
                         }
                     }
                 } catch (Exception $e) {

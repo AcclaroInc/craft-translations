@@ -42,7 +42,7 @@
                                             {{ file.uiLabel }}
                                         </a>
                                         {% set sourceUpdated = file.elementId in isSourceChanged %}
-                                        {% set targetUpdated = order.trackTargetChanges and file.hasTmMisalignments and not file.isNew and not file.isModified %}
+                                        {% set targetUpdated = file.elementId in isTargetChanged %}
                                         {% if canUpdateFiles and not file.isPublished and (sourceUpdated or targetUpdated) %}
                                             <span class="warning order-warning font-size-15" data-icon="alert">
                                                 {% if sourceUpdated %}
@@ -72,12 +72,7 @@
                                             </div>
                                         {% endif %}
                                         {% set sourceUpdated = file.elementId in isSourceChanged %}
-                                        {% set targetUpdated = order.trackTargetChanges and file.hasTmMisAlignments and not file.isNew and not file.isModified %}
-
-                                        {# Ignore target changes for api order that are completed #}
-                                        {% if not order.hasDefaultTranslator and (order.isReviewReady or order.isComplete or order.isPublished) %}
-                                            {% set targetUpdated = false %}
-                                        {% endif %}
+                                        {% set targetUpdated = file.elementId in isTargetChanged %}
 
                                     {# Create Preview for each target entry #}
                                     {% if file.hasPreview or isCraftCommerce %}

@@ -222,8 +222,6 @@ class DraftRepository
 
                     $translationService->updateIOFile($order, $file);
 
-                    $file->reference = null;
-
                     Translations::$plugin->fileRepository->saveFile($file);
                 }
 
@@ -283,7 +281,7 @@ class DraftRepository
         }
 
         if (!($file instanceof FileModel)) {
-            $file = Translations::$plugin->fileRepository->makeNewFile();
+            $file = Translations::$plugin->fileRepository->getNewFile();
         }
 
         if (empty($draft)) {
