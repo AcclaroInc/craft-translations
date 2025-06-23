@@ -43,6 +43,9 @@ class MatrixFieldTranslator extends GenericFieldTranslator
                 $blockSource = $elementTranslator->toTranslationSource($block, $sourceSite);
 
                 foreach ($blockSource as $key => $value) {
+                    if ($key === 'slug' && str_starts_with($value, "__temp_")) {
+                        continue;
+                    }
                     $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
 
                     $source[$key] = $value;
