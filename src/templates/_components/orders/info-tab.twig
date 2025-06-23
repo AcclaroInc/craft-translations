@@ -116,7 +116,7 @@
 	<div class="field button">
 		<div class="heading">
 			<label id="source-files">Source files</label>
-			<form id="export-zip" class="utility" method="post" accept-charset="UTF-8">
+			<form id="export-source-files" class="utility" method="post" accept-charset="UTF-8">
 				{{ csrfInput() }}
 				{{ forms.hidden({
 						name: 'action',
@@ -129,7 +129,7 @@
 				}) }}
 			</form>
 		</div>
-		<button type="button" id="export-btn" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }}
+		<button type="button" id="export-source-btn" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }}
 			data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
 			<div class="utility-status"></div>
 		</button>
@@ -153,7 +153,8 @@
 			<div class="utility-status"></div>
 		</button>
 	</div>
-	{% js 'new Craft.Translations.ExportFiles(\'export-zip\',\'export-btn\');' %}
+	{% js 'new Craft.Translations.ExportFiles(\'source\');' %}
+
 	{% if order.hasTranslator('acclaro') %}
 		<div class="field button">
 			<div class="heading">
@@ -198,4 +199,49 @@
 			<button type="button" form="sync-order-google" class="btn icon right link-disabled" data-icon="refresh" value="submit" style="width: 125px;">{{ "Translate"|t('app') }}</button>
 		</div>
 	{% endif %}
+
+	{% if order.hasTranslator('acclaro') %}
+		<div class="field button">
+			<div class="heading">
+				<label>TM files</label>
+				<form id="sync-tm-files" class="utility" method="post" accept-charset="UTF-8">
+					{{ csrfInput() }}
+					{{ forms.hidden({
+						name: 'action',
+						value: 'translations/files/sync-tm-files',
+					}) }}
+
+					{{ forms.hidden({
+						name: 'orderId',
+						value: order.id
+					}) }}
+				</form>
+			</div>
+
+			<button type="submit" form="sync-tm-files" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
+		</div>
+	{% else %}
+		<div class="field button">
+			<div class="heading">
+				<label id="tm-files">TM files</label>
+				<form id="export-tm-files" class="utility" method="post" accept-charset="UTF-8">
+					{{ csrfInput() }}
+					{{ forms.hidden({
+							name: 'action',
+							value: 'translations/files/create-tm-export-zip',
+						}) }}
+
+					{{ forms.hidden({
+						name: 'orderId',
+						value: order.id
+					}) }}
+				</form>
+			</div>
+			<button type="button" id="export-tm-btn" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }}
+				data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
+				<div class="utility-status"></div>
+			</button>
+		</div>
+	{% endif %}
+	{% js 'new Craft.Translations.ExportFiles(\'tm\');' %}
 </div>

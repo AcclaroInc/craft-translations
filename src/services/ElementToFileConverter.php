@@ -129,7 +129,7 @@ class ElementToFileConverter
      * @param \craft\base\Element $element
      * @param [string] $format like [JSON, XML, CSV]
      * @param [array] $data
-     * @return file
+     * @return string
      */
     public function convert(Element $element, $format, $data) {
         if ($format == Constants::FILE_FORMAT_XML) {
@@ -379,5 +379,34 @@ class ElementToFileConverter
         }
 
         return $headers."\n".$content;
+    }
+
+    /**
+     * Convert content to the specified format
+     *
+     * @param string $content in xml format
+     * @param string $format in which to convert in
+     * @return string
+     */
+    public function convertTo($content, $format) {
+        switch ($format) {
+            case Constants::FILE_FORMAT_CSV:
+                return $this->xmlToCsv($content);
+            case Constants::FILE_FORMAT_JSON:
+                return $this->xmlToJson($content);
+            default:
+                return $content;
+        }
+    }
+
+    public function isValidXml($content) {
+        $dom = new \DOMDocument('1.0', 'utf-8');
+
+        //Turn LibXml Internal Errors Reporting On!
+        libxml_use_internal_errors(true);
+        $isValid = $dom->loadXML( $content );
+        libxml_clear_errors();
+
+        return $isValid;
     }
 }

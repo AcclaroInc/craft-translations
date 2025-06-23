@@ -83,6 +83,7 @@ class Install extends Migration
                     'wordCount'         => $this->integer(),
                     'source'            => $this->longText(),
                     'reference'         => $this->longText(),
+                    'draftReference'    => $this->longText(),
                     'target'            => $this->longText(),
                     'previewUrl'        => $this->text(),
                     'serviceFileId'     => $this->string()->defaultValue(''),
