@@ -11,19 +11,25 @@
 
 namespace acclaro\translations\services\repository;
 
-use acclaro\translations\Constants;
 use Craft;
 use craft\db\Query;
+use craft\elements\Entry;
 use craft\services\Users;
 use craft\helpers\Component;
 use craft\helpers\FileHelper;
+use craft\helpers\UrlHelper;
 use craft\events\WidgetEvent;
 use craft\base\WidgetInterface;
 use craft\widgets\MissingWidget;
+use yii\base\Component as BaseComponent;
 use craft\errors\WidgetNotFoundException;
 use craft\errors\MissingComponentException;
 use acclaro\translations\records\WidgetRecord;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\records\FileRecord;
+use craft\models\Updates as UpdatesModel;
+
 // Widget Classes
 use acclaro\translations\widgets\Ads;
 use acclaro\translations\widgets\BaseWidget;
@@ -32,7 +38,6 @@ use acclaro\translations\widgets\Translators;
 use acclaro\translations\widgets\RecentOrders;
 use acclaro\translations\widgets\LanguageCoverage;
 use acclaro\translations\widgets\NewAndModifiedEntries;
-use yii\base\Component as BaseComponent;
 
 class WidgetRepository extends BaseComponent
 {
@@ -373,6 +378,275 @@ class WidgetRepository extends BaseComponent
         return $closest;
     }
 
+    public function getNewsArticles($limit): array
+    {
+        return $this->_getArticles($limit);
+    }
+
+    public function getRecentEntries($limit, $days): array
+    {
+        $data = [];
+        $i = 0;
+
+        // Get array of entry IDs sorted by most recently updated
+        $fromDate = (new \DateTime("-{$days} days"))->format(\DateTime::ATOM);
+        $entries = Entry::find()
+            ->dateCreated(">= {$fromDate}")
+            ->orderBy(['dateCreated' => SORT_DESC])
+            ->ids();
+
+        $entriesInOrders = [];
+        $records = FileRecord::find()
+            ->select(['elementId'])
+            ->groupBy('elementId')
+            ->all();
+
+        foreach ($records as $key => $record) {
+            array_push($entriesInOrders, $record->elementId);
+        }
+
+        // Loop through entry IDs
+        foreach ($entries as $id) {
+            // exclude entries for which order has been created
+            if (in_array($id, $entriesInOrders)) continue;
+            // Now we can get the element
+            $element = Translations::$plugin->elementRepository->getElementById($id, Craft::$app->getSites()->getPrimarySite()->id);
+
+            // Current entries XML
+            $currentXML = Translations::$plugin->elementToFileConverter->convert(
+                $element,
+                Constants::FILE_FORMAT_XML,
+                [
+                    'sourceSite'    => Craft::$app->getSites()->getPrimarySite()->id,
+                    'targetSite'    => Craft::$app->getSites()->getPrimarySite()->id,
+                ]
+            );
+
+            $diffHtml = Translations::$plugin->fileRepository->getFileDiffHtml($currentXML);
+
+            // Create data array
+            $data[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
+            $data[$i]['entryId'] = $element->id;
+            $data[$i]['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
+            $data[$i]['entryDateTimestamp'] = $element->dateUpdated->format('Y-m-d H:i:s');
+            $data[$i]['siteId'] = $element->siteId;
+            $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
+            $data[$i]['entryUrl'] = $element->getCpEditUrl();
+            $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element));
+            $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
+            $data[$i]['diff'] = $diffHtml;
+
+            // Sort data array by most recent
+            usort($data, function($a, $b) {
+                return $b['entryDateTimestamp'] <=> $a['entryDateTimestamp'];
+            });
+
+            // Only return set limit
+            if ($i + 1 < $limit) {
+                $i++;
+            } else {
+                break;
+            }
+        }
+
+        return $data;
+    }
+
+    public function getRecentlyModifiedEntries($limit): array
+    {
+        $files = [];
+        $data = [];
+        $i = 0;
+
+        // Get array of entry IDs sorted by most recently updated
+        $entries = Entry::find()
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->ids();
+
+        // Get Files and order by most recently updated
+        $records = FileRecord::find()
+            ->where(['status' => Constants::FILE_STATUS_PUBLISHED])
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->all();
+        // Get in progress Files and order
+        $inProgressRecords = FileRecord::find()
+            ->where(['status' => Constants::FILE_STATUS_IN_PROGRESS])
+            ->orderBy(['dateUpdated' => SORT_DESC])
+            ->all();
+
+        // Build file array
+        foreach ($records as $key => $record) {
+            if (! array_key_exists($record->elementId, $files)) {
+                $files[$record->elementId] = $record;
+            }
+        }
+
+        // Filter out published records which are also present in $inProgressRecords and are created after than published ones.
+        foreach ($inProgressRecords as $key => $record) {
+            if (array_key_exists($record->elementId, $files)) {
+                if ($record->dateCreated > $files[$record->elementId]->dateCreated) {
+                    unset($files[$record->elementId]);
+                }
+            }
+        }
+
+        // Loop through entry IDs
+        foreach ($entries as $id) {
+            // Check to see if we have a file that meets the conditions
+            $fileRecord = $files[$id] ?? null;
+
+            if ($fileRecord) {
+                $fileId = $fileRecord->id;
+                // Now we can get the element
+                $element = Translations::$plugin->elementRepository->getElementById($id, Craft::$app->getSites()->getPrimarySite()->id);
+                // Get the elements translated file
+                $file = Translations::$plugin->fileRepository->getFileById($fileId);
+
+                // Is the element more recent than the file?
+                if ($element->dateUpdated->format('Y-m-d H:i:s') > $file->dateUpdated->format('Y-m-d H:i:s')) {
+                    // Translated file XML
+                    $translatedXML = $file->source;
+
+                    // Current entries XML
+                    $currentXML = Translations::$plugin->elementToFileConverter->convert(
+                        $element,
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    =>  Craft::$app->getSites()->getPrimarySite()->id,
+                            'targetSite'    => $file->targetSite,
+                            'orderId'       => $file->orderId,
+                        ]
+                    );
+
+                    $diffData = Translations::$plugin->fileRepository->getSourceTargetDifferences($currentXML, $translatedXML);
+                    $diffHtml = Translations::$plugin->fileRepository->getFileDiffHtml($diffData, true);
+
+                    $sourceString = '';
+                    $targetString = '';
+                    foreach ($diffData as $key => $field) {
+                        $sourceString .= $field['source'];
+                        $targetString .= $field['target'];
+                    }
+
+                    $wordCount = (Translations::$plugin->elementTranslator->getWordCount($element) - $file->wordCount);
+
+                    // Check to see if there is a difference between translated XML and current entries XML
+                    if (! empty($diffHtml) && base64_encode($sourceString) != base64_encode($targetString)) {
+                        // Create data array
+                        $data[$i]['entryName'] = Craft::$app->getEntries()->getEntryById($element->id)->title;
+                        $data[$i]['entryId'] = $element->id;
+                        $data[$i]['entryDate'] = $element->dateUpdated->format('M j, Y g:i a');
+                        $data[$i]['entryDateTimestamp'] = $element->dateUpdated->format('Y-m-d H:i:s');
+                        $data[$i]['siteId'] = $element->siteId;
+                        $data[$i]['siteLabel'] = Craft::$app->sites->getSiteById($element->siteId)->name. '<span class="light"> ('. Craft::$app->sites->getSiteById($element->siteId)->language. ')</span>';
+                        $data[$i]['entryUrl'] = $element->getCpEditUrl();
+                        $data[$i]['fileDate'] = $file->dateUpdated->format('M j, Y g:i a');
+                        $data[$i]['wordDifference'] = (int)$wordCount == $wordCount && (int)$wordCount > 0 ? '+'.$wordCount : $wordCount;
+                        $data[$i]['diff'] = $diffHtml;
+
+                        // Sort data array by most recent
+                        usort($data, function($a, $b) {
+                            return $b['entryDateTimestamp'] <=> $a['entryDateTimestamp'];
+                        });
+
+                        // Only return set limit
+                        if ($i + 1 < $limit) {
+                            $i++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    public function getLanguageCoverage($limit): array
+    {
+        $data = [];
+        $i = 0;
+
+        // Get array of site ids
+        $siteIds = Craft::$app->getSites()->getAllSiteIds();
+
+        // Grade based color options
+        $colorArr = array(
+            '85' => '#27AE60',
+            '75' => '#F1C40E',
+            '50' => '#F2842D',
+            '0' => '#D0021B'
+        );
+
+        // Loop through site ids
+        foreach ($siteIds as $key => $id) {
+            $site = Craft::$app->getSites()->getSiteById($id);
+
+            // Only show for target sites
+            if (!$site->primary) {
+                // Get entries count
+                $enabledEntries = Entry::find()
+                ->site($site)
+                // ->enabledForSite()
+                ->count();
+
+                // Get in progress entry translation count
+                $inQueue = FileRecord::find()
+                    ->select(['elementId'])
+                    ->distinct(true)
+                    ->where(['status' => [
+                        Constants::FILE_STATUS_NEW,
+                        Constants::FILE_STATUS_PREVIEW,
+                        Constants::FILE_STATUS_IN_PROGRESS,
+                        Constants::FILE_STATUS_COMPLETE,
+                        ]])
+                    ->andWhere(['targetSite' => $id])
+                    ->count();
+
+                $translated = FileRecord::find()
+                    ->select(['elementId'])
+                    ->distinct(true)
+                    ->where(['status' => Constants::FILE_STATUS_PUBLISHED])
+                    ->andWhere(['targetSite' => $id])
+                    ->count();
+
+                // Set data
+                $data[$i]['siteId'] = $id;
+                $data[$i]['name'] = $site->name;
+                $data[$i]['url'] = UrlHelper::cpUrl('settings/sites/'.$id);
+                $data[$i]['enabledEntries'] = $enabledEntries;
+                $data[$i]['inQueue'] = $inQueue;
+                $data[$i]['translated'] = $translated;
+                $data[$i]['percentage'] = $enabledEntries ? number_format((($translated / $enabledEntries)*100), 0) : 0;
+                $data[$i]['color'] = $colorArr[$this->getClosest((int) $data[$i]['percentage'], $colorArr)];
+
+                // Sort the data by highest percentage
+                usort($data, function($a, $b) {
+                    return $b['percentage'] <=> $a['percentage'];
+                });
+
+                if ($i + 1 < $limit) {
+                    $i++;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Check for new releases
+     *
+     * @return bool
+     */
+    public function checkForUpdate(): bool
+    {
+        return $this->_checkForUpdate(Constants::PLUGIN_HANDLE);
+    }
+
     // Private Methods
     // =========================================================================
     /**
@@ -403,7 +677,7 @@ class WidgetRepository extends BaseComponent
      * @param int|null $widgetId
      * @return WidgetRecord
      */
-    private function _getUserWidgetRecordById(int $widgetId = null): WidgetRecord
+    private function _getUserWidgetRecordById(?int $widgetId = null): WidgetRecord
     {
         $userId = Craft::$app->getUser()->getIdentity()->id;
 
@@ -493,5 +767,67 @@ class WidgetRepository extends BaseComponent
         return Craft::$app->getView()->renderTemplate('_includes/defaulticon.svg', [
             'label' => $widget::displayName()
         ]);
+    }
+
+    /**
+     * Returns the recent articles from Acclaro Blog RSS feed
+     *
+     * @return array
+     */
+    private function _getArticles($limit): array
+    {
+        $articles = [];
+
+        $client = Craft::createGuzzleClient(array(
+            'base_uri' => 'https://www.acclaro.com/',
+            'timeout' => 2.0,
+            'verify' => false
+        ));
+
+        try {
+            $response = $client->get('feed/');
+        } catch (\Exception $e) {
+            Translations::$plugin->logHelper->log("[" . __METHOD__ . "] . $e", Constants::LOG_LEVEL_ERROR);
+            return [];
+        }
+
+        $data = $response->getBody()->getContents();
+        $feed = simplexml_load_string($data);
+
+        $i = 0;
+        foreach ($feed->channel->item as $key => $article) {
+            $articles[$i]['title'] = (string) $article->title;
+            $articles[$i]['link'] = (string) $article->link;
+            $articles[$i]['pubDate'] = date('m/d/Y', strtotime($article->pubDate));
+
+            if ($i + 1 < $limit) {
+                $i++;
+            } else {
+                break;
+            }
+        }
+
+        return $articles;
+    }
+
+    private function _checkForUpdate($pluginHandle): bool
+    {
+        $hasUpdate = false;
+
+        try {
+            $updateData = Craft::$app->getApi()->getUpdates([]);
+    
+            $updates = new UpdatesModel($updateData);
+    
+            foreach ($updates->plugins as $key => $pluginUpdate) {
+                if ($key === $pluginHandle && $pluginUpdate->getHasReleases()) {
+                    $hasUpdate = true;
+                }
+            }
+        }catch(\Exception $e) {
+            Translations::$plugin->logHelper->log($e->getMessage(), Constants::LOG_LEVEL_ERROR);
+        }
+
+        return $hasUpdate;
     }
 }
