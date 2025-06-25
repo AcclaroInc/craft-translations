@@ -657,6 +657,9 @@ class Translations extends Plugin
                 $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
                 $craft->end();
             }
+        } else {
+            // For console requests, we don't need to check action segments
+            // This prevents the "Getting unknown property: craft\console\Request::actionSegments" error
         }
     }
 
