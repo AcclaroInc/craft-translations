@@ -228,7 +228,7 @@ class StaticTranslations extends Element
             'context' => $context,
             'disabledElementIds' => $disabledElementIds,
             'collapsedElementIds' => Craft::$app->getRequest()->getParam('collapsedElementIds'),
-            'selectable' => $selectable,
+            'selectable' => false,
             'sortable' => $sortable,
             'showHeaderColumn' => $viewState['showHeaderColumn'] ?? false,
             'inlineEditing' => $viewState['inlineEditing'] ?? false,
