@@ -100,9 +100,6 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             $fieldHandle => array(),
         );
 
-        $allBlockData = array();
-        $this->parseBlockData($allBlockData, $fieldData);
-
         $new = 0;
         foreach ($blocks as $i => $block) {
             $i = sprintf('new%s', ++$new);
@@ -112,7 +109,7 @@ class MatrixFieldTranslator extends GenericFieldTranslator
              * sites non localised block to non localised block.
              */
             $blockId = $field->getIsTranslatable($element) ? $i : $block->id;
-            $blockData = $allBlockData[$i] ?? array();
+            $blockData = $fieldData[$i] ?? array();
             $title = isset($blockData['title']) ? $blockData['title'] : $block->title; 
             $slug = isset($blockData['slug']) ? $blockData['slug'] : $block->slug; 
 

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.11 - 2025-07-08
+
+### Fixed
+- An issue where non-localised matrix blocks when applied overwrites the content to all sites of an entry. ([AcclaroInc#606](https://github.com/AcclaroInc/pm-craft-translations/issues/606))
+- Unexpected matrix blocks showing in dashboard widgets as new entries.
+
 ## 4.0.10 - 2025-06-12
 
 ### Fixed
