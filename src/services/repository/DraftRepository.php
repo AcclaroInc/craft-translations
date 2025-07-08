@@ -196,26 +196,30 @@ class DraftRepository
                 continue;
             }
 
-            /* Create transaction per file so that in case a file has validation error
-            only that will be rolledback and others can be processed */
-            $transaction = Craft::$app->db->beginTransaction();
-
-            $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
-            $isFileReady = $file->isReviewReady() || $file->isComplete();
-
-            if ($queue) {
-                $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
-            }
-
-            // Create draft only if not already exist
-            if ($file->hasDraft()) {
-                $file->status = Constants::FILE_STATUS_COMPLETE;
-                Translations::$plugin->fileRepository->saveFile($file);
-            } else {
-                $isNewDraft = $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
-            }
-
             try {
+                /* Create transaction per file so that in case a file has validation error
+                only that will be rolledback and others can be processed */
+                $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
+    
+                $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
+                $isFileReady = $file->isReviewReady();
+    
+                if ($queue) {
+                    $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
+                }
+    
+                // Create draft only if not already exist
+                if ($file->hasDraft()) {
+                    $file->status = Constants::FILE_STATUS_COMPLETE;
+                    Translations::$plugin->fileRepository->saveFile($file);
+                } else {
+                    $isNewDraft = $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+                }
+
+                /**
+                 * Only allow draft merge once, as merging multiple times
+                 * will cause issues with the non-localised blocks duplication.
+                 */
                 if ($isFileReady) {
                     // Translation Service Always Local
                     $translationService = $order->getTranslationService();
@@ -236,9 +240,13 @@ class DraftRepository
                 if ($publish) {
                     $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
                 }
-                $transaction->commit();
+                if ($transaction !== null) {
+                    $transaction->commit();
+                }
             } catch(Exception $e) {
-                $transaction->rollback();
+                if ($transaction !== null) {
+                    $transaction->rollBack();
+                }
                 $this->setError($e->getMessage());
                 continue;
             }

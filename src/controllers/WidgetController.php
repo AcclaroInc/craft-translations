@@ -397,6 +397,7 @@ class WidgetController extends BaseController
 
         // Get array of entry IDs sorted by most recently updated
         $entries = Entry::find()
+            ->sectionId(['not', null])
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->ids();
 
@@ -514,6 +515,7 @@ class WidgetController extends BaseController
         // Get array of entry IDs sorted by most recently updated
         $fromDate = (new \DateTime("-{$days} days"))->format(\DateTime::ATOM);
         $entries = Entry::find()
+            ->sectionId(['not', null])
             ->dateCreated(">= {$fromDate}")
             ->orderBy(['dateCreated' => SORT_DESC])
             ->ids();

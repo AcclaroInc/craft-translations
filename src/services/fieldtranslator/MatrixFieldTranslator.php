@@ -43,6 +43,9 @@ class MatrixFieldTranslator extends GenericFieldTranslator
                 $blockSource = $elementTranslator->toTranslationSource($block, $sourceSite);
 
                 foreach ($blockSource as $key => $value) {
+                    if ($key === 'slug' && str_starts_with($value, "__temp_")) {
+                        continue;
+                    }
                     $key = sprintf('%s.%s.%s', $field->handle, $blockId, $key);
 
                     $source[$key] = $value;
@@ -73,9 +76,12 @@ class MatrixFieldTranslator extends GenericFieldTranslator
         foreach ($blocks as $i => $block) {
             $blockId = $block->id ?? sprintf('new%s', ++$i);
             $post[$fieldHandle][$blockId] = array(
-                'type'              => $block->getType()->handle,
-                'enabled'           => $block->enabled,
-                'fields'            => $elementTranslator->toPostArray($block),
+                'title'         => $block->title,
+                'slug'          => $block->slug,
+                'type'          => $block->getType()->handle,
+                'enabled'       => $block->enabled,
+                'collapsed'     => $block->collapsed,
+                'fields'        => $elementTranslator->toPostArray($block),
             );
         }
         return $post;
@@ -94,25 +100,25 @@ class MatrixFieldTranslator extends GenericFieldTranslator
             $fieldHandle => array(),
         );
 
+        $allBlockData = array();
+        $this->parseBlockData($allBlockData, $fieldData);
+
         $new = 0;
         foreach ($blocks as $i => $block) {
             $i = sprintf('new%s', ++$new);
 
-            // Check for old key in case an order was created before plugin update
-            $oldKey = sprintf('%s_%s', $block->fieldId, $block->canonicalId);
             /**
              * Block id changes for localised block so use $i and using same for non localised blocks merges other
              * sites non localised block to non localised block.
              */
             $blockId = $field->getIsTranslatable($element) ? $i : $block->id;
-            $blockData = $fieldData[$i] ?? $fieldData[$oldKey] ?? array();
-
-            $titleDiff = (!empty($fieldData[$i]['title']) && $block->title !== $fieldData[$i]['title'])
-                ? $fieldData[$i]['title']
-                : ($block->title ?? '');
+            $blockData = $allBlockData[$i] ?? array();
+            $title = isset($blockData['title']) ? $blockData['title'] : $block->title; 
+            $slug = isset($blockData['slug']) ? $blockData['slug'] : $block->slug; 
 
             $post[$fieldHandle][$blockId] = array(
-                'title'             => $titleDiff,
+                'title'             => $title,
+                'slug'              => $slug,
                 'type'              => $block->getType()->handle,
                 'enabled'           => $block->getAttributes()['enabled'],
                 'collapsed'         => $block->getAttributes()['collapsed'],
