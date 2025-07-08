@@ -11,8 +11,8 @@
 namespace acclaro\translations\widgets;
 
 use Craft;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
-use acclaro\translations\elements\Order;
 use acclaro\translations\records\WidgetRecord;
 
 /**
@@ -78,9 +78,20 @@ class RecentOrders extends BaseWidget
     {
         $view = Craft::$app->getView();
 
-        $orders = $this->_getOrders();
+        $ordersCallback = fn() => Translations::$plugin->orderRepository->getOrders($this->limit);
 
-        $orderCountAcclaro = Translations::$plugin->orderRepository->getAcclaroOrdersCount();
+        $orderCountAcclaroCallback = fn() => Translations::$plugin->orderRepository->getAcclaroOrdersCount();
+
+        $orders = Translations::$plugin->cacheHelper->getOrSetCache(
+            Constants::CACHE_KEY_RECENT_ORDERS_WIDGET,
+            $ordersCallback,
+            Constants::CACHE_TIMEOUT
+        );
+        $orderCountAcclaro = Translations::$plugin->cacheHelper->getOrSetCache(
+            Constants::CACHE_KEY_ACCLARO_ORDERS_COUNT,
+            $orderCountAcclaroCallback,
+            Constants::CACHE_TIMEOUT
+        );
 
         return $view->renderTemplate('translations/_components/widgets/RecentOrders/body', ['orders' => $orders, 'orderCountAcclaro' => $orderCountAcclaro]);
     }
@@ -101,20 +112,6 @@ class RecentOrders extends BaseWidget
     public static function isSelectable(): bool
     {
         return (static::allowMultipleInstances() || !static::doesUserHaveWidget(static::class));
-    }
-
-    /**
-     * Returns the recent orders
-     *
-     * @return array
-     */
-    private function _getOrders(): array
-    {
-        $query = Order::find()
-            ->orderBy(['dateUpdated' => SORT_DESC])
-            ->limit($this->limit);
-
-        return $query->all();
     }
 
     /**

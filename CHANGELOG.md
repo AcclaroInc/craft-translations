@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.10 - 2025-06-12
+
+### Fixed
+- An issue where unexpected event encountered when merging into draft. ([AcclaroInc#581](https://github.com/AcclaroInc/craft-translations/issues/581))
+
+## 4.0.9 - 2025-06-06
+
+### Added
+- Database indexes for quick data retrival. ([AcclaroInc#599](https://github.com/AcclaroInc/pm-craft-translations/issues/599))
+
+### Fixed
+- Dashboard performace issues. ([AcclaroInc#600](https://github.com/AcclaroInc/pm-craft-translations/issues/600))
+
 ## 4.0.8 - 2025-05-07
 
 ### Updated
