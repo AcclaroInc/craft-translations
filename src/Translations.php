@@ -46,6 +46,7 @@ use acclaro\translations\assetbundles\NavigationAssets;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\job\SyncDataToHubSpotJob;
+use acclaro\translations\services\QueueHelper;
 
 class Translations extends Plugin
 {
@@ -193,7 +194,7 @@ class Translations extends Plugin
                         ))->send();
                     }
 
-                    Craft::$app->queue->push(new SyncDataToHubSpotJob());
+                    QueueHelper::push(new SyncDataToHubSpotJob());
                 }
             }
         );
@@ -218,7 +219,7 @@ class Translations extends Plugin
         // Let's clean up the drafts table
         $drafts = self::$plugin->fileRepository->getAllDraftIds();
         if ($drafts) {
-            Craft::$app->queue->push(new DeleteDrafts([
+            QueueHelper::push(new DeleteDrafts([
                 'description' => Constants::JOB_DELETING_DRAFT,
                 'drafts' => $drafts,
             ]));
@@ -756,7 +757,7 @@ class Translations extends Plugin
             }
 
             if ($drafts) {
-                Craft::$app->queue->push(new DeleteDrafts([
+                QueueHelper::push(new DeleteDrafts([
                     'description' => Constants::JOB_DELETING_DRAFT,
                     'drafts' => $drafts,
                 ]));
