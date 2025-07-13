@@ -76,11 +76,7 @@
                     }
                 });
 
-                var $data = {
-                    limit: params
-                };
-
-                Craft.sendActionRequest('POST', 'translations/widget/get-recently-modified', {data: $data})
+                Craft.sendActionRequest('POST', 'translations/widget/get-recently-modified', {data: params})
                     .then((response) => {
                         this.$widget.removeClass('loading');
                         this.$widget.find('.elements').removeClass('hidden');
