@@ -391,6 +391,11 @@ class WidgetRepository extends BaseComponent
         // Get array of entry IDs sorted by most recently updated
         $fromDate = (new \DateTime("-{$days} days"))->format(\DateTime::ATOM);
         $entries = Entry::find()
+            ->drafts(null)
+            ->draftOf(false)
+            ->provisionalDrafts(null)
+            ->revisions(null)
+            ->sectionId(['not', null])
             ->dateCreated(">= {$fromDate}")
             ->orderBy(['dateCreated' => SORT_DESC])
             ->ids();
@@ -452,14 +457,21 @@ class WidgetRepository extends BaseComponent
         return $data;
     }
 
-    public function getRecentlyModifiedEntries($limit): array
+    public function getRecentlyModifiedEntries($limit, $days): array
     {
         $files = [];
         $data = [];
         $i = 0;
 
+        $fromDate = (new \DateTime("-{$days} days"))->format(\DateTime::ATOM);
         // Get array of entry IDs sorted by most recently updated
         $entries = Entry::find()
+            ->sectionId(['not', null])
+            ->drafts(null)
+            ->draftOf(false)
+            ->provisionalDrafts(null)
+            ->revisions(null)
+            ->dateUpdated(">= {$fromDate}")
             ->orderBy(['dateUpdated' => SORT_DESC])
             ->ids();
 
@@ -588,7 +600,10 @@ class WidgetRepository extends BaseComponent
                 // Get entries count
                 $enabledEntries = Entry::find()
                 ->site($site)
-                // ->enabledForSite()
+                ->sectionId(['not', null])
+                ->drafts(null)
+                ->draftOf(false)
+                ->revisions(null)
                 ->count();
 
                 // Get in progress entry translation count

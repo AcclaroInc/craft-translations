@@ -296,7 +296,8 @@ class WidgetController extends BaseController
 
         // Set variables
         $limit = Craft::$app->getRequest()->getParam('limit');
-        $recentlyModifiedCallback = fn() => $this->service->getRecentlyModifiedEntries($limit);
+        $days = Craft::$app->getRequest()->getParam('days', '7');
+        $recentlyModifiedCallback = fn() => $this->service->getRecentlyModifiedEntries($limit, $days);
 
         $data = Translations::$plugin->cacheHelper->getOrSetCache(
             Constants::CACHE_KEY_RECENTLY_MODIFIED_WIDGET,

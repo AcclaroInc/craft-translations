@@ -23,6 +23,7 @@ use yii\web\NotFoundHttpException;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\services\QueueHelper;
 use acclaro\translations\services\job\ImportFiles;
 
 /**
@@ -262,7 +263,7 @@ class FilesController extends BaseController
 
                             // Process files via job or directly based on order "size"
                             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
-                                $job = Craft::$app->queue->push(new ImportFiles([
+                                $job = QueueHelper::push(new ImportFiles([
                                     'description' => Constants::JOB_IMPORTING_FILES,
                                     'orderId' => $orderId,
                                     'totalFiles' => $total_files,
@@ -337,7 +338,7 @@ class FilesController extends BaseController
 
                         // Process files via job or directly based on file "size"
                         if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
-                            $job = Craft::$app->queue->push(new ImportFiles([
+                            $job = QueueHelper::push(new ImportFiles([
                                 'description' => Constants::JOB_IMPORTING_FILES,
                                 'orderId' => $orderId,
                                 'totalFiles' => $total_files,

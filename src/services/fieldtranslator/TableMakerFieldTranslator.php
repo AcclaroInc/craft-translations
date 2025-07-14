@@ -116,7 +116,7 @@ class TableMakerFieldTranslator extends GenericFieldTranslator
 
     private function isColumnDropdown($columnsData)
     {
-        return $columnsData['type'] === 'select';
+        return isset($columnsData['type']) && $columnsData['type'] === 'select';
     }
 
     private function handleDropdownValues(&$post, &$row, $fieldHandle, $i)
