@@ -7,13 +7,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ## 4.1.0 - 2025-07-14
 
 ### Added
-- Feature to static translations to database for load balanced environments.((AcclaroInc##580)(https://github.com/AcclaroInc/pm-craft-translations/issues/580))
+- Feature to static translations to database for load balanced environments.([AcclaroInc#580](https://github.com/AcclaroInc/pm-craft-translations/issues/580))
 
 ### Fixed
-- Widget timeout issue when opening plugin dashboard.((AcclaroInc#608)(https://github.com/AcclaroInc/pm-craft-translations/issues/608))
-- Action segment error when request intiated via bots or code.((AcclaroInc#586)(https://github.com/AcclaroInc/craft-translations/pull/586))
-- Error handling supertable fields.((AcclaroInc#601)(https://github.com/AcclaroInc/pm-craft-translations/issues/601))
-- An issue where queued jobs were delayed in between large stack of queues.((AcclaroInc#612)(https://github.com/AcclaroInc/pm-craft-translations/issues/612))
+- Widget timeout issue when opening plugin dashboard.([AcclaroInc#608](https://github.com/AcclaroInc/pm-craft-translations/issues/608))
+- Action segment error when request intiated via bots or code.([AcclaroInc#586](https://github.com/AcclaroInc/craft-translations/pull/586))
+- Error handling supertable fields.([AcclaroInc#601](https://github.com/AcclaroInc/pm-craft-translations/issues/601))
+- An issue where queued jobs were delayed in between large stack of queues.([AcclaroInc#612](https://github.com/AcclaroInc/pm-craft-translations/issues/612))
+- Track target changes and Tm alighnment not working as expected. ([AcclaroInc#597](https://github.com/AcclaroInc/pm-craft-translations/issues/597))
 
 ## 4.0.11 - 2025-07-08
 
