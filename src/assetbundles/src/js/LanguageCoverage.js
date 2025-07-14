@@ -27,11 +27,7 @@
                     autoShow: false,
                 });
 
-                var $data = {
-                    limit: params
-                };
-
-                Craft.sendActionRequest('POST', 'translations/widget/get-language-coverage', {data: $data})
+                Craft.sendActionRequest('POST', 'translations/widget/get-language-coverage', {data: params})
                     .then((response) => {
                         this.$widget.removeClass('loading');
                         this.$widget.find('.elements').removeClass('hidden');
