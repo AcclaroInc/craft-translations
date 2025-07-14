@@ -49,11 +49,10 @@ class FilesController extends BaseController
 
     public function actionCreateExportZip()
     {
-        $params = Craft::$app->getRequest()->getRequiredBodyParam('params');
+        $orderId = Craft::$app->getRequest()->getRequiredBodyParam('orderId');
+        $fileFormat = Craft::$app->getRequest()->getBodyParam('format', Constants::FILE_FORMAT_XML);;
 
-        $fileFormat = $params['format'] ?? Constants::FILE_FORMAT_XML;
-
-        $order = Translations::$plugin->orderRepository->getOrderById($params['orderId']);
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         $errors = array();
 
@@ -81,7 +80,6 @@ class FilesController extends BaseController
         //Iterate over each file on this order
         if ($order->files)
         {
-            $hasMisalignment = $order->isTmMisaligned(false);
             foreach ($order->getFiles() as $file)
             {
                 // skip failed files
@@ -110,7 +108,10 @@ class FilesController extends BaseController
                     $fileContent = $file->source;
                 }
 
-                if ($order->includeTmFiles && $hasMisalignment) $fileName = "source/" . $fileName;
+                if ($order->includeTmFiles) {
+                    $fileName = "source/" . $fileName;
+                    $file->reference = $file->getReferenceFileContent();
+                }
 
                 if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
                     $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
@@ -118,19 +119,13 @@ class FilesController extends BaseController
                 }
 
                 /** Check if entry exists in target site for reference comparison */
-                if ($hasMisalignment && Translations::$plugin->elementRepository->getElementById($file->elementId, $file->targetSite)) {
-                    $tmFile = $file->getTmMisalignmentFile($fileFormat);
-                    $fileName = $tmFile['fileName'];
+                if ($order->includeTmFiles && $file->hasReference()) {
+                    $fileName = $file->getReferenceFileName($fileFormat);
 
-                    if ($order->includeTmFiles && $file->hasTmMisalignments(true)) {
-
-                        if (! $zip->addFromString("references/" . $fileName, $tmFile['fileContent'])) {
-                            $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
-                            Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_ERROR );
-                        }
+                    if (! $zip->addFromString("references/" . $fileName, $file->reference)) {
+                        $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
+                        Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_ERROR );
                     }
-
-                    $file->reference = $tmFile['reference'];
                 }
 
                 if ($file->isNew() || $file->isModified()) {
@@ -157,7 +152,7 @@ class FilesController extends BaseController
         Craft::$app->getElements()->saveElement($order);
         $transaction->commit();
 
-        return $this->asSuccess(null, ['translatedFiles' => $zipDest]);
+        return $this->asSuccess(null, ['files' => $zipDest]);
     }
 
     /**
@@ -459,7 +454,6 @@ class FilesController extends BaseController
     public function actionCreateTmExportZip() {
         $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
         $format = Craft::$app->getRequest()->getBodyParam('format');
-        $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
 
         try {
             $order = Translations::$plugin->orderRepository->getOrderById($orderId);
@@ -482,13 +476,11 @@ class FilesController extends BaseController
             //Iterate over each file on this order
             if ($order->files) {
                 foreach ($order->getFiles() as $file) {
-                    if (! in_array($file->id, $files) || !$file->hasTmMisalignments()) continue;
+                    $fileName = $file->getReferenceFileName($format);
+                    $fileContent = $file->getReferenceFileContent();
+                    $tmContent = Translations::$plugin->elementToFileConverter->convertTo($fileContent, $format);
 
-                    $tmFile = $file->getTmMisalignmentFile($format);
-                    $fileName = $tmFile['fileName'];
-                    $fileContent = $tmFile['fileContent'];
-
-                    if (! $fileContent || ! $zip->addFromString($fileName, $fileContent)) {
+                    if (! $zip->addFromString($fileName, $tmContent)) {
                         return $this->asFailure(sprintf(
                             $this->getErrorMessage('There was an error adding the file {%s} to the zip. {%s}'),
                             $fileName,
@@ -496,7 +488,11 @@ class FilesController extends BaseController
                         ));
                     }
 
-                    $file->reference = $tmFile['reference'];
+                    if ($file->isComplete()) {
+                        $file->draftReference = $fileContent;
+                    } else {
+                        $file->reference = $fileContent;
+                    }
                     Translations::$plugin->fileRepository->saveFile($file);
                 }
             }
@@ -508,29 +504,26 @@ class FilesController extends BaseController
             return $this->asJson(['success' => false, 'message' => $this->getErrorMessage($e->getMessage())]);
         }
 
-        return $this->asSuccess(null, ['tmFiles' => $zipDest]);
+        return $this->asSuccess(null, ['files' => $zipDest]);
     }
 
     /**
      * Send Translation memory files to translation service provider
      */
     public function actionSyncTmFiles() {
-        $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
-        $format = Craft::$app->getRequest()->getBodyParam('format');
-        $files = json_decode(Craft::$app->getRequest()->getBodyParam('files'), true);
+        $orderId = Craft::$app->getRequest()->getRequiredBodyParam('orderId');
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         //Iterate over each file on this order and only process if trackTargetChanges is enabled
-        if ($order->files && $order->trackTargetChanges) {
+        if ($order->files) {
             $translationService = $order->getTranslationService();
 
             foreach ($order->getFiles() as $file) {
-                if (in_array($file->id, $files) && $file->hasTmMisalignments()) {
-                    $translationService->sendOrderReferenceFile($order, $file, $format);
-                }
+                $translationService->sendOrderReferenceFile($order, $file);
             }
         }
-        return $this->asJson(['success' => true]);
+        $this->setSuccess("Done syncing tm files for order '{$order->title}'");
+        return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
     }
 
     /**

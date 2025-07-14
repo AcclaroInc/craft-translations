@@ -13,11 +13,11 @@
         $form: null,
         $formId: null,
 
-        init: function(formId, buttonId) {
-            this.$formId = formId;
-            this.$form = $('#' + formId);
-            this.$trigger = $('#export-btn');
-            this.$exportBtn = $('#' + buttonId);
+        init: function(fileType) {
+            this.$formId = 'export-'+fileType+'-files';
+            this.$form = $('#' + this.$formId);
+            this.$trigger = $('#export-'+fileType+'-btn');
+            this.$exportBtn = $('#export-' + fileType + '-btn');
             this.$status = this.$exportBtn.find(".utility-status");
 
             this.addListener(this.$exportBtn, 'click', '_showExportHud');
@@ -47,14 +47,13 @@
                         complete: $.proxy(function() {
                             var postData = Garnish.getPostData(this.$form),
                                 params = Craft.expandPostArray(postData);
-                                $data = {'params' : params};
 
-                            Craft.sendActionRequest('POST', params.action, {data: $data})
+                            Craft.sendActionRequest('POST', params.action, {data: params})
                                 .then((response) => {
                                     this.updateProgressBar();
 
-                                    if (response.data.translatedFiles) {
-                                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.translatedFiles})}).hide();
+                                    if (response.data.files) {
+                                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.files})}).hide();
                                         this.$form.append($iframe);
                                     }
 
