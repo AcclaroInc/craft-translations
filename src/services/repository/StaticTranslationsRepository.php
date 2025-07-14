@@ -19,6 +19,7 @@ use craft\helpers\ElementHelper;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\elements\db\ElementQueryInterface;
+use acclaro\translations\services\QueueHelper;
 use acclaro\translations\elements\StaticTranslations;
 use acclaro\translations\models\StaticTranslationsModel;
 use acclaro\translations\records\StaticTranslationsRecord;
@@ -289,7 +290,7 @@ class StaticTranslationsRepository
      * Fire sync static translation job
      */
     public function fireStaticTranslationSync() {
-        $job = Craft::$app->queue->push(new SyncStaticTranslations());
+        $job = QueueHelper::push(new SyncStaticTranslations());
 
         return $job;
     }
