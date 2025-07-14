@@ -19,21 +19,15 @@ class QueueHelper
     /**
      * The job priority, if supported. Jobs with a lower priority will be executed first. (Default is 1024.)
      */
-    public static $priority;
+    public static $priority = 1;
     /**
      * The maximum time the queue should wait around for the job to be handled before assuming it failed.
      */
-    public static $ttr;
+    public static $ttr = 1500;
     /**
      * The execution delay (in seconds), if supported.
      */
-    public static $delay;
-
-    public function __construct(){
-        self::$priority = 1;
-        self::$ttr = 1500;
-        self::$delay = 0;
-    }
+    public static $delay = null;
 
     /**
      * Push a job onto the queue.
