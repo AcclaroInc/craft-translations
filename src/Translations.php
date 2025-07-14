@@ -46,6 +46,8 @@ use acclaro\translations\assetbundles\NavigationAssets;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\job\SyncDataToHubSpotJob;
+use acclaro\translations\services\QueueHelper;
+use acclaro\translations\services\job\SyncStaticTranslations;
 
 class Translations extends Plugin
 {
@@ -193,7 +195,8 @@ class Translations extends Plugin
                         ))->send();
                     }
 
-                    Craft::$app->queue->push(new SyncDataToHubSpotJob());
+                    QueueHelper::push(new SyncDataToHubSpotJob());
+                    QueueHelper::push(new SyncStaticTranslations());
                 }
             }
         );
@@ -218,7 +221,7 @@ class Translations extends Plugin
         // Let's clean up the drafts table
         $drafts = self::$plugin->fileRepository->getAllDraftIds();
         if ($drafts) {
-            Craft::$app->queue->push(new DeleteDrafts([
+            QueueHelper::push(new DeleteDrafts([
                 'description' => Constants::JOB_DELETING_DRAFT,
                 'drafts' => $drafts,
             ]));
@@ -689,6 +692,9 @@ class Translations extends Plugin
                 $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
                 $craft->end();
             }
+        } else {
+            // For console requests, we don't need to check action segments
+            // This prevents the "Getting unknown property: craft\console\Request::actionSegments" error
         }
     }
 
@@ -756,7 +762,7 @@ class Translations extends Plugin
             }
 
             if ($drafts) {
-                Craft::$app->queue->push(new DeleteDrafts([
+                QueueHelper::push(new DeleteDrafts([
                     'description' => Constants::JOB_DELETING_DRAFT,
                     'drafts' => $drafts,
                 ]));

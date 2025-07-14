@@ -10,6 +10,7 @@
 
 namespace acclaro\translations\services\job;
 
+use Craft;
 use craft\queue\BaseJob;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
@@ -24,6 +25,12 @@ class CreateDrafts extends BaseJob
 
     public function execute($queue): void
     {
+        // Set a fake action segment for console requests to prevent errors in event listeners
+        $request = Craft::$app->getRequest();
+        if ($request->getIsConsoleRequest() && method_exists($request, 'setActionSegments')) {
+            $request->setActionSegments(['translations', 'order', 'run']);
+        }
+        
         Translations::$plugin->draftRepository->createOrderDrafts(
             $this->orderId, $this->wordCounts, $this->publish, $this->fileIds, $queue
         );

@@ -38,6 +38,7 @@ class FileRepository
         'wordCount',
         'source',
         'reference',
+        'draftReference',
         'target',
         'previewUrl',
         'serviceFileId',
@@ -132,7 +133,7 @@ class FileRepository
     /**
      * @return \acclaro\translations\models\FileModel
      */
-    public function makeNewFile()
+    public function getNewFile()
     {
         return new FileModel();
     }
@@ -319,29 +320,11 @@ class FileRepository
      */
     public function createOrderFiles($order, $wordCounts)
     {
-        // ? Create File for each element per target language
+        // Create File for each element per target language
         foreach ($order->getTargetSitesArray() as $key => $targetSite) {
             foreach ($order->getElements() as $element) {
                 $wordCount = $wordCounts[$element->id] ?? 0;
-
-                $file = $this->makeNewFile();
-
-                $file->orderId = $order->id;
-                $file->elementId = $element->id;
-                $file->sourceSite = $order->sourceSite;
-                $file->targetSite = $targetSite;
-
-                $file->source = Translations::$plugin->elementToFileConverter->convert(
-                    $element,
-                    Constants::FILE_FORMAT_XML,
-                    [
-                        'sourceSite'    => $order->sourceSite,
-                        'targetSite'    => $targetSite,
-                        'wordCount'     => $wordCount,
-                        'orderId'       => $order->id
-                    ]
-                );
-                $file->wordCount = $wordCount;
+                $file = $this->createOrderFile($order, $element->id, $targetSite, $wordCount);
 
                 Translations::$plugin->fileRepository->saveFile($file);
             }
@@ -349,28 +332,31 @@ class FileRepository
         return true;
     }
 
-    public function createOrderFile($order, $elementId, $targetSite)
+    public function createOrderFile($order, $elementId, $targetSite, $wordCount = null)
     {
         $element = Translations::$plugin->elementRepository->getElementById($elementId, $order->sourceSite);
-        $wordCount = Translations::$plugin->elementTranslator->getWordCount($element) ?? 0;
+        $wordCount = $wordCount ?? Translations::$plugin->elementTranslator->getWordCount($element) ?? 0;
 
-        $file = $this->makeNewFile();
+        $fileData = [
+            'sourceSite'    => $order->sourceSite,
+            'targetSite'    => $targetSite,
+            'wordCount'     => $wordCount,
+            'orderId'       => $order->id
+        ];
 
-        $file->orderId = $order->id;
-        $file->elementId = $element->id;
-        $file->sourceSite = $order->sourceSite;
-        $file->targetSite = $targetSite;
-        $file->source = Translations::$plugin->elementToFileConverter->convert(
-            $element,
-            Constants::FILE_FORMAT_XML,
-            [
-                'sourceSite'    => $order->sourceSite,
-                'targetSite'    => $targetSite,
-                'wordCount'     => $wordCount,
-                'orderId'       => $order->id,
-            ]
-        );
-        $file->wordCount = $wordCount;
+        $data = [
+            'orderId' => $order->id,
+            'elementId' => $element->id,
+            'sourceSite' => $order->sourceSite,
+            'targetSite' => $targetSite,
+            'source' => Translations::$plugin->elementToFileConverter->convert(
+                $element, Constants::FILE_FORMAT_XML, $fileData
+            ),
+            'wordCount' => $wordCount,
+        ];
+        $file = $this->createFileWithData($data);
+
+        $file->reference = $file->getReferenceFileContent();
 
         return $file;
     }
@@ -449,16 +435,6 @@ class FileRepository
         }
 
         return '<table class="diffTable data"><tbody>' . $mainContent . '</tbody></table>';
-    }
-
-    /**
-     * @param \acclaro\translations\models\FileModel $file
-     */
-    public function isReferenceChanged($file)
-    {
-        $currentData = $file->getTmMisalignmentFile()['reference'];
-
-        return md5($currentData) !== md5($file->reference);
     }
 
     /**
@@ -679,7 +655,7 @@ class FileRepository
 
         return json_encode($tmContent);
     }
-    
+
     private function referenceAsXml($source, $target, $meta)
     {
         $dom = new DOMDocument('1.0', 'utf-8');
@@ -740,5 +716,53 @@ class FileRepository
         }
 
         return $dom->saveXML();
+    }
+
+    private function createFileWithData($data): FileModel
+    {
+        $file = $this->getNewFile();
+
+        $file->orderId = $data["orderId"];
+        $file->elementId = $data["elementId"];
+        $file->sourceSite = $data["sourceSite"];
+        $file->targetSite = $data["targetSite"];
+        $file->source = $data["source"];
+        $file->wordCount = $data["wordCount"];
+
+        return $file;
+    }
+
+    /**
+     * Check if the content of source and target files are changed
+     *
+     * @param $source is the version stored in database
+     * @param $target is the current version of source/draft element
+     * @return bool
+     */
+    public function getIsContentChanged($source, $target): bool
+    {
+        $converter = Translations::$plugin->elementToFileConverter;
+        $sourceContent = json_decode($converter->xmlToJson($source), true);
+        $targetContent = json_decode($converter->xmlToJson($target), true);
+        
+        if (isset($targetContent['content']) && isset($sourceContent['content'])) {
+            // Removed temporary slugs comming in from drafts
+            $sourceContent = $sourceContent['content'];
+            $targetContent = $targetContent['content'];
+
+            $commonKeys = array_intersect_key($sourceContent, $targetContent);
+            $targetContent = array_intersect_key($targetContent, $commonKeys);
+            $sourceContent = json_encode(array_values($sourceContent));
+            $targetContent = json_encode(array_values($targetContent));
+            /**
+             * Replace `\u00a0` created by mysql with `space`
+             * as mysql replaces any space before special char like ?, ! with `\u00a0`
+             */
+            $sourceContent = str_replace('\u{00a0}', ' ', $sourceContent);
+            $targetContent = str_replace('\u{00a0}', ' ', $targetContent);
+
+            return md5($sourceContent) !== md5($targetContent);
+        }
+        return false;
     }
 }

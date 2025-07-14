@@ -666,16 +666,14 @@ class Order extends Element
         return $this->statusLabel;
     }
 
-    public function isTmMisaligned($ignoreNew = true)
+    public function isTmMisaligned()
     {
-        if (!$this->hasDefaultTranslator() && ($this->isComplete() || $this->isReviewReady() || $this->isPublished())) {
+        if ($this->isPublished() || $this->isCanceled() || $this->isPending()) {
             return false;
         }
 
         foreach ($this->getFiles() as $file) {
-            if ($file->isPublished() || ($ignoreNew && $file->isNew())) continue;
-
-            if ($file->hasTmMisalignments(!$ignoreNew)) return true;
+            if ($file->hasTmMisalignments()) return true;
         }
 
         return false;

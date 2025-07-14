@@ -4,7 +4,7 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '2.0.1';
+    const PLUGIN_SCHEMA_VERSION = '2.0.2';
     const CRAFT_MIN_VERSION = '5.0.0';
     const WORD_COUNT_LIMIT  = 2000;
     const PLUGIN_HANDLE     = 'translations';
@@ -172,6 +172,7 @@ class Constants
     const TABLE_ASSET_DRAFT         = '{{%translations_assetdrafts}}';
     const TABLE_ACTIVITY_LOG        = '{{%translations_activitylogs}}';
     const TABLE_NAVIGATION_DRAFT    = '{{%translations_navigationdrafts}}';
+    const TABLE_STATIC_TRANSLATIONS = '{{%translations_statictranslations}}';
 
     // Job Descriptions
     const JOB_ACCLARO_UPDATING_REVIEW_URL   = 'Updating Acclaro review urls';
@@ -181,6 +182,7 @@ class Constants
     const JOB_DELETING_DRAFT                = 'Deleting translation drafts';
     const JOB_IMPORTING_FILES               = 'Importing translation files';
     const JOB_REGENERATING_PREVIEW_URL      = 'Regenerating preview urls';
+    const JOB_SYNC_STATIC_TRANSLATIONS      = 'Syncing Static Translations';
 
     // Nested Field Types
     const NESTED_FIELD_TYPES = [

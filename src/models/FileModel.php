@@ -65,6 +65,8 @@ class FileModel extends Model
 
     public $reference;
 
+    public $draftReference;
+
     public function init(): void
     {
         parent::init();
@@ -151,6 +153,11 @@ class FileModel extends Model
         return $this->status === Constants::FILE_STATUS_CANCELED;
     }
 
+    public function isFailed()
+    {
+        return $this->status === Constants::FILE_STATUS_FAILED;
+    }
+
     public function isComplete()
     {
         return $this->status === Constants::FILE_STATUS_COMPLETE;
@@ -194,6 +201,11 @@ class FileModel extends Model
 
         return $element instanceof (Constants::CLASS_ENTRY) || $element instanceof (Constants::CLASS_CATEGORY) || $element instanceof (Constants::CLASS_COMMERCE_PRODUCT);
     }
+
+    public function hasReference()
+    {
+        return !!($this->isComplete() ? $this->draftReference : $this->reference);
+    }
     
     public function getOrder()
     {
@@ -215,12 +227,10 @@ class FileModel extends Model
                 return $this->isReviewReady() || $this->isComplete() || $this->isPublished();
         }
     }
-    
+
     public function canBeCheckedForTargetChanges()
     {
-        return ! ($this->isPublished() || $this->isNew() || $this->isModified() || 
-            ($this->isInProgress() && $this->getTranslator()?->service === Constants::TRANSLATOR_GOOGLE)
-        );
+        return ! ($this->isPublished() || $this->isCanceled() || $this->isFailed());
     }
 
     public function getSourceLangCode()
@@ -279,43 +289,36 @@ class FileModel extends Model
         return $this->_service->getEntryPreviewSettings($this);
     }
 
-    public function hasTmMisalignments($ignoreReference = false)
+    public function hasTmMisalignments()
     {
-        // Reference or miss alignment can only be check if source entry exists in given target site
-        if (!Craft::$app->elements->getElementById($this->elementId, null, $this->targetSite)) {
+        if ($this->isPublished() || $this->isCanceled() || $this->isFailed()) {
             return false;
         }
 
-        if ($this->reference && !$ignoreReference) {
-            return $this->_service->isReferenceChanged($this);
+        /**
+         * Will only be triggered for existing drafts that existed before the
+         * draftReference column was added to the translations_files table.
+         * No target changes will be detected at this point
+         */
+        if ($this->isComplete() && is_null($this->draftReference)) {
+            $this->draftReference = $this->getReferenceFileContent();
+            Translations::$plugin->fileRepository->saveFile($this);
+            return false;
         }
 
-        if ($ignoreReference || $this->isNew() || $this->isComplete()) {
-            return $this->_service->checkTmMisalignments($this);
+        $dbVersion =  $this->isComplete() ? $this->draftReference : $this->reference;
+
+        if (!!$dbVersion && Translations::$plugin->elementToFileConverter->isValidXml($dbVersion)) {
+            $currentVersion = $this->getReferenceFileContent();
+            return $this->_service->getIsContentChanged($dbVersion, $currentVersion);
         }
 
         return false;
     }
 
-    public function getTmMisalignmentFile($format = Constants::FILE_FORMAT_CSV)
+    public function getReferenceFileName($format = Constants::FILE_FORMAT_CSV)
     {
         $element = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
-
-        $metaData = [
-            'orderId'       => $this->orderId,
-            'elementId'     => $this->elementId,
-            'dateCreated'   => $element->dateCreated->format('YmdTHi'),
-        ];
-
-        $targetSite = $this->targetSite;
-        $source = $this->source;
-
-        $targetElement = Translations::$plugin->elementRepository->getElementById($this->elementId, $targetSite);
-
-        if ($this->isComplete()) {
-            $draft = $this->_service->getDraft($this);
-            $targetElement = $draft ?: $targetElement;
-        }
 
         if ($element instanceof GlobalSet) {
             $entrySlug= ElementHelper::normalizeSlug($element->name);
@@ -327,27 +330,33 @@ class FileModel extends Model
             $entrySlug= $element->slug;
         }
 
-        $targetLang = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($targetSite)->language);
-
+        $targetLang = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($this->targetSite)->language);
         $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), $format);
-        
-        $metaData += [
-            'entrySlug'     => $entrySlug,
-            'entryTitle'    => $this->getUiLabel(),
+
+        return $filename;
+    }
+
+    public function getReferenceFileContent()
+    {
+        $targetEntry = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->targetSite);
+
+        if ($this->isComplete()) {
+            $targetEntry = $this->hasDraft();
+        }
+
+        if (!$targetEntry) {
+            return null;
+        }
+
+        $fileData = [
+            'sourceSite'    => $this->sourceSite,
+            'targetSite'    => $this->targetSite,
+            'wordCount'     => $this->wordCount,
+            'orderId'       => $this->orderId
         ];
 
-        $TmData = [
-            'sourceContent' => $source,
-            'sourceElementSite' => $this->sourceSite,
-            'targetElement' => $targetElement,
-            'targetElementSite' => $targetSite,
-            'format' => $format
-        ];
-
-        return [
-            'fileName' => $filename,
-            'fileContent' => Translations::$plugin->fileRepository->createReferenceData($TmData, $metaData),
-            'reference' => Translations::$plugin->fileRepository->createReferenceData($TmData, $metaData, false),
-        ];
+        return Translations::$plugin->elementToFileConverter->convert(
+            $targetEntry, Constants::FILE_FORMAT_XML, $fileData
+        );
     }
 }

@@ -92,7 +92,7 @@ class StaticTranslations extends Element
      * @param string|null $context
      * @return array
      */
-    protected static function defineSources(string $context = null): array
+    protected static function defineSources(?string $context = null): array
     {
         $sources = [];
 
@@ -228,7 +228,7 @@ class StaticTranslations extends Element
             'context' => $context,
             'disabledElementIds' => $disabledElementIds,
             'collapsedElementIds' => Craft::$app->getRequest()->getParam('collapsedElementIds'),
-            'selectable' => $selectable,
+            'selectable' => false,
             'sortable' => $sortable,
             'showHeaderColumn' => $viewState['showHeaderColumn'] ?? false,
             'inlineEditing' => $viewState['inlineEditing'] ?? false,

@@ -13,13 +13,27 @@ namespace acclaro\translations\services\repository;
 use Craft;
 use Exception;
 use craft\helpers\FileHelper;
+use craft\helpers\ArrayHelper;
+use craft\helpers\StringHelper;
 use craft\helpers\ElementHelper;
+use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use craft\elements\db\ElementQueryInterface;
+use acclaro\translations\services\QueueHelper;
 use acclaro\translations\elements\StaticTranslations;
+use acclaro\translations\models\StaticTranslationsModel;
+use acclaro\translations\records\StaticTranslationsRecord;
+use acclaro\translations\services\job\SyncStaticTranslations;
 
 class StaticTranslationsRepository
 {
+    protected $defaultColumns = [
+        'id',
+        'siteId',
+        'original',
+        'translation'
+    ];
+
     /**
      * @param ElementQueryInterface $query
      * @return array
@@ -197,7 +211,7 @@ class StaticTranslationsRepository
     {
         try {
             // get translation file path
-            $sitePath = Craft::$app->getPath()->getSiteTranslationsPath();
+            $sitePath = $this->getTranslationsPath();
             $file = $sitePath.DIRECTORY_SEPARATOR.$lang.DIRECTORY_SEPARATOR.'site.php';
 
             if ($existingContent = @include($file)) {
@@ -216,5 +230,141 @@ class StaticTranslationsRepository
         }
 
         return true;
+    }
+
+    /**
+     * Sync translations with database
+     * @return [] ["success" : bool, "message": string]
+     */
+    public function syncWithDB($queue = null) {
+        $response = [
+            "success" => true,
+            "message" => "Static Translations synced."
+        ];
+        $source = $this->getTemplatesPath();
+        $source = str_replace('*', '/', $source);
+        $siteIds = Craft::$app->getSites()->getAllSiteIds();
+        $elementQuery = StaticTranslations::find();
+        $elementQuery->status = null;
+        $elementQuery->source = [$source];
+        $elementQuery->search = null;
+        $syncJob = new SyncStaticTranslations();
+        $totalProcessed = 0;
+
+        try {
+            $restoreFromDB = !$this->hasTranslationFiles();
+
+            foreach ($siteIds as $site) {
+                if ($restoreFromDB) {
+                    // Arranging per site basis to create one site file at once
+                    $translationsPerSite = ArrayHelper::index($this->getStaticTranslations(), null, 'siteId');
+                    $this->restoreStaticTranslations($site, $translationsPerSite[$site]);
+                } else {
+                    $elementQuery->siteId = $site;
+                    $translations = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
+                    $totalTranslations = count($translations) * count($siteIds);
+    
+                    foreach ($translations as $row) {
+                        $target = StringHelper::convertToUTF8($row->translation);
+                        $original = $row->original;
+                        $this->createNewTranslation($site, $original, $target);
+                        if ($queue) {
+                            $syncJob->updateProgress($queue, $totalProcessed++/$totalTranslations);
+                        }
+                    }
+                }
+            }
+            return $response;
+        } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            Translations::$plugin->logHelper->log(
+                'Error syncing static translations: ' . $errorMessage,
+                Constants::LOG_LEVEL_ERROR
+            );
+            return [
+                'message' => $errorMessage,
+                'success' => false
+            ];
+        }
+    }
+
+    /**
+     * Fire sync static translation job
+     */
+    public function fireStaticTranslationSync() {
+        $job = QueueHelper::push(new SyncStaticTranslations());
+
+        return $job;
+    }
+
+    /**
+     * Return path where static translation files are stored.
+     */
+    public function getTranslationsPath(): string
+    {
+        return Craft::$app->getPath()->getSiteTranslationsPath();
+    }
+
+    /**
+     * Return path where templates lives.
+     */
+    public function getTemplatesPath(): string
+    {
+        return Craft::$app->getPath()->getSiteTemplatesPath();
+    }
+
+    private function getNewTranslation()
+    {
+        return new StaticTranslationsModel();
+    }
+
+    private function createNewTranslation(string|int $siteId, string $original, string $target)
+    {
+        $translation = $this->getNewTranslation();
+        $translation->siteId = $siteId;
+        $translation->original = $original;
+        $translation->translation = $target;
+
+        return $translation->createOrUpdate();
+    }
+
+    private function hasTranslationFiles(): bool
+    {
+        $translations = scandir($this->getTranslationsPath());
+        $filtered = array_diff($translations, ['.', '..']);
+        return boolval($filtered);
+    }
+
+    private function getStaticTranslations()
+    {
+        $logs = StaticTranslationsRecord::find()->all();
+
+        $activityLogs = [];
+
+        foreach ($logs as $log) {
+            $activityLogs[] = new StaticTranslationsModel($log->toArray($this->defaultColumns));
+        }
+
+        return $activityLogs;
+    }
+
+    private function restoreStaticTranslations($siteId, $translations)
+    {
+        $site = Craft::$app->getSites()->getSiteById($siteId);
+        $fullPath = $this->getTranslationsPath() . DIRECTORY_SEPARATOR . $site->language;
+        mkdir($fullPath, 0755, true);
+        $arrayContent = [];
+        foreach($translations as $translation) {
+            $arrayContent[$translation->original] = $translation->translation;
+        }
+        $filePath = $fullPath . DIRECTORY_SEPARATOR . "site.php";
+        $arrayContent = var_export($arrayContent, true);
+        $fileContent = $fileContent = <<<PHP
+        <?php
+
+        return $arrayContent;
+        PHP;
+
+        file_put_contents($filePath, $fileContent);
     }
 }
