@@ -11,6 +11,7 @@
 namespace acclaro\translations\controllers;
 
 use Craft;
+use craft\web\Response;
 use craft\helpers\Path;
 use craft\models\Volume;
 use craft\helpers\FileHelper;
@@ -20,8 +21,8 @@ use yii\web\NotFoundHttpException;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
+use acclaro\translations\services\QueueHelper;
 use acclaro\translations\services\job\DeleteDrafts;
-use craft\web\Response;
 
 /**
  * @author    Acclaro
@@ -129,7 +130,7 @@ class SettingsController extends BaseController
                             $drafts[] = $file->draftId;
                     }
                     if ($drafts) {
-                        Craft::$app->queue->push(new DeleteDrafts([
+                        QueueHelper::push(new DeleteDrafts([
                             'description' => Constants::JOB_DELETING_DRAFT,
                             'drafts' => $drafts,
                         ]));
