@@ -19,10 +19,11 @@ use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\elements\Order;
 use acclaro\translations\models\FileModel;
+use acclaro\translations\services\QueueHelper;
+use acclaro\translations\services\job\SyncOrderJob;
 use acclaro\translations\services\api\AcclaroApiClient;
 use acclaro\translations\services\job\acclaro\SendOrder;
 use acclaro\translations\services\job\acclaro\UpdateReviewFileUrls;
-use acclaro\translations\services\job\SyncOrderJob;
 
 class AcclaroTranslationService implements TranslationServiceInterface
 {
@@ -207,7 +208,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function sendOrder(Order $order)
     {
-        $job = Craft::$app->queue->push(new SendOrder([
+        $job = QueueHelper::push(new SendOrder([
             'description' => Constants::JOB_ACCLARO_SENDING_ORDER,
             'orderId' => $order->id,
             'settings' => $this->settings
@@ -259,7 +260,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      */
     public function updateReviewFileUrls(Order $order)
     {
-        Craft::$app->queue->push(new UpdateReviewFileUrls([
+        QueueHelper::push(new UpdateReviewFileUrls([
             'description' => Constants::JOB_ACCLARO_UPDATING_REVIEW_URL,
             'orderId' => $order->id,
             'settings' => $this->settings

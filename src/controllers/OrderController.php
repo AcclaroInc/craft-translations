@@ -22,6 +22,7 @@ use yii\web\HttpException;
 
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
+use acclaro\translations\services\QueueHelper;
 use acclaro\translations\services\job\CreateDrafts;
 use acclaro\translations\services\job\SyncOrderJob;
 use acclaro\translations\services\repository\OrderRepository;
@@ -889,7 +890,7 @@ class OrderController extends BaseController
 
         try {
             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
-                $job = Craft::$app->queue->push(new CreateDrafts([
+                $job = QueueHelper::push(new CreateDrafts([
                     'orderId' => $order->id,
                     'wordCounts' => $wordCounts,
                     'publish' => $action === 'publish',
@@ -1010,7 +1011,7 @@ class OrderController extends BaseController
 
         if ($order) {
             if ($order->shouldProcessByQueue()) {
-                $job = Craft::$app->queue->push(new SyncOrderJob([
+                $job = QueueHelper::push(new SyncOrderJob([
                     'description' => 'Syncing order '. $order->title,
                     'files' => $files,
                     'orderId' => $order->id
@@ -1077,7 +1078,7 @@ class OrderController extends BaseController
                 }
 
                 if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
-                    $job = Craft::$app->queue->push(new SyncOrderJob([
+                    $job = QueueHelper::push(new SyncOrderJob([
                         'description' => 'Syncing order '. $order->title,
                         'orderId' => $order->id
                     ]));

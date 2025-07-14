@@ -16,6 +16,7 @@ use craft\elements\Entry;
 use acclaro\translations\Constants;
 use acclaro\translations\Translations;
 use acclaro\translations\base\AlertsTrait;
+use acclaro\translations\services\QueueHelper;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
 
 /**
@@ -323,7 +324,7 @@ class BaseController extends Controller
             $filePreviewUrls = Translations::$plugin->fileRepository->getOrderFilesPreviewUrl($order);
 
             if ($totalWordCount > Constants::WORD_COUNT_LIMIT) {
-                $job = Craft::$app->queue->push(new RegeneratePreviewUrls([
+                $job = QueueHelper::push(new RegeneratePreviewUrls([
                     'description' => 'Regenerating preview urls for '. $order->title,
                     'orderId' => $order->id,
                     'filePreviewUrls' => $filePreviewUrls,
