@@ -47,6 +47,7 @@ use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\job\DeleteDrafts;
 use acclaro\translations\services\job\SyncDataToHubSpotJob;
 use acclaro\translations\services\QueueHelper;
+use acclaro\translations\services\job\SyncStaticTranslations;
 
 class Translations extends Plugin
 {
@@ -195,6 +196,7 @@ class Translations extends Plugin
                     }
 
                     QueueHelper::push(new SyncDataToHubSpotJob());
+                    QueueHelper::push(new SyncStaticTranslations());
                 }
             }
         );

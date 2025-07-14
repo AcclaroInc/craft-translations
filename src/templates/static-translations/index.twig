@@ -1,4 +1,5 @@
 {% extends "_layouts/cp" %}
+{% import 'translations/_components/_forms/button' as button %}
 
 {% set title = "Static Translations"|t('app') %}
 {% set elementType = 'acclaro\\translations\\elements\\StaticTranslations' %}
@@ -11,7 +12,13 @@
 {% endif %}
 
 {% block actionButton %}
-    <button class="btn big submit save-static-translation">{{ 'Save'|t }}</button>
+    {{ button.button({
+        id: 'save-static-translation',
+        class: 'big icon submit',
+        label: 'Save'|t('app'),
+        type: 'submit',
+        spinner: true,
+    }) }}
 {% endblock %}
 
 {% set crumbs = [
@@ -37,6 +44,7 @@
     {% include '_elements/toolbar' with {
         showSiteMenu: true,
     } %}
+    {{ button.syncToDatabaseButton() }}
 {% endblock %}
 
 
