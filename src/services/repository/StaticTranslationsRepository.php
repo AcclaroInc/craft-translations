@@ -250,40 +250,42 @@ class StaticTranslationsRepository
         $elementQuery->search = null;
         $syncJob = new SyncStaticTranslations();
         $totalProcessed = 0;
-        $restoreFromDB = !$this->hasTranslationFiles();
 
-        foreach ($siteIds as $site) {
-            if ($restoreFromDB) {
-                // Arranging per site basis to create one site file at once
-                $translationsPerSite = ArrayHelper::index($this->getStaticTranslations(), null, 'siteId');
-                $this->restoreStaticTranslations($site, $translationsPerSite[$site]);
-            } else {
-                $elementQuery->siteId = $site;
-                $translations = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
-                $totalTranslations = count($translations) * count($siteIds);
+        try {
+            $restoreFromDB = !$this->hasTranslationFiles();
 
-                foreach ($translations as $row) {
-                    $target = StringHelper::convertToUTF8($row->translation);
-                    $original = $row->original;
-                    try {
+            foreach ($siteIds as $site) {
+                if ($restoreFromDB) {
+                    // Arranging per site basis to create one site file at once
+                    $translationsPerSite = ArrayHelper::index($this->getStaticTranslations(), null, 'siteId');
+                    $this->restoreStaticTranslations($site, $translationsPerSite[$site]);
+                } else {
+                    $elementQuery->siteId = $site;
+                    $translations = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
+                    $totalTranslations = count($translations) * count($siteIds);
+    
+                    foreach ($translations as $row) {
+                        $target = StringHelper::convertToUTF8($row->translation);
+                        $original = $row->original;
                         $this->createNewTranslation($site, $original, $target);
                         if ($queue) {
                             $syncJob->updateProgress($queue, $totalProcessed++/$totalTranslations);
                         }
-                    } catch (\Exception $e) {
-                        $response = [
-                            'message' => 'Error saving some static translations check logs.',
-                            'success' => false
-                        ];
-                        Translations::$plugin->logHelper->log(
-                            'Error saving static translation for text"'.$original.'"',
-                            Constants::LOG_LEVEL_ERROR
-                        );
                     }
                 }
             }
+            return $response;
+        } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            Translations::$plugin->logHelper->log(
+                'Error syncing static translations: ' . $errorMessage,
+                Constants::LOG_LEVEL_ERROR
+            );
+            return [
+                'message' => $errorMessage,
+                'success' => false
+            ];
         }
-        return $response;
     }
 
     /**
