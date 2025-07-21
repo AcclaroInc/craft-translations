@@ -331,14 +331,15 @@ class FileModel extends Model
         }
 
         $targetLang = Translations::$plugin->siteRepository->normalizeLanguage(Craft::$app->getSites()->getSiteById($this->targetSite)->language);
-        $filename = sprintf('%s-%s_%s_%s_TM.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), $format);
+        $filename = sprintf('TM_%s-%s_%s_%s.%s',$this->elementId, $entrySlug, $targetLang, date("Ymd\THi"), $format);
 
         return $filename;
     }
 
-    public function getReferenceFileContent()
+    public function getReferenceFileContent($fileFormat = Constants::FILE_FORMAT_XML)
     {
         $targetEntry = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->targetSite);
+        $sourceEntry = Translations::$plugin->elementRepository->getElementById($this->elementId, $this->sourceSite);
 
         if ($this->isComplete()) {
             $targetEntry = $this->hasDraft();
@@ -356,7 +357,7 @@ class FileModel extends Model
         ];
 
         return Translations::$plugin->elementToFileConverter->convert(
-            $targetEntry, Constants::FILE_FORMAT_XML, $fileData
+            $targetEntry, $fileFormat, $fileData , $sourceEntry
         );
     }
 }

@@ -19,9 +19,13 @@
             this.$trigger = $('#export-'+fileType+'-btn');
             this.$exportBtn = $('#export-' + fileType + '-btn');
             this.$status = this.$exportBtn.find(".utility-status");
-
-            this.addListener(this.$exportBtn, 'click', '_showExportHud');
-            this.addListener(this.$form, 'submit', 'onSubmit');
+            
+            if (fileType === 'tm') {
+                this.addListener(this.$exportBtn, 'click', 'onSubmit');
+            } else {
+                this.addListener(this.$exportBtn, 'click', '_showExportHud');
+                this.addListener(this.$form, 'submit', 'onSubmit');
+            }
         },
 
         onSubmit: function(ev) {

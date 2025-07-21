@@ -108,9 +108,11 @@ class FilesController extends BaseController
                     $fileContent = $file->source;
                 }
 
+                $tmFileContent = null;
                 if ($order->includeTmFiles) {
                     $fileName = "source/" . $fileName;
                     $file->reference = $file->getReferenceFileContent();
+                    $tmFileContent = $file->getReferenceFileContent(Constants::FILE_FORMAT_TMX);
                 }
 
                 if (! $fileContent || !$zip->addFromString($fileName, $fileContent)) {
@@ -120,9 +122,9 @@ class FilesController extends BaseController
 
                 /** Check if entry exists in target site for reference comparison */
                 if ($order->includeTmFiles && $file->hasReference()) {
-                    $fileName = $file->getReferenceFileName($fileFormat);
+                    $fileName = $file->getReferenceFileName(Constants::FILE_FORMAT_TMX);
 
-                    if (! $zip->addFromString("references/" . $fileName, $file->reference)) {
+                    if (! $zip->addFromString("references/" . $fileName, $tmFileContent)) {
                         $errors[] = 'There was an error adding the file '.$fileName.' to the zip: '.$zipName;
                         Translations::$plugin->logHelper->log( '['. __METHOD__ .'] There was an error adding the file '.$fileName.' to the zip: '.$zipName, Constants::LOG_LEVEL_ERROR );
                     }
@@ -460,7 +462,7 @@ class FilesController extends BaseController
             $orderAttributes = $order->getAttributes();
 
             //Filename Zip Folder
-            $zipName = $this->getZipName($orderAttributes) . '_TM';
+            $zipName = 'TM_'. $this->getZipName($orderAttributes);
 
             // Set destination zip
             $zipDest = Craft::$app->path->getTempPath() . '/' . $zipName . '.' . Constants::FILE_FORMAT_ZIP;

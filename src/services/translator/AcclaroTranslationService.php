@@ -357,7 +357,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     /**
      * @param \acclaro\translations\models\FileModel $file
      */
-    public function sendOrderReferenceFile($order, $file, $format = Constants::FILE_FORMAT_CSV) {
+    public function sendOrderReferenceFile($order, $file, $format = Constants::FILE_FORMAT_TMX) {
         $tempPath = Craft::$app->path->getTempPath();
         $client = $this->apiClient;
 
