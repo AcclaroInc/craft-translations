@@ -256,9 +256,11 @@ class StaticTranslationsRepository
 
             foreach ($siteIds as $site) {
                 if ($restoreFromDB) {
-                    // Arranging per site basis to create one site file at once
-                    $translationsPerSite = ArrayHelper::index($this->getStaticTranslations(), null, 'siteId');
-                    $this->restoreStaticTranslations($site, $translationsPerSite[$site]);
+                    if (count($staticTranslationFromDB = $this->getStaticTranslations()) > 0) {
+                        // Arranging per site basis to create one site file at once
+                        $translationsPerSite = ArrayHelper::index($staticTranslationFromDB, null, 'siteId');
+                        $this->restoreStaticTranslations($site, $translationsPerSite[$site]);
+                    }
                 } else {
                     $elementQuery->siteId = $site;
                     $translations = Translations::$plugin->staticTranslationsRepository->get($elementQuery);
@@ -334,7 +336,11 @@ class StaticTranslationsRepository
             $translations = scandir($this->getTranslationsPath());
             $filtered = array_diff($translations, ['.', '..']);
         } catch (Exception $e) {
-            throw $e;
+            Translations::$plugin->logHelper->log(
+                'Error checking for translation files: ' . $e->getMessage(),
+                Constants::LOG_LEVEL_ERROR
+            );
+            return false;
         }
         return boolval($filtered);
     }
