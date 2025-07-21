@@ -77,6 +77,7 @@ class Constants
     const FILE_FORMAT_XML   = 'xml';
     const FILE_FORMAT_ZIP   = 'zip';
     const FILE_FORMAT_TXT   = 'txt';
+    const FILE_FORMAT_TMX   = 'tmx';
 
     const FILE_FORMAT_ALLOWED   = [
         self::FILE_FORMAT_CSV,

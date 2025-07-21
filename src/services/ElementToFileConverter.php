@@ -131,7 +131,7 @@ class ElementToFileConverter
      * @param [array] $data
      * @return string
      */
-    public function convert(Element $element, $format, $data) {
+    public function convert(Element $element, $format, $data, ?Element $sourceElement = null) {
         if ($format == Constants::FILE_FORMAT_XML) {
             $sourceSite = $data['sourceSite'] ?? null;
             $targetSite = $data['targetSite'] ?? null;
@@ -148,6 +148,13 @@ class ElementToFileConverter
             $orderId    = $data['orderId'] ?? 0;
 
             return $this->toCsv($element, $sourceSite, $targetSite, $wordCount, $orderId);
+        } elseif ($format == Constants::FILE_FORMAT_TMX) {
+            $sourceSite = $data['sourceSite'] ?? null;
+            $targetSite = $data['targetSite'] ?? null;
+            $wordCount  = $data['wordCount'] ?? 0;
+            $orderId    = $data['orderId'] ?? 0;
+
+            return $this->toTmx($element, $sourceElement, $sourceSite, $targetSite, $orderId, $wordCount);
         } else {
             $sourceSite = $data['sourceSite'] ?? null;
             $targetSite = $data['targetSite'] ?? null;
@@ -382,6 +389,196 @@ class ElementToFileConverter
     }
 
     /**
+     * Convert XML to TMX format
+     *
+     * @param string $sourceContent
+     * @return string
+     */
+    public function xmlToTmx($sourceContent) {
+        $dom = new DOMDocument('1.0', 'utf-8');
+        $dom->loadXML($sourceContent);
+
+        $head = $dom->getElementsByTagName("head")[0];
+        $body = $dom->getElementsByTagName("body")[0];
+
+        $sites = $head->getElementsByTagName("sites")[0];
+        $langs = $head->getElementsByTagName("langs")[0];
+        $meta = $head->getElementsByTagName("meta")[0];
+
+        $orderId = $meta->getAttribute('orderId') ?? '';
+        $elementId = $meta->getAttribute('elementId');
+        $wordCount = $meta->getAttribute('wordCount') ?? '';
+
+        $sourceSite = $sites->getAttribute('source-site');
+        $targetSite = $sites->getAttribute('target-site');
+        $sourceLanguage = $langs->getAttribute('source-language');
+        $targetLanguage = $langs->getAttribute('target-language');
+
+        $tmxDom = new DOMDocument('1.0', 'utf-8');
+        $tmxDom->formatOutput = true;
+
+        // Create TMX root element
+        $tmx = $tmxDom->appendChild($tmxDom->createElement('tmx'));
+        $tmx->setAttribute('version', '1.4');
+
+        // Create header
+        $header = $tmx->appendChild($tmxDom->createElement('header'));
+        $header->setAttribute('creationtool', 'Translations');
+        $header->setAttribute('creationtoolversion', '1.0');
+        $header->setAttribute('datatype', 'plaintext');
+        $header->setAttribute('segtype', 'sentence');
+        $header->setAttribute('adminlang', $sourceLanguage);
+        $header->setAttribute('srclang', $sourceLanguage);
+        $header->setAttribute('o-tmf', 'craft-cms');
+
+        // Add custom properties for Craft CMS metadata
+        $prop = $header->appendChild($tmxDom->createElement('prop'));
+        $prop->setAttribute('type', 'x-filename');
+        $prop->appendChild($tmxDom->createTextNode("element-{$elementId}.tmx"));
+
+        $prop = $header->appendChild($tmxDom->createElement('prop'));
+        $prop->setAttribute('type', 'x-elementId');
+        $prop->appendChild($tmxDom->createTextNode($elementId));
+
+        $prop = $header->appendChild($tmxDom->createElement('prop'));
+        $prop->setAttribute('type', 'x-orderId');
+        $prop->appendChild($tmxDom->createTextNode($orderId));
+
+        $prop = $header->appendChild($tmxDom->createElement('prop'));
+        $prop->setAttribute('type', 'x-wordCount');
+        $prop->appendChild($tmxDom->createTextNode($wordCount));
+
+        $prop = $header->appendChild($tmxDom->createElement('prop'));
+        $prop->setAttribute('type', 'x-source-site');
+        $prop->appendChild($tmxDom->createTextNode($sourceSite));
+
+        $prop = $header->appendChild($tmxDom->createElement('prop'));
+        $prop->setAttribute('type', 'x-target-site');
+        $prop->appendChild($tmxDom->createTextNode($targetSite));
+
+        // Create body
+        $tmxBody = $tmx->appendChild($tmxDom->createElement('body'));
+        $sourceElement = Translations::$plugin->elementRepository->getElementById($elementId, $sourceSite);
+
+        $sourcePairs = Translations::$plugin->elementTranslator->toTranslationSource($sourceElement, $sourceSite, $orderId);
+
+        foreach ($body->getElementsByTagName('content') as $contentElement) {
+            $key = $contentElement->getAttribute('resname');
+            $targetText = $contentElement->childNodes[0] ? $contentElement->childNodes[0]->nodeValue : '';
+            $sourceText = $sourcePairs[$key] ?? '';
+
+            $tu = $tmxBody->appendChild($tmxDom->createElement('tu'));
+            $tu->setAttribute('tuid', $key);
+
+            // Source TUV
+            $tuvSource = $tu->appendChild($tmxDom->createElement('tuv'));
+            $tuvSource->setAttribute('lang', $sourceLanguage);
+            $segSource = $tuvSource->appendChild($tmxDom->createElement('seg'));
+            $textSource = preg_match('/[&<>]/', $sourceText)
+                ? $tmxDom->createCDATASection($sourceText)
+                : $tmxDom->createTextNode($sourceText);
+            $segSource->appendChild($textSource);
+
+            // Target TUV
+            $tuvTarget = $tu->appendChild($tmxDom->createElement('tuv'));
+            $tuvTarget->setAttribute('lang', $targetLanguage);
+            $segTarget = $tuvTarget->appendChild($tmxDom->createElement('seg'));
+            $textTarget = preg_match('/[&<>]/', $targetText)
+                ? $tmxDom->createCDATASection($targetText)
+                : $tmxDom->createTextNode($targetText);
+            $segTarget->appendChild($textTarget);
+        }
+
+        return $tmxDom->saveXML();
+    }
+
+    /**
+     * Convert Element to TMX file
+     *
+     * @param \craft\base\Element $element
+     * @param [string] $sourceSite
+     * @param [string] $targetSite
+     * @param [string] $orderId
+     * @param [string] $wordCount
+     * @param \craft\base\Element|null $sourceElement
+     * @return string
+     */
+    public function toTmx(Element $element, Element $sourceElement, $sourceSite, $targetSite, $orderId, $wordCount)
+    {
+        $dom = new \DOMDocument('1.0', 'utf-8');
+        $dom->formatOutput = true;
+
+        $tmx = $dom->createElement('tmx');
+        $tmx->setAttribute('version', '1.4');
+
+        $sourceLang = Craft::$app->sites->getSiteById($sourceSite)->language;
+        $targetLang = Craft::$app->sites->getSiteById($targetSite)->language ?? 'deleted';
+
+        $header = $dom->createElement('header');
+        $header->setAttribute('creationtool', 'Translations');
+        $header->setAttribute('creationtoolversion', '1.0');
+        $header->setAttribute('datatype', 'plaintext');
+        $header->setAttribute('segtype', 'sentence');
+        $header->setAttribute('adminlang', $sourceLang);
+        $header->setAttribute('srclang', $sourceLang);
+        $header->setAttribute('o-tmf', 'craft-cms');
+
+        $props = [
+            'x-filename'     => "element-{$element->id}.tmx",
+            'x-elementId'    => $element->id,
+            'x-orderId'      => $orderId,
+            'x-wordCount'    => $wordCount,
+            'x-source-site'  => $sourceSite,
+            'x-target-site'  => $targetSite,
+        ];
+
+        foreach ($props as $key => $val) {
+            $prop = $dom->createElement('prop', htmlspecialchars((string)$val));
+            $prop->setAttribute('type', $key);
+            $header->appendChild($prop);
+        }
+
+        $tmx->appendChild($header);
+
+        // Body
+        $body = $dom->createElement('body');
+
+        $sourcePairs = Translations::$plugin->elementTranslator->toTranslationSource($sourceElement, $sourceSite, $orderId);
+        $targetPairs = Translations::$plugin->elementTranslator->toTranslationSource($element, $targetSite, $orderId);
+
+        foreach ($sourcePairs as $key => $sourceText) {
+            $targetText = $targetPairs[$key] ?? '';
+
+            $tu = $dom->createElement('tu');
+            $tu->setAttribute('tuid', $key);
+
+            // Source TUV
+            $tuvSource = $dom->createElement('tuv');
+            $tuvSource->setAttribute('lang', $sourceLang);
+            $segSource = $dom->createElement('seg');
+            $segSource->appendChild(preg_match('/[&<>]/', $sourceText) ? $dom->createCDATASection($sourceText) : $dom->createTextNode($sourceText));
+            $tuvSource->appendChild($segSource);
+            $tu->appendChild($tuvSource);
+
+            // Target TUV
+            $tuvTarget = $dom->createElement('tuv');
+            $tuvTarget->setAttribute('lang', $targetLang);
+            $segTarget = $dom->createElement('seg');
+            $segTarget->appendChild(preg_match('/[&<>]/', $targetText) ? $dom->createCDATASection($targetText) : $dom->createTextNode($targetText));
+            $tuvTarget->appendChild($segTarget);
+            $tu->appendChild($tuvTarget);
+
+            $body->appendChild($tu);
+        }
+
+        $tmx->appendChild($body);
+        $dom->appendChild($tmx);
+
+        return $dom->saveXML();
+    }
+
+
+    /**
      * Convert content to the specified format
      *
      * @param string $content in xml format
@@ -394,6 +591,8 @@ class ElementToFileConverter
                 return $this->xmlToCsv($content);
             case Constants::FILE_FORMAT_JSON:
                 return $this->xmlToJson($content);
+            case Constants::FILE_FORMAT_TMX:
+                return $this->xmlToTmx($content);
             default:
                 return $content;
         }

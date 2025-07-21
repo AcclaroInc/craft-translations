@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.1 - 2025-07-21
+
+### Fixed
+- An issue where migration fails due to filesystem access. ([AcclaroInc#590](https://github.com/AcclaroInc/craft-translations/issues/590))
+
+### Changed
+- Default translation memory format to tmx. ([AcclaroInc#613](https://github.com/AcclaroInc/pm-craft-translations/issues/613))
+
 ## 4.1.0 - 2025-07-14
 
 ### Added
