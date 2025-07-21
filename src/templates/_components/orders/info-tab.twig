@@ -200,48 +200,54 @@
 		</div>
 	{% endif %}
 
-	{% if order.hasTranslator('acclaro') %}
-		<div class="field button">
-			<div class="heading">
-				<label>TM files</label>
-				<form id="sync-tm-files" class="utility" method="post" accept-charset="UTF-8">
-					{{ csrfInput() }}
-					{{ forms.hidden({
-						name: 'action',
-						value: 'translations/files/sync-tm-files',
-					}) }}
-
-					{{ forms.hidden({
-						name: 'orderId',
-						value: order.id
-					}) }}
-				</form>
-			</div>
-
-			<button type="submit" form="sync-tm-files" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
-		</div>
-	{% else %}
-		<div class="field button">
-			<div class="heading">
-				<label id="tm-files">TM files</label>
-				<form id="export-tm-files" class="utility" method="post" accept-charset="UTF-8">
-					{{ csrfInput() }}
-					{{ forms.hidden({
+	{% if order.shouldIncludeTmFiles() %}
+		{% if order.hasTranslator('acclaro') %}
+			<div class="field button">
+				<div class="heading">
+					<label>TM Alignment Files</label>
+					<form id="sync-tm-files" class="utility" method="post" accept-charset="UTF-8">
+						{{ csrfInput() }}
+						{{ forms.hidden({
 							name: 'action',
-							value: 'translations/files/create-tm-export-zip',
+							value: 'translations/files/sync-tm-files',
 						}) }}
 
-					{{ forms.hidden({
-						name: 'orderId',
-						value: order.id
-					}) }}
-				</form>
+						{{ forms.hidden({
+							name: 'orderId',
+							value: order.id
+						}) }}
+					</form>
+				</div>
+
+				<button type="submit" form="sync-tm-files" class="btn icon right" data-icon="refresh" value="submit" style="width: 125px;">{{ "Sync"|t('app') }}</button>
 			</div>
-			<button type="button" id="export-tm-btn" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }}
-				data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
-				<div class="utility-status"></div>
-			</button>
-		</div>
+		{% else %}
+			<div class="field button">
+				<div class="heading">
+					<label id="tm-files">TM Alignment Files</label>
+					<form id="export-tm-files" class="utility" method="post" accept-charset="UTF-8">
+						{{ csrfInput() }}
+						{{ forms.hidden({
+								name: 'action',
+								value: 'translations/files/create-tm-export-zip',
+							}) }}
+
+						{{ forms.hidden({
+							name: 'orderId',
+							value: order.id
+						}) }}
+						{{ forms.hidden({
+							name: 'format',
+							value: 'tmx'
+						}) }}
+					</form>
+				</div>
+				<button type="button" id="export-tm-btn" class="btn icon {{ exportImportStatus }}" {{ exportImportStatus }}
+					data-icon="download" value="submit" style="width: 125px;">{{ "Download"|t('app') }}
+					<div class="utility-status"></div>
+				</button>
+			</div>
+		{% endif %}
 	{% endif %}
 	{% js 'new Craft.Translations.ExportFiles(\'tm\');' %}
 </div>
