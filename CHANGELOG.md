@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - An issue where migration fails due to filesystem access. ([AcclaroInc#590](https://github.com/AcclaroInc/craft-translations/issues/590))
 
 ### Changed
-- Default translation memory format to tmx. ([AcclaroInc#613](https://github.com/AcclaroInc/pm-craft-translations/issues/613)
+- Default translation memory format to tmx. ([AcclaroInc#613](https://github.com/AcclaroInc/pm-craft-translations/issues/613))
 
 ## 4.1.0 - 2025-07-14
 
