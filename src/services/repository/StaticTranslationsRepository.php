@@ -330,8 +330,12 @@ class StaticTranslationsRepository
 
     private function hasTranslationFiles(): bool
     {
-        $translations = scandir($this->getTranslationsPath());
-        $filtered = array_diff($translations, ['.', '..']);
+        try {
+            $translations = scandir($this->getTranslationsPath());
+            $filtered = array_diff($translations, ['.', '..']);
+        } catch (Exception $e) {
+            throw $e;
+        }
         return boolval($filtered);
     }
 
