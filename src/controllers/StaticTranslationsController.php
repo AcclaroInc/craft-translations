@@ -14,7 +14,8 @@ use Craft;
 use ZipArchive;
 use craft\models\Site;
 use craft\helpers\Path;
-use yii\web\UploadedFile;
+use craft\web\UploadedFile;
+use craft\helpers\FileHelper;
 use craft\helpers\StringHelper;
 use yii\web\NotFoundHttpException;
 
@@ -202,52 +203,39 @@ class StaticTranslationsController extends BaseController
             $file = UploadedFile::getInstanceByName('trans-import');
 
             if ($this->validateFile($file) && $this->isZip($file)) {
-                $zip = new ZipArchive();
-
-                if ($zip->open($file->tempName) !== true) {
-                    $this->setError('Unable to open the ZIP file.');
-                    return;
-                }
-
-                $extractPath = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . 'static-import-' . time();
-                mkdir($extractPath);
-
-                $zip->extractTo($extractPath);
-                $zip->close();
-
+                $extractedPath = $this->_extractFiles($file);
+                $files = FileHelper::findFiles($extractedPath);
                 $importedCount = 0;
 
-                foreach (scandir($extractPath) as $entry) {
-                    $filePath = $extractPath . DIRECTORY_SEPARATOR . $entry;
+                foreach ($files as $tempFile) {
+                    $entry = basename($tempFile);
 
                     // Skip system entries and non-files
-                    if (in_array($entry, ['.', '..']) || !is_file($filePath)) {
+                    if (! is_bool(strpos($entry, '__MACOSX')) || in_array($entry, ['.', '..']) || !is_file($tempFile)) {
                         continue;
                     }
 
-                    if (pathinfo($entry, PATHINFO_EXTENSION) !== Constants::FILE_FORMAT_CSV) {
-                        throw new \Exception("File '$entry' is not a valid CSV file.");
+                    if (pathinfo($entry, PATHINFO_EXTENSION) === Constants::FILE_FORMAT_CSV) {
+                        // Validate filename pattern and extract siteId
+                        if (!preg_match('/StaticTranslations\-([0-9]+)\-[a-zA-Z\-]+\-\d+\.csv$/', $entry, $matches)) {
+                            throw new \Exception("Invalid filename format: '$entry'. Expected pattern: StaticTranslations-{siteId}-{lang}-{timestamp}.csv");
+                        }
+
+                        $siteId = (int) $matches[1];
+                        $site = Craft::$app->getSites()->getSiteById($siteId);
+
+                        if (!$site) {
+                            throw new \Exception("No site found for site ID '$siteId' in file '$entry'.");
+                        }
+
+                        if (!$this->_processCsvFile($tempFile, $site)) {
+                            throw new \Exception("File '$entry' has no valid translation rows.");
+                        }
+    
+                        $importedCount++;
                     }
-
-                    // Validate filename pattern and extract siteId
-                    if (!preg_match('/StaticTranslations\-([0-9]+)\-[a-zA-Z\-]+\-\d+\.csv$/', $entry, $matches)) {
-                        throw new \Exception("Invalid filename format: '$entry'. Expected pattern: StaticTranslations-{siteId}-{lang}-{timestamp}.csv");
-                    }
-
-                    $siteId = (int) $matches[1];
-                    $site = Craft::$app->getSites()->getSiteById($siteId);
-
-                    if (!$site) {
-                        throw new \Exception("No site found for site ID '$siteId' in file '$entry'.");
-                    }
-
-                    if (!$this->_processCsvFile($filePath, $site)) {
-                        throw new \Exception("File '$entry' has no valid translation rows.");
-                    }
-
-                    $importedCount++;
                 }
-
+                FileHelper::removeDirectory($extractedPath);
                 if ($importedCount === 0) {
                     throw new \Exception('No valid translation files found in the ZIP.');
                 }
@@ -331,5 +319,24 @@ class StaticTranslationsController extends BaseController
 
     private function isZip($file): bool {
         return $file->getExtension() === Constants::FILE_FORMAT_ZIP;
+    }
+
+    private function _extractFiles($uploadedFile) {
+        $zip = new \ZipArchive();
+        $assetPath = $uploadedFile->saveAsTempFile();
+        $extractPath = Craft::$app->getPath()->getTempPath() . '/extracted/' . uniqid(pathinfo($uploadedFile->name, PATHINFO_FILENAME), true);
+        FileHelper::createDirectory($extractPath);
+        $zip->open($assetPath);
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            if (str_contains($zip->getNameIndex($i), '..') || str_contains($zip->getNameIndex($i), '__MACOSX')) {
+                continue;
+            }
+            $zip->extractTo($extractPath, array($zip->getNameIndex($i)));
+        }
+        $zip->close();
+
+        FileHelper::deleteFileAfterRequest($assetPath);
+
+        return $extractPath;
     }
 }
