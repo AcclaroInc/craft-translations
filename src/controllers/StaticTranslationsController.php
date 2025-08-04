@@ -11,8 +11,11 @@
 namespace acclaro\translations\controllers;
 
 use Craft;
+use ZipArchive;
+use craft\models\Site;
 use craft\helpers\Path;
-use yii\web\UploadedFile;
+use craft\web\UploadedFile;
+use craft\helpers\FileHelper;
 use craft\helpers\StringHelper;
 use yii\web\NotFoundHttpException;
 
@@ -87,10 +90,58 @@ class StaticTranslationsController extends BaseController
 
         $this->requirePostRequest();
 
-        $siteId = Craft::$app->request->getRequiredBodyParam('siteId');
+        $siteIds = Craft::$app->request->getRequiredBodyParam('siteIds');
         $source = Craft::$app->request->getRequiredBodyParam('sourceKey');
         $source = str_replace('*', '/', $source);
 
+        if (count($siteIds) === 1) {
+            $filePath = $this->_generateCsvForSite($siteIds[0], $source);
+            return $this->asJson([
+                'success' => true,
+                'filePath' => $filePath,
+            ]);
+        }
+
+        // If multiple sites are selected, generate CSVs for each site and create a ZIP file
+        $csvFiles = [];
+
+        foreach ($siteIds as $siteId) {
+            $csvFiles[] = $this->_generateCsvForSite($siteId, $source);
+        }
+
+        // Create ZIP
+        $zipFileName = 'StaticTranslations-' . date('YmdHis') . '.zip';
+        $zipFilePath = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . $zipFileName;
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipFilePath, ZipArchive::CREATE) !== true) {
+            return $this->asJson([
+                'success' => false,
+                'error' => 'Unable to create ZIP file.'
+            ]);
+        }
+
+        foreach ($csvFiles as $filePath) {
+            $zip->addFile($filePath, basename($filePath));
+        }
+
+        $zip->close();
+
+        return $this->asJson([
+            'success' => true,
+            'filePath' => $zipFilePath
+        ]);
+    }
+
+    /**
+     * Generate a CSV file for a given site
+     *
+     * @param int    $siteId  The site ID
+     * @param string $source  The source language
+     *
+     * @return string The path to the generated CSV file
+     */
+    private function _generateCsvForSite(int $siteId, string $source): string {
         $elementQuery = StaticTranslations::find();
         $elementQuery->status = null;
         $elementQuery->source = [$source];
@@ -106,21 +157,18 @@ class StaticTranslationsController extends BaseController
         $primaryLang = Craft::$app->getI18n()->getLocaleById($primary->language);
         $langName = ucfirst(StringHelper::convertToUTF8($lang->displayName));
 
-        $data = '"' .Translations::$plugin->translator->translate('app', "Source: $primaryLang->displayName ($primary->language)") . '","' . Translations::$plugin->translator->translate('app', "Target: $langName ($site->language)") . "\"\r\n";
+        $data = '"' . Translations::$plugin->translator->translate('app', "Source: $primaryLang->displayName ($primary->language)") . '","' .
+                Translations::$plugin->translator->translate('app', "Target: $langName ($site->language)") . "\"\r\n";
+
         foreach ($translations as $row) {
             $trans = StringHelper::convertToUTF8($row->translation);
             $data .= '"' . $row->original . '","' . $trans . "\"\r\n";
         }
 
-        $file = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . 'StaticTranslations-'.$site->language.'-'.date('Ymdhis') . '.' . Constants::FILE_FORMAT_CSV;
-        $fd = fopen($file, "w");
-        fputs($fd, $data);
-        fclose($fd);
+        $csvFilePath = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . 'StaticTranslations-' . $siteId . '-' . $site->language . '-' . date('YmdHis') . '.csv';
+        file_put_contents($csvFilePath, $data);
 
-        return $this->asJson([
-            'success' => true,
-            'filePath' => $file
-        ]);
+        return $csvFilePath;
     }
 
     /**
@@ -140,48 +188,116 @@ class StaticTranslationsController extends BaseController
     }
 
     /**
+     * Import Functionality
+     * Handles the import of static translations from a CSV or ZIP file
+     *
+     * @return void
      * @throws \yii\web\BadRequestHttpException
      */
     public function actionImport(){
-
         $this->requireLogin();
         $this->requirePostRequest();
+        $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {
-
-            $siteId = Craft::$app->getRequest()->getRequiredBodyParam('siteId');
-            $site = Craft::$app->getSites()->getSiteById($siteId);
-
-            // Upload the file and drop it in the temporary folder
             $file = UploadedFile::getInstanceByName('trans-import');
 
-            // validate file
-            if (!$this->validateFile($file)) {
-                $this->setError('Invalid file type.');
-            } else {
+            if ($this->validateFile($file) && $this->isZip($file)) {
+                $extractedPath = $this->_extractFiles($file);
+                $files = FileHelper::findFiles($extractedPath);
+                $importedCount = 0;
 
-                $rows = [];
-                $handle = fopen($file->tempName, 'r');
+                foreach ($files as $tempFile) {
+                    $entry = basename($tempFile);
 
-                while (($row = fgetcsv($handle)) !== false) {
-                    if (isset($row[0]) && isset($row[1])) {
-                        $rows[$row[0]] = $row[1];
+                    // Skip system entries and non-files
+                    if (! is_bool(strpos($entry, '__MACOSX')) || in_array($entry, ['.', '..']) || !is_file($tempFile)) {
+                        continue;
+                    }
+
+                    if (pathinfo($entry, PATHINFO_EXTENSION) === Constants::FILE_FORMAT_CSV) {
+                        // Validate filename pattern and extract siteId
+                        if (!preg_match('/StaticTranslations\-([0-9]+)\-[a-zA-Z\-]+\-\d+\.csv$/', $entry, $matches)) {
+                            throw new \Exception("Invalid filename format: '$entry'. Expected pattern: StaticTranslations-{siteId}-{lang}-{timestamp}.csv");
+                        }
+
+                        $siteId = (int) $matches[1];
+                        $site = Craft::$app->getSites()->getSiteById($siteId);
+
+                        if (!$site) {
+                            throw new \Exception("No site found for site ID '$siteId' in file '$entry'.");
+                        }
+
+                        if (!$this->_processCsvFile($tempFile, $site)) {
+                            throw new \Exception("File '$entry' has no valid translation rows.");
+                        }
+    
+                        $importedCount++;
                     }
                 }
-                fclose($handle);
-
-                if ($rows) {
-                    Translations::$plugin->staticTranslationsRepository->set($site->language, $rows);
-                    Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
-                    $this->setSuccess('Translations imported successfully.');
-                } else {
-                    $this->setError('No translation imported.');
+                FileHelper::removeDirectory($extractedPath);
+                if ($importedCount === 0) {
+                    throw new \Exception('No valid translation files found in the ZIP.');
                 }
+
+                Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
+                $transaction->commit();
+
+                $this->setSuccess("Translations imported for {$importedCount} site(s).");
+            } elseif ($this->validateFile($file) && $this->isCsv($file)) {
+                $siteId = Craft::$app->getRequest()->getRequiredBodyParam('siteId');
+                $site = Craft::$app->getSites()->getSiteById($siteId);
+
+                if (!$site) {
+                    throw new \Exception("Invalid site ID '$siteId'.");
+                }
+
+                if (!$this->_processCsvFile($file->tempName, $site)) {
+                    throw new \Exception('No valid translation rows found in the file.');
+                }
+
+                Translations::$plugin->staticTranslationsRepository->fireStaticTranslationSync();
+                $transaction->commit();
+
+                $this->setSuccess('Translations imported successfully.');
+            } else {
+                $this->setError('Invalid file type.');
             }
-        }  catch (\Exception $e) {
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Craft::error("Static import failed: " . $e->getMessage(), __METHOD__);
             $this->setError($e->getMessage());
         }
+    }
 
+    /**
+     * Process the CSV file and save translations for the given site
+     *
+     * @param string $filePath The path to the CSV file
+     * @param Site $site The site for which translations are being processed
+     * @return bool True if translations were successfully processed, false otherwise
+     */
+    private function _processCsvFile(string $filePath, Site $site): bool {
+        $rows = [];
+        $handle = fopen($filePath, 'r');
+
+        // Skip header
+        fgetcsv($handle);
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (isset($row[0]) && isset($row[1])) {
+                $rows[$row[0]] = $row[1];
+            }
+        }
+
+        fclose($handle);
+
+        if ($rows) {
+            Translations::$plugin->staticTranslationsRepository->set($site->language, $rows);
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -190,10 +306,6 @@ class StaticTranslationsController extends BaseController
      */
     public function validateFile($file)
     {
-        if ($file->getExtension() !== Constants::FILE_FORMAT_CSV) {
-            return false;
-        }
-
         if (!in_array($file->type, Constants::STATIC_TRANSLATIONS_SUPPORTED_MIME_TYPES)) {
             return false;
         }
@@ -201,4 +313,30 @@ class StaticTranslationsController extends BaseController
         return true;
     }
 
+    private function isCsv($file): bool {
+        return $file->getExtension() === Constants::FILE_FORMAT_CSV;
+    }
+
+    private function isZip($file): bool {
+        return $file->getExtension() === Constants::FILE_FORMAT_ZIP;
+    }
+
+    private function _extractFiles($uploadedFile) {
+        $zip = new \ZipArchive();
+        $assetPath = $uploadedFile->saveAsTempFile();
+        $extractPath = Craft::$app->getPath()->getTempPath() . '/extracted/' . uniqid(pathinfo($uploadedFile->name, PATHINFO_FILENAME), true);
+        FileHelper::createDirectory($extractPath);
+        $zip->open($assetPath);
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            if (str_contains($zip->getNameIndex($i), '..') || str_contains($zip->getNameIndex($i), '__MACOSX')) {
+                continue;
+            }
+            $zip->extractTo($extractPath, array($zip->getNameIndex($i)));
+        }
+        $zip->close();
+
+        FileHelper::deleteFileAfterRequest($assetPath);
+
+        return $extractPath;
+    }
 }

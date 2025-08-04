@@ -105,7 +105,7 @@ class StaticTranslationsRepository
                         $translation = Craft::t($category, $original, [], $site->language);
 
                         $field = $view->renderTemplate('_includes/forms/text', [
-                            'id' => $translateId,
+                            'id' => 'static-translation-'.$translateId,
                             'name' => 'translation['.$original.']',
                             'value' => $translation,
                             'placeholder' => $translation,
