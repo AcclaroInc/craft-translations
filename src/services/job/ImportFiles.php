@@ -26,7 +26,6 @@ class ImportFiles extends BaseJob
     public $order;
     public $totalFiles;
     public $fileFormat;
-    public $discardElements;
     private $_allowAppliedChanges = null;
 
     /**
@@ -46,7 +45,7 @@ class ImportFiles extends BaseJob
 
             $this->setProgress($queue, $currentFile++ / $this->totalFiles);
             //Process Files
-            $this->processFile($asset, $this->order, $this->fileFormat, $this->fileNames, $this->discardElements);
+            $this->processFile($asset, $this->order, $this->fileFormat, $this->fileNames);
 
             Craft::$app->getElements()->deleteElement($asset);
         }
@@ -61,13 +60,11 @@ class ImportFiles extends BaseJob
      * Process each file entry per order
      * Validates
      */
-    public function processFile(Asset $asset, $order = null , $fileFormat = null, $fileNames = null, $discardElements = [])
+    public function processFile(Asset $asset, $order = null , $fileFormat = null, $fileNames = null)
     {
         $this->order = $this->order ?: $order;
 
         $this->fileNames = $this->fileNames ?: $fileNames;
-
-        $this->discardElements = $this->discardElements ?: $discardElements;
 
         $this->fileFormat = $this->fileFormat ?: $fileFormat;
 
@@ -134,14 +131,6 @@ class ImportFiles extends BaseJob
         $targetSite = (string)$file_content['target-site'];
 
         $elementId = $file_content['elementId'];
-
-        if (in_array($elementId, $this->discardElements)) {
-            $this->orderLog(sprintf(
-                "File {%s} has source entry changes, please update source.",
-                $this->assetName($asset)
-            ));
-            return false;
-        }
 
         foreach ($this->order->getFiles() as $orderFile)
         {
@@ -258,14 +247,6 @@ class ImportFiles extends BaseJob
         $element = isset($element[0]) ? $element[0] : $element;
         $elementId = (string)$element->getAttribute('elementId');
 
-        if (in_array($elementId, $this->discardElements)) {
-            $this->orderLog(sprintf(
-                "File {%s} has source entry changes, please update source.",
-                $this->assetName($asset)
-            ));
-            return false;
-        }
-
         $orderId = (string)$element->getAttribute('orderId');
 
         foreach ($this->order->getFiles() as $orderFile)
@@ -355,15 +336,6 @@ class ImportFiles extends BaseJob
         $targetSite = (string)$file_content['target-site'];
 
         $elementId = $file_content['elementId'];
-
-        if (in_array($elementId, $this->discardElements)) {
-            $this->orderLog(sprintf(
-                "File {%s} has source entry changes, please update source.",
-                $this->assetName($asset)
-            ));
-
-            return false;
-        }
 
         foreach ($this->order->getFiles() as $orderFile)
         {
