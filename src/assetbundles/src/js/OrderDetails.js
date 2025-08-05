@@ -933,7 +933,7 @@
                     class: "field hidden bg-white",
                     id: "cancel-order-tab"
                 });
-                var settingsDiv = $('#settings div:eq(0)');
+                var settingsDiv = $('#sidebar-settings div:eq(0)');
                 $cancelOrderDiv.insertAfter(settingsDiv);
                 var $cancelOrderHead = $('<div class=heading><label>Order Actions</label></div>');
                 $cancelOrderHead.appendTo($cancelOrderDiv);
