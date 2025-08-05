@@ -2,6 +2,7 @@
 {% import "_includes/forms" as forms %}
 
 {% set title = 'Settings Check'|t %}
+{% set cpTrigger = craft.app.config.general.cpTrigger %}
 
 {% block header %}
     {{ parent() }}
@@ -55,7 +56,10 @@
                         <span class="success" title="{{ 'Passed'|t('app') }}" data-icon="check"></span>
                     {% endif %}
                 </td>
-                <td>Is MultiSite <span class="info">{{ 'Multiple Sites are required. <a href="/admin/settings/sites">Configure your Sites</a>' }}</span></td>
+                <td>Is MultiSite <span class="info">
+                    Multiple Sites are required. 
+                    <a href="/{{cpTrigger}}/settings/sites">Configure your Sites</a>
+                </span></td>
             </tr>
         </tbody>
     </table>
@@ -86,19 +90,19 @@
                         {% switch section.propagationMethod.value %}
                             {% case 'none' %}
                                 {{'Only save entries to the site they were created in'|t('app')}}
-                                <span class="info">Section propagation is required to create translation drafts within this section. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                                <span class="info">Section propagation is required to create translation drafts within this section. <a href="/{{cpTrigger}}/settings/sections/{{section.id}}">Configure your Sections</a></span>
                             {% case 'siteGroup' %}
                                 {{'Save entries to other sites in the same site group'|t('app')}}
-                                <span class="info">With this propagation method, translation drafts can only be created within the same site group. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                                <span class="info">With this propagation method, translation drafts can only be created within the same site group. <a href="/{{cpTrigger}}/settings/sections/{{section.id}}">Configure your Sections</a></span>
                             {% case 'language' %}
                                 {{'Save entries to other sites with the same language'|t('app')}}
-                                <span class="info">With this propagation method, translation drafts can only be created for sites with the same language. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                                <span class="info">With this propagation method, translation drafts can only be created for sites with the same language. <a href="/{{cpTrigger}}/settings/sections/{{section.id}}">Configure your Sections</a></span>
                             {% case 'all' %}
                                 {{'Save entries to all sites enabled for this section'|t('app')}}
-                                <span class="info">With this propagation method, translation drafts can be created for all enabled sites. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                                <span class="info">With this propagation method, translation drafts can be created for all enabled sites. <a href="/{{cpTrigger}}/settings/sections/{{section.id}}">Configure your Sections</a></span>
                             {% case 'custom' %}
                                 {{'Let each entry choose which sites it should be saved to'|t('app')}}
-                                <span class="info">With this propagation method, translation drafts can be created for specifically enabled sites. <a href="/admin/settings/sections/{{section.id}}">Configure your Sections</a></span>
+                                <span class="info">With this propagation method, translation drafts can be created for specifically enabled sites. <a href="/{{cpTrigger}}/settings/sections/{{section.id}}">Configure your Sections</a></span>
                         {% endswitch %}
                     </td>
                 </tr>

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.2 - 2025-08-05
+
+### Fixed
+- Source modification check blocking file operations after delivery. ([AcclaroInc#618](https://github.com/AcclaroInc/pm-craft-translations/issues/618))
+- An issue where page redirected to wrong cpTrigger after order creation. ([AcclaroInc#619](https://github.com/AcclaroInc/pm-craft-translations/issues/619))
+
+### Added
+- Static translation bulk export/import feature. ([AcclariInc#610](https://github.com/AcclaroInc/pm-craft-translations/issues/610))
+
 ## 4.1.1 - 2025-07-21
 
 ### Fixed

@@ -66,7 +66,7 @@
     <div id="count-spinner" class="spinner small hidden"></div>
     <div id="count-container" class="light flex-grow static-trans-footer">&nbsp;</div>
     <form method="post" enctype="multipart/form-data">
-        <input type="file" accept=".csv" name="trans-import" style="display: none" />
+        <input type="file" accept=".csv,.zip" name="trans-import" style="display: none" />
         <input type="hidden" name="action" value="translations/static-translations/import">
         <input type="hidden" name="siteId" value="{{ elementInstance.siteId }}" id="siteId" >
         {{ csrfInput() }}

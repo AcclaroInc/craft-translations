@@ -188,7 +188,6 @@ class FilesController extends BaseController
 
         //Get Order Data
         $orderId = Craft::$app->getRequest()->getParam('orderId');
-        $sourceChangedElements = explode(",", Craft::$app->getRequest()->getParam('elements'));
 
         $this->order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
@@ -271,8 +270,7 @@ class FilesController extends BaseController
                                     'totalFiles' => $total_files,
                                     'assets' => $assetIds,
                                     'fileFormat' => $fileInfo['extension'],
-                                    'fileNames' => $fileNames,
-                                    'discardElements' => $sourceChangedElements
+                                    'fileNames' => $fileNames
                                 ]));
 
                                 if ($job) {
@@ -293,7 +291,7 @@ class FilesController extends BaseController
                                 $success = true;
                                 foreach ($assetIds as $key => $id) {
                                     $a = Craft::$app->getAssets()->getAssetById($id);
-                                    $res = $fileSvc->processFile($a, $this->order, $fileInfo['extension'], $fileNames, $sourceChangedElements);
+                                    $res = $fileSvc->processFile($a, $this->order, $fileInfo['extension'], $fileNames);
                                     Craft::$app->getElements()->deleteElement($a);
                                     if ($res === false) $success = false;
                                 }
@@ -346,8 +344,7 @@ class FilesController extends BaseController
                                 'totalFiles' => $total_files,
                                 'assets' => [$asset->id],
                                 'fileFormat' => $file->extension,
-                                'fileNames' => [$asset->id => $file->name],
-                                'discardElements' => $sourceChangedElements
+                                'fileNames' => [$asset->id => $file->name]
                             ]));
 
                             if ($job) {
@@ -366,7 +363,7 @@ class FilesController extends BaseController
                         } else {
                             $fileSvc = new ImportFiles();
                             $a = Craft::$app->getAssets()->getAssetById($asset->id);
-                            $res = $fileSvc->processFile($a, $this->order, $file->extension, [$asset->id => $file->name], $sourceChangedElements);
+                            $res = $fileSvc->processFile($a, $this->order, $file->extension, [$asset->id => $file->name]);
                             Craft::$app->getElements()->deleteElement($a);
 
                             if($res !== false){

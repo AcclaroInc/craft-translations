@@ -153,11 +153,17 @@ class Constants
         'text/csv',
         'text/plain',
         'application/csv',
+        'application/zip',
         'application/txt',
         'application/excel',
         'application/vnd.msexcel',
         'application/vnd.ms-excel',
         'text/comma-separated-values'
+    ];
+
+    const STATIC_TRANSLATIONS_SUPPORTED_FILE_TYPES = [
+        self::FILE_FORMAT_CSV,
+        self::FILE_FORMAT_ZIP
     ];
 
     const STATUS_STATIC_TRANSLATION_TRANSLATED      = 'translated';
