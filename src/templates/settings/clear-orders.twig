@@ -24,8 +24,17 @@
         <h3>{{ 'Need a fresh start?'|t('app') }}</h3>
         {{ 'Clear all translation orders.'|t('app') }}
     </div>
+    {% set redirectUrl = "/" ~ craft.app.config.general.cpTrigger ~ "/translations/settings/clear-orders" %}
     <div class="buttons">
-        <button type="button" data-confirm="{{ 'Are you sure you want to continue?'|t }}" class="formsubmit btn submit icon" data-icon="trash" data-redirect="{{ '/admin/translations/settings/clear-orders' }}" value="submit">{{ "Clear orders"|t('app') }}</button>&nbsp;&nbsp;
+        <button
+        type="button"
+        data-confirm="{{ 'Are you sure you want to continue?'|t }}"
+        class="formsubmit btn submit icon"
+        data-icon="trash"
+        data-redirect="{{ redirectUrl }}"
+        value="submit">
+            {{ "Clear orders"|t('app') }}
+        </button>&nbsp;&nbsp;
     </div>
     <span class="warning" title="{{ 'Warning'|t('app') }}" data-icon="alert">{{' This action cannot be undone'}}</span>
 </form>

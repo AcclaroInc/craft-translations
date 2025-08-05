@@ -329,7 +329,7 @@
         let translatorId = getSelectedTranslator().val();
 
         // Construct the endpoint URL
-        const url = `/admin/translations/translators/${translatorId}/programs`;
+        const url = `/${Craft.cpTrigger}/translations/translators/${translatorId}/programs`;
 
         // Make the GET request
         fetch(url, {
@@ -957,7 +957,7 @@
                 sendingOrderStatus(true);
                 setUnloadEvent(false);
                 if ($(that).text() == "Create new order") {
-                    var url = window.location.origin+"/admin/translations/orders/create";
+                    var url = `${Craft.baseSiteUrl}/${Craft.cpTrigger}/translations/orders/create`;
                     $form.find("input[type=hidden][name=action]").val('translations/order/order-detail');
                     window.history.pushState("", "", url);
                     $('<input>', {
