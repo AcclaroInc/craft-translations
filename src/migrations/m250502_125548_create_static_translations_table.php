@@ -34,9 +34,9 @@ class m250502_125548_create_static_translations_table extends Migration
         $this->createIndex(null, Constants::TABLE_STATIC_TRANSLATIONS, ['siteId']);
         echo "Done creating translations_statictranslations table...\n";
 
-        echo "Seeding static translation to database...\n";
-        (new StaticTranslationsRepository())->syncWithDB();
-        echo "Completed static translation seeding to database...\n";
+        // echo "Seeding static translation to database...\n";
+        // (new StaticTranslationsRepository())->syncWithDB();
+        // echo "Completed static translation seeding to database...\n";
 
         return true;
     }

@@ -226,7 +226,7 @@ class StaticTranslationsRepository
             // write to file
             FileHelper::writeToFile($file, $content);
         }catch (\Exception $e) {
-            throw new \Exception(Craft::t('app','Something went wrong'));
+            throw new \Exception($e->getMessage());
         }
 
         return true;
@@ -237,6 +237,12 @@ class StaticTranslationsRepository
      * @return [] ["success" : bool, "message": string]
      */
     public function syncWithDB($queue = null) {
+        $response = $this->checkPermissions();
+
+        if (!$response['success']) {
+            return $response;
+        }
+
         $response = [
             "success" => true,
             "message" => "Static Translations synced."
@@ -376,5 +382,81 @@ class StaticTranslationsRepository
         PHP;
 
         file_put_contents($filePath, $fileContent);
+    }
+
+    /**
+    * Checks if the static translations directory and its subdirectories are writable.
+    * Returns an error message if any part of the permission check fails, otherwise returns null.
+    *
+    * @return string|null An error message if permissions are insufficient, or null if all checks pass.
+    */
+    public function checkPermissions(): ?array
+    {
+        $staticPath = Craft::$app->getPath()->getSiteTranslationsPath();
+
+        // Step 1: Check/Create static root directory
+        if (!is_dir($staticPath)) {
+            try {
+                FileHelper::createDirectory($staticPath);
+            } catch (\Throwable $e) {
+                return $this->getMessage('Error: Cannot create static translations directory – permission denied.');
+            }
+        }
+
+        // Step 2: Check writability of the root directory
+        if (!is_writable($staticPath)) {
+            return $this->getMessage('Error: Root static translations directory is not writable.');
+        }
+
+        // Step 3: Create a temporary subdirectory with random name
+        $tempDirPath = $staticPath . DIRECTORY_SEPARATOR . 'test_' . uniqid();
+
+        try {
+            FileHelper::createDirectory($tempDirPath);
+        } catch (\Throwable $e) {
+            return $this->getMessage('Error: Write permission denied – Cannot create test subdirectory inside static translations.');
+
+        }
+
+        // Step 4: Attempt to create a site.php file inside the temp directory
+        $tempFilePath = $tempDirPath . DIRECTORY_SEPARATOR . 'site.php';
+
+        try {
+            file_put_contents($tempFilePath, "<?php\nreturn [\n    // Translations here\n];\n");
+        } catch (\Throwable $e) {
+            FileHelper::removeDirectory($tempDirPath);
+            return $this->getMessage('Error: Write permission denied – Cannot create file in static translations subdirectory.');
+
+        }
+
+        // Step 5: Check writability of the file
+        if (!is_writable($tempFilePath)) {
+            FileHelper::removeDirectory($tempDirPath);
+            return $this->getMessage('Error: site.php is not writable inside the static translations subdirectory.');
+        }
+
+        FileHelper::removeDirectory($tempDirPath);
+
+        return $this->getMessage(null);
+    }
+
+    /**
+     * Prepare a response message for the API.
+     *
+     * @param string $message The message to include in the response.
+     * @return array The formatted response message.
+     */
+    private function getMessage(string|null $message): array
+    {
+        $success = false;
+        if ($message === null) {
+            $message = 'All good! Static translations directory and its subdirectories are writable.';
+            $success = true;
+        }
+
+        return [
+            'success' => $success,
+            'message' => $message,
+        ];
     }
 }
