@@ -225,8 +225,8 @@ class StaticTranslationsRepository
 
             // write to file
             FileHelper::writeToFile($file, $content);
-        }catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+        }catch (\Throwable $e) {
+            throw $e;
         }
 
         return true;
@@ -422,7 +422,10 @@ class StaticTranslationsRepository
         $tempFilePath = $tempDirPath . DIRECTORY_SEPARATOR . 'site.php';
 
         try {
-            file_put_contents($tempFilePath, "<?php\nreturn [\n    // Translations here\n];\n");
+            $bytes = file_put_contents($tempFilePath, "<?php\nreturn [\n    // Translations here\n];\n");
+            if ($bytes === false) {
+                throw new \Exception('Failed to write to file');
+            }
         } catch (\Throwable $e) {
             FileHelper::removeDirectory($tempDirPath);
             return $this->getMessage('Error: Write permission denied – Cannot create file in static translations subdirectory.');
