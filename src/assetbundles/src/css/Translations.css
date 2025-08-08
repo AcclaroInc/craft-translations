@@ -1045,16 +1045,16 @@ td.target{
     border-inline-end: none;
 }
 
-#settings, #meta-details {
+#sidebar-settings, #meta-details {
     padding-right: 2.5rem;
 }
 
-#settings .input.ltr:not(.value) {
+#sidebar-settings .input.ltr:not(.value) {
     display: block;
     align-self: center;
 }
 
-#settings .field.button {
+#sidebar-settings .field.button {
     align-items: center;
     justify-content: space-between;
 }
