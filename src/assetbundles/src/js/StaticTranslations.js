@@ -23,7 +23,7 @@ Craft.Translations.StaticTranslations = {
                 Craft.elementIndex.updateElements();
             })
             .catch(({response}) => {
-                Craft.cp.displayError(Craft.t('app', response.data.errors));
+                Craft.cp.displayError(Craft.t('app', response.data.errors.join(', ')));
             })
             .finally(() => {
                 element.removeClass('link-disabled loading');

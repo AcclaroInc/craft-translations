@@ -61,6 +61,7 @@ class SettingsController extends BaseController
         $variables['settings']['DOMEnabled'] = extension_loaded('dom');
         $variables['settings']['isMultisite'] = Craft::$app->getIsMultiSite();
         $variables['settings']['sections'] = Craft::$app->getEntries()->getAllSections();
+        $variables['settings']['staticTranslationPermission'] = Translations::$plugin->staticTranslationsRepository->checkPermissions();
 
         foreach (Craft::$app->getFields()->getAllFieldTypes() as $key => $fieldType) {
             if (in_array($fieldType, $supportedFieldTypes)) {
