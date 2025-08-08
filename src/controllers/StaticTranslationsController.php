@@ -90,7 +90,11 @@ class StaticTranslationsController extends BaseController
 
         $this->requirePostRequest();
 
-        $siteIds = Craft::$app->request->getRequiredBodyParam('siteIds');
+        $siteIds = array_diff(
+            Craft::$app->getSites()->getAllSiteIds(),
+            [Craft::$app->getSites()->getPrimarySite()->id]
+        );
+
         $source = Craft::$app->request->getRequiredBodyParam('sourceKey');
         $source = str_replace('*', '/', $source);
 
@@ -99,6 +103,11 @@ class StaticTranslationsController extends BaseController
             return $this->asJson([
                 'success' => true,
                 'filePath' => $filePath,
+            ]);
+        } else if (count($siteIds) === 0) {
+            return $this->asJson([
+                'success' => false,
+                'error' => 'This feature needs multisite setup.'
             ]);
         }
 

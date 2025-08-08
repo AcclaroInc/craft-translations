@@ -41,19 +41,8 @@ Craft.Translations.StaticTranslations = {
         });
     },
 
-    exportStaticTranslation: function(bulkExport = false) {
-        let exportSiteIds;
-
-        if (bulkExport) {
-            exportSiteIds = Craft.sites
-                ?.filter(site => site.id !== Craft.primarySiteId)
-                .map(site => site.id) ?? [];
-        } else {
-            exportSiteIds = [Craft.elementIndex.siteId];
-        }
-
-        params = {
-            siteIds: exportSiteIds,
+    exportStaticTranslation: function() {
+        const params = {
             sourceKey: Craft.elementIndex.sourceKey,
             search: Craft.elementIndex.searchText
         };
@@ -71,7 +60,7 @@ Craft.Translations.StaticTranslations = {
     },
 
     syncToDB: function (element) { 
-        params = {
+        const params = {
             siteId: Craft.elementIndex.siteId,
             sourceKey: Craft.elementIndex.sourceKey
         };
@@ -97,7 +86,6 @@ Craft.Translations.StaticTranslations = {
         var self = this;
         var syncToDatabaseButton = $('#sync-static-translation');
         var saveStaticTranslations = $('#save-static-translation');
-        this._createExportButtonGroup();
 
         $('.sortmenubtn').hide();
         $('.statusmenubtn').hide();
@@ -135,57 +123,6 @@ Craft.Translations.StaticTranslations = {
 
         });
     },
-
-    _createExportButtonGroup: function () {
-        const self = this;
-        
-        // Hide the original export button
-        $('#translate-export').hide();
-        
-        // Create button group container
-        const $btngroup = $('<div>', { class: 'btngroup translations-dropdown' });
-        $btngroup.insertAfter('#translate-export');
-
-        // Main Export button
-        this.$btn = $('<a>', {
-            class: 'btn icon translations-submit-order',
-            href: '#',
-            'data-icon': 'download',
-        });
-
-        this.$btn.html("<span class='spinner spinner-absolute translations-loader'></span><div class='label'>Export</div>");
-        this.$btn.appendTo($btngroup);
-
-        // Dropdown menu button
-        this.$menubtn = $('<div>', {
-            class: 'btn menubtn'
-        });
-        this.$menubtn.appendTo($btngroup);
-
-        // Dropdown menu
-        const $menu = $('<div>', { class: 'menu' }).appendTo($btngroup);
-        const $dropdown = $('<ul>').appendTo($menu);
-
-        // Bulk Export menu item
-        const $item = $('<li>').appendTo($dropdown);
-        const $bulkExportLink = $('<a>', {
-            class: 'translations-submit-order update-and-new',
-            href: '#',
-            text: 'Export All Sites'
-        }).appendTo($item);
-
-        this.$btn.on('click', function(e) {
-            e.preventDefault();
-            self.exportStaticTranslation();
-        });
-
-        $bulkExportLink.on('click', function(e) {
-            e.preventDefault();
-            self.exportStaticTranslation(true); // Bulk export
-        });
-
-        new Garnish.MenuBtn(this.$menubtn);
-    }
 };
 
 })(jQuery);
