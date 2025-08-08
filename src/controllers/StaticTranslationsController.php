@@ -104,6 +104,11 @@ class StaticTranslationsController extends BaseController
                 'success' => true,
                 'filePath' => $filePath,
             ]);
+        } else if (count($siteIds) === 0) {
+            return $this->asJson([
+                'success' => false,
+                'error' => 'This feature needs multisite setup.'
+            ]);
         }
 
         // If multiple sites are selected, generate CSVs for each site and create a ZIP file

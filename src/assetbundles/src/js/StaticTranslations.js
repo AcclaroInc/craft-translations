@@ -42,7 +42,7 @@ Craft.Translations.StaticTranslations = {
     },
 
     exportStaticTranslation: function() {
-        params = {
+        const params = {
             sourceKey: Craft.elementIndex.sourceKey,
             search: Craft.elementIndex.searchText
         };
@@ -60,7 +60,7 @@ Craft.Translations.StaticTranslations = {
     },
 
     syncToDB: function (element) { 
-        params = {
+        const params = {
             siteId: Craft.elementIndex.siteId,
             sourceKey: Craft.elementIndex.sourceKey
         };
