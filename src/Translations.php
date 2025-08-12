@@ -68,6 +68,11 @@ class Translations extends Plugin
      */
     public static $view;
 
+    /**
+     * @var bool
+     */
+    public static bool $suppressDraftDeleteLog = false;
+
     // Public Methods
     // =========================================================================
 
@@ -727,7 +732,7 @@ class Translations extends Plugin
 
     private function _onDeleteElement(Event $event)
     {
-		if (!empty($event->element->draftId)) {
+		if (!self::$suppressDraftDeleteLog && !empty($event->element->draftId)) {
 			$response = self::$plugin->draftRepository->isTranslationDraft($event->element->draftId);
 			if ($response) {
 
