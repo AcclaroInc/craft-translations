@@ -69,9 +69,9 @@ class Translations extends Plugin
     public static $view;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    public static bool $suppressDraftDeleteLog = false;
+    public static ?bool $suppressDraftDeleteLog = null;
 
     // Public Methods
     // =========================================================================

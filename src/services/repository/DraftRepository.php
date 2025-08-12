@@ -253,7 +253,7 @@ class DraftRepository
                 $order,
                 $wordCounts,
                 $draftMap['content'],
-                false,
+                false
             );
         }
 
@@ -284,19 +284,22 @@ class DraftRepository
      */
     private function _deleteOtherDrafts(array $fileDraftMap, int $currentFileId): array
     {
-        Translations::$suppressDraftDeleteLog = true;
         $deletedFileIds = [];
-        foreach ($fileDraftMap as $fileId => $draftMap) {
-            if ((int)$fileId !== (int)$currentFileId) {
-                $existingFile = Translations::$plugin->fileRepository->getFileById($fileId);
-                $this->deleteDraft($draftMap['draft_id'], $existingFile->targetSite);
-                $existingFile->status = Constants::FILE_STATUS_REVIEW_READY;
-                $existingFile->draftId = 0;
-                Translations::$plugin->fileRepository->saveFile($existingFile);
-                $deletedFileIds[] = (int)$fileId;
+        Translations::$suppressDraftDeleteLog = true;
+        try {
+            foreach ($fileDraftMap as $fileId => $draftMap) {
+                if ((int)$fileId !== (int)$currentFileId) {
+                    $existingFile = Translations::$plugin->fileRepository->getFileById($fileId);
+                    $this->deleteDraft($draftMap['draft_id'], $existingFile->targetSite);
+                    $existingFile->status = Constants::FILE_STATUS_REVIEW_READY;
+                    $existingFile->draftId = 0;
+                    Translations::$plugin->fileRepository->saveFile($existingFile);
+                    $deletedFileIds[] = (int)$fileId;
+                }
             }
+        } finally {
+            Translations::$suppressDraftDeleteLog = false;
         }
-        Translations::$suppressDraftDeleteLog = false;
         return $deletedFileIds;
     }
 
