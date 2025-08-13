@@ -64,6 +64,23 @@
         </tbody>
     </table>
 
+    {# FileSystem Permissions for Static Translations #}
+    <h2>{{ "FileSystem Permissions for Static Translations"|t('app') }}</h2>
+    <table class="data fullwidth" dir="ltr">
+        <tbody>
+            <tr>
+                <td class="thin centeralign">
+                    {% if settings.staticTranslationPermission.success == true %}
+                        <span class="success" title="{{ 'Success'|t('app') }}" data-icon="check"></span>
+                    {% else %}
+                        <span class="error" title="{{ 'Error'|t('app') }}" data-icon="alert"></span>
+                    {% endif %}
+                </td>
+                <td>{{ settings.staticTranslationPermission.message }}</td>
+            </tr>
+        </tbody>
+    </table>
+
     <h2>{{ "Section Propagation Methods"|t('app') }}</h2>
     <table class="data fullwidth" dir="ltr">
         <tbody>
