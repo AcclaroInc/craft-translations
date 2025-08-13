@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.3 - 2025-08-13
+
+### Fixed
+- Migration failure due to job trigger. ([AcclaroInc#599](https://github.com/AcclaroInc/craft-translations/issues/599))
+- Neo field UI breaking sure to conflicting css. ([AcclaroInc#598](https://github.com/AcclaroInc/craft-translations/issues/598))
+- Error handling messages in static translations action flow. ([AcclaroInc#599](https://github.com/AcclaroInc/craft-translations/issues/599))
+- An issue where cpTrigger was hard coded as admin leading to wrong site url. ([AcclaroInc#619](https://github.com/AcclaroInc/pm-craft-translations/issues/619))
+
+### Added
+- Static translation filesystem access status section in plugin settings. ([AcclaroInc#599](https://github.com/AcclaroInc/craft-translations/issues/599))
+
 ## 4.1.2 - 2025-08-05
 
 ### Fixed
