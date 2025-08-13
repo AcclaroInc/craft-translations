@@ -184,6 +184,8 @@ class DraftRepository
     public function createOrderDrafts($orderId, $wordCounts, $publish, $fileIds, $queue=null)
     {
         $isNewDraft = false;
+        $draftsDeleted = false;
+        $recreatedDraftFileIds = [];
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
         $totalElements = count($order->getFiles());
@@ -191,9 +193,21 @@ class DraftRepository
 
         $createDrafts = new CreateDrafts();
         
+        $fileDraftMap = $this->_getFileDraftMap($order); 
         foreach ($order->getFiles() as $file) {
             if (! in_array($file->id, $fileIds)) {
                 continue;
+            }
+            $draftContent = $fileDraftMap[$file->id]['content'] ?? null; // stores the content of the draft temporarily
+            unset($fileDraftMap[$file->id]);
+
+            // Delete other drafts only if there is more than one fileId and drafts already exists
+            if ($publish && !$draftsDeleted && (count($fileIds) > 1 || count($fileDraftMap) > 1)) {
+                $deleted = $this->_deleteOtherDrafts($fileDraftMap, $file->id);
+                $draftsDeleted = true;
+                if (!empty($deleted)) {
+                    $recreatedDraftFileIds = array_merge($recreatedDraftFileIds, $deleted);
+                }
             }
 
             try {
@@ -201,43 +215,22 @@ class DraftRepository
                 only that will be rolledback and others can be processed */
                 $transaction = Craft::$app->db->getTransaction() === null ? Craft::$app->db->beginTransaction() : null;
     
-                $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
-                $isFileReady = $file->isReviewReady();
-    
                 if ($queue) {
                     $createDrafts->updateProgress($queue, $currentElement++/$totalElements);
                 }
-    
-                // Create draft only if not already exist
-                if ($file->hasDraft()) {
-                    $file->status = Constants::FILE_STATUS_COMPLETE;
-                    Translations::$plugin->fileRepository->saveFile($file);
-                } else {
-                    $isNewDraft = $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
-                }
 
-                /**
-                 * Only allow draft merge once, as merging multiple times
-                 * will cause issues with the non-localised blocks duplication.
-                 */
-                if ($isFileReady) {
-                    // Translation Service Always Local
-                    $translationService = $order->getTranslationService();
+                $isRecreate = in_array($file->id, $recreatedDraftFileIds, true);
 
-                    $translationService->updateIOFile($order, $file);
+                $isNewDraft = $this->processFileDraft(
+                    $file,
+                    $order,
+                    $wordCounts,
+                    $draftContent,
+                    $publish,
+                    $queue,
+                    $isRecreate
+                );
 
-                    Translations::$plugin->fileRepository->saveFile($file);
-                }
-
-                /**
-                 * Updated applyDrafts logic to apply drafts individually v.s all at once
-                 * - https://github.com/AcclaroInc/pm-craft-translations/issues/388
-                 * - https://github.com/craftcms/cms/issues/9966
-                 * - https://github.com/AcclaroInc/craft-translations/pull/236/commits/813ef41548532ec41a5f53da6eb4194259f64071
-                 **/
-                if ($publish) {
-                    $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
-                }
                 if ($transaction !== null) {
                     $transaction->commit();
                 }
@@ -248,6 +241,20 @@ class DraftRepository
                 $this->setError($e->getMessage());
                 continue;
             }
+        }
+
+        /**
+         *  Recreate drafts for deleted but unprocessed files
+        */
+        foreach ($fileDraftMap as $remainingFileId => $draftMap) {
+            $file = Translations::$plugin->fileRepository->getFileById($remainingFileId);
+            $isNewDraft = $this->processFileDraft(
+                $file,
+                $order,
+                $wordCounts,
+                $draftMap['content'],
+                false
+            );
         }
 
         if ($isNewDraft)
@@ -261,6 +268,111 @@ class DraftRepository
 
         Translations::$plugin->orderRepository->saveOrder($order);
         Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
+    }
+
+    /**
+     * Deletes old drafts to resolve an issue with non-localized matrix blocks containing localized fields.
+     * 
+     * When merging drafts while one or more drafts already exist, content may be lost 
+     * both in the parent site and in all target sites except the last one.  
+     * 
+     * To prevent this, we delete existing drafts first. This mimics the behavior of 
+     * creating drafts from scratch, ensuring the merge process runs without content loss.
+     *
+     * @param array $fileDraftMap
+     * @param int $currentFileId
+     */
+    private function _deleteOtherDrafts(array $fileDraftMap, int $currentFileId): array
+    {
+        $deletedFileIds = [];
+        Translations::$suppressDraftDeleteLog = true;
+        try {
+            foreach ($fileDraftMap as $fileId => $draftMap) {
+                if ((int)$fileId !== (int)$currentFileId) {
+                    $existingFile = Translations::$plugin->fileRepository->getFileById($fileId);
+                    $this->deleteDraft($draftMap['draft_id'], $existingFile->targetSite);
+                    $existingFile->status = Constants::FILE_STATUS_REVIEW_READY;
+                    $existingFile->draftId = 0;
+                    Translations::$plugin->fileRepository->saveFile($existingFile);
+                    $deletedFileIds[] = (int)$fileId;
+                }
+            }
+        } finally {
+            Translations::$suppressDraftDeleteLog = false;
+        }
+        return $deletedFileIds;
+    }
+
+    /**
+     * Gets an array of file id vs draft id mapping for the given order and files
+     * @param OrderModel $order
+     * @param array $fileIds
+     * @return array
+     */
+    private function _getFileDraftMap($order)
+    {
+        $fileDraftMap = [];
+        foreach ($order->getFiles() as $file) {
+            $draft = $file->hasDraft();
+            if ($draft) {
+                $fileDraftMap[$file->id] = [
+                    'draft_id' => $draft->draftId,
+                    'content' => Translations::$plugin->elementToFileConverter->convert(
+                        $draft,
+                        Constants::FILE_FORMAT_XML,
+                        [
+                            'sourceSite'    => $order->sourceSite,
+                            'targetSite'    => $file->targetSite,
+                            'wordCount'     => Translations::$plugin->elementTranslator->getWordCount($draft),
+                            'orderId'       => $order->id
+                        ]
+                    )
+                ];
+            }
+        }
+
+        return $fileDraftMap;
+    }
+
+    /**
+    * Process a single file's draft creation/update logic.
+    */
+    private function processFileDraft($file, $order, $wordCounts, $draftContent, $publish, $queue=null, $isRecreate = true)
+    {
+        $isNewDraft = false;
+
+        $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $order->sourceSite);
+        $currentFile = Translations::$plugin->fileRepository->getFileById($file->id);
+        $isFileReady = $currentFile->isReviewReady();
+
+
+        if ($file->hasDraft()) {
+            $file->status = Constants::FILE_STATUS_COMPLETE;
+            Translations::$plugin->fileRepository->saveFile($file);
+        } else {
+            $draftCreated = $this->createDrafts($element, $order, $file->targetSite, $wordCounts, $file);
+            if ($draftCreated && !$isRecreate) {
+                $isNewDraft = true;
+            }
+        }
+
+        if ($isFileReady) {
+            $translationService = $order->getTranslationService();
+            $translationService->updateIOFile($order, $file, $draftContent);
+            Translations::$plugin->fileRepository->saveFile($file);
+        }
+
+        /**
+         * Updated applyDrafts logic to apply drafts individually v.s all at once
+         * - https://github.com/AcclaroInc/pm-craft-translations/issues/388
+         * - https://github.com/craftcms/cms/issues/9966
+         * - https://github.com/AcclaroInc/craft-translations/pull/236/commits/813ef41548532ec41a5f53da6eb4194259f64071
+        **/
+        if ($publish) {
+            $this->applyDrafts($order->id, [$element->id], [$file->id], $queue);
+        }
+
+        return $isNewDraft;
     }
 
     public function createDrafts($element, $order, $site, $wordCounts, $file=null)
