@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.4 - 2025-08-25
+
+### Fixed
+- An issue where cotnent reverts back tooriginnal when applying multiple drafts. ([AcclaroInc#609](https://github.com/AcclaroInc/pm-craft-translations/issues/609))
+
 ## 4.1.3 - 2025-08-13
 
 ### Fixed
