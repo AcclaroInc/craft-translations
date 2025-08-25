@@ -95,9 +95,9 @@ class Export_ImportTranslationService implements TranslationServiceInterface
         return [];
     }
 
-    public function updateIOFile(Order $order, FileModel $file)
+    public function updateIOFile(Order $order, FileModel $file, ?string $existingDraftContent = null)
     {
-        $target = $file->target;
+        $target = $existingDraftContent ?? $file->target;
         $file->dateDelivered = new \DateTime();
 
         $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
