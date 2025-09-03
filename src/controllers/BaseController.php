@@ -18,6 +18,7 @@ use acclaro\translations\Translations;
 use acclaro\translations\base\AlertsTrait;
 use acclaro\translations\services\QueueHelper;
 use acclaro\translations\services\job\RegeneratePreviewUrls;
+use Exception;
 
 /**
  * @author    Acclaro
@@ -313,9 +314,12 @@ class BaseController extends Controller
         // Authenticate service
         $translationService = $order->getTranslationService();
 
-        if (!$translationService->authenticate()) {
-            $this->setError('Failed to authenticate API key.');
-            return;
+        try {
+            if (!$translationService->authenticate()) {
+                throw new Exception("Failed to authenticate API key.");
+            }
+        } catch (\Throwable $e) {
+            throw $e;
         }
 
         if ($order) {

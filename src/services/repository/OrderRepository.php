@@ -165,6 +165,7 @@ class OrderRepository
     }
 
     /**
+     * TODO: Remove this with $order->save();
      * @param \acclaro\translations\elements\Order $order
      * @throws \Exception
      * @return bool
@@ -285,19 +286,22 @@ class OrderRepository
             $dueDate = $dueDate->format('Y-m-d');
         }
 
-        $orderResponse = $translationService->createOrder(
-            $order->title,
-            $comments,
-            $dueDate,
-            $order->wordCount
-        );
+        if ( !$order->serviceOrderId ) {
+            $orderResponse = $translationService->createOrder(
+                $order->title,
+                $comments,
+                $dueDate,
+                $order->wordCount
+            );
 
-        $orderData = [
-            'acclaroOrderId'    => (!is_null($orderResponse)) ? $orderResponse->orderid : '',
-            'orderId'      => $order->id
-        ];
-
-        $order->serviceOrderId = $orderData['acclaroOrderId'];
+            $orderData = [
+                'acclaroOrderId'    => (!is_null($orderResponse)) ? $orderResponse->orderid : '',
+                'orderId'      => $order->id
+            ];
+    
+            $order->serviceOrderId = $orderData['acclaroOrderId']; // Set service order ID to the order just after this
+            $order->save(); // Save the order to avoid multiple order creation on Acclaro side
+        }
 
         $translationService->requestOrderCallback(
             $order->serviceOrderId,
