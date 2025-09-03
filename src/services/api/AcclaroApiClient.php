@@ -129,7 +129,7 @@ class AcclaroApiClient
                 $response = $this->client->send($request, ['timeout' => 0]);
             } catch (Exception $e) {
 				Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
-                return null;
+                throw $e;
             }
         }
 
@@ -137,7 +137,7 @@ class AcclaroApiClient
 
         if ($response->getStatusCode() != 200) {
             // being logged from apiLog()
-            return null;
+            throw new Exception("Error Processing Request on Acclaro");
         }
 
         $body = $response->getBody();
@@ -146,7 +146,7 @@ class AcclaroApiClient
 
         if (!isset($responseJson['data']) || $responseJson['success'] === false) {
 			Translations::$plugin->logHelper->log($body, Constants::LOG_LEVEL_ERROR);
-            return null;
+            throw new Exception("Acclaro API error: missing data or success=false");
         }
 
         // // is assoc?
@@ -230,6 +230,10 @@ class AcclaroApiClient
             'estwordcount' => $wordCount,
         ));
 
+        if (is_null($order) || !isset($order->orderid)) {
+            throw new Exception("Creating order failed due to no order id.");
+        }
+        
         $this->addOrderTags($order->orderid);
 
         return $order;

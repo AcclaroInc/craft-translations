@@ -837,6 +837,14 @@ class Order extends Element
         return $this->requestQuote;
     }
 
+    /**
+     * Save the order element
+     */
+    public function save(): bool
+    {
+        return Craft::$app->getElements()->saveElement($this);
+    }
+
     public function shouldIncludeTmFiles()
     {
         return (bool) $this->includeTmFiles;
