@@ -358,35 +358,41 @@ class OrderController extends BaseController
             !is_null($variables['translator']) &&
             $variables['translator']->service === Constants::TRANSLATOR_ACCLARO
         ) {
-			$variables['isDefaultTranslator'] = false;
+            try {
+                $variables['isDefaultTranslator'] = false;
 
-			if (!$order->isPending()) {
-				/** @var \acclaro\translations\services\translator\AcclaroTranslationService */
-				$translationService = $order->getTranslationService();
+                if (!$order->isPending()) {
+                    /** @var \acclaro\translations\services\translator\AcclaroTranslationService */
+                    $translationService = $order->getTranslationService();
 
-				$translatorUrl = $translationService->getOrderUrl($order);
-				$variables['translator_url'] = $translatorUrl;
-				$orderStatus = $translationService->getOrderStatus($order);
-				if ($order->isCanceled()) {
-					$variables['isEditable'] = false;
-				}
-				if ($orderStatus === Constants::ORDER_STATUS_COMPLETE) {
-					$variables['isEditable'] = false;
-					if ($order->isPublished()) {
-						$variables['orderRecentStatus'] = Constants::ORDER_STATUS_PUBLISHED;
-					} else {
-						$variables['orderRecentStatus'] = $orderStatus;
-					}
-				}
+                    $translatorUrl = $translationService->getOrderUrl($order);
+                    $variables['translator_url'] = $translatorUrl;
+                    $orderStatus = $translationService->getOrderStatus($order);
+                    if ($order->isCanceled()) {
+                        $variables['isEditable'] = false;
+                    }
+                    if ($orderStatus === Constants::ORDER_STATUS_COMPLETE) {
+                        $variables['isEditable'] = false;
+                        if ($order->isPublished()) {
+                            $variables['orderRecentStatus'] = Constants::ORDER_STATUS_PUBLISHED;
+                        } else {
+                            $variables['orderRecentStatus'] = $orderStatus;
+                        }
+                    }
 
-				if ($orderStatus !== Constants::ORDER_STATUS_COMPLETE) {
-					$variables['isUpdateable'] = true;
-				}
+                    if ($orderStatus !== Constants::ORDER_STATUS_COMPLETE) {
+                        $variables['isUpdateable'] = true;
+                    }
 
-                if ($order->requestQuote() && !$order->isGettingQuote()) {
-                    $variables['orderQuote'] = $translationService->getOrderQuote($order->serviceOrderId);
+                    if ($order->requestQuote() && !$order->isGettingQuote()) {
+                        $variables['orderQuote'] = $translationService->getOrderQuote($order->serviceOrderId);
+                    }
                 }
-			}
+            } catch (\Throwable $e) {
+                Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
+                $this->setError($e->getMessage());
+            }
+
         }
 
         $variables['isSubmitted'] = $clone ? false : !($order->isPending() || $order->isFailed());
@@ -718,6 +724,10 @@ class OrderController extends BaseController
         $translatorService = $order->getTranslationService();
 
         $isAcclaroTranslator = $translator->service === Constants::TRANSLATOR_ACCLARO;
+        
+        if($isAcclaroTranslator && !$order->serviceOrderId) {
+            return $this->asFailure($this->getErrorMessage('Missing Acclaro Order Id.'));
+        }
 
         if (!$translatorService->authenticate()) {
             return $this->asFailure($this->getErrorMessage('Failed to authenticate API key.'));
@@ -940,48 +950,58 @@ class OrderController extends BaseController
         $this->requirePostRequest();
 
         $variables = Craft::$app->getRequest()->resolve()[1];
-
         $orderId = $variables['orderId'] ?? Craft::$app->getRequest()->getParam('id');
-        $order = $this->service->getOrderById($orderId);
-        if (!$order) {
-            $this->setError("Order not found with ID '{$orderId}'.");
-            return;
-        }
 
-        $translator = $order->translatorId ? Translations::$plugin->translatorRepository->getTranslatorById($order->translatorId) : null;
-
-        if (! $translator) {
-            $this->setError('Invalid translator.');
-            return;
-        }
-
-        if ($translator->service === Constants::TRANSLATOR_ACCLARO) {
-            $translatorService = $order->getTranslationService();
-
-            $res = $translatorService->cancelOrder($order);
-
-            if (empty($res)) {
-                $this->setError("Unable to cancel order '{$order->title}'.");
+        try {
+            $order = $this->service->getOrderById($orderId);
+            if (!$order) {
+                $this->setError("Order not found with ID '{$orderId}'.");
                 return;
             }
+
+            if (! ($translator = $order->getTranslator())) {
+                $this->setError('Invalid translator.');
+                return;
+            }
+
+            if ($translator->isAcclaro()) {
+                $translatorService = $order->getTranslationService();
+
+                $res = $translatorService->cancelOrder($order);
+
+                if (empty($res)) {
+                    $this->setError("Unable to cancel order '{$order->title}'.");
+                    return;
+                }
+            }
+
+            foreach ($order->files as $file) {
+                Translations::$plugin->fileRepository->cancelOrderFile($file);
+            }
+
+            $order->status = Constants::ORDER_STATUS_CANCELED;
+            $order->logActivity(Translations::$plugin->translator->translate(
+                'app',
+                'Sent My Acclaro order cancellation request.'
+            ));
+            Craft::$app->getElements()->saveElement($order);
+
+            $this->setSuccess("Order canceled '{$order->title}'");
+            Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
+
+            return $this->redirect(Constants::URL_ORDER_DETAIL.$order->id, 302, true);
+
+        } catch (\Throwable $e) {
+            Translations::$plugin->logHelper->log(
+                "Error canceling order (ID: {$orderId}): " . $e->getMessage(),
+                Constants::LOG_LEVEL_ERROR
+            );
+
+            $this->setError("Error canceling order '{$orderId}': " . $e->getMessage());
+            return;
         }
-
-        foreach ($order->files as $file) {
-            Translations::$plugin->fileRepository->cancelOrderFile($file);
-        }
-
-        $order->status = Constants::ORDER_STATUS_CANCELED;
-        $order->logActivity(Translations::$plugin->translator->translate(
-            'app',
-            'Sent My Acclaro order cancellation request.'
-        ));
-        Craft::$app->getElements()->saveElement($order);
-
-        $this->setSuccess("Order canceled '{$order->title}'");
-        Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
-
-        return $this->redirect(Constants::URL_ORDER_DETAIL.$order->id, 302, true);
     }
+
 
     // Acclaro Order methods
     public function actionSyncOrder()
@@ -1001,39 +1021,46 @@ class OrderController extends BaseController
 
         $order = $this->service->getOrderById((int) $orderId);
 
-        // Authenticate service
-        $translationService = $order->getTranslationService();
+        try {
+             // Authenticate service
+            $translationService = $order->getTranslationService();
 
-        if (!$translationService->authenticate()) {
-            $this->setError('Failed to authenticate API key.');
-            return;
-        }
+            if (!$translationService->authenticate()) {
+                throw new Exception("Failed to authenticate API key.");
+            }
 
-        if ($order) {
-            if ($order->shouldProcessByQueue()) {
-                $job = QueueHelper::push(new SyncOrderJob([
-                    'description' => 'Syncing order '. $order->title,
-                    'files' => $files,
-                    'orderId' => $order->id
-                ]));
+            if ($order) {
+                if ($order->shouldProcessByQueue()) {
+                    $job = QueueHelper::push(new SyncOrderJob([
+                        'description' => 'Syncing order '. $order->title,
+                        'files' => $files,
+                        'orderId' => $order->id
+                    ]));
 
-                if ($job) {
-                    $params = [
-                        'id' => (int) $job,
-                        'notice' => 'Done syncing order '. $order->title,
-                        'url' => Constants::URL_ORDER_DETAIL . $order->id
-                    ];
-                    $this->setNotice("Order is being synced via queue. Refer queue for updates.");
-                    Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(false, false, '. json_encode($params) .'); });');
+                    if ($job) {
+                        $params = [
+                            'id' => (int) $job,
+                            'notice' => 'Done syncing order '. $order->title,
+                            'url' => Constants::URL_ORDER_DETAIL . $order->id
+                        ];
+                        $this->setNotice("Order is being synced via queue. Refer queue for updates.");
+                        Craft::$app->getView()->registerJs('$(function(){ Craft.Translations.trackJobProgressById(false, false, '. json_encode($params) .'); });');
+                    } else {
+                        $this->setError("Cannot sync order '{$order->title}'.");
+                        return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
+                    }
                 } else {
-                    $this->setError("Cannot sync order '{$order->title}'.");
+                    $translationService->syncOrder($order, $files);
+                    $this->setSuccess("Done syncing order '{$order->title}'");
                     return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
                 }
-            } else {
-                $translationService->syncOrder($order, $files);
-                $this->setSuccess("Done syncing order '{$order->title}'");
-                return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
             }
+        } catch (\Throwable $e) {
+            Translations::$plugin->logHelper->log(
+                "Order Sync Error (Order ID: {$orderId}) - " . $e->getMessage(),
+                Constants::LOG_LEVEL_ERROR
+            );
+            return $this->asFailure($this->getErrorMessage($e->getMessage()));
         }
     }
 
@@ -1122,15 +1149,17 @@ class OrderController extends BaseController
         $elements = Craft::$app->getRequest()->getRequiredBodyParam('selected');
         if ($elements) $elements = json_decode($elements, true);
 
-        // Authenticate service
-        $translationService = $order->getTranslationService();
-        if (! $translationService->authenticate()) {
-            return $this->asFailure($this->getErrorMessage('Failed to authenticate API key.'));
-        }
 
         $transaction = Craft::$app->getDb()->beginTransaction();
 
         try {
+            // Authenticate service
+            $translationService = $order->getTranslationService();
+
+            if (! $translationService->authenticate()) {
+                throw new Exception("Failed to authenticate API key.");
+            }
+
             $changeLog = [];
             foreach ($order->getFiles() as $file) {
                 if (in_array($file->elementId, $elements)) {
