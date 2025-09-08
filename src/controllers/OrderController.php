@@ -959,14 +959,12 @@ class OrderController extends BaseController
                 return;
             }
 
-            $translator = $order->translatorId ? Translations::$plugin->translatorRepository->getTranslatorById($order->translatorId) : null;
-
-            if (! $translator) {
+            if (! ($translator = $order->getTranslator())) {
                 $this->setError('Invalid translator.');
                 return;
             }
 
-            if ($translator->service === Constants::TRANSLATOR_ACCLARO) {
+            if ($translator->isAcclaro()) {
                 $translatorService = $order->getTranslationService();
 
                 $res = $translatorService->cancelOrder($order);

@@ -29,7 +29,23 @@ class Translator extends Element
      */
     public static function sources(string $context): array
     {
-        return static::defineSources($context);;
+        return static::defineSources($context);
+    }
+
+    /**
+     * Check if the translator is Acclaro
+     */
+    public function isAcclaro()
+    {
+        return $this->service === Constants::TRANSLATOR_ACCLARO;
+    }
+
+    /**
+     * Check if the translator is Export/Import
+     */
+    public function isExportImport()
+    {
+        return $this->service === Constants::TRANSLATOR_DEFAULT;
     }
 
     /**
