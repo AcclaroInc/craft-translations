@@ -136,8 +136,8 @@ class AcclaroApiClient
         $this->apiLog($response, $endpoint);
 
         if ($response->getStatusCode() != 200) {
-            // being logged from apiLog()
-            throw new Exception("Error Processing Request on Acclaro");
+            $status = $response->getStatusCode();
+            throw new Exception("Acclaro API request failed ({$status}) at '{$endpoint}'.");
         }
 
         $body = $response->getBody();

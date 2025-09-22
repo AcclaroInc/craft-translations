@@ -314,12 +314,9 @@ class BaseController extends Controller
         // Authenticate service
         $translationService = $order->getTranslationService();
 
-        try {
-            if (!$translationService->authenticate()) {
-                throw new Exception("Failed to authenticate API key.");
-            }
-        } catch (\Throwable $e) {
-            throw $e;
+        if (!$translationService->authenticate()) {
+            $this->setError("Failed to authenticate API key.");
+            return;
         }
 
         if ($order) {
