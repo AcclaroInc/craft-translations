@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.5 - 2025-09-22
+
+### Added
+- Graceful handling of failure in case of sequencical acclaro api calls. ([AcclaroInc#588](https://github.com/AcclaroInc/pm-craft-translations/issues/588))
+
 ## 4.1.4 - 2025-08-25
 
 ### Fixed
