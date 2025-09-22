@@ -513,16 +513,21 @@ class FilesController extends BaseController
         $orderId = Craft::$app->getRequest()->getRequiredBodyParam('orderId');
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
 
-        //Iterate over each file on this order and only process if trackTargetChanges is enabled
-        if ($order->files) {
-            $translationService = $order->getTranslationService();
+        try {
+            //Iterate over each file on this order and only process if trackTargetChanges is enabled
+            if ($order->files) {
+                $translationService = $order->getTranslationService();
 
-            foreach ($order->getFiles() as $file) {
-                $translationService->sendOrderReferenceFile($order, $file);
+                foreach ($order->getFiles() as $file) {
+                    $translationService->sendOrderReferenceFile($order, $file);
+                }
             }
+            $this->setSuccess("Done syncing tm files for order '{$order->title}'");
+            return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
+        } catch (\Throwable $e) {
+            Translations::$plugin->logHelper->log($e, Constants::LOG_LEVEL_ERROR);
+            $this->setError($e->getMessage());
         }
-        $this->setSuccess("Done syncing tm files for order '{$order->title}'");
-        return $this->redirect(Constants::URL_ORDER_DETAIL . $order->id, 302, true);
     }
 
     /**
