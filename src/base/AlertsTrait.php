@@ -32,7 +32,11 @@ trait AlertsTrait
      */
     public function setError($message)
     {
-        Craft::$app->getSession()->setError($this->getErrorMessage($message));
+        if (Craft::$app instanceof \craft\web\Application) {
+            Craft::$app->getSession()->setError($this->getErrorMessage($message));
+        } else {
+            Craft::error($this->getErrorMessage($message), __METHOD__);
+        }
     }
 
     /**
@@ -43,7 +47,11 @@ trait AlertsTrait
      */
     public function setSuccess($message)
     {
-        Craft::$app->getSession()->setSuccess($this->getSuccessMessage($message));
+        if (Craft::$app instanceof \craft\web\Application) {
+            Craft::$app->getSession()->setSuccess($this->getSuccessMessage($message));
+        } else {
+            Craft::info($this->getSuccessMessage($message), __METHOD__);
+        }
     }
 
     /**
@@ -55,7 +63,11 @@ trait AlertsTrait
     public function setNotice($message)
     {
         $message = Translations::$plugin->translator->translate('app', $message);
-        Craft::$app->getSession()->setNotice("Alert: $message");
+        if (Craft::$app instanceof \craft\web\Application) {
+            Craft::$app->getSession()->setNotice("Alert: $message");
+        } else {
+            Craft::info("Alert: $message", __METHOD__);
+        }
     }
 
     public function getErrorMessage($message)

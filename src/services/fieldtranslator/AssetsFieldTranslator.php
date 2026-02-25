@@ -99,7 +99,24 @@ class AssetsFieldTranslator extends GenericFieldTranslator
 
                 $element = Craft::$app->assets->getAssetById($block->id, $targetSite);
 
-                $assetFields =$element ? $element->getFieldValues(): array();
+                if ($element === null) {
+                    // Asset doesn't exist in the target site yet — propagate from source
+                    $sourceAsset = Craft::$app->assets->getAssetById($block->id, $sourceSite);
+
+                    if ($sourceAsset === null) {
+                        continue;
+                    }
+
+                    Craft::$app->elements->propagateElement($sourceAsset, $targetSite);
+                    $element = Craft::$app->assets->getAssetById($block->id, $targetSite);
+
+                    if ($element === null) {
+                        // Propagation failed — skip this block
+                        continue;
+                    }
+                }
+
+                $assetFields = $element->getFieldValues();
 
                 $post = [];
                 $element->siteId = $targetSite;

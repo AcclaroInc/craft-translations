@@ -25,9 +25,9 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^5.7.9",
+        "craftcms/cms": "^5.9.0",
         "guzzlehttp/guzzle": "^7.0",
-        "composer/composer": "^2.7.0",
+        "composer/composer": "^2.9.3",
         "google/cloud-translate": "^1.15",
 		"spatie/guzzle-rate-limiter-middleware": "^2.0"
     },
