@@ -95,7 +95,7 @@ Craft.Translations.AssetsTranslations = {
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
         } else {
-            $btngroup.insertBefore('header#header > div:last');
+            $btngroup.insertAfter('header#header > div:last');
         }
 
 
@@ -155,7 +155,7 @@ Craft.Translations.AssetsTranslations = {
 
             var $link = $('<a>', {
                 'href': '#',
-                'text': 'Add to '+order.title
+                'text': 'Add to order "'+order.title+'"'
             });
 
             $link.appendTo($item);

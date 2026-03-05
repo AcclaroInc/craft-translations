@@ -101,9 +101,8 @@ Craft.Translations.CategoryTranslations = {
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
         } else if (!this.isCreatingFresh()) {
-            $btngroup.insertBefore('#header #action-buttons');
+            $btngroup.insertAfter('header#header > div:last');
         }
-
 
         this.$btn = $('<a>', {
             'class': 'btn icon',
@@ -161,7 +160,7 @@ Craft.Translations.CategoryTranslations = {
 
             var $link = $('<a>', {
                 'href': '#',
-                'text': 'Add to '+order.title
+                'text': 'Add to order "'+order.title+'"'
             });
 
             $link.appendTo($item);

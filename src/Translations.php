@@ -432,8 +432,7 @@ class Translations extends Plugin
     private function _includeResources($path)
     {
         $this->_includeUniversalResources();
-
-        if (preg_match('#^entries(/|$)#', $path)) {
+        if (preg_match('#^content/entries(/|$)#', $path)) {
             $this->_includeEntryResources();
         }
         // Only matches for commerce products

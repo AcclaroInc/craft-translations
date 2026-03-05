@@ -12,7 +12,7 @@ Craft.Translations.GlobalSetEdit = {
     },
 
     initDraftsDropdown: function(drafts) {
-        var $container = $('<div>', {'class': 'select'}).css('margin-left', '0.75em');
+        var $container = $('<div>', {'class': 'select global-edit'});
 
         var $select = $('<select>');
 
@@ -36,7 +36,7 @@ Craft.Translations.GlobalSetEdit = {
             $option.appendTo($select);
         });
 
-        $container.appendTo('#page-title');
+        $container.appendTo('#revision-indicators');
     },
 
     initSaveDraftButton: function() {
@@ -135,7 +135,7 @@ Craft.Translations.GlobalSetEdit = {
 
             var $link = $('<a>', {
                 'href': '#',
-                'text': 'Add to '+order.title
+                'text': 'Add to order "'+order.title+'"'
             });
 
             $link.appendTo($item);
