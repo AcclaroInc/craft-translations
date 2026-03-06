@@ -1063,3 +1063,8 @@ td.target{
     display: flex;
     align-items: center;
 }
+
+.global-edit.select {
+    max-width: fit-content;
+    margin-left: 10em;
+}

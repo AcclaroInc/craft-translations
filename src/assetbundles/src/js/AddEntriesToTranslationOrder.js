@@ -53,6 +53,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
         $(this.$btn[0]).toggleClass('link-disabled', this.entries.length === 0);
         $(this.$menubtn[0]).toggleClass('link-disabled', this.entries.length === 0);
+        $(this.$btn[0]).find(".btn-text").toggleClass('display-none', this.entries.length === 0);
 
         this.updateCreateNewLink();
     },
@@ -138,12 +139,11 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             var $headinggroup = $('<div>', {'class': 'heading'}).html('<label id="translations-label" for="translations">Translations</label>');
             var $inputgroup = $('<div>', {'class': 'input ltr'});
 
-
             $headinggroup.appendTo($btncontainer);
             $inputgroup.appendTo($btncontainer);
             $btngroup.appendTo($inputgroup);
         } else if(! (this.isRevertRevisionScreen() || this.isEditDraftScreen() || this.isCreateEntryScreen())) {
-            $btngroup.insertBefore('header#header > div:last');
+            $btngroup.insertAfter('header#header > div:last');
         }
 
         this.$btn = $('<a>', {
@@ -152,7 +152,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
             'data-icon': "language",
         });
 
-        this.$btn.html("<span>" + Craft.t('app', 'New translation') + "</span>");
+        this.$btn.html("<span class='btn-text'>" + Craft.t('app', 'New translation') + "</span>");
 
         this.$menubtn = $('<div>', {
             'class': 'btn menubtn'
@@ -161,6 +161,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
         if (!this.isEditEntryScreen()) {
             this.$btn.addClass('link-disabled');
             this.$menubtn.addClass('link-disabled');
+            this.$btn.find(".btn-text").addClass('display-none');
         }
 
         this.$btn.appendTo($btngroup);
@@ -201,7 +202,7 @@ Craft.Translations.AddEntriesToTranslationOrder = {
 
             var $link = $('<a>', {
                 'href': '#',
-                'text': 'Add to '+order.title
+                'text': 'Add to order "'+order.title+'"'
             });
 
             $link.appendTo($item);

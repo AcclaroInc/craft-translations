@@ -40,7 +40,7 @@
                 this.$btngroup.appendTo($inputgroup);
                 $inputgroup.appendTo($btncontainer);
             } else if (this.isIndexScreen()) {
-                this.$btngroup.insertBefore('header#header > div:last');
+                this.$btngroup.insertAfter('header#header > div:last');
             }
 
             this.$btn = $('<a>', {
@@ -98,7 +98,7 @@
 
                 var $link = $('<a>', {
                     'href': '#',
-                    'text': 'Add to '+order.title
+                    'text': 'Add to order "'+order.title+'"'
                 });
 
                 $link.appendTo($item);
