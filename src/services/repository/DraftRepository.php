@@ -193,7 +193,9 @@ class DraftRepository
 
         $createDrafts = new CreateDrafts();
         
-        $fileDraftMap = $this->_getFileDraftMap($order); 
+        $fileDraftMap = $this->_getFileDraftMap($order);
+        $fileErrors = [];
+
         foreach ($order->getFiles() as $file) {
             if (! in_array($file->id, $fileIds)) {
                 continue;
@@ -238,7 +240,13 @@ class DraftRepository
                 if ($transaction !== null) {
                     $transaction->rollBack();
                 }
-                $this->setError($e->getMessage());
+                $errorMsg = sprintf('File %s: %s', $file->id, $e->getMessage());
+                $this->setError($errorMsg);
+                Translations::$plugin->logHelper->log(
+                    '[' . __METHOD__ . '] ' . $errorMsg,
+                    Constants::LOG_LEVEL_ERROR
+                );
+                $fileErrors[] = $errorMsg;
                 continue;
             }
         }
@@ -268,6 +276,14 @@ class DraftRepository
 
         Translations::$plugin->orderRepository->saveOrder($order);
         Translations::$plugin->cacheHelper->invalidateCache(Constants::CACHE_RESET_ORDER_CHANGES);
+
+        // If every requested file failed, propagate the error so the queue job is
+        // marked as failed rather than silently succeeding with no work done.
+        if (!empty($fileErrors) && count($fileErrors) === count($fileIds)) {
+            throw new Exception(
+                'All files failed to process: ' . implode('; ', $fileErrors)
+            );
+        }
     }
 
     /**

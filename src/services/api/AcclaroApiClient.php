@@ -19,7 +19,7 @@ class AcclaroApiClient
         $sandboxMode = false
     ) {
 		$stack = HandlerStack::create();
-		$stack->push(RateLimiterMiddleware::perSecond(3));
+		$stack->push(RateLimiterMiddleware::perSecond(3, new CraftCacheRateLimiterStore()));
 
         $this->client = new Client([
             'base_uri' => $sandboxMode ? Constants::SANDBOX_URL : Constants::PRODUCTION_URL,

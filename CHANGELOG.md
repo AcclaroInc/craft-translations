@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.8 - 2026-03-25
+
+### Fixed
+- An issue where the API rate limiter state was not shared across PHP processes (queue workers), causing each worker to maintain its own independent limit counter and collectively overwhelming the Acclaro API.
+- An issue where `getFileInfo()` was called once per file inside the order callback and sync loops, resulting in O(n) redundant API calls for orders with many files — now called once per order and passed to each file update.
+- An issue where concurrent order callbacks for the same order could run simultaneously, causing duplicate API calls and race conditions — a non-blocking per-order mutex now ensures only one callback processes at a time.
+- An issue where the `ApplyDrafts` queue job was missing the `$fileIds` property, causing the job to silently skip all files and report success without applying any drafts.
+- An issue where `updateIOFile()` was discarding the pre-fetched draft content and always falling back to reading from `$file->target`.
+- An issue where `createOrderDrafts()` was swallowing per-file exceptions and reporting the queue job as successful even when all files failed to process.
+
+### Added
+- `CraftCacheRateLimiterStore` — a Craft cache-backed implementation of the rate limiter store interface, enabling true cross-process and cross-server rate limiting for Acclaro API calls.
+- `getApiClient()` accessor method on `AcclaroTranslationService` to allow controlled access to the underlying API client (e.g. for pre-fetching shared API responses).
+
 ## 4.1.7 - 2026-03-06
 
 ### Fixed
