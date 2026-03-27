@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 4.1.8 - 2026-03-25
+## 4.1.8 - 2026-03-27
 
 ### Fixed
+- An issue where queue jobs (CreateDrafts/ApplyDrafts) triggered a `Getting unknown property: craft\console\Request::actionSegments` error because `_onBeforePublishDraft` relied on `getIsConsoleRequest()` instead of an `instanceof \craft\web\Request` type check — now uses early return with `instanceof` guard.
+- An issue where `applyTranslationDraft()` called web-only `setRouteParams()` in its catch block, which would fail in console/queue context — now guarded behind `instanceof \craft\web\Request`.
+- An issue where `CreateDrafts` contained dead code attempting to call `setActionSegments()` on `craft\console\Request` which does not have that method — removed the ineffective hack.
 - An issue where the API rate limiter state was not shared across PHP processes (queue workers), causing each worker to maintain its own independent limit counter and collectively overwhelming the Acclaro API.
 - An issue where `getFileInfo()` was called once per file inside the order callback and sync loops, resulting in O(n) redundant API calls for orders with many files — now called once per order and passed to each file update.
 - An issue where concurrent order callbacks for the same order could run simultaneously, causing duplicate API calls and race conditions — a non-blocking per-order mutex now ensures only one callback processes at a time.

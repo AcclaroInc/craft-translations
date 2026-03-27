@@ -171,10 +171,12 @@ class DraftRepository
             $newEntry = Craft::$app->getDrafts()->applyDraft($draft);
         } catch (InvalidElementException $e) {
             $this->setError('Couldn’t publish draft.');
-            // Send the draft back to the template
-            Craft::$app->getUrlManager()->setRouteParams([
-                'entry' => $draft
-            ]);
+            // Send the draft back to the template (web requests only)
+            if (Craft::$app->getRequest() instanceof \craft\web\Request) {
+                Craft::$app->getUrlManager()->setRouteParams([
+                    'entry' => $draft
+                ]);
+            }
             return null;
         }
 
