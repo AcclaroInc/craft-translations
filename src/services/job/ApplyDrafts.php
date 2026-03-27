@@ -18,10 +18,11 @@ class ApplyDrafts extends BaseJob
 {
     public $orderId;
     public $elementIds;
+    public $fileIds;
 
     public function execute($queue): void
     {
-        Translations::$plugin->draftRepository->applyDrafts($this->orderId, $this->elementIds, $queue);
+        Translations::$plugin->draftRepository->applyDrafts($this->orderId, $this->elementIds, $this->fileIds, $queue);
     }
 
     public function updateProgress($queue, $progress) {

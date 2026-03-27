@@ -672,33 +672,35 @@ class Translations extends Plugin
         $craft = Craft::$app;
         $request = $craft->getRequest();
 
-        if (!$request->getIsConsoleRequest()) {
-            $draft = $event->draft;
+        // Only check action segments for web requests — craft\console\Request
+        // does not have getActionSegments() and accessing it throws
+        // "Getting unknown property: craft\console\Request::actionSegments"
+        if (!($request instanceof \craft\web\Request)) {
+            return;
+        }
 
-            $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
+        $draft = $event->draft;
 
-            $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
+        $draftId = isset($draft['draftId']) ? $draft['draftId'] : '';
 
-            $action = $request->getActionSegments();
-            $action = end($action);
+        $response = Translations::$plugin->draftRepository->isTranslationDraft($draftId);
 
-            $applyDraftActions = [
-                'apply-draft', // Apply from entry detail page
-                'save-draft-and-publish', // Apply from order detail page
-                'publish-draft',
-                'run',
-            ];
+        $action = $request->getActionSegments();
+        $action = end($action);
 
-            if (!empty($response) && !in_array($action, $applyDraftActions)) {
-                $this->setError('Unable to publish translation draft.');
-                $path = $craft->request->getFullPath();
-                $params = $craft->request->getQueryParams();
-                $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
-                $craft->end();
-            }
-        } else {
-            // For console requests, we don't need to check action segments
-            // This prevents the "Getting unknown property: craft\console\Request::actionSegments" error
+        $applyDraftActions = [
+            'apply-draft', // Apply from entry detail page
+            'save-draft-and-publish', // Apply from order detail page
+            'publish-draft',
+            'run',
+        ];
+
+        if (!empty($response) && !in_array($action, $applyDraftActions)) {
+            $this->setError('Unable to publish translation draft.');
+            $path = $craft->request->getFullPath();
+            $params = $craft->request->getQueryParams();
+            $craft->response->redirect(UrlHelper::siteUrl($path, $params))->send();
+            $craft->end();
         }
     }
 

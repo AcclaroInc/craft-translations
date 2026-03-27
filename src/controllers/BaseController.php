@@ -105,27 +105,50 @@ class BaseController extends Controller
             $output .= 'Translation service found'.PHP_EOL;
         }
 
-        $translationService->updateOrder($order);
+        // Prevent concurrent callbacks for the same order from hammering the API.
+        // If another process is already handling a callback for this order, skip
+        // this one -- Acclaro will retry later if needed.
+        $lockKey = 'acclaro_order_callback_' . $order->id;
+        if (!Craft::$app->mutex->acquire($lockKey, 0)) {
+            $output .= 'Callback already in progress for this order, skipping.' . PHP_EOL;
+            Craft::$app->end($output);
+        }
 
-        $output .= 'Updating order'.PHP_EOL;
+        try {
+            $translationService->updateOrder($order);
 
-        $success = Craft::$app->getElements()->saveElement($order);
+            $output .= 'Updating order'.PHP_EOL;
 
-        if (!$success) {
-            Craft::$app->end('Couldn’t save the order');
-        } else {
-            $output .= 'Order changes saved'.PHP_EOL;
-            $output .= 'Starting file sync' . PHP_EOL;
+            $success = Craft::$app->getElements()->saveElement($order);
 
-            foreach($order->getFiles() as $file) {
-                // Only process the file is not already done
-                if ($file->isNew() || $file->isInProgress()) {
-                    $translationService->updateFile($order, $file);
-                    Translations::$plugin->fileRepository->saveFile($file);
+            if (!$success) {
+                Craft::$app->end('Couldn’t save the order');
+            } else {
+                $output .= 'Order changes saved'.PHP_EOL;
+                $output .= 'Starting file sync' . PHP_EOL;
+
+                // Fetch file info once for the entire order instead of once per file.
+                $fileInfoResponse = $translationService->getApiClient()->getFileInfo($order->serviceOrderId);
+                if (!is_array($fileInfoResponse)) {
+                    $fileInfoResponse = null;
+                    Translations::$plugin->logHelper->log(
+                        '[actionOrderCallback] Could not fetch file info for order: ' . $order->serviceOrderId,
+                        Constants::LOG_LEVEL_ERROR
+                    );
                 }
-            }
 
-            $output .= 'File sync successful' . PHP_EOL;
+                foreach ($order->getFiles() as $file) {
+                    // Only process the file if not already done
+                    if ($file->isNew() || $file->isInProgress()) {
+                        $translationService->updateFile($order, $file, $fileInfoResponse);
+                        Translations::$plugin->fileRepository->saveFile($file);
+                    }
+                }
+
+                $output .= 'File sync successful' . PHP_EOL;
+            }
+        } finally {
+            Craft::$app->mutex->release($lockKey);
         }
 
         Craft::$app->end("$output OK");

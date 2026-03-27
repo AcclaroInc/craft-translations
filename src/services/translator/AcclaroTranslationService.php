@@ -63,6 +63,15 @@ class AcclaroTranslationService implements TranslationServiceInterface
     }
 
     /**
+     * Expose the AcclaroApiClient instance (used by controllers that need to
+     * pre-fetch data once before iterating over files).
+     */
+    public function getApiClient(): AcclaroApiClient
+    {
+        return $this->apiClient;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function authenticate()
@@ -135,7 +144,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function updateFile(Order $order, FileModel $file)
+    public function updateFile(Order $order, FileModel $file, ?array $fileInfoResponse = null)
     {
         try {
             if ($file->isCanceled()) {
@@ -144,7 +153,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 return;
             }
 
-            $fileInfoResponse = $this->apiClient->getFileInfo($order->serviceOrderId);
+            if ($fileInfoResponse === null) {
+                $fileInfoResponse = $this->apiClient->getFileInfo($order->serviceOrderId);
+            }
 
             if (!is_array($fileInfoResponse)) {
                 $error = sprintf('Invalid file Info from acclaro. FileId: %s', $file->id);
@@ -237,6 +248,18 @@ class AcclaroTranslationService implements TranslationServiceInterface
 
         if (!($order->isGettingQuote() || $order->isAwaitingApproval())) {
             $syncOrderSvc = new SyncOrderJob();
+
+            // Fetch file info once for the whole order so updateFile does not
+            // call the /files-info endpoint on every single iteration.
+            $fileInfoResponse = $this->apiClient->getFileInfo($order->serviceOrderId);
+            if (!is_array($fileInfoResponse)) {
+                Translations::$plugin->logHelper->log(
+                    '[' . __METHOD__ . '] Invalid file info response for order: ' . $order->serviceOrderId,
+                    Constants::LOG_LEVEL_ERROR
+                );
+                $fileInfoResponse = null;
+            }
+
             foreach ($order->getFiles() as $file) {
                 if ($queue) {
                     $syncOrderSvc->updateProgress($queue, $currentElement++ / $totalElements);
@@ -244,7 +267,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
                 // Let's make sure we're not updating canceled/complete/published files
                 if ($file->isCanceled() || $file->isComplete() || $file->isPublished()) continue;
 
-                $this->updateFile($order, $file);
+                $this->updateFile($order, $file, $fileInfoResponse);
 
                 Translations::$plugin->fileRepository->saveFile($file);
             }
@@ -487,9 +510,9 @@ class AcclaroTranslationService implements TranslationServiceInterface
         return $this->apiClient->declineQuote($orderId, $comment);
     }
 
-    public function updateIOFile(Order $order, FileModel $file)
+    public function updateIOFile(Order $order, FileModel $file, ?string $draftContent = null)
     {
-        return (new Export_ImportTranslationService())->updateIOFile($order, $file);
+        return (new Export_ImportTranslationService())->updateIOFile($order, $file, $draftContent);
     }
 
     public function getProgramsList()
