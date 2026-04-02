@@ -6,7 +6,7 @@ class Constants
 {
     const PLUGIN_SCHEMA_VERSION = '2.0.2';
     const CRAFT_MIN_VERSION = '5.0.0';
-    const WORD_COUNT_LIMIT  = 2;
+    const WORD_COUNT_LIMIT  = 5000;
     const PLUGIN_HANDLE     = 'translations';
 
     // Licenses
