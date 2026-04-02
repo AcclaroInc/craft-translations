@@ -92,6 +92,20 @@ class Translations extends Plugin
     {
         parent::init();
 
+        // Attach a fallback behavior to craft\console\Request so that any code
+        // accessing $request->actionSegments (property) or calling
+        // $request->getActionSegments() in a console/queue context receives null
+        // instead of throwing UnknownPropertyException / UnknownMethodException.
+        $request = Craft::$app->getRequest();
+        if ($request instanceof \craft\console\Request) {
+            $request->attachBehavior('actionSegmentsFallback', new class extends \yii\base\Behavior {
+                public function getActionSegments(): ?array
+                {
+                    return null;
+                }
+            });
+        }
+
         Event::on(
             Plugins::class,
             Plugins::EVENT_AFTER_LOAD_PLUGINS,

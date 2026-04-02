@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.9 - 2026-04-02
+
+### Fixed
+- An issue where the word count limit threshold was incorrectly set to `2`, causing virtually all orders to be treated as large orders — restored to the default of `5000`.
+
 ## 4.1.8 - 2026-03-27
 
 ### Fixed
