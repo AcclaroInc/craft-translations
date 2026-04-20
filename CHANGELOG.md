@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.10 - 2026-04-20
+
+### Fixed
+- An issue where `self` was assigned without `var` in `AssetsTranslations.js` and `OrderEntries.js`, causing an implicit global variable declaration.
+
 ## 4.1.9 - 2026-04-02
 
 ### Fixed

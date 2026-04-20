@@ -16,7 +16,7 @@ Craft.Translations.AssetsTranslations = {
     $btn: null,
 
     init: function(orders, assetId) {
-        self = this;
+        var self = this;
         self.addTranslationOrderButton(orders, assetId);
 
         $(document).on('click', '#sidebar nav ul li a .label',function() {

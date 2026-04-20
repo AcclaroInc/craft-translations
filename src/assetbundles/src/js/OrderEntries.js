@@ -22,7 +22,7 @@
 		$buildFileActions: true,
 
 		init: function() {
-			self = this;
+			var self = this;
 			this.$publishSelectedBtn = $('#review');
 			this.$translateSelectedBtn = $('#sidebar-settings').find('button[form=sync-order-google]');
 			this.$fileActions = $('#file-actions');
