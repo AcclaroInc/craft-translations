@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.2.0 - 2026-04-23
+
+### Fixed
+- An issue where file import/export flow was not working. ([AcclaroInc#626](https://github.com/AcclaroInc/craft-translations/issues/626))
+
+### Updated
+- File upload selector to not need click button after file is selected. ([AcclaroInc#625](https://github.com/AcclaroInc/craft-translations/issues/625))
+
 ## 4.1.10 - 2026-04-20
 
 ### Fixed
