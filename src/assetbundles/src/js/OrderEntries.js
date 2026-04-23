@@ -20,9 +20,10 @@
 		$translateSelectedBtn: null,
 		$selectedFileIds: {},
 		$buildFileActions: true,
+		$self: null,
 
 		init: function() {
-			var self = this;
+			$self = this;
 			this.$publishSelectedBtn = $('#review');
 			this.$translateSelectedBtn = $('#sidebar-settings').find('button[form=sync-order-google]');
 			this.$fileActions = $('#file-actions');
@@ -30,34 +31,34 @@
 			this.$checkboxes = $('tbody .translations-checkbox-cell :checkbox').not('[disabled]');
 
 			this.$selectAllCheckbox.on('change', function() {
-				if (self.$buildFileActions) {
-					self._buildFileActions();
-					self.$buildFileActions = false;
+				if ($self.$buildFileActions) {
+					$self._buildFileActions();
+					$self.$buildFileActions = false;
 				}
 
-				self.setSelectedFileIds($(this).is(':checked'));
-				self.toggleSelected($(this).is(':checked'));
+				$self.setSelectedFileIds($(this).is(':checked'));
+				$self.toggleSelected($(this).is(':checked'));
 			});
 
 			this.$checkboxes.on('change', function() {
-				if (self.$buildFileActions) {
-					self._buildFileActions();
-					self.$buildFileActions = false;
+				if ($self.$buildFileActions) {
+					$self._buildFileActions();
+					$self.$buildFileActions = false;
 				}
 
-				self.setSelectedFileIds($(this).is(':checked'), $(this).val());
-				self.togglePublishButton();
-				self.toggleTranslateButton();
-				self.toggleSelectAllCheckbox();
+				$self.setSelectedFileIds($(this).is(':checked'), $(this).val());
+				$self.togglePublishButton();
+				$self.toggleTranslateButton();
+				$self.toggleSelectAllCheckbox();
 			});
 
 			this.$publishSelectedBtn.on('click', function () {
-				var form = self._buildPublishModal();
+				var form = $self._buildPublishModal();
 				var $modal = new Garnish.Modal(form, {
 					closeOtherModals : false,
 					resizable: true
 				});
-				self.showFirstTdComparison();
+				$self.showFirstTdComparison();
 
 				// Destroy the modal that is being hided as a new modal will be created every time
 				$modal.on('hide', function() {
@@ -65,8 +66,8 @@
 				});
 			});
 			
-			self.$translateSelectedBtn.on('click', function() {
-				self.processGoogleMT();
+			$self.$translateSelectedBtn.on('click', function() {
+				$self.processGoogleMT();
 			});
 
 			// Modal checkboxes behaviour script
@@ -74,10 +75,10 @@
 				$value = $(this).val();
 				$selected = $('tbody .clone:checkbox:checked').length;
 				if ($selected == 0) {
-					self.toggleApprovePublishButton(false)
+					$self.toggleApprovePublishButton(false)
 				} else {
 					if ($value != "on") {
-						self.toggleApprovePublishButton(true)
+						$self.toggleApprovePublishButton(true)
 					}
 				}
 				$all = $('.clone:checkbox').not("[disabled]").length;
@@ -90,7 +91,7 @@
 					return;
 				} else {
 					if ($('tbody .clone:checkbox').not("[disabled]").length > 0) {
-						self.toggleApprovePublishButton(this.checked);
+						$self.toggleApprovePublishButton(this.checked);
 						$('.clone:checkbox').not("[disabled]").prop('checked', this.checked);
 					}
 				}
@@ -100,25 +101,25 @@
 			if (action) {
 				if (fileId) {
 					let status = $('#file-' + fileId).closest('tr').find("span.status").parent().text();
-					self.$selectedFileIds[fileId] = status.trim(' ');
+					$self.$selectedFileIds[fileId] = status.trim(' ');
 				} else {
 					let files = $('#files tbody .file :checkbox').closest('tr');
 					files.each(function () {
 						let status = $(this).find('span.status').parent().text();
 						fileId = $(this).data('file-id');
-						self.$selectedFileIds[fileId] = status.trim(' ');
+						$self.$selectedFileIds[fileId] = status.trim(' ');
 					});
 				}
 			} else {
 				if (fileId) {
-					delete self.$selectedFileIds[fileId];
+					delete $self.$selectedFileIds[fileId];
 				} else {
-					self.$selectedFileIds = {};
+					$self.$selectedFileIds = {};
 				}
 			}
 		},
 		hasSelections: function () {
-			return !$.isEmptyObject(self.$selectedFileIds);
+			return !$.isEmptyObject($self.$selectedFileIds);
 		},
 		getSelections: function() {
 			return this.$checkboxes.filter(':checked');
@@ -148,7 +149,7 @@
 		},
 		canBePublished: function () {
 			let response = false;
-			$.each(self.$selectedFileIds, function (fileId, status) {
+			$.each($self.$selectedFileIds, function (fileId, status) {
 				response = ['Ready to apply', 'Applied', 'Ready for review'].includes(status);
 				return !response;
 			});
@@ -156,18 +157,18 @@
 		},
 		canBeTranslated: function () {
 			var response = false;
-			$.each(self.$selectedFileIds, function (fileId, status) {
+			$.each($self.$selectedFileIds, function (fileId, status) {
 				response = ['New', 'Modified', 'In progress'].includes(status);
 				return !response;
 			});
 			return response;
 		},
 		toggleTranslateButton: function () {
-			let canBeTranslated = self.canBeTranslated() && !(isDefaultTranslator && isAcclaroTranslator);
+			let canBeTranslated = $self.canBeTranslated() && !(isDefaultTranslator && isAcclaroTranslator);
 			if (canBeTranslated) {
-				self.$translateSelectedBtn.removeClass('link-disabled');
+				$self.$translateSelectedBtn.removeClass('link-disabled');
 			} else {
-				self.$translateSelectedBtn.addClass('link-disabled');
+				$self.$translateSelectedBtn.addClass('link-disabled');
 			}
 		},
 		toggleApprovePublishButton: function(state) {
@@ -230,7 +231,7 @@
 			$row = $(".modal.elementselectormodal").find("tr.clone-modal-tr");
 			$row.each(function() {
 				if ($(this).find("span.status").data("status") == 1) {
-					self._addDiffViewEvent(this);
+					$self._addDiffViewEvent(this);
 					$(this).find(".icon").removeClass("desc");
 					$(this).find(".icon").addClass("asc");
 					return false;
@@ -299,8 +300,8 @@
 
 			$selections.each(function () {
 				let fileId = $(this).val();
-				if (['Ready for review', 'Ready to apply', 'Applied'].includes(self.$selectedFileIds[fileId])) {
-					$clone = self.createRowClone(this);
+				if (['Ready for review', 'Ready to apply', 'Applied'].includes($self.$selectedFileIds[fileId])) {
+					$clone = $self.createRowClone(this);
 					$clone.appendTo($tableContent);
 					$('<tr>', {
 						id: "data-"+fileId
@@ -329,7 +330,7 @@
 						$($icon).addClass("desc");
 					}
 				} else {
-					self._addDiffViewEvent($row);
+					$self._addDiffViewEvent($row);
 					$($icon).removeClass("desc");
 					$($icon).addClass("asc");
 				}
@@ -356,7 +357,7 @@
 				.then((response) => {
 					data = response.data.data;
 
-					diffHtml = self.createDiffHtmlView(data);
+					diffHtml = $self.createDiffHtmlView(data);
 					diffHtml.attr("id", "data-"+$fileId)
 					$("#data-"+$fileId).replaceWith(diffHtml);
 					diffHtml.show();
@@ -368,7 +369,7 @@
 					// Copy text to clipboard
 					var $copyBtn = $("#data-"+$fileId).find('.diff-copy');
 					$($copyBtn).on('click', function(event) {
-						self.copyTextToClipboard(event);
+						$self.copyTextToClipboard(event);
 					});
 				});
 		},
@@ -490,7 +491,7 @@
 		processGoogleMT: function () {
 			let $form = $('#sync-order');
 
-			var files = Object.keys(self.$selectedFileIds);
+			var files = Object.keys($self.$selectedFileIds);
 
 			$hiddenFlow = $('<input>', {
 				'type': 'hidden',
@@ -536,9 +537,9 @@
 			var $form = $('#regenerate-preview-urls');
 			$(that).on('click', function(e) {
 				e.preventDefault();
-				self.toggleLoader(true);
+				$self.toggleLoader(true);
 
-				var files = Object.keys(self.$selectedFileIds);
+				var files = Object.keys($self.$selectedFileIds);
 
 				$hiddenFlow = $('<input>', {
                     'type': 'hidden',
@@ -553,9 +554,9 @@
 		_addDownloadPreviewLinksAction: function(that) {
 			$(that).on('click', function(e) {
 				e.preventDefault();
-				self.toggleLoader(true);
+				$self.toggleLoader(true);
 				if (hasOrderId) {
-					var files = Object.keys(self.$selectedFileIds);
+					var files = Object.keys($self.$selectedFileIds);
 					$data = {
 						'id': $("input[type=hidden][name=id]").val(),
 						'files': JSON.stringify(files)
@@ -566,12 +567,12 @@
 							if (response.data.previewFile) {
 								var $iframe = $('<iframe/>', { 'src': Craft.getActionUrl('translations/files/export-file', { 'filename': response.data.previewFile }) }).hide();
 								$('#regenerate-preview-urls').append($iframe);
-								self.toggleLoader();
+								$self.toggleLoader();
 							}
 						})
 						.catch(() => {
 							Craft.cp.displayError(Craft.t('app', 'Unable to download your file.'));
-							self.toggleLoader();
+							$self.toggleLoader();
 						});
 				}
 			});
