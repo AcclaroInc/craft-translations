@@ -99,25 +99,17 @@
             });
             $hiddenElements.appendTo($form);
 
-            var $div = $('<div class="buttons"></div>');
-            var $submit = $('<input>', {
-                'type': 'submit',
-                'id' : 'submit',
-                'class' : 'btn submit fullwidth',
-                'value' : 'Upload'
-            });
-
-            $submit.appendTo($div);
-            $div.appendTo($form);
-
             var hud = new Garnish.HUD(this.$importBtn, $form, {
                 orientations: ['top', 'bottom', 'right', 'left'],
                 hudClass: 'hud toolhud import',
             });
 
-            $submit.on('click', function() {
-                hud.hide();
-                self._showProgressBar();
+            $file.on('change', function() {
+                if ($(this).val()) {
+                    hud.hide();
+                    self._showProgressBar();
+                    $form.submit();
+                }
             });
 
             hud.on('hide', $.proxy(function() {
