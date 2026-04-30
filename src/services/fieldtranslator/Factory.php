@@ -10,14 +10,15 @@
 
 namespace acclaro\translations\services\fieldtranslator;
 
-use Craft;
 use craft\base\Field;
 use craft\fields\Tags;
 use craft\fields\Table;
 use craft\fields\Assets;
+use craft\fields\Link;
 use craft\fields\Matrix;
 use craft\fields\Number;
 use craft\fields\Entries;
+use craft\fields\ContentBlock;
 use craft\fields\Dropdown;
 use craft\fields\PlainText;
 use craft\fields\Categories;
@@ -53,8 +54,10 @@ class Factory
         Assets::class           => AssetsFieldTranslator::class,
         Categories::class       => CategoryFieldTranslator::class,
         Checkboxes::class       => MultiSelectFieldTranslator::class,
+        ContentBlock::class     => ContentBlockFieldTranslator::class,
         Dropdown::class         => SingleOptionFieldTranslator::class,
         Entries::class          => EntriesFieldTranslator::class,
+        Link::class             => LinkFieldTranslator::class,
         Matrix::class           => MatrixFieldTranslator::class,
         MultiSelect::class      => MultiSelectFieldTranslator::class,
         TypedLinkField::class   => TypedLinkFieldTranslator::class,
