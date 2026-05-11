@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.2.1 - 2026-05-12
+
+### Added
+- Support for content blocks field. ([AcclaroInc#628](https://github.com/AcclaroInc/craft-translations/issues/628))
+- Support for link field. ([AcclaroInc#628](https://github.com/AcclaroInc/craft-translations/issues/628))
+
+### Updated
+- Min craft version supported to 5.9.22
+
+
 ## 4.2.0 - 2026-04-23
 
 ### Fixed

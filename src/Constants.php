@@ -195,6 +195,7 @@ class Constants
     const NESTED_FIELD_TYPES = [
         'craft\fields\Matrix',
         'craft\fields\Assets',
+		'craft\fields\ContentBlock',
 		'verbb\vizy\fields\VizyField',
         'verbb\navigation\fields\NavigationField',
         'verbb\supertable\fields\SuperTableField',
