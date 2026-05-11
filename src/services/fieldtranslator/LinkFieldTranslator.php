@@ -19,7 +19,7 @@ use acclaro\translations\services\ElementTranslator;
 
 class LinkFieldTranslator extends GenericFieldTranslator
 {
-    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field)
+    public function toTranslationSource(ElementTranslator $elementTranslator, Element $element, Field $field, $sourceSite = null)
     {
         $fieldData = $this->getFieldValue($elementTranslator, $element, $field);
 

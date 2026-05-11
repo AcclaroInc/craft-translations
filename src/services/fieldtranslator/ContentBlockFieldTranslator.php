@@ -181,8 +181,9 @@ class ContentBlockFieldTranslator extends GenericFieldTranslator
                 continue;
             }
 
-            $field->handle = $layoutField->handle;
-            $fields[] = $field;
+            $resolvedField = clone $field;
+            $resolvedField->handle = $layoutField->handle;
+            $fields[] = $resolvedField;
         }
 
         return $fields;
