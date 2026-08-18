@@ -39,7 +39,7 @@ class ElementTranslator
         }
 
         foreach ($element->getFieldLayout()->getCustomFields() as $layoutField) {
-            $field = Craft::$app->fields->getFieldById($layoutField->id);
+            $field = clone Craft::$app->fields->getFieldById($layoutField->id);
             $field->handle = $layoutField->handle;
             $fieldSource = $this->fieldToTranslationSource($element, $field, $sourceSite);
 
@@ -162,8 +162,9 @@ class ElementTranslator
         $post = array();
 
         foreach($element->getFieldLayout()->getCustomFields() as $key => $layoutField) {
-            $field = Craft::$app->fields->getFieldById($layoutField->id);
-            $fieldHandle = $field->handle = $layoutField->handle;
+            $field = clone Craft::$app->fields->getFieldById($layoutField->id);
+            $fieldHandle = $layoutField->handle;
+            $field->handle = $layoutField->handle;
 
             $fieldType = $field;
 
