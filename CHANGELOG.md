@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Updated
    - Change link from https://info.acclaro.com/craftcms-technical-support to https://www.acclaro.com/get-started
 
+## 4.2.3 - 2026-08-24
+### Fixed
+- Neo block sub-field silently dropped on import issues
+
 ## 4.2.1 - 2026-05-12
 
 ### Added
