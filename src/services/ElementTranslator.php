@@ -42,7 +42,9 @@ class ElementTranslator
             $field = clone Craft::$app->fields->getFieldById($layoutField->id);
             $field->handle = $layoutField->handle;
             $fieldSource = $this->fieldToTranslationSource($element, $field, $sourceSite);
-
+            if (!empty($fieldSource)) {
+               $source["__fieldmap__.{$field->uid}"] = $field->handle;
+            }
             $source = array_merge($source, $fieldSource);
         }
 
@@ -165,7 +167,10 @@ class ElementTranslator
             $field = clone Craft::$app->fields->getFieldById($layoutField->id);
             $fieldHandle = $layoutField->handle;
             $field->handle = $layoutField->handle;
-
+            if (isset($targetData['__fieldmap__']) && isset($targetData['__fieldmap__'][$field->uid])) {
+               $fieldHandle = $targetData['__fieldmap__'][$field->uid];
+               $field->handle = $fieldHandle;
+            }
             $fieldType = $field;
 
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
@@ -190,11 +195,58 @@ class ElementTranslator
             }
 
             $fieldPost = [];
-            if (isset($targetData[$fieldHandle])) {
-                    $fieldPost = $translator->toPostArrayFromTranslationTarget($this, $element, $field, $sourceSite, $targetSite, $targetData[$fieldHandle]);
-            } else {
-                $fieldPost = $translator->toPostArray($this, $element, $field, $sourceSite);
+            $originalField = Craft::$app->fields->getFieldById($layoutField->id);
+
+            $translationValue = null;
+            $possibleHandles = [
+               $layoutField->handle,
+               $originalField->handle,
+            ];
+
+            $exportedHandle = null;
+
+            if (isset($targetData['__fieldmap__'])) {
+               foreach ($targetData['__fieldmap__'] as $uid => $handle) {
+                    if ($uid === $field->uid) {
+                       $exportedHandle = $handle;
+                       break;
+                    }
+                }
             }
+            if ($exportedHandle) {
+               $possibleHandles[] = $exportedHandle;
+            }
+
+            $possibleHandles = array_filter(array_unique($possibleHandles));
+            foreach ($possibleHandles as $handle) {
+                if (isset($targetData[$handle])) {
+                    $translationValue = $targetData[$handle];
+                    break;
+                }
+            }
+
+            if ($translationValue !== null) {
+               $fieldPost = $translator->toPostArrayFromTranslationTarget(
+                    $this,
+                    $element,
+                    $field,
+                    $sourceSite,
+                    $targetSite,
+                    $translationValue
+                );
+            } else {
+                $fieldPost = $translator->toPostArray(
+                    $this,
+                    $element,
+                    $field,
+                    $sourceSite
+                );
+            }
+            // if (isset($targetData[$fieldHandle])) {
+            //         $fieldPost = $translator->toPostArrayFromTranslationTarget($this, $element, $field, $sourceSite, $targetSite, $targetData[$fieldHandle]);
+            // } else {
+            //     $fieldPost = $translator->toPostArray($this, $element, $field, $sourceSite);
+            // }
 
             if (!is_array($fieldPost)) {
                 $fieldPost = array($fieldHandle => $fieldPost);
