@@ -37,10 +37,13 @@ class ElementTranslator
             }
         
         }
+        
+        $fieldMap = [];
 
         foreach ($element->getFieldLayout()->getCustomFields() as $layoutField) {
             $field = clone Craft::$app->fields->getFieldById($layoutField->id);
             $field->handle = $layoutField->handle;
+            $fieldMap[$field->uid] = $layoutField->handle;
             $fieldSource = $this->fieldToTranslationSource($element, $field, $sourceSite);
             
             $source = array_merge($source, $fieldSource);
@@ -65,6 +68,9 @@ class ElementTranslator
 
         }
         
+        if (!empty($fieldMap)) {
+          $source['__meta__fieldmap__'] = json_encode($fieldMap);
+        }
         return $source;
     }
 
@@ -191,8 +197,18 @@ class ElementTranslator
 
             $fieldPost = [];
             $translationValue = null;
+            $fieldMap = [];
 
-            if (array_key_exists($layoutField->handle, $targetData)) {
+            if (!empty($targetData['__meta__fieldmap__'])) {
+               $fieldMap = json_decode(
+                  $targetData['__meta__fieldmap__'],
+                  true
+                ) ?: [];
+            }
+            if (isset($fieldMap[$field->uid]) &&    array_key_exists($fieldMap[$field->uid], $targetData)) {
+               $translationValue =    $targetData[$fieldMap[$field->uid]];
+            }
+            if ( $translationValue === null &&   array_key_exists($layoutField->handle, $targetData)) {
                $translationValue = $targetData[$layoutField->handle];
             }
 
