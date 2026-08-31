@@ -19,6 +19,64 @@ use acclaro\translations\Translations;
 
 class ElementToFileConverter
 {
+    private function ensureMetadataTable()
+    {
+        try {
+
+            $db = Craft::$app->db;
+
+            if ($db->schema->getTableSchema(
+                '{{%translation_file_metadata}}',
+                true
+            ) !== null
+            ) {
+              return;
+            }
+
+            $db->createCommand()->createTable(
+            '{{%translation_file_metadata}}',
+            [
+                'id' => \yii\db\Schema::TYPE_PK,
+
+                'order_id'
+                    => \yii\db\Schema::TYPE_INTEGER
+                    . ' NOT NULL',
+
+                'element_id'
+                    => \yii\db\Schema::TYPE_INTEGER
+                    . ' NOT NULL',
+
+                'metadata_key'
+                    => \yii\db\Schema::TYPE_STRING
+                    . '(500) NOT NULL',
+
+                'metadata_value'
+                    => \yii\db\Schema::TYPE_TEXT,
+
+                'dateCreated'
+                    => \yii\db\Schema::TYPE_DATETIME,
+
+                'dateUpdated'
+                    => \yii\db\Schema::TYPE_DATETIME,
+            ]
+            )->execute();
+
+            $db->createCommand()->createIndex(
+            'uq_translation_file_metadata',
+            '{{%translation_file_metadata}}',
+            [
+                'order_id',
+                'element_id',
+                'metadata_key'
+            ],
+            true
+            )->execute();
+
+        } catch (\Throwable $e) {
+
+           Craft::error(    $e->getMessage(),    __METHOD__);
+        }
+    }
     public function toXml(Element $element, $draftId, $sourceSite, $targetSite, $previewUrl, $orderId, $wordCount)
     {
         $dom = new DOMDocument('1.0', 'utf-8');
@@ -46,7 +104,31 @@ class ElementToFileConverter
 
         $body = $xml->appendChild($dom->createElement('body'));
 
-        foreach (Translations::$plugin->elementTranslator->toTranslationSource($element, $sourceSite, $orderId) as $key => $value) {
+        $translations =   Translations::$plugin->elementTranslator->toTranslationSource($element,$sourceSite,$orderId);
+        $this->ensureMetadataTable();
+        foreach ($translations as $key => $value) {
+            if ( substr($key, -19) === '.__meta__fieldmap__') {
+
+                Craft::$app->db->createCommand()->upsert(
+                'translation_file_metadata',
+                [
+                    'order_id'      => $orderId,
+                    'element_id'    => $element->id,
+                    'metadata_key'  => $key,
+                    'metadata_value'=> $value,
+                ],
+                [
+                   'metadata_value'=> $value,
+                    'dateUpdated'   =>
+                     new \yii\db\Expression('NOW()'),
+                ]
+                )->execute();
+
+                continue;
+            }
+            if($key == '__meta__fieldmap__') {
+                continue;
+            }
             $translation = $dom->createElement('content');
 
             $translation->setAttribute('resname', $key);
@@ -78,13 +160,31 @@ class ElementToFileConverter
             "wordCount"         => $wordCount
         ];
 
-        foreach (
-            Translations::$plugin->elementTranslator->toTranslationSource(
-                $element,
-                $sourceSite,
-                $orderId
-            ) as $key => $value
-        ) {
+        $translations =   Translations::$plugin->elementTranslator->toTranslationSource($element,$sourceSite,$orderId);
+        $this->ensureMetadataTable();
+        foreach ($translations as $key => $value) {
+            if ( substr($key, -19) === '.__meta__fieldmap__') {
+
+                Craft::$app->db->createCommand()->upsert(
+                'translation_file_metadata',
+                [
+                    'order_id'      => $orderId,
+                    'element_id'    => $element->id,
+                    'metadata_key'  => $key,
+                    'metadata_value'=> $value,
+                ],
+                [
+                   'metadata_value'=> $value,
+                    'dateUpdated'   =>
+                     new \yii\db\Expression('NOW()'),
+                ]
+                )->execute();
+
+                continue;
+            }
+            if($key == '__meta__fieldmap__') {
+                continue;
+            }
             $file['content'][$key] = $value;
         }
 
@@ -108,13 +208,31 @@ class ElementToFileConverter
         $headers = '"orderId","elementId","source-site","target-site","source-language","target-language","wordCount"';
         $content = "\"$orderId\",\"$element->id\",\"$sourceSite\",\"$targetSite\",\"$sourceLanguage\",\"$targetLanguage\",\"$wordCount\"";
 
-        foreach (
-            Translations::$plugin->elementTranslator->toTranslationSource(
-                $element,
-                $sourceSite,
-                $orderId
-            ) as $key => $value
-        ) {
+        $translations =   Translations::$plugin->elementTranslator->toTranslationSource($element,$sourceSite,$orderId);
+        $this->ensureMetadataTable();
+        foreach ($translations as $key => $value) {
+            if ( substr($key, -19) === '.__meta__fieldmap__') {
+
+                Craft::$app->db->createCommand()->upsert(
+                'translation_file_metadata',
+                [
+                    'order_id'      => $orderId,
+                    'element_id'    => $element->id,
+                    'metadata_key'  => $key,
+                    'metadata_value'=> $value,
+                ],
+                [
+                   'metadata_value'=> $value,
+                    'dateUpdated'   =>
+                     new \yii\db\Expression('NOW()'),
+                ]
+                )->execute();
+
+                continue;
+            }
+            if($key == '__meta__fieldmap__') {
+                continue;
+            }
             $headers .= ",\"$key\"";
             $content .= ",\"$value\"";
         }
