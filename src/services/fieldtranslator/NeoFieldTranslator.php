@@ -114,7 +114,30 @@ class NeoFieldTranslator extends GenericFieldTranslator
             $isTranslatable = $field->getIsTranslatable($element);
             $blockId = $isTranslatable ? $i : $this->getBlockUid($block);
             $blockData = $allBlockData[$i] ?? array();
+            try {
 
+                $metadataKey = sprintf(
+                      '%s.%s.__meta__fieldmap__',
+                    $fieldHandle,
+                    $i
+                );
+
+                $row = (new \yii\db\Query())
+                ->from('translation_file_metadata')
+                ->where([
+                 'element_id'   => $element->id,
+                 'metadata_key' => $metadataKey,
+                ])
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
+
+                if ($row) {
+                   $blockData['__meta__fieldmap__'] = $row['metadata_value'];
+                }
+
+            } catch (\Throwable $e) {
+
+            }
             $data = [
                 'modified' => '1',
                 'type' => $block->getType()->handle,
