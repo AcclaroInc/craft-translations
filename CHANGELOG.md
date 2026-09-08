@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.2.7 - 2026-09-08
+
+### Fixed
+- Prevent `Invalid field handle` import failures when top-level or nested field handles change after export. ([pm-craft-translations#633](https://github.com/AcclaroInc/pm-craft-translations/issues/633))
+- Add the missing field-map metadata table through a Craft migration and respect configured database table prefixes.
+- Keep field-map metadata isolated by order and element.
+- Preserve import compatibility with field maps exported by version 4.2.3.
+
 ## 4.2.2 - 2026-07-22
 
 ### Updated

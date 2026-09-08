@@ -459,6 +459,7 @@ class FileRepository
             $converter = Translations::$plugin->elementToFileConverter;
 
             $currentContent = Translations::$plugin->elementTranslator->toTranslationSource($element, $sourceSite, $file->orderId);
+            $currentContent = Translations::$plugin->fileMetadataRepository->withoutFieldMaps($currentContent);
             $currentContent = json_encode(array_map("strval", array_values($currentContent)));
 
             $sourceContent = json_decode($converter->xmlToJson($source), true);
@@ -592,6 +593,7 @@ class FileRepository
             $data['targetElementSite'],
             $meta['orderId']
         );
+        $target = Translations::$plugin->fileMetadataRepository->withoutFieldMaps($target);
         $tmContent = '';
 
         if ($forDownload) {

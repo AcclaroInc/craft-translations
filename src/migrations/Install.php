@@ -276,6 +276,23 @@ class Install extends Migration
             );
         }
 
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Constants::TABLE_FILE_METADATA);
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                Constants::TABLE_FILE_METADATA,
+                [
+                    'id' => $this->primaryKey(),
+                    'order_id' => $this->integer()->notNull(),
+                    'element_id' => $this->integer()->notNull(),
+                    'metadata_key' => $this->string(500)->notNull(),
+                    'metadata_value' => $this->text(),
+                    'dateCreated' => $this->dateTime(),
+                    'dateUpdated' => $this->dateTime(),
+                ]
+            );
+        }
+
         return $tablesCreated;
     }
 
@@ -290,6 +307,12 @@ class Install extends Migration
         $this->createIndex(null, Constants::TABLE_GLOBAL_SET_DRAFT, ['globalSetId'], false);
         $this->createIndex(null, Constants::TABLE_WIDGET, ['userId'], false);
         $this->createIndex(null, Constants::TABLE_STATIC_TRANSLATIONS, ['siteId']);
+        $this->createIndex(
+            'uq_translation_file_metadata',
+            Constants::TABLE_FILE_METADATA,
+            ['order_id', 'element_id', 'metadata_key'],
+            true
+        );
         // Orders table - Indexing
         $this->createIndex(null, Constants::TABLE_ORDERS, ['status']);
         $this->createIndex(null, Constants::TABLE_ORDERS, ['translatorId']);
@@ -370,6 +393,8 @@ class Install extends Migration
         $this->dropTableIfExists(Constants::TABLE_NAVIGATION_DRAFT);
 
         $this->dropTableIfExists(Constants::TABLE_STATIC_TRANSLATIONS);
+
+        $this->dropTableIfExists(Constants::TABLE_FILE_METADATA);
     }
 
     /**
