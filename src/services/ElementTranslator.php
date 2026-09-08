@@ -69,7 +69,7 @@ class ElementTranslator
         }
         
         if (!empty($fieldMap)) {
-          $source['__meta__fieldmap__'] = json_encode($fieldMap);
+          $source[Constants::FIELD_MAP_METADATA_KEY] = json_encode($fieldMap);
         }
         return $source;
     }
@@ -85,36 +85,42 @@ class ElementTranslator
         if ($this->getDataFormat($content) === Constants::FILE_FORMAT_XML) {
             return $this->getTargetDataFromXml($content, $nonNested);
         } else {
-            $targetData = [];
             $content = json_decode($content, true);
 
             if ($nonNested) {
-                return $content['content'];
+                return $content['content'] ?? [];
             }
 
-            foreach ($content['content'] as $name => $value) {
-                if (strpos($name, '.') !== false) {
-                    $parts = explode('.', $name);
-                    $container =& $targetData;
-
-                    while ($parts) {
-                        $key = array_shift($parts);
-
-                        if (!isset($container[$key])) {
-                            $container[$key] = array();
-                        }
-
-                        $container =& $container[$key];
-                    }
-
-                    $container = $value;
-                } else {
-                    $targetData[$name] = $value;
-                }
-            }
-
-            return $targetData;
+            return $this->mergeFlatTargetData([], $content['content'] ?? []);
         }
+    }
+
+    public function mergeFlatTargetData(array $targetData, array $flatData): array
+    {
+        foreach ($flatData as $name => $value) {
+            if (strpos($name, '.') === false) {
+                $targetData[$name] = $value;
+                continue;
+            }
+
+            $parts = explode('.', $name);
+            $container =& $targetData;
+
+            while ($parts) {
+                $key = array_shift($parts);
+
+                if (!isset($container[$key]) || !is_array($container[$key])) {
+                    $container[$key] = [];
+                }
+
+                $container =& $container[$key];
+            }
+
+            $container = $value;
+            unset($container);
+        }
+
+        return $targetData;
     }
 
     public function getTargetDataFromXml($xml, $nonNested = false)
@@ -199,14 +205,28 @@ class ElementTranslator
             $translationValue = null;
             $fieldMap = [];
 
-            if (!empty($targetData['__meta__fieldmap__'])) {
-               $fieldMap = json_decode(
-                  $targetData['__meta__fieldmap__'],
-                  true
-                ) ?: [];
+            if (isset($targetData[Constants::LEGACY_FIELD_MAP_KEY]) &&
+                is_array($targetData[Constants::LEGACY_FIELD_MAP_KEY])
+            ) {
+                $fieldMap = $targetData[Constants::LEGACY_FIELD_MAP_KEY];
             }
-            if (isset($fieldMap[$field->uid]) &&    array_key_exists($fieldMap[$field->uid], $targetData)) {
-               $translationValue =    $targetData[$fieldMap[$field->uid]];
+
+            if (isset($targetData[Constants::FIELD_MAP_METADATA_KEY]) &&
+                is_string($targetData[Constants::FIELD_MAP_METADATA_KEY])
+            ) {
+                $decodedFieldMap = json_decode(
+                    $targetData[Constants::FIELD_MAP_METADATA_KEY],
+                    true
+                );
+
+                if (is_array($decodedFieldMap)) {
+                    $fieldMap = array_merge($fieldMap, $decodedFieldMap);
+                }
+            }
+
+            $mappedHandle = $fieldMap[$field->uid] ?? null;
+            if (is_string($mappedHandle) && array_key_exists($mappedHandle, $targetData)) {
+               $translationValue = $targetData[$mappedHandle];
             }
             if ( $translationValue === null &&   array_key_exists($layoutField->handle, $targetData)) {
                $translationValue = $targetData[$layoutField->handle];

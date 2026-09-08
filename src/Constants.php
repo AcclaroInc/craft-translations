@@ -4,7 +4,7 @@ namespace acclaro\translations;
 
 class Constants
 {
-    const PLUGIN_SCHEMA_VERSION = '2.0.2';
+    const PLUGIN_SCHEMA_VERSION = '2.0.3';
     const CRAFT_MIN_VERSION = '5.0.0';
     const WORD_COUNT_LIMIT  = 5000;
     const PLUGIN_HANDLE     = 'translations';
@@ -180,6 +180,10 @@ class Constants
     const TABLE_ACTIVITY_LOG        = '{{%translations_activitylogs}}';
     const TABLE_NAVIGATION_DRAFT    = '{{%translations_navigationdrafts}}';
     const TABLE_STATIC_TRANSLATIONS = '{{%translations_statictranslations}}';
+    const TABLE_FILE_METADATA       = '{{%translation_file_metadata}}';
+
+    const FIELD_MAP_METADATA_KEY = '__meta__fieldmap__';
+    const LEGACY_FIELD_MAP_KEY   = '__fieldmap__';
 
     // Job Descriptions
     const JOB_ACCLARO_UPDATING_REVIEW_URL   = 'Updating Acclaro review urls';

@@ -133,6 +133,11 @@ class Export_ImportTranslationService implements TranslationServiceInterface
     {
         // Get the data from the XML files
         $targetData = Translations::$plugin->elementTranslator->getTargetData($translatedContent);
+        $fieldMaps = Translations::$plugin->fileMetadataRepository->findFieldMaps(
+            (int)$order->id,
+            (int)$element->id
+        );
+        $targetData = Translations::$plugin->elementTranslator->mergeFlatTargetData($targetData, $fieldMaps);
 
         switch (true) {
             // Update GlobalSet Drafts
