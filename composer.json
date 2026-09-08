@@ -36,6 +36,9 @@
             "acclaro\\translations\\": "src/"
         }
     },
+    "scripts": {
+        "test": "php tests/regression.php"
+    },
     "extra": {
         "name": "Translations",
         "handle": "translations",
