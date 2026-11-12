@@ -11,7 +11,6 @@
 namespace acclaro\translations\controllers;
 
 use Craft;
-use craft\helpers\Path;
 use craft\helpers\Assets;
 use craft\elements\Asset;
 use craft\web\UploadedFile;
@@ -33,12 +32,23 @@ use acclaro\translations\services\job\ImportFiles;
  */
 class FilesController extends BaseController
 {
-    protected array|int|bool $allowAnonymous = ['actionImportFile', 'actionExportFile', 'actionCreateExportZip'];
+    protected array|int|bool $allowAnonymous = false;//['actionImportFile', 'actionExportFile', 'actionCreateExportZip'];
 
     /**
      * @var Order
      */
     protected $order;
+    
+    private function requireOrderExportAccess($order): void
+    {
+       $user = Craft::$app->getUser()->getIdentity();
+       $isOwner = $user && (int) $order->ownerId === (int) $user->id;
+       $canEdit = Translations::$plugin->userRepository->userHasAccess('translations:orders:edit');
+
+       if (!$isOwner && !$canEdit) {
+        throw new \yii\web\ForbiddenHttpException('User is not authorized to perform this action.');
+       }
+    }
 
     /**
 	 * Allowed types of site images.
@@ -49,10 +59,19 @@ class FilesController extends BaseController
 
     public function actionCreateExportZip()
     {
-        $orderId = Craft::$app->getRequest()->getRequiredBodyParam('orderId');
-        $fileFormat = Craft::$app->getRequest()->getBodyParam('format', Constants::FILE_FORMAT_XML);;
+        //$orderId = Craft::$app->getRequest()->getRequiredBodyParam('orderId');
+        //$fileFormat = Craft::$app->getRequest()->getBodyParam('format', Constants::FILE_FORMAT_XML);;
 
+        //$order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        $this->requireLogin();
+        $this->requirePostRequest();
+        $orderId = Craft::$app->getRequest()->getRequiredBodyParam('orderId');
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        if (!$order) {
+           throw new NotFoundHttpException('Order not found.');
+        }
+        $this->requireOrderExportAccess($order);
+        $fileFormat = Craft::$app->getRequest()->getBodyParam('format', Constants::FILE_FORMAT_XML);
 
         $errors = array();
 
@@ -154,25 +173,97 @@ class FilesController extends BaseController
         Craft::$app->getElements()->saveElement($order);
         $transaction->commit();
 
-        return $this->asSuccess(null, ['files' => $zipDest]);
+        //return $this->asSuccess(null, ['files' => $zipDest]);
+        return $this->asSuccess(null, [
+          'token' => $this->createExportToken($zipDest),
+        ]);
+    }
+
+    private function createExportToken(string $absolutePath): string
+    {
+       $payload = json_encode([
+          'uid' => (int) Craft::$app->getUser()->getId(),
+          'name' => basename($absolutePath),
+          'exp' => time() + 120,
+       ], JSON_THROW_ON_ERROR);
+
+       return Craft::$app->getSecurity()->hashData($payload);
     }
 
     /**
      * Export Functionlity
 	 * Sends the zip file created to the user
      */
+    // public function actionExportFile()
+    // {
+    //     $filename = Craft::$app->getRequest()->getRequiredQueryParam('filename');
+    //     if (!is_file($filename) || !Path::ensurePathIsContained($filename)) {
+    //         throw new NotFoundHttpException(Craft::t('app', 'Invalid file name: {filename}', [
+    //             'filename' => $filename
+	// 		]));
+    //     }
+
+    //     Craft::$app->getResponse()->sendFile($filename, null, ['inline' => true]);
+
+    //     return FileHelper::unlink($filename);
+    // }
     public function actionExportFile()
     {
-        $filename = Craft::$app->getRequest()->getRequiredQueryParam('filename');
-        if (!is_file($filename) || !Path::ensurePathIsContained($filename)) {
-            throw new NotFoundHttpException(Craft::t('app', 'Invalid file name: {filename}', [
-                'filename' => $filename
-			]));
+       $this->requireLogin();
+       $this->requirePostRequest();
+
+       $token = Craft::$app->getRequest()->getRequiredBodyParam('token');
+       $path = $this->resolveExportPath($token);
+
+       FileHelper::deleteFileAfterRequest($path);
+
+       return Craft::$app->getResponse()->sendFile($path, basename($path), [
+          'inline' => false,
+       ]);
+    }
+
+    private function resolveExportPath(string $token): string
+    {
+        $data = Craft::$app->getSecurity()->validateData($token);
+        if (!is_string($data) || $data === '') {
+          throw new NotFoundHttpException('Export file not found.');
         }
 
-        Craft::$app->getResponse()->sendFile($filename, null, ['inline' => true]);
+        try {
+          $payload = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+          throw new NotFoundHttpException('Export file not found.');
+        }
 
-        return FileHelper::unlink($filename);
+        $name = $payload['name'] ?? null;
+        $exp = $payload['exp'] ?? null;
+        $uid = $payload['uid'] ?? null;
+
+        if (!is_string($name) || !is_int($exp) || !is_int($uid) || $exp < time()) {
+           throw new NotFoundHttpException('Export file not found.');
+        }
+
+        if ($uid !== (int) Craft::$app->getUser()->getId()) {
+           throw new \yii\web\ForbiddenHttpException('User is not authorized to perform this action.');
+        }
+
+        if (preg_match('/^(?:TM_)?[A-Za-z0-9\-_]*_\d+\.zip$/', $name) !== 1 || $name !== basename($name)) {
+           throw new NotFoundHttpException('Export file not found.');
+        }
+
+        $temp = realpath(Craft::$app->getPath()->getTempPath());
+        $real = ($temp !== false) ? realpath($temp . DIRECTORY_SEPARATOR . $name) : false;
+        if ($real === false || !is_file($real)) {
+          throw new NotFoundHttpException('Export file not found.');
+        }
+
+        $tempNorm = rtrim(FileHelper::normalizePath($temp), '/');
+        $realNorm = FileHelper::normalizePath($real);
+        if (dirname($realNorm) !== $tempNorm) {
+           throw new NotFoundHttpException('Export file not found.');
+        }
+
+        return $real;
     }
 
     public function actionImportFile()
@@ -422,6 +513,12 @@ class FilesController extends BaseController
             if ($file && (in_array($file->status, [Constants::FILE_STATUS_REVIEW_READY, Constants::FILE_STATUS_COMPLETE, Constants::FILE_STATUS_PUBLISHED]))) {
                 try {
                     $element = Translations::$plugin->elementRepository->getElementById($file->elementId, $file->sourceSite);
+                    
+                    $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+                    if (!$order) {
+                      throw new NotFoundHttpException('Order not found.');
+                    }
+                    $this->requireOrderExportAccess($order);
 
                     $data['diff'] = Translations::$plugin->fileRepository->getSourceTargetDifferences($file->source, $file->target);
 
@@ -451,11 +548,16 @@ class FilesController extends BaseController
      * Create Zip of Translations memory alignment files
      */
     public function actionCreateTmExportZip() {
+        $this->requireLogin();
+        $this->requirePostRequest();
         $orderId = Craft::$app->getRequest()->getBodyParam('orderId');
         $format = Craft::$app->getRequest()->getBodyParam('format');
-
+        $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        if (!$order) {
+           throw new NotFoundHttpException('Order not found.');
+        }
+        $this->requireOrderExportAccess($order);
         try {
-            $order = Translations::$plugin->orderRepository->getOrderById($orderId);
             $orderAttributes = $order->getAttributes();
 
             //Filename Zip Folder
@@ -469,7 +571,8 @@ class FilesController extends BaseController
 
             // Open zip
             if ($zip->open($zipDest, $zip::CREATE) !== true) {
-                return $this->asFailure(sprintf("%s. {%s}", $this->getErrorMessage("Unable to create zip file"), $zipDest));
+                //return $this->asFailure(sprintf("%s. {%s}", $this->getErrorMessage("Unable to create zip file"), $zipDest));
+                return $this->asFailure($this->getErrorMessage('Unable to create zip file'));
             }
 
             //Iterate over each file on this order
@@ -503,15 +606,25 @@ class FilesController extends BaseController
             return $this->asJson(['success' => false, 'message' => $this->getErrorMessage($e->getMessage())]);
         }
 
-        return $this->asSuccess(null, ['files' => $zipDest]);
+        return $this->asSuccess(null, [
+           'token' => $this->createExportToken($zipDest),
+        ]);
     }
 
     /**
      * Send Translation memory files to translation service provider
      */
     public function actionSyncTmFiles() {
+        //$orderId = Craft::$app->getRequest()->getRequiredBodyParam('orderId');
+        //$order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        $this->requireLogin();
+        $this->requirePostRequest();
         $orderId = Craft::$app->getRequest()->getRequiredBodyParam('orderId');
         $order = Translations::$plugin->orderRepository->getOrderById($orderId);
+        if (!$order) {
+           throw new NotFoundHttpException('Order not found.');
+        }
+        $this->requireOrderExportAccess($order);
 
         try {
             //Iterate over each file on this order and only process if trackTargetChanges is enabled
@@ -544,7 +657,14 @@ class FilesController extends BaseController
 
         try {
             $file = Translations::$plugin->fileRepository->getFileById($fileId);
-
+            if (!$file) {
+               throw new NotFoundHttpException('File not found.');
+            }
+            $order = Translations::$plugin->orderRepository->getOrderById($file->orderId);
+            if (!$order) {
+              throw new NotFoundHttpException('Order not found.');
+            }
+            $this->requireOrderExportAccess($order);
             $element = $file->getElement(false);
 
             if ($file->isComplete() && $file->hasPreview() && $draft = $file->hasDraft()) {

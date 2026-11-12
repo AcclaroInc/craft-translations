@@ -56,12 +56,19 @@
                                 .then((response) => {
                                     this.updateProgressBar();
 
-                                    if (response.data.files) {
-                                        var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.files})}).hide();
-                                        this.$form.append($iframe);
-                                    }
+                                    // if (response.data.files) {
+                                    //     var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.files})}).hide();
+                                    //     this.$form.append($iframe);
+                                    // }
 
-                                    setTimeout($.proxy(this, 'onComplete'), 300);
+                                    // setTimeout($.proxy(this, 'onComplete'), 300);
+                                    if (!response.data || !response.data.token) {
+                                       Craft.cp.displayError(Craft.t('app', 'Export failed.'));
+                                       this.onComplete(false);
+                                       return;
+                                    }
+                                    this.downloadExport(response.data.token);
+                                    setTimeout($.proxy(this, 'onComplete'), 1000);
                                 }).catch(({response}) => {
                                     Craft.cp.displayError(Craft.t('app', response.data.message));
 
@@ -76,7 +83,40 @@
             }
             this.$trigger.css('background-color', '');
         },
+        downloadExport: function(token) {
+            const frameName = 'files-export-frame';
+            let $iframe = $('iframe[name="' + frameName + '"]');
 
+            if (!$iframe.length) {
+               $iframe = $('<iframe/>', {
+               name: frameName,
+               style: 'display:none'
+              }).appendTo(document.body);
+            }
+
+            const $form = $('<form/>', {
+               method: 'post',
+               action: Craft.getActionUrl('translations/files/export-file'),
+               target: frameName
+            });
+
+            $form.append($('<input/>', {
+               type: 'hidden',
+               name: Craft.csrfTokenName,
+               value: Craft.csrfTokenValue
+            }));
+            $form.append($('<input/>', {
+               type: 'hidden',
+               name: 'token',
+               value: token
+            }));
+
+            $form.appendTo(document.body);
+            $form[0].submit();
+            setTimeout(function() {
+              $form.remove();
+            }, 1000);
+        },
         updateProgressBar: function() {
             var width = 100;
             this.progressBar.setProgressPercentage(width);
