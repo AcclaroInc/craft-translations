@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.2.8 - 2026-11-17
+ - Fix Security issues in the Translations for Craft plugin (unauthenticated file read, callback key disclosure, order export without authorization)
+([AcclaroInc#660](https://github.com/AcclaroInc/craft-translations/issues/660))
+
 ## 4.2.7 - 2026-09-08
 
 ### Fixed
