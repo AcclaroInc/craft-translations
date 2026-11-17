@@ -52,6 +52,16 @@ class BaseController extends Controller
         $this->pluginVersion = Craft::$app->getPlugins()->getPlugin(Constants::PLUGIN_HANDLE)->getVersion();
     }
 
+    private function assertCallbackKey(): void
+    {
+       $provided = Craft::$app->getRequest()->getQueryParam('key');
+       $expected = sha1_file(Craft::$app->getPath()->getConfigPath() . '/license.key');
+
+       if (!is_string($provided) || !is_string($expected) || !hash_equals($expected, $provided)) {
+          Craft::$app->end('Invalid key');
+       }
+    }
+
     // Callback & Request Methods
     // =========================================================================
 
@@ -59,17 +69,20 @@ class BaseController extends Controller
     {
         Craft::$app->getResponse()->headers->set('Content-Type', 'text/plain');
         
+        $this->assertCallbackKey();
         $this->logIncomingRequest('orderCallback');
 
-        $key = sha1_file(Craft::$app->path->getConfigPath().'/license.key');
-        $output = '';
+        // $key = sha1_file(Craft::$app->path->getConfigPath().'/license.key');
+        // $output = '';
 
-        if (Craft::$app->request->getRequiredQueryParam('key') !== $key) {
-            $output .= $key.PHP_EOL.'Invalid key';
-            Craft::$app->end($output);
-        } else {
-            $output .= "Valid key: $key".PHP_EOL;
-        }
+        // if (Craft::$app->request->getRequiredQueryParam('key') !== $key) {
+        //     $output .= $key.PHP_EOL.'Invalid key';
+        //     Craft::$app->end($output);
+        // } else {
+        //     $output .= "Valid key: $key".PHP_EOL;
+        // }
+        //$this->assertCallbackKey();
+        $output = 'Valid key' . PHP_EOL;
 
         $orderId = Craft::$app->request->getRequiredQueryParam('orderId');
 
@@ -157,17 +170,19 @@ class BaseController extends Controller
     public function actionFileCallback()
     {
         Craft::$app->getResponse()->headers->set('Content-Type', 'text/plain');
-
+        $this->assertCallbackKey();
         $this->logIncomingRequest('fileCallback');
 
-        $key = sha1_file(Craft::$app->path->getConfigPath().'/license.key');
-        $output = '';
+        // $key = sha1_file(Craft::$app->path->getConfigPath().'/license.key');
+        // $output = '';
 
-        if (Craft::$app->request->getQueryParam('key') !== $key) {
-            Craft::$app->end('Invalid key');
-        } else {
-            $output .= 'Valid key'.PHP_EOL;
-        }
+        // if (Craft::$app->request->getQueryParam('key') !== $key) {
+        //     Craft::$app->end('Invalid key');
+        // } else {
+        //     $output .= 'Valid key'.PHP_EOL;
+        // }
+        //$this->assertCallbackKey();
+        $output = 'Valid key' . PHP_EOL;
 
         $fileId = Craft::$app->request->getRequiredQueryParam('fileId');
 
@@ -373,6 +388,28 @@ class BaseController extends Controller
         }
     }
 
+    private function redactCallbackSecrets(string $uri): string
+    {
+       $parts = parse_url($uri);
+       if ($parts === false) {
+         return $uri;
+       }
+
+       $path = $parts['path'] ?? '';
+       if (empty($parts['query'])) {
+          return $path !== '' ? $path : $uri;
+       }
+
+       parse_str($parts['query'], $query);
+       unset($query['key'], $query['sig']);
+
+       if ($query === []) {
+        return $path;
+       }
+
+       return $path . '?' . http_build_query($query);
+    }
+
     // PRIVATE METHODS
     private function logIncomingRequest($endpoint)
     {
@@ -381,7 +418,8 @@ class BaseController extends Controller
         $request = sprintf(
             "%s %s %s\n",
             $_SERVER['REQUEST_METHOD'],
-            $_SERVER['REQUEST_URI'],
+            //$_SERVER['REQUEST_URI'],
+            $this->redactCallbackSecrets($_SERVER['REQUEST_URI'] ?? ''),
             $_SERVER['SERVER_PROTOCOL']
         );
 
@@ -389,8 +427,13 @@ class BaseController extends Controller
             $request .= "{$key}: {$value[0]}\n";
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $request .= "\n" . http_build_query($_POST);
+        // if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        //     $request .= "\n" . http_build_query($_POST);
+        // }
+        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+           $post = $_POST;
+           unset($post['key'], $post['sig']);
+           $request .= "\n" . http_build_query($post);
         }
 
         $tempPath = Craft::$app->getPath()->getTempPath() . '/translations';

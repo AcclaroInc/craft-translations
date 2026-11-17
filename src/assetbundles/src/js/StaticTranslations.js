@@ -43,20 +43,64 @@ Craft.Translations.StaticTranslations = {
 
     exportStaticTranslation: function() {
         const params = {
-            sourceKey: Craft.elementIndex.sourceKey,
-            search: Craft.elementIndex.searchText
+           sourceKey: Craft.elementIndex.sourceKey,
+           search: Craft.elementIndex.searchText
         };
 
         Craft.sendActionRequest('POST', 'translations/static-translations/export', {data: params})
-            .then((response) => {
-                var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/static-translations/export-file', {'filename': response.data.filePath})}).hide();
-                $('#static-translation').append($iframe);
-                Craft.cp.displaySuccess(Craft.t('app', 'Static Translations exported.'));
-            })
-            .catch(({response}) => {
-                Craft.cp.displayError(Craft.t('app', response.data.error));
-            });
+        .then((response) => {
+            if (!response.data || !response.data.success || !response.data.token) {
+                const message = response.data && response.data.error
+                    ? response.data.error
+                    : 'Export failed.';
+                Craft.cp.displayError(Craft.t('app', message));
+                return;
+            }
 
+            this.downloadExport(response.data.token);
+            Craft.cp.displaySuccess(Craft.t('app', 'Static Translations exported.'));
+        })
+        .catch(({response}) => {
+            const message = response && response.data && response.data.error
+                ? response.data.error
+                : 'Export failed.';
+            Craft.cp.displayError(Craft.t('app', message));
+        });
+    },
+
+    downloadExport: function(token) {
+       const frameName = 'static-translations-export-frame';
+       let $iframe = $('iframe[name="' + frameName + '"]');
+
+       if (!$iframe.length) {
+            $iframe = $('<iframe/>', {
+              name: frameName,
+              style: 'display:none'
+           }).appendTo(document.body);
+        }
+
+        const $form = $('<form/>', {
+           method: 'post',
+           action: Craft.getActionUrl('translations/static-translations/export-file'),
+           target: frameName
+       });
+
+       $form.append($('<input/>', {
+          type: 'hidden',
+          name: Craft.csrfTokenName,
+          value: Craft.csrfTokenValue
+       }));
+       $form.append($('<input/>', {
+          type: 'hidden',
+          name: 'token',
+          value: token
+       }));
+
+       $form.appendTo(document.body);
+       $form[0].submit();
+       setTimeout(function() {
+          $form.remove();
+       }, 1000);
     },
 
     syncToDB: function (element) { 

@@ -1193,16 +1193,59 @@
 
             Craft.sendActionRequest('POST', $data.action, {data: params})
                 .then((response) => {
-                    var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.translatedFiles})}).hide();
-                    $downloadForm.append($iframe);
+                    // var $iframe = $('<iframe/>', {'src': Craft.getActionUrl('translations/files/export-file', {'filename': response.data.translatedFiles})}).hide();
+                    // $downloadForm.append($iframe);
+                    // setTimeout(function() {
+                    //     self.onComplete(true);
+                    // }, 500);
+                    if (!response.data || !response.data.token) {
+                       Craft.cp.displayError(Craft.t('app', 'Export failed.'));
+                       self.onComplete();
+                       return;
+                    }
+                    self.downloadExport(response.data.token);
                     setTimeout(function() {
-                        self.onComplete(true);
-                    }, 500);
+                       self.onComplete(true);
+                    }, 1000);
                 })
                 .catch(({response}) => {
                     Craft.cp.displayError(response.data.message);
                     self.onComplete();
                 });
+        },
+        downloadExport: function(token) {
+            const frameName = 'files-export-frame';
+            let $iframe = $('iframe[name="' + frameName + '"]');
+
+            if (!$iframe.length) {
+               $iframe = $('<iframe/>', {
+               name: frameName,
+               style: 'display:none'
+              }).appendTo(document.body);
+            }
+
+            const $form = $('<form/>', {
+               method: 'post',
+               action: Craft.getActionUrl('translations/files/export-file'),
+               target: frameName
+            });
+
+            $form.append($('<input/>', {
+               type: 'hidden',
+               name: Craft.csrfTokenName,
+               value: Craft.csrfTokenValue
+            }));
+            $form.append($('<input/>', {
+               type: 'hidden',
+               name: 'token',
+               value: token
+            }));
+
+            $form.appendTo(document.body);
+            $form[0].submit();
+            setTimeout(function() {
+              $form.remove();
+            }, 1000);
         },
         onComplete: function($reload = false) {
             $('#toolbar').removeClass('disabled noClick');

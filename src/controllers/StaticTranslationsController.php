@@ -13,7 +13,6 @@ namespace acclaro\translations\controllers;
 use Craft;
 use ZipArchive;
 use craft\models\Site;
-use craft\helpers\Path;
 use craft\web\UploadedFile;
 use craft\helpers\FileHelper;
 use craft\helpers\StringHelper;
@@ -30,6 +29,7 @@ use acclaro\translations\elements\StaticTranslations;
  */
 class StaticTranslationsController extends BaseController
 {
+    protected array|int|bool $allowAnonymous = false;
     /**
      * @return mixed
      */
@@ -94,23 +94,24 @@ class StaticTranslationsController extends BaseController
      * @throws \yii\web\BadRequestHttpException
      */
     public function actionExport() {
-
+        
+        $this->requireLogin();
         $this->requirePostRequest();
 
-        $siteIds = array_diff(
-            Craft::$app->getSites()->getAllSiteIds(),
-            [Craft::$app->getSites()->getPrimarySite()->id]
-        );
+        $siteIds = array_values(array_diff(
+           Craft::$app->getSites()->getAllSiteIds(),
+           [Craft::$app->getSites()->getPrimarySite()->id]
+        ));
 
         $source = Craft::$app->request->getRequiredBodyParam('sourceKey');
         $source = str_replace('*', '/', $source);
 
         if (count($siteIds) === 1) {
-            $filePath = $this->_generateCsvForSite($siteIds[0], $source);
-            return $this->asJson([
-                'success' => true,
-                'filePath' => $filePath,
-            ]);
+          $filePath = $this->_generateCsvForSite($siteIds[0], $source);
+          return $this->asJson([
+           'success' => true,
+           'token' => $this->createExportToken($filePath),
+           ]);
         } else if (count($siteIds) === 0) {
             return $this->asJson([
                 'success' => false,
@@ -145,8 +146,18 @@ class StaticTranslationsController extends BaseController
 
         return $this->asJson([
             'success' => true,
-            'filePath' => $zipFilePath
+            'token' => $this->createExportToken($zipFilePath),
         ]);
+    }
+
+    private function createExportToken(string $absolutePath): string
+    {
+       $payload = json_encode([
+        'name' => basename($absolutePath),
+        'exp' => time() + 120,
+       ], JSON_THROW_ON_ERROR);
+
+       return Craft::$app->getSecurity()->hashData($payload);
     }
 
     /**
@@ -193,14 +204,68 @@ class StaticTranslationsController extends BaseController
      */
     public function actionExportFile()
     {
-        $filename = Craft::$app->getRequest()->getQueryParam('filename');
-        if (!is_file($filename) || !Path::ensurePathIsContained($filename)) {
-            throw new NotFoundHttpException(Craft::t('app', 'Invalid file name: {filename}', [
-                'filename' => $filename
-            ]));
-        }
+        $this->requireLogin();
+        $this->requirePostRequest();
+        $token = Craft::$app->getRequest()->getRequiredBodyParam('token');
+        $path = $this->resolveExportPath($token);
+        FileHelper::deleteFileAfterRequest($path);
+        return Craft::$app->getResponse()->sendFile($path, basename($path), [
+          'inline' => false,
+        ]);
+        // $filename = Craft::$app->getRequest()->getQueryParam('filename');
+        // if (!is_file($filename) || !Path::ensurePathIsContained($filename)) {
+        //     throw new NotFoundHttpException(Craft::t('app', 'Invalid file name: {filename}', [
+        //         'filename' => $filename
+        //     ]));
+        // }
 
-        return Craft::$app->getResponse()->sendFile($filename, null, ['inline' => true]);
+        // return Craft::$app->getResponse()->sendFile($filename, null, ['inline' => true]);
+    }
+
+    private function resolveExportPath(string $token): string
+    {
+      $data = Craft::$app->getSecurity()->validateData($token);
+      if (!is_string($data) || $data === '') {
+        throw new NotFoundHttpException('Export file not found.');
+      }
+
+      try {
+        $payload = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+      } catch (\JsonException) {
+        throw new NotFoundHttpException('Export file not found.');
+      }
+
+      $name = $payload['name'] ?? null;
+      $exp = $payload['exp'] ?? null;
+
+      if (!is_string($name) || !is_int($exp) || $exp < time()) {
+        throw new NotFoundHttpException('Export file not found.');
+      }
+
+      $isCsv = preg_match('/^StaticTranslations-\d+-[A-Za-z0-9\-]+-\d{14}\.csv$/', $name) === 1;
+      $isZip = preg_match('/^StaticTranslations-\d{14}\.zip$/', $name) === 1;
+      if ((!$isCsv && !$isZip) || $name !== basename($name)) {
+        throw new NotFoundHttpException('Export file not found.');
+      }
+
+      $temp = realpath(Craft::$app->getPath()->getTempPath());
+      if ($temp === false) {
+        throw new NotFoundHttpException('Export file not found.');
+      }
+
+      $real = realpath($temp . DIRECTORY_SEPARATOR . $name);
+      if ($real === false || !is_file($real)) {
+        throw new NotFoundHttpException('Export file not found.');
+      }
+
+      $tempNorm = rtrim(FileHelper::normalizePath($temp), '/');
+      $realNorm = FileHelper::normalizePath($real);
+
+      if (dirname($realNorm) !== $tempNorm) {
+        throw new NotFoundHttpException('Export file not found.');
+      }
+
+      return $real;
     }
 
     /**
